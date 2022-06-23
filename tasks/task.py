@@ -5,6 +5,7 @@ import threading
 # import NeuRPi
 # from hardware import BCM_TO_BOARD
 # from NeuRPi import prefs
+import hydra
 
 
 # If need be, work on multithreading later
@@ -100,50 +101,21 @@ class Task(object):
 
         self.trigger_lock = threading.Lock()
 
+
+    def get_configuration(self, path=None, filename=None):
+        hydra.initialize(version_base=None, config_path=path)
+        self.config = hydra.compose(filename, overrides=[])
+
+
     def init_hardware(self):
         """
-        Initialize all hardware required by the task. Defined in HARDWARE dictionary.
+        Initialize all hardware required by the task. Defined in HARDWARE dictionary in configuration file.
         """
-        self.hardware = {}
-        self.pin_id = {}
-        pin_numbers = prefs.get('HARDWARE')
-
-        # Iterating through all hardware types like LEDs
-        for type, values in self.HARDWARE.items():
-            self.hardware[type] = {}
-            # Iterating through all pins within hardware group type like left LED
-            for pin, handler in values.items():
-                # if string is provided them get it from get_hardware method
-                if isinstance(handler, str):
-                    handler = NeuRPi.get_hardware(handler)
-
-                try:
-                    hw_args = pin_numbers[type][pin]
-                    if isinstance(hw_args, dict):
-                        if 'name' not in hw_args.keys():
-                            hw_args['name'] = "{}_{}".format(type, pin)
-                        hw = handler(**hw_args)
-                    else:
-                        hw_args['name'] = "{}_{}".format(type, pin)
-                        hw = handler(hw_args, **hw_args)
-
-                    # if a pin in an event-based input (trigger), give it the trigger handler
-                    if hw.is_trigger:
-                        hw.assign_cb(self.handle_trigger)
-
-                    # add to forward and backward pin dicts
-                    self.hardware[type][pin] = hw
-                    if isinstance(hw_args, int) or isinstance(hw_args, str):
-                        self.pin_id[hw_args] = pin
-                    elif isinstance(hw_args, list):
-                        for p in hw_args:
-                            self.pin_id[p] = pin
-                    elif isinstance(hw_args, dict):
-                        if 'pin' in hw_args.keys():
-                            self.pin_id[hw_args['pin']] = pin
-
-                except Exception as e:
-                    raise Exception("pin could not instantiated - Type: {}, pin: {}\nGot exception:{}".format(type, pin, e))
+        for group, container in self.config.HARDWARE.items():
+            if group == 'Arduino':
+                for name, properties in container.items():
+                    connection = properties['connection']
+                    exec(f"""self.hw['{name}'] = Arduino(name='{name}', port='{connection['port']}', baudrate = {connection['baudrate']}, timeout={connection['timeout']})""")
 
     def set_reward(self, vol=None, duration=None, port=None):
         """

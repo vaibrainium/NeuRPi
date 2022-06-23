@@ -1,12 +1,17 @@
 HARDWARE:
     Arduino:
-        Response:
-            tag: "[Lick, Reward]"
-            port: "COM7"
-            baudrate: None
-            timeout: None
+        Primary:
+            connection:
+                port: "COM7"
+                baudrate: None
+                timeout: None
 
-    GPIO':
+            
+            tag: "[Lick, Reward]"
+
+
+
+    GPIO:
         Stim_Onset:
             pin: None,
             tag: 'TTL'

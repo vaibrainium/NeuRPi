@@ -25,8 +25,6 @@ import datetime
 from scipy.stats import pearson3
 
 
-
-
 class DynamicCoherences(Task):
     """
     Two-alternative force choice task for random dot motion tasks
@@ -116,23 +114,6 @@ class DynamicCoherences(Task):
                                                        }
 
 
-    # HARDWARE = {
-    #     'Arduino': {
-    #         'Response': {'tag': "[Lick, Reward]",
-    #                  'port': "COM7",
-    #                  'baudrate': None,
-    #                  'timeout': None
-    #                  }
-    #     },
-    #
-    #     'GPIO': {
-    #         'Stim_Onset': {'pin': None,
-    #                        'tag': 'TTL'
-    #                        },
-    #         'Video_Monitor': {'pin': None,
-    #                          'tag': 'Frame Time'}
-    #     }
-    # }
 
     EVENT_FILES = {
         'events': 'event_all.txt'
@@ -176,13 +157,17 @@ class DynamicCoherences(Task):
         """
         super(DynamicCoherences, self).__init__()
 
+        # Get configuration for this task -> self.config
+        self.get_configuration(path='conf', filename='rdk')
+        self.init_hardware()
+
         # Event locks, triggers
         self.stage_block = stage_block
         self.trigger = {}
 
         # Initializing managers
         self.trial_manager = TrialManager(DynamicCoherences.TASK_PARAMS)
-        self.behavior_manager = Behavior(hardwares=, trigger=self.trigger, stage_block=self.stage_block)
+        self.behavior_manager = Behavior(hardwares=self.hw, trigger=self.trigger, stage_block=self.stage_block)
 
         # Variable parameters
         self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
@@ -199,14 +184,6 @@ class DynamicCoherences(Task):
         stage_list = [self.fixation, self.stimulus, self.reinforcement, self.intertrial]
         self.num_stages = len(stage_list)
         self.stages = itertools.cycle(stage_list)
-
-        self.init_hardware(DynamicCoherences.HARDWARE)
-    def init_hardware(self, hardwares):
-        # Collecting all hardware requirements
-        for group, container in hardwares.items():
-            if group == 'Arduino':
-                for name, properties in container.items():
-                    exec(f"""self.hw['{name}'] = Arduino(name='{name}', port='{properties['port']}', baudrate = {properties['baudrate']}, timeout={properties['timeout']})""")
 
 
 
