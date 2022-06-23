@@ -1,0 +1,14 @@
+HARDWARE:
+  Arduino:
+    Response:
+      tag: '[Lick, Reward]'
+      port: COM7
+      baudrate: None
+      timeout: None
+  GPIO':
+    Stim_Onset:
+      pin: None,
+      tag: TTL
+    Video_Monitor:
+      pin: None
+      tag: Frame Time
