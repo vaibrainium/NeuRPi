@@ -19,6 +19,9 @@ class HardwareManager(Hardware,Arduino):
 
         return self.hardware
 
+    def close_hardware(self):
+        raise Warning('TODO: Not Implemented')
+
     def read_lick(self):
         """
         Function to detect if there's an incoming signal. If so, decode the signal to lick direction and retunrn
