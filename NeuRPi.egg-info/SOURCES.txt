@@ -1,8 +1,0 @@
-LICENSE
-README.md
-setup.py
-NeuRPi/__init__.py
-NeuRPi.egg-info/PKG-INFO
-NeuRPi.egg-info/SOURCES.txt
-NeuRPi.egg-info/dependency_links.txt
-NeuRPi.egg-info/top_level.txt
