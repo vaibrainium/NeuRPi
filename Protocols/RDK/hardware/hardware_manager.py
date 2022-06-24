@@ -19,6 +19,22 @@ class HardwareManager(Hardware,Arduino):
 
         return self.hardware
 
+    def read_lick(self):
+        """
+        Function to detect if there's an incoming signal. If so, decode the signal to lick direction and retunrn
+        Returns:
+            lick (int): Lick direction.
+                        {1: Left Spout Licked,
+                         -1: Left Spout Free
+                         2: Right Spout Licked,
+                         -2: Right Spout Free}
+        """
+        lick = None
+        message = self.hardware['Primary'].read()
+        if message:
+            lick = int(message) - 3
+        return lick
+
     def reward_left(self, volume):
         """
         Dispense 'volume' of Reward to Left spout

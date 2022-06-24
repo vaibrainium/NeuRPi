@@ -51,17 +51,17 @@ class Behavior():
 
     def _acquire(self):
         while True:#not self.quit_monitoring.is_set():
-            message = self.hw['Response'].read()
-            if message:
-                lick = int(message) - 3
-                if lick == 1:
-                    print("Left Spout Licked")
-                elif lick == -1:
-                    print("Left Spout Free")
-                elif lick == 2:
-                    print("Right Spout Licked")
-                elif lick == -2:
-                    print("Right Spout Free")
+            # message = self.hw['Response'].read()
+            # if message:
+            #     lick = int(message) - 3
+            #     if lick == 1:
+            #         print("Left Spout Licked")
+            #     elif lick == -1:
+            #         print("Left Spout Free")
+            #     elif lick == 2:
+            #         print("Right Spout Licked")
+            #     elif lick == -2:
+            #         print("Right Spout Free")
 
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
