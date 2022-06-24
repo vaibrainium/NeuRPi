@@ -3,7 +3,7 @@ from itertools import count
 # import tables
 import threading
 # import NeuRPi
-from hardwares.arduino import Arduino
+# from hardware import BCM_TO_BOARD
 # from NeuRPi import prefs
 import hydra
 
@@ -64,6 +64,8 @@ class Task(object):
         pin_id (dict): Reverse dictionary, pin numbers back to pin letters.
 
     """
+    TASK_PARAMS = odict()
+    HARDWARE = {}
     STAGE_NAMES = {}
     PLOT = {}
 
@@ -103,7 +105,6 @@ class Task(object):
     def get_configuration(self, path=None, filename=None):
         hydra.initialize(version_base=None, config_path=path)
         self.config = hydra.compose(filename, overrides=[])
-        return self.config
 
 
     def init_hardware(self):
@@ -113,9 +114,8 @@ class Task(object):
         for group, container in self.config.HARDWARE.items():
             if group == 'Arduino':
                 for name, properties in container.items():
-                    connect = properties['connection']
-                    exec(f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})""")
-        return self.hardware
+                    connection = properties['connection']
+                    exec(f"""self.hw['{name}'] = Arduino(name='{name}', port='{connection['port']}', baudrate = {connection['baudrate']}, timeout={connection['timeout']})""")
 
     def set_reward(self, vol=None, duration=None, port=None):
         """

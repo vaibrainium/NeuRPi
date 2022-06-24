@@ -84,7 +84,6 @@ class Behavior():
 
 
     def monitor_response(self):
-        self.stage_block.set()
         while True:
             self.response = np.NAN
             self.response_time = np.NAN

@@ -52,7 +52,73 @@ class DynamicCoherences(Task):
 
     STAGE_NAMES = ["fixation", "stimulus", "reinforcement", "intertrial"]
 
+    # List of needed parameters, returned data and data format
+    TASK_PARAMS = odict()
 
+    TASK_PARAMS['stimulus'] = {'_coherences':         {'tag'  : 'List of all coherences used in study',
+                                                       'type' : 'list',
+                                                       'value': [100, 72, 36, 18, 9, 0]},
+                               'coherence_level':     {'tag'  : 'Level of difficulty for current block',
+                                                       'type' : 'int',
+                                                       'value': 1},
+                               'repeats_per_block':   {'tag'  : 'Number of repeats of each coherences per block',
+                                                       'type' : 'int',
+                                                       'value': 3}
+                               }
+    TASK_PARAMS['bias'] = {'active_correction': {'tag'            : 'Repeat threshold',
+                                                 'type'           : 'int',
+                                                 'threshold'      : 100},
+                           'passive_correction': {'tag'           : 'Repeat threshold and window',
+                                                 'type'           : 'int',
+                                                  'threshold'     : 100,
+                                                  'rolling_window': 10
+                                                  }
+                           }
+    TASK_PARAMS['timings'] = {'fixation': {'tag'   : 'Mean fixation time in ms',
+                                           'type'  : 'int',
+                                           'value' : 500},
+                              'stimulus': {'tag'   : 'Max stimulus time in ms',
+                                           'type'  : 'int',
+                                           'value'  : 10000},
+                              'intertrial': {'tag' : 'Inter-trial interval in ms',
+                                             'type': 'int',
+                                             'mean':500}
+                              }
+    TASK_PARAMS['feedback'] = {'correct': {'visual': {'tag': 'Visual feedback for correct trial',
+                                           'type'  : 'tuple'},
+                               'audio': {'tag'     : 'Audio feedback for correct trial',
+                                         'type'    : 'tuple'},
+                               'time': {'tag'      : 'Temporal delay feedback in ms',
+                                        'type'     : 'int'}
+                             },
+                 'incorrect': {'visual': {'tag'    : 'Visual feedback for correct trial',
+                                          'type'   : 'tuple'},
+                               'audio': {'tag'     : 'Audio feedback for correct trial',
+                                         'type'    : 'tuple'},
+                               'time': {'tag'      : 'Temporal delay feedback in ms',
+                                        'type'     : 'int'}
+                               },
+                 'noresponse': {'visual': {'tag'   : 'Visual feedback for correct trial',
+                                           'type'  : 'tuple'},
+                                'audio': {'tag'    : 'Audio feedback for correct trial',
+                                          'type'   : 'tuple'},
+                                'time': {'tag'     : 'Temporal delay feedback in ms',
+                                         'type'    : 'int'}
+                                }
+                               }
+    TASK_PARAMS['training_type'] = {'value': {0:'Passive-Only', 1:'Active-Passive', 2:'Active-Only'},
+                                    'active-passive': {'tag'                : 'Parameters for Active-Passive Training',
+                                                       'reaction_time_mu'   : 10,
+                                                       'reaction_time_sigma':6,
+                                                       'reaction_time_max'  : 60}
+                                                       }
+
+
+
+    EVENT_FILES = {
+        'events': 'event_all.txt'
+        ''
+    }
 
 
     class TrialData(tables.IsDescription):
@@ -66,7 +132,7 @@ class DynamicCoherences(Task):
         bailed = tables.Int32Col()
 
 
-    def __init__(self, stage_block=None, **kwargs):
+    def __init__(self, stage_block=None, rolling_perf=None, **kwargs):
 
         """
         Args:
@@ -92,18 +158,16 @@ class DynamicCoherences(Task):
         super(DynamicCoherences, self).__init__()
 
         # Get configuration for this task -> self.config
-        self.config = self.get_configuration(path='../conf', filename='rdk')
-        self.hardware = self.init_hardware()       # Initialize all hardwares
-        self.task_pars = self.config.TASK_PARAMETERS       # Get all task parameters
+        self.get_configuration(path='conf', filename='rdk')
+        self.init_hardware()
 
         # Event locks, triggers
         self.stage_block = stage_block
         self.trigger = {}
 
         # Initializing managers
-        self.trial_manager = TrialManager(self.task_pars)
-        self.behavior_manager = Behavior(hardwares=self.hardware, trigger=self.trigger, stage_block=self.stage_block)
-        self.behavior_manager.start()
+        self.trial_manager = TrialManager(DynamicCoherences.TASK_PARAMS)
+        self.behavior_manager = Behavior(hardwares=self.hw, trigger=self.trigger, stage_block=self.stage_block)
 
         # Variable parameters
         self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
@@ -111,11 +175,10 @@ class DynamicCoherences(Task):
         self.response = None
         self.bailed = None
         self.correct = None
-        self.response_time = None
         self.correction_trial = None
 
         # We make a list of the variables that need to be reset each trial so it's easier to do so
-        self.resetting_variables = [self.response, self.response_time]
+        self.resetting_variables = [self.stimulus, self.response, self.response_time]
 
         # This allows us to cycle through the task by just repeatedly calling self.stages.next()
         stage_list = [self.fixation, self.stimulus, self.reinforcement, self.intertrial]
@@ -139,7 +202,7 @@ class DynamicCoherences(Task):
         self.current_stage = 0
 
         # Set triggers, set display and start timer
-        self.fixation_time = self.task_pars.timings.fixation.value
+        self.fixation_time = DynamicCoherences.TASK_PARAMS['timings']['fixation_time']['value']
         self.triggers = {'type': 'NoGO', 'time': self.fixation_time}
         # ''' Send Signal to Display Manager'''
         self.behavior_manager.response_block.set()
@@ -166,18 +229,17 @@ class DynamicCoherences(Task):
 
             }
         """
-        print(self.stim_pars)
 
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.current_stage = 1
 
         # Set triggers, set display and start timer
-        if self.task_pars.training_type  < 2:
-            self.stimulus_time = self.task_pars.training_type.active_passive.reaction_time_mu + \
+        if DynamicCoherences.TASK_PARAMS['training_type']  < 2:
+            self.stimulus_time = DynamicCoherences.TASK_PARAMS['training_type']['active-passive']['reaction_time_mean'] + \
                             (pearson3.rvs(0.6, size=1) * 1.5)
         else:
-            self.stimulus_time = self.task_pars.timings.stimulus_time.value
+            self.stimulus_time = DynamicCoherences.TASK_PARAMS['timings']['stimulus_time']['value']
         self.triggers = {'type': 'GO', 'time': self.stimulus_time}
         # ''' Send Signal to Display Manager'''
         self.behavior_manager.response_block.set()
@@ -207,9 +269,9 @@ class DynamicCoherences(Task):
         # Checking if trial was correct
         if np.isnan(self.response):    # Invalid Trial
             self.correction_trial = 1
-        elif self.stim_pars['target'] != self.response:  # Incorrect Trial
+        elif self.stimlus['target'] != self.response:  # Incorrect Trial
             self.correction_trial = 1
-        elif self.stim_pars['target'] == self.response:  # Correct Trial
+        elif self.stimlus['target'] == self.response:  # Correct Trial
             self.correction_trial = 0
             self.correct = 1
             if self.response == -1:     # Left Correct
@@ -262,13 +324,12 @@ class DynamicCoherences(Task):
 class TrialManager():
     def __init__(self, TASK_PARAMS):
         self.schedule_counter = 0
-        self.task_pars = TASK_PARAMS
+        self.TASK_PARAMS = TASK_PARAMS
         self.get_full_coherences()
 
         # Setting session parameters
-        self.rolling_bias = np.zeros(self.task_pars.bias.passive_correction.rolling_window) # Initializing at no bias
+        self.rolling_bias = np.zeros(self.TASK_PARAMS['bias']['passive_correction']['rolling_window']) # Initializing at no bias
         self.rolling_bias_index = 0
-        self.stim_pars = {}
 
 
     # RT = np.zeros(len(App['Coherences']));RT[:]=np.NaN
@@ -293,7 +354,7 @@ class TrialManager():
             full_coherences (list): List of all direction-wise coherences with adjustment for zero coherence (remove duplicates).
             coh_to_xrange (dict): Mapping dictionary from coherence level to corresponding x values for plotting of psychometric function
         """
-        coherences = np.array(self.task_pars.stimulus._coherences.value)
+        coherences = np.array(self.TASK_PARAMS['stimulus']['_coherences']['value'])
         self.full_coherences = sorted(np.concatenate([coherences,-coherences]))
         if 0 in coherences:     # If current full coherence contains zero, then remove one copy to avoid 2x 0 coh trials
             self.full_coherences.remove(0)
@@ -315,9 +376,9 @@ class TrialManager():
         self.schedule_counter = 0
 
         # Generate array of active signed-coherences based on current coherence level
-        coherences = np.array(self.task_pars.stimulus._coherences.value)
-        coherence_level = self.task_pars.stimulus.coherence_level.value
-        repeats_per_block = self.task_pars.stimulus.repeats_per_block.value
+        coherences = np.array(self.TASK_PARAMS['stimulus']['_coherences']['value'])
+        coherence_level = self.TASK_PARAMS['stimulus']['coherence_level']['value']
+        repeats_per_block = self.TASK_PARAMS['stimulus']['repeats_per_block']['value']
         active_coherences = sorted(np.concatenate([coherences[:coherence_level], -coherences[:coherence_level]]))    # Signed coherence
         if 0 in active_coherences:
             active_coherences.remove(0)  # Removing one zero from the list
@@ -326,7 +387,7 @@ class TrialManager():
 
         # Active bias correction block by having unbiased side appear more
         for _, coh in enumerate(coherences[:coherence_level]):
-            if coh > self.task_pars.bias.active_correction.threshold:
+            if coh > self.TASK_PARAMS['bias']['active_correction']['value']:
                 self.trials_schedule.remove(coh*self.rolling_bias)    # Removing high coherence from biased direction (-1:left; 1:right)
                 self.trials_schedule.append(-coh*self.rolling_bias)   # Adding high coherence from unbiased direction.
 
@@ -345,10 +406,10 @@ class TrialManager():
         """
 
         # If correction trial and above passive correction threshold
-        if correction_trial and self.stim_pars['coh'] > self.task_pars.bias.passive_correction.threshold:
+        if correction_trial and self.stimulus['coh'] > self.TASK_PARAMS['bias']['passive_correction']['threshold']:
             # Drawing incorrect trial from normal distribution with high prob to direction
             temp_bias = np.sign(np.random.normal(np.mean(self.rolling_Bias), 0.5))
-            self.stim_pars['coh'] = int(-temp_bias) * np.abs(self.stim_pars['coh'])  # Repeat probability to opposite side of bias
+            self.stimulus['coh'] = int(-temp_bias) * np.abs(self.stimulus['coh'])  # Repeat probability to opposite side of bias
 
         else:
             # Generate new trial schedule if at the end of schedule
@@ -356,9 +417,9 @@ class TrialManager():
                 self.graduation_check()
                 self.generate_trials_schedule()
 
-            self.stim_pars = {'coh': self.trials_schedule[self.schedule_counter] + np.random.choice([-1e-2, 1e-2])} # Adding small random coherence to distinguish 0.01 vs -0.01 coherence direction
-            self.stim_pars['target'] = np.sign(self.stim_pars['coh'])
-
+            self.stimulus = {'coh': self.trials_schedule[self.schedule_counter] + np.random.choice([-1e-2, 1e-2]), # Adding small randon coherence to distinguish 0.01 vs -0.01 coherence direction
+                         'target': np.sign(self.stimulus['coh'])
+                         }
             self.schedule_counter += 1  # Incrementing within trial_schedule counter
         # return self.stimulus
 
@@ -383,7 +444,7 @@ if __name__ == '__main__':
     while True:
         level = input("Enter new coherence level at will")
         if level:
-            task.task_pars.stimulus.coherence_level.value = int(level)
+            DynamicCoherences.TASK_PARAMS['stimulus']['coherence_level']['value'] = int(level)
 
         task.trial_manager.next_trial()
 
