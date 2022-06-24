@@ -1,0 +1,103 @@
+HARDWARE:
+    Arduino:
+        Primary:
+            connection:
+                port    : "COM7"
+                baudrate: None
+                timeout : None
+            tag: "[Lick, Reward]"
+    GPIO:
+        Stim_Onset:
+            pin: None
+            tag: 'TTL'
+
+        Video_Monitor:
+            pin: None
+            tag: 'Frame Time'
+
+
+TASK_PARAMETERS:
+    stimulus:
+        _coherences:
+            tag  : 'List of all coherences used in study'
+            type : 'list'
+            value: [100, 72, 36, 18, 9, 0]
+        coherence_level:
+            tag  : 'Level of difficulty for current block'
+            type : 'int'
+            value: 1
+        repeats_per_block:
+            tag  : 'Number of repeats of each coherences per block'
+            type : 'int'
+            value: 3
+
+    bias:
+        active_correction:
+            tag             : 'Repeat threshold'
+            type            : 'int'
+            threshold       : 100
+        passive_correction:
+            tag             : 'Repeat threshold and window'
+            type            : 'int'
+            threshold       : 100,
+            rolling_window  : 10
+
+    timings:
+        fixation:
+            tag     : 'Mean fixation time in ms'
+            type    : 'int'
+            value   : 500
+        stimulus:
+            tag     : 'Max stimulus time in ms'
+            type    : 'int'
+            value   : 10000
+        intertrial:
+            tag     : 'Inter-trial interval in ms'
+            type    : 'int'
+            mean    : 500
+
+    feedback:
+        correct:
+            visual:
+                tag  : 'Visual feedback for correct trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for correct trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in ms'
+                type : 'int'
+        incorrect:
+            visual:
+                tag  : 'Visual feedback for correct trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for correct trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in ms'
+                type : 'int'
+        noresponse:
+            visual:
+                tag  : 'Visual feedback for correct trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for correct trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in ms'
+                type : 'int'
+
+    training_type:
+        value:
+            0                  : 'Passive-Only'
+            1                  : 'Active-Passive'
+            2                  : 'Active-Only'
+        active_passive:
+            tag                : 'Parameters for Active-Passive Training'
+            reaction_time_mu   : 10
+            reaction_time_sigma: 6
+            reaction_time_max  : 60
+
+EVENT_FILES:
+    events: 'event_all.txt'
