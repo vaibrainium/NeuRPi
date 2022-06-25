@@ -36,6 +36,7 @@ class Arduino(Hardware):
         """
         try:
             self.connection = serial.Serial(port = self.port, baudrate = self.baudrate, timeout = self.timeout)
+            self.is_connected = True
         except:
             raise Exception(f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')")
 
@@ -46,7 +47,7 @@ class Arduino(Hardware):
         Return:
             message (str): Incoming message after byte decoded
         """
-        if self.connection:
+        if self.is_connected:
             message = self.connection.read(self.connection.inWaiting()).decode()
         else:
             raise Warning(f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading")
@@ -57,7 +58,7 @@ class Arduino(Hardware):
         """
         Encode and send serial output to the device
         """
-        if self.connection:
+        if self.is_connected:
             if isinstance(message,str):
                 self.connection.write(message.encode())
             else:
@@ -72,7 +73,7 @@ class Arduino(Hardware):
         """
         try:
             self.connection.close()
-            self.connection = None
+            self.is_connected = False
         except:
             raise Warning(f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')")
 

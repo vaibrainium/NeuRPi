@@ -39,7 +39,7 @@ TASK_PARAMETERS:
         passive_correction:
             tag             : 'Repeat threshold and window'
             type            : 'int'
-            threshold       : 100,
+            threshold       : 100
             rolling_window  : 10
 
     timings:
@@ -50,7 +50,7 @@ TASK_PARAMETERS:
         stimulus:
             tag     : 'Max stimulus time in ms'
             type    : 'int'
-            value   : 10000
+            value   : 2000
         intertrial:
             tag     : 'Inter-trial interval in ms'
             type    : 'int'
@@ -89,15 +89,16 @@ TASK_PARAMETERS:
                 type : 'int'
 
     training_type:
-        value:
+        value: 1
+        tag:
             0                  : 'Passive-Only'
             1                  : 'Active-Passive'
             2                  : 'Active-Only'
         active_passive:
-            tag                : 'Parameters for Active-Passive Training'
-            reaction_time_mu   : 10
-            reaction_time_sigma: 6
-            reaction_time_max  : 60
+            tag                : 'Parameters for Active-Passive Training (time in ms)'
+            reaction_time_mu   : 2000
+            reaction_time_sigma: 0
+            reaction_time_max  : 60000
 
 EVENT_FILES:
     events: 'event_all.txt'

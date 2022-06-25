@@ -1,6 +1,6 @@
 
 from NeuRPi.tasks.task import Task
-
+from Protocols.RDK.hardware.hardware_manager import HardwareManager
 from Protocols.RDK.tasks.behavior import Behavior
 import numpy as np
 import itertools
@@ -8,6 +8,7 @@ import tables
 import threading
 import datetime
 from scipy.stats import pearson3
+import time
 
 
 class DynamicCoherences(Task):
@@ -74,17 +75,17 @@ class DynamicCoherences(Task):
 
         # Get configuration for this task -> self.config
         self.config = self.get_configuration(directory='Protocols/RDK/config', filename='dynamic_coherences')
-        self.hardware = self.init_hardware()       # Initialize all hardwares
         self.task_pars = self.config.TASK_PARAMETERS       # Get all task parameters
 
         # Event locks, triggers
         self.stage_block = stage_block
-        self.trigger = {}
 
         # Initializing managers
         self.trial_manager = TrialManager(self.task_pars)
-        self.behavior_manager = Behavior(hardwares=self.hardware, trigger=self.trigger, stage_block=self.stage_block)
+        self.hardware_manager = HardwareManager(self.config)
+        self.behavior_manager = Behavior(hardware_manager=self.hardware_manager, stage_block=self.stage_block)
         self.behavior_manager.start()
+
         # Variable parameters
         self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
         self.target = None
@@ -103,7 +104,6 @@ class DynamicCoherences(Task):
         self.stages = itertools.cycle(stage_list)
 
 
-
     def fixation(self, *args, **kwargs):
         """
         Stage 0: Fixation time, making sure no trigger is set during fixation times.
@@ -116,9 +116,11 @@ class DynamicCoherences(Task):
         self.stage_block.clear()
         self.current_stage = 0
 
+        self.start = time.time()
+
         # Set triggers, set display and start timer
         self.fixation_time = self.task_pars.timings.fixation.value
-        self.triggers = {'type': 'NoGO', 'time': self.fixation_time}
+        self.behavior_manager.trigger = {'type': 'NoGO', 'time': self.fixation_time}
         # ''' Send Signal to Display Manager'''
         self.behavior_manager.response_block.set()
 
@@ -142,24 +144,24 @@ class DynamicCoherences(Task):
             {
             }
         """
-        print(self.stim_pars)
+        print("Fixation",time.time() - self.start)
 
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.current_stage = 1
 
         # Set triggers, set display and start timer
-        if self.task_pars.training_type  < 2:
+        if self.task_pars.training_type.value < 0:#2:
             self.stimulus_time = self.task_pars.training_type.active_passive.reaction_time_mu + \
                             (pearson3.rvs(0.6, size=1) * 1.5)
         else:
-            self.stimulus_time = self.task_pars.timings.stimulus_time.value
-        self.triggers = {'type': 'GO', 'time': self.stimulus_time}
+            self.stimulus_time = self.task_pars.timings.stimulus.value
+        self.behavior_manager.trigger = {'type': 'GO', 'time': self.stimulus_time}
         # ''' Send Signal to Display Manager'''
         self.behavior_manager.response_block.set()
+
         self.stage_block.wait()
         self.response, self.response_time = self.behavior_manager.response, self.behavior_manager.response_time
-
         data = {
             'DC_timestamp': datetime.datetime.now().isoformat(),
             'trial_num': self.current_trial,
@@ -174,6 +176,9 @@ class DynamicCoherences(Task):
             {
             }
         """
+
+        print("Stimulus",time.time() - self.start)
+
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.current_stage = 2
@@ -193,7 +198,7 @@ class DynamicCoherences(Task):
 
 
         # Setting intertrial interval in ms
-        self.ITI = 1
+        self.ITI = 1000
 
 
         data = {
@@ -211,6 +216,9 @@ class DynamicCoherences(Task):
             {
             }
         """
+
+        print("Reinforcement",time.time() - self.start)
+
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.current_stage = 3
@@ -225,7 +233,8 @@ class DynamicCoherences(Task):
             'trial_num': self.current_trial,
             'TRIAL_END': True
         }
-        self.stage_block.set()
+        self.stage_block.wait()
+        print("ITI", time.time() - self.start)
         return data
 
 
@@ -313,20 +322,20 @@ class TrialManager():
         """
 
         # If correction trial and above passive correction threshold
-        if correction_trial and self.stim_pars['coh'] > self.task_pars.bias.passive_correction.threshold:
-            # Drawing incorrect trial from normal distribution with high prob to direction
-            temp_bias = np.sign(np.random.normal(np.mean(self.rolling_Bias), 0.5))
-            self.stim_pars['coh'] = int(-temp_bias) * np.abs(self.stim_pars['coh'])  # Repeat probability to opposite side of bias
+        if correction_trial:
+            if self.stim_pars['coh'] > self.task_pars.bias.passive_correction.threshold:
+                # Drawing incorrect trial from normal distribution with high prob to direction
+                self.rolling_Bias = 0.5
+                temp_bias = np.sign(np.random.normal(np.mean(self.rolling_Bias), 0.5))
+                self.stim_pars['coh'] = int(-temp_bias) * np.abs(self.stim_pars['coh'])  # Repeat probability to opposite side of bias
 
         else:
             # Generate new trial schedule if at the end of schedule
             if self.schedule_counter == 0 or self.schedule_counter == len(self.trials_schedule):
                 self.graduation_check()
                 self.generate_trials_schedule()
-
             self.stim_pars = {'coh': self.trials_schedule[self.schedule_counter] + np.random.choice([-1e-2, 1e-2])} # Adding small random coherence to distinguish 0.01 vs -0.01 coherence direction
             self.stim_pars['target'] = np.sign(self.stim_pars['coh'])
-
             self.schedule_counter += 1  # Incrementing within trial_schedule counter
         # return self.stimulus
 
