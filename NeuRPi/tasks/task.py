@@ -110,18 +110,6 @@ class Task(object):
 
 
 
-    def init_hardware(self):
-        """
-        Initialize all hardware required by the task. Defined in HARDWARE dictionary in configuration file.
-        """
-        for group, container in self.config.HARDWARE.items():
-            if group == 'Arduino':
-                for name, properties in container.items():
-                    connect = properties['connection']
-                    exec(f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})""")
-
-        return self.hardware
-
     def set_reward(self, vol=None, duration=None, port=None):
         """
         Set reward value for each port

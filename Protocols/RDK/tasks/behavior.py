@@ -8,19 +8,17 @@ import time
 class Behavior():
     """
     General class for monitoring behavior during the task. This also takes care of interacting between multiple
-    hardwares (lick sensors, camera, rotary encoder etc). This class runs on it's own thread to achieve better accuracy.
+    hardwares (lick sensors, camera, rotary encoder etc). This class runs on its own thread to achieve better accuracy.
     Arguments:
-        HARDWARE (dict): Dictionary of all hardwares involved in the task.
-        EVENT_FILE (dict): Event file details for exporting all events
-        stage_block: Stage_Block event for controling trial progression
+        hardware_manager (class instance): Hardware manager for monitoring and giving rewards
+        stage_block: Stage_Block event for controlling trial progression
     """
 
-    def __init__(self, hardwares={}, event_file=None, stage_block=None, trigger={}):
-        self.hw = hardwares
-        self.event_file = event_file
+    def __init__(self, hardware_manager= None, stage_block=None):
+        self.hardware_manager = hardware_manager
         self.stage_block = stage_block
-        self.trigger = trigger
-        self.queue = Queue
+        self.trigger = {}
+        self.queue = Queue()
         self.response_block = threading.Event()
         self.response_block.clear()
         self.response = None
@@ -30,13 +28,9 @@ class Behavior():
         self.quit_monitoring.clear()
 
     def start(self):
-        # Establishing connections with all hardwares
-        for key in self.hw.keys():
-            self.hw[key].connect()
         # Starting acquisition process on different thread
-        self.thread = threading.Thread(target=self._acquire, daemon=True).start()
-        self.thread = threading.Thread(target=self.monitor_trigger, daemon=True).start()
-        # self._acquire()
+        self.thread = threading.Thread(target=self._acquire).start()
+        self.thread = threading.Thread(target=self.monitor_response).start()
 
     def stop(self):
         """
@@ -45,31 +39,21 @@ class Behavior():
         # Closing all threads
         self.quit_monitoring.set()
 
-        # Releasing connections with all hardwares
-        for key in self.hw.keys():
-            self.hw[key].release()
-
     def _acquire(self):
-        while True:#not self.quit_monitoring.is_set():
-            # message = self.hw['Response'].read()
-            # if message:
-            #     lick = int(message) - 3
-            #     if lick == 1:
-            #         print("Left Spout Licked")
-            #     elif lick == -1:
-            #         print("Left Spout Free")
-            #     elif lick == 2:
-            #         print("Right Spout Licked")
-            #     elif lick == -2:
-            #         print("Right Spout Free")
-
+        while not self.quit_monitoring.is_set():
+            lick = self.hardware_manager.read_licks()
+            if lick:
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
                     self.queue.put(lick)
 
 
     def monitor_response(self):
-        self.stage_block.set()
+        """
+        Monitoring response from agent when requested by 'response_block.set()'.
+        Monitoring can be either GO or NoGO for requested time. Conditions are passed by
+        setting 'self.trigger' dictionary type: NoGO/GO and time: float in ms
+        """
         while True:
             self.response = np.NAN
             self.response_time = np.NAN
@@ -77,30 +61,33 @@ class Behavior():
             try:
                 # When agent is not supposed to respond
                 if self.trigger['type'] == 'NoGO':
-                    start = time.thread_time_ns()
-                    wait_time = self.trigger['time']*1000  # Converting wait time from ms to ns
-                    while start < wait_time:          # Waiting for response
+                    start = time.time()
+                    wait_time = self.trigger['time']/1000  # Converting wait time from ms to sec
+                    while time.time() - start < wait_time:          # Waiting for response
                         if not self.queue.empty():
-                            self.queue.clear()
+                            self.queue.queue.clear()
                             self.monitor_response()
                     # NoGo is complete. Set stage_block to proceed with the task
 
+
                 # When agent is supposed to respond
                 elif self.trigger['type'] == 'GO':
-                    start = time.thread_time_ns()
-                    wait_time = self.trigger['time'] * 1000  # Converting wait time from ms to ns
-                    while start < wait_time:            # Waiting for response
+                    start = time.time()
+                    wait_time = self.trigger['time'] / 1000  # Converting wait time from ms to sec
+                    while time.time() - start < wait_time:            # Waiting for response
                         if not self.queue.empty():
                             self.response = self.queue.get()
-                            self.response_time = time.thread_time_ns() - start
+                            self.response_time = time.time() - start
                             break
                     # Go is complete.
 
             except:
                 raise Warning("Problem with response monitoring")
 
-            self.response_block.clear()
-            self.stage_block.set()
+            finally:
+                self.trigger = None
+                self.response_block.clear()
+                self.stage_block.set()
 
 
 
@@ -113,27 +100,4 @@ class Behavior():
 
 
 if __name__ == '__main__':
-    HARDWARE = {
-        'Arduino': {
-            'Response': {'tag': "[Lick, Reward]",
-                     'port': "COM7",
-                     'baudrate': None,
-                     'timeout': None
-                     }
-        },
-
-        'GPIO': {
-            'Stim_Onset': {'pin': None,
-                           'tag': 'TTL'
-                           },
-            'Video_Monitor': {'pin': None,
-                              'tag': 'Frame Time'}
-        }
-    }
-    Behav = Behavior(HARDWARE)
-
-    Behav.start()
-    while True:
-        pass
-        # if KeyboardInterrupt:
-        #     break
+    pass

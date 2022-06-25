@@ -2,9 +2,19 @@ from NeuRPi.hardware.arduino import Arduino
 from NeuRPi.hardware.hardware import Hardware
 from NeuRPi.hardware.gpio import GPIO
 
-class HardwareManager(Hardware,Arduino):
-    def __init__(self):
+class HardwareManager(Arduino, GPIO):
+    """
+    Hardware Manager for RDK protocol
+    """
+
+    def __init__(self, config = None):
+        """
+        Arguments:
+            config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
+        """
         self.hardware = {}
+        self.config = config
+        self.init_hardware()
 
     def init_hardware(self):
         """
@@ -15,14 +25,12 @@ class HardwareManager(Hardware,Arduino):
                 for name, properties in container.items():
                     connect = properties['connection']
                     exec(f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})""")
-                    self.hardware['{name}'].connect
-
-        return self.hardware
+                    exec(f"""self.hardware['{name}'].connect()""")
 
     def close_hardware(self):
         raise Warning('TODO: Not Implemented')
 
-    def read_lick(self):
+    def read_licks(self):
         """
         Function to detect if there's an incoming signal. If so, decode the signal to lick direction and retunrn
         Returns:
@@ -111,3 +119,8 @@ class HardwareManager(Hardware,Arduino):
                 " \n 'Right': For right spout \n 'Center': For center spout")
 
 
+
+
+if __name__ == '__main__':
+    a = HardwareManager()
+    print(2)

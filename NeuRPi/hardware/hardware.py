@@ -21,7 +21,7 @@ class Hardware():
         self.name = None
         self.type = None
         self.port = None
-        self.is_connected = None
+        self.is_connected = False
 
     def connect(self):
         """

@@ -109,7 +109,6 @@ class RigManager():
         self.task = task_class(stage_block=self.stage_block, **task_params)
         self.running.set()
 
-
         while True:
             data = next(self.task.stages)()
 
