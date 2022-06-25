@@ -3,7 +3,7 @@ HARDWARE:
         Primary:
             connection:
                 port    : "COM7"
-                baudrate: None
+                baudrate: 9600
                 timeout : None
             tag: "[Lick, Reward]"
     GPIO:
@@ -99,6 +99,53 @@ TASK_PARAMETERS:
             reaction_time_mu   : 2000
             reaction_time_sigma: 0
             reaction_time_max  : 60000
+
+
+
+STIMULUS:
+    display:
+        num_screens: 1
+        window_size: (1920 x 1200)
+        frame_rate: 60
+        flags: pygame.DOUBLEBUF
+
+    audio:
+
+
+    fixation:
+        background: (0,0,0)
+        audio: None
+
+    stimulus:
+        background: (0,0,0)
+        audio: None
+        stim_size: (1920 x 1200)
+        dots:
+            radius: 7
+            color: (255, 255, 255)
+            fill_prct: 15
+            velocity: 150
+            lifetime: 30
+
+    reinforcement:
+        background    : None
+        audio:
+            correct   : None
+            incorrect : None
+            invalid   : None
+    
+    intertrial:
+        background: (0,0,0)
+        audio: None
+
+        
+
+
+
+
+
+
+
 
 EVENT_FILES:
     events: 'event_all.txt'

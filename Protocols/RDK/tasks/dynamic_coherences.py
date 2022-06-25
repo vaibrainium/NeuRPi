@@ -251,21 +251,6 @@ class TrialManager():
         self.rolling_bias_index = 0
         self.stim_pars = {}
 
-
-    # RT = np.zeros(len(App['Coherences']));RT[:]=np.NaN
-    # psych_Right = np.zeros(len(App['Coherences']));
-    # psych_Left = np.zeros(len(App['Coherences']));
-    # psych = np.zeros(len(App['Coherences'])) + 0.5;     # chance performance
-    # tottrl_X = list(range(len(App['Coherences'])))
-    # tottrl_Y = np.zeros(len(App['Coherences']));
-    # RT_Y = np.zeros(len(App['Coherences']));
-    # Bias = 0      # Initiating for active bias correction at 0
-    # rolling_5minTrials = 0
-    # rolling_5minTimer = time.time()
-    # previous_attempts = 0
-
-
-
     def get_full_coherences(self):
         """
         Generates full direction-wise coherence array from input coherences list.
