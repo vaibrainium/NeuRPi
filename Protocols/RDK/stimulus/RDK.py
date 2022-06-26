@@ -13,9 +13,6 @@ class RDK(Display):
                 if isinstance(val, dict):
                     pass
 
-        # self.reward_tone = self.
-
-
     def fixation(self, screen=0):
         self.screen[screen].fill(self.stim_config.fixation.background)
         self.screen[screen].fill(self.stim_config.fixation.background)

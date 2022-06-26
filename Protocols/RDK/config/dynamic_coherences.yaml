@@ -44,17 +44,18 @@ TASK_PARAMETERS:
 
     timings:
         fixation:
-            tag     : 'Mean fixation time in ms'
-            type    : 'int'
-            value   : 500
+            tag             : 'Mean fixation time in secs'
+            type            : 'int'
+            value           : 0.500
         stimulus:
-            tag     : 'Max stimulus time in ms'
-            type    : 'int'
-            value   : 2000
+            tag             : 'Minimum and Maximum stimulus time in secs'
+            type            : 'int'
+            max_viewing     : 60.000
+            min_viewing     : 0.3
         intertrial:
-            tag     : 'Inter-trial interval in ms'
-            type    : 'int'
-            mean    : 500
+            tag             : 'Inter-trial interval in secs'
+            type            : 'int'
+            mean            : 0.500
 
     feedback:
         correct:
@@ -65,8 +66,13 @@ TASK_PARAMETERS:
                 tag  : 'Audio feedback for correct trial'
                 type : 'tuple'
             time  :
-                tag  : 'Temporal delay feedback in ms'
+                tag  : 'Temporal delay feedback in secs'
                 type : 'int'
+                value: 0.500
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 0
+                power: 0
         incorrect:
             visual:
                 tag  : 'Visual feedback for correct trial'
@@ -75,8 +81,13 @@ TASK_PARAMETERS:
                 tag  : 'Audio feedback for correct trial'
                 type : 'tuple'
             time  :
-                tag  : 'Temporal delay feedback in ms'
+                tag  : 'Temporal delay feedback in secs'
                 type : 'int'
+                value: 1.000
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 25
+                power: -4
         noresponse:
             visual:
                 tag  : 'Visual feedback for correct trial'
@@ -85,8 +96,13 @@ TASK_PARAMETERS:
                 tag  : 'Audio feedback for correct trial'
                 type : 'tuple'
             time  :
-                tag  : 'Temporal delay feedback in ms'
+                tag  : 'Temporal delay feedback in secs'
                 type : 'int'
+                value: 0
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 25
+                power: -4
 
     training_type:
         value: 1
@@ -95,10 +111,9 @@ TASK_PARAMETERS:
             1                  : 'Active-Passive'
             2                  : 'Active-Only'
         active_passive:
-            tag                : 'Parameters for Active-Passive Training (time in ms)'
-            reaction_time_mu   : 2000
-            reaction_time_sigma: 0
-            reaction_time_max  : 60000
+            tag                : 'Parameters for Active-Passive Training (time in secs)'
+            passive_rt_mu   : 60.000
+            passive_rt_sigma: 0.6
 
 
 
