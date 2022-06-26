@@ -79,13 +79,10 @@ class TrialConstruct(object):
         """
         while True:
             self.response_block.wait()
-            # print('Entered')
             self.response = np.NAN
             self.response_time = np.NAN
-            # print('Resetted')
-
             start = time.time()
-            wait_time = self.trigger['duration'] / 1000  # Converting wait time from ms to sec
+            wait_time = self.trigger['duration']  # Converting wait time from ms to sec
             try:
                 # When agent is not supposed to respond
                 if self.trigger['type'] == 'NoGO':
@@ -99,9 +96,20 @@ class TrialConstruct(object):
                     while time.time() - start < wait_time:
                         if not response_handler.empty():
                             self.response = response_handler.get()
-                            self.response_time = time.time() - start
-                            response_handler.queue.clear()
-                            break
+                            if self.response in self.trigger['directions']:
+                                self.response_time = time.time() - start
+                                response_handler.queue.clear()
+                                break
+
+                # When agent Must respond
+                elif self.trigger['type'] == 'MustGO':
+                    while True:
+                        if not response_handler.empty():
+                            self.response = response_handler.get()
+                            if self.response in self.trigger['directions']:
+                                self.response_time = time.time() - start
+                                response_handler.queue.clear()
+                                break
 
             except:
                 raise Warning("Problem with response monitoring")
@@ -111,32 +119,58 @@ class TrialConstruct(object):
                 self.stage_block.set()
 
 
-    def fixation(self, duration=500, *args, **kwargs):
+    def fixation(self, duration=0.500, directions=[-1,0,1], *args, **kwargs):
         """
         Fixation stage making sure no trigger is set during fixation times.
         Arguments:
-            duration (float): Fixation phase duration in ms
+            duration (float): Fixation phase duration in secs
+            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put('initiate_fixation')
-        self.trigger = {'type': 'NoGO', 'duration': duration}
+        self.stim_handler.put(('initiate_fixation'))
+        self.trigger = {'type': 'NoGO', 'duration': duration, 'directions': directions}
         self.response_block.set()
 
-    def stimulus_rt(self, duration=2000, *args, **kwargs):
+    def stimulus_rt(self, duration=2.000, directions=[-1,1], min_viewing_duration = 0, *args, **kwargs):
         """
         Show stimulus and wait for response trigger on target/distractor input
         Arguments:
-            duration (float): Max stimulus_rt phase duration in ms
+            duration (float): Max stimulus_rt phase duration in secs
+            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put('initiate_stimulus')
-        self.trigger = {'type': 'GO', 'duration': duration}
+        self.stim_handler.put(('initiate_stimulus'))
+        # Implement minimum stimulus viewing time by not validating responses during this period
+        self.trigger = {'type': 'GO', 'duration': duration-min_viewing_duration, 'directions': directions}
+        threading.Timer(min_viewing_duration, self.response_block.set).start()
+
+    def reinforcement(self, outcome=None, duration=0.500, *args, **kwargs):
+        """
+        Give audio and/or visual reinforcement
+        Arguments:
+            type (str): Correct, Incorrect or Invalid
+            duration (float): Reinforcement display phase duration in secs
+        """
+        # Clear the event lock -> defaults to event: false
+        self.stage_block.clear()
+        self.stim_handler.put(('initiate_reinforcement', outcome))
+        threading.Timer(duration, self.stage_block.set).start()
+
+    def must_respond(self, directions, *args, **kwargs):
+        """
+        Give audio and/or visual reinforcement
+        Arguments:
+            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
+        """
+        # Clear the event lock -> defaults to event: false
+        self.stage_block.clear()
+        self.trigger = {'type': 'MustGO', 'duration': 0, 'directions': directions}
         self.response_block.set()
 
 
-    def intertrial(self, duration=1000, *args, **kwargs):
+    def intertrial(self, duration=1.000, *args, **kwargs):
         """
         Stage 3: Inter-trial Interval.
         Arguments:
@@ -145,7 +179,6 @@ class TrialConstruct(object):
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.stim_handler.put('initiate_intertrial')
-        duration = duration/1000  # Converting duration from ms to sec
         # Setting timer to trigger stage_block event after defined inter-trial interval
         threading.Timer(duration, self.stage_block.set).start()
 

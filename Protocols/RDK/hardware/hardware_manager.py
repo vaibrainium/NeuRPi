@@ -36,9 +36,9 @@ class HardwareManager(Arduino, GPIO):
         Returns:
             lick (int): Lick direction.
                         {1: Left Spout Licked,
-                         -1: Left Spout Free
-                         2: Right Spout Licked,
-                         -2: Right Spout Free}
+                         -2: Left Spout Free
+                         1: Right Spout Licked,
+                         2: Right Spout Free}
         """
         lick = None
         message = self.hardware['Primary'].read()
