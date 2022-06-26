@@ -3,7 +3,7 @@ HARDWARE:
         Primary:
             connection:
                 port    : "COM7"
-                baudrate: 9600
+                baudrate: None
                 timeout : None
             tag: "[Lick, Reward]"
     GPIO:
@@ -110,33 +110,37 @@ STIMULUS:
         flags: pygame.DOUBLEBUF
 
     audio:
-
+        tag: 'Source path for audion stimulus'
+        fixation_onset   : None
+        stimulus_onset   : None
+        reinforcement_onset:
+            correct        : None
+            incorrect      : None
+            invalid        : None
+        intertrial_onset : None
 
     fixation:
         background: (0,0,0)
-        audio: None
+        audio: True
 
     stimulus:
-        background: (0,0,0)
-        audio: None
-        stim_size: (1920 x 1200)
+        background : (0,0,0)
+        audio      : False
+        stim_size  : (1920 x 1200)
         dots:
-            radius: 7
-            color: (255, 255, 255)
-            fill_prct: 15
-            velocity: 150
-            lifetime: 30
+            radius    : 7
+            color     : (255, 255, 255)
+            fill_prct : 15
+            velocity  : 150
+            lifetime  : 30
 
     reinforcement:
-        background    : None
-        audio:
-            correct   : None
-            incorrect : None
-            invalid   : None
+        background : None
+        audio      : True
     
     intertrial:
-        background: (0,0,0)
-        audio: None
+        background : (50,50,50)
+        audio      : None
 
         
 
