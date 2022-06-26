@@ -5,10 +5,16 @@ class RDK(Display):
         super(RDK, self).__init__(config)
         self.stim_config = self.config.STIMULUS
         self._start()
-        self.load_audio()
+        self.load_audio(self.stim_config.audio)
 
-    def load_audio(self):
-        self.reward_tone = sef
+    def load_audio(self, path_dict):
+        for key, val in path_dict.items():
+            if key != 'tag':
+                if isinstance(val, dict):
+                    pass
+
+        # self.reward_tone = self.
+
 
     def fixation(self, screen=0):
         self.screen[screen].fill(self.stim_config.fixation.background)

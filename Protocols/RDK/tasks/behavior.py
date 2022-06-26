@@ -58,28 +58,26 @@ class Behavior():
             self.response = np.NAN
             self.response_time = np.NAN
             self.response_block.wait()
+
+            start = time.time()
+            wait_time = self.trigger['time'] / 1000  # Converting wait time from ms to sec
             try:
                 # When agent is not supposed to respond
                 if self.trigger['type'] == 'NoGO':
-                    start = time.time()
-                    wait_time = self.trigger['time']/1000  # Converting wait time from ms to sec
-                    while time.time() - start < wait_time:          # Waiting for response
+                    while time.time() - start < wait_time:
                         if not self.queue.empty():
                             self.queue.queue.clear()
                             self.monitor_response()
-                    # NoGo is complete. Set stage_block to proceed with the task
 
 
                 # When agent is supposed to respond
                 elif self.trigger['type'] == 'GO':
-                    start = time.time()
-                    wait_time = self.trigger['time'] / 1000  # Converting wait time from ms to sec
-                    while time.time() - start < wait_time:            # Waiting for response
+                    while time.time() - start < wait_time:
                         if not self.queue.empty():
                             self.response = self.queue.get()
                             self.response_time = time.time() - start
+                            self.queue.queue.clear()
                             break
-                    # Go is complete.
 
             except:
                 raise Warning("Problem with response monitoring")

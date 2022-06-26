@@ -32,8 +32,8 @@ class Display():
         pygame.event.pump()
 
     def _audio(self, tone):
-        if tone not None:
-        pygame.mixer.Sound.play(tone)
+        if tone:
+            pygame.mixer.Sound.play(tone)
 
     def _end(self):
         pygame.quit()
