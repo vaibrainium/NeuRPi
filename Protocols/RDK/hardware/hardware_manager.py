@@ -12,6 +12,7 @@ class HardwareManager(Arduino, GPIO):
         Arguments:
             config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
         """
+        self.calibration = None
         self.hardware = {}
         self.config = config
         self.init_hardware()
@@ -80,9 +81,9 @@ class HardwareManager(Arduino, GPIO):
 
     def reward_caliberation(self):
         """
-        Method to caliberate reward.
+        Method to calibrate reward.
         """
-        self.caliberation = 30
+        self.calibration = 30
         raise Warning("TODO: Not Implemented")
 
     def open_reward_indefinitely(self, spout):

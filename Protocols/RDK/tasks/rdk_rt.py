@@ -20,6 +20,7 @@ class RDK(TrialConstruct):
     * **stimulus** - Stimulus display
     * **reinforcement** - deliver reward/punishment
     * **intertrial** - waiting period between two trials
+
     Attributes:
         stim: Current stimulus (coherence)
         target ("L","R"): Correct response
@@ -115,6 +116,7 @@ class RDK(TrialConstruct):
     def run(self):
 
         while True:
+
             self.start = time.time()
             print(self.current_trial, time.time() - self.start, 'Fixation Started')
             data = self.fixation_stage()
@@ -131,6 +133,7 @@ class RDK(TrialConstruct):
 
             print(self.current_trial, time.time() - self.start, 'Intertrial Started')
             data = self.intertrial_stage()
+
 
     def fixation_stage(self):
         self.fixation_duration = self.task_pars.timings.fixation.value
@@ -245,7 +248,6 @@ class RDK(TrialConstruct):
         }
         self.stage_block.wait()
         return data
-
 
 
 if __name__ == '__main__':
