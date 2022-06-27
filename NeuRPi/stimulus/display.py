@@ -23,11 +23,14 @@ class Display():
     def _start(self):
         # Initialize all screens with black background
         pygame.init()
-        for screen in range(self.stim_config.display.num_screens):
-            exec(f"""self.screen[{screen}] = pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
-            exec(f"""self.screen[{screen}].fill((0,0,0))""")
+        if self.stim_config.display.num_screens == 1:
+            self.screen[0] = pygame.display.set_mode(self.window_size, flags=self.flags, display=self.stim_config.display.screen, vsync=self.vsync)
+            self.screen[0].fill((0,0,0))
+        else:
+            for screen in range(self.stim_config.display.num_screens):
+                exec(f"""self.screen[{screen}] = pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
+                exec(f"""self.screen[{screen}].fill((0,0,0))""")
         self._update()
-
         # Initialize and load audios
         pygame.mixer.init()
         self.load_audio(self.stim_config.audio)

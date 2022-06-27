@@ -121,6 +121,7 @@ TASK_PARAMETERS:
 STIMULUS:
     display:
         num_screens: 1
+        screen     : 0 
         window_size: (1920, 1280)
         frame_rate : 60
         flags      : pygame.DOUBLEBUF
@@ -135,6 +136,32 @@ STIMULUS:
             incorrect       : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
             invalid         : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
         intertrial_onset : False
+
+    courier_handle:
+        initiate_fixation: 
+            tag: 'Execution type for fixation'
+            function: fixation
+            is_static: 
+                video: True
+                audio: True
+        initiate_stimulus: stimulus
+            tag: 'Execution type for stimulus'
+            function: stimulus
+            is_static: 
+                video: False
+                audio: False
+        initiate_reinforcement: reinforcement
+            tag: 'Execution type for reinforcement'
+            function: reinforcement
+            is_static: 
+                video: False
+                audio: True
+        initiate_intertrial: intertrial
+            tag: 'Execution type for intertrial'
+            function: intertrial
+            is_static: 
+                video: True
+                audio: True
 
     fixation:
         background: (0,0,0)
