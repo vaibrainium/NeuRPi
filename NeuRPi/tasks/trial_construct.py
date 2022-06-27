@@ -143,7 +143,7 @@ class TrialConstruct(object):
         self.stage_block.clear()
         self.stim_handler.put(('initiate_stimulus'))
         # Implement minimum stimulus viewing time by not validating responses during this period
-        self.trigger = {'type': 'GO', 'duration': duration-min_viewing_duration, 'directions': directions}
+        self.trigger = {'type': 'GO', 'duration': duration - min_viewing_duration, 'directions': directions}
         threading.Timer(min_viewing_duration, self.response_block.set).start()
 
     def reinforcement(self, outcome=None, duration=0.500, *args, **kwargs):

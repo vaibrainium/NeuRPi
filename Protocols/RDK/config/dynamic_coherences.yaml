@@ -6,6 +6,7 @@ HARDWARE:
                 baudrate: None
                 timeout : None
             tag: "[Lick, Reward]"
+
     GPIO:
         Stim_Onset:
             pin: None
@@ -120,19 +121,20 @@ TASK_PARAMETERS:
 STIMULUS:
     display:
         num_screens: 1
-        window_size: (1920 x 1200)
-        frame_rate: 60
-        flags: pygame.DOUBLEBUF
+        window_size: (1920, 1280)
+        frame_rate : 60
+        flags      : pygame.DOUBLEBUF
+        vsync      : 0
 
     audio:
         tag: 'Source path for audion stimulus'
-        fixation_onset   : None
-        stimulus_onset   : None
+        fixation_onset   : fixationTone.wav # '/NeuRPi/stimulus/fixationTone.wav'
+        stimulus_onset   : False
         reinforcement_onset:
-            correct        : None
-            incorrect      : None
-            invalid        : None
-        intertrial_onset : None
+            correct         : correctTone.wav # '/NeuRPi/stimulus/correctTone.wav'
+            incorrect       : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
+            invalid         : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
+        intertrial_onset : False
 
     fixation:
         background: (0,0,0)
@@ -141,7 +143,7 @@ STIMULUS:
     stimulus:
         background : (0,0,0)
         audio      : False
-        stim_size  : (1920 x 1200)
+        stim_size  : (1920, 1280)
         dots:
             radius    : 7
             color     : (255, 255, 255)
@@ -151,11 +153,14 @@ STIMULUS:
 
     reinforcement:
         background : None
-        audio      : True
+        audio      : 
+            correct   : True
+            incorrect : True
+            invalid   : True
     
     intertrial:
         background : (50,50,50)
-        audio      : None
+        audio      : False
 
         
 
