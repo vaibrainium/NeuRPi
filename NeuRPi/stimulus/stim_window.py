@@ -1,20 +1,56 @@
-import pygame.mixer
+import threading
 from NeuRPi.stimulus.display import Display
 
 class StimWindow(Display):
+    """
+    Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
-    def __init__(self, config=None, courier=None):
+    """
+
+    def __init__(self, configuration=None, courier=None):
         self.courier = courier
         self.message = {}
         self.prev_message = {}
+        self.stim_block = threading.Event()
+        self.stim_block.clear()
+        self.stim_config = configuration.STIMULUS
+        super(StimWindow, self).__init__(configuration=configuration)
 
-        super(StimWindow, self).__init__(config)
-        self._start()
-        self.run()
+        self.thread = threading.Thread(target=self.get_messages(), args=[], daemon=True).start()
+
+    def get_messages(self):
+        while True:
+            if not self.courier.empty():
+                self.message = self.courier.get()
+                self.stim_block.set()
 
 
     def run(self):
-        raise Exception("Stimulus needs to be modified for each task")
+        # self.courier_map = self.stim_config.courier_handle
+        while True:
+            self.stim_block.wait()
+            self.stim_block.clear()
+            # properties = self.courier_map.get(self.message)
+            # function = eval('self.' + properties.function)
+            # function(is_static=properties.is_static)
+    #
+    # def exec_func(self, function=None, is_static={'video': False, 'audio': False}, screen=0, *args, **kwargs):
+    #     video, audio = [0, 0]
+    #     while not self.stim_block.is_set():
+    #         if not is_static['video'] or video == 0:
+    #             video = 1
+    #             function(*args, **kwargs)
+    #             pass
+    #
+    #         if audio == 0:
+    #             # First time excecuting function?
+    #             if is_static['audio']:
+    #                 loops = 0
+    #             else:
+    #                 loops = -1  # If continuously play tone
+    #             self.audio['fixation_onset'].play(loops=loops)
+    #             pass
+
 
 
     # def fixation(self, screen=0):
@@ -55,8 +91,8 @@ class StimWindow(Display):
     #             raise Warning('intertrial_onset audio path not set')
 
 
-
 if __name__ == '__main__':
+
     import hydra
 
     path = '../../Protocols/RDK/config'
@@ -64,4 +100,4 @@ if __name__ == '__main__':
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
 
-    stim_window = StimWindow(config=config)
+    stim_window = StimWindow(configuration=config)

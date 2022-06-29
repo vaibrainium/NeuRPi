@@ -84,14 +84,27 @@ class TrialConstruct(object):
             start = time.time()
             wait_time = self.trigger['duration']  # Converting wait time from ms to sec
             try:
-                # When agent is not supposed to respond
-                if self.trigger['type'] == 'NoGO':
+                # When agent is supposed to fixate on one of the targets
+                if self.trigger['type'] == 'FIXATE_ON':
                     while time.time() - start < wait_time:
                         if not response_handler.empty():
-                            response_handler.queue.clear()
-                            self.monitor_response(response_handler)
+                            response = response_handler.get()
+                            if response not in self.trigger['targets']:
+                                self.response_time = time.time() - start
+                                response_handler.queue.clear()
+                                self.monitor_response(response_handler)
 
-                # When agent is supposed to respond
+                # When agent is supposed to wait on one of the targets
+                if self.trigger['type'] == 'WAIT_ON':
+                    while time.time() - start < wait_time:
+                        if not response_handler.empty():
+                            response = response_handler.get()
+                            if response not in self.trigger['targets']:
+                                self.response_time = time.time() - start
+                                response_handler.queue.clear()
+                                break
+
+                # When agent is supposed to go to one of the targets
                 elif self.trigger['type'] == 'GO':
                     while time.time() - start < wait_time:
                         if not response_handler.empty():
@@ -102,11 +115,11 @@ class TrialConstruct(object):
                                 break
 
                 # When agent Must respond
-                elif self.trigger['type'] == 'MustGO':
+                elif self.trigger['type'] == 'MUST_GO':
                     while True:
                         if not response_handler.empty():
                             self.response = response_handler.get()
-                            if self.response in self.trigger['directions']:
+                            if self.response in self.trigger['targets']:
                                 self.response_time = time.time() - start
                                 response_handler.queue.clear()
                                 break
@@ -119,32 +132,58 @@ class TrialConstruct(object):
                 self.stage_block.set()
 
 
-    def fixation(self, duration=0.500, directions=[-1,0,1], *args, **kwargs):
+    def fixation(self, duration=0.500, targets=[np.NaN], *args, **kwargs):
         """
         Fixation stage making sure no trigger is set during fixation times.
         Arguments:
             duration (float): Fixation phase duration in secs
-            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
+            targets (list): Possible targets to wait_on. [-1: left, 0: center. 1: right, np.NaN: Null]
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.stim_handler.put(('initiate_fixation'))
-        self.trigger = {'type': 'NoGO', 'duration': duration, 'directions': directions}
+        self.trigger = {'type': 'FIXATE_ON', 'targets': targets, 'duration': duration}
         self.response_block.set()
 
-    def stimulus_rt(self, duration=2.000, directions=[-1,1], min_viewing_duration = 0, *args, **kwargs):
+    def stimulus_rt(self, duration=2.000, targets=[-1,1], min_viewing_duration = 0, *args, **kwargs):
         """
         Show stimulus and wait for response trigger on target/distractor input
         Arguments:
             duration (float): Max stimulus_rt phase duration in secs
-            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
+            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         self.stim_handler.put(('initiate_stimulus'))
         # Implement minimum stimulus viewing time by not validating responses during this period
-        self.trigger = {'type': 'GO', 'duration': duration - min_viewing_duration, 'directions': directions}
+        self.trigger = {'type': 'GO', 'targets': targets, 'duration': duration - min_viewing_duration}
         threading.Timer(min_viewing_duration, self.response_block.set).start()
+
+    def stimulus_delay(self, duration=2.000, targets=[np.NaN], *args, **kwargs):
+        """
+        Show stimulus and make sure subject doesn't respond (waits on target like fixation)
+        Arguments:
+            duration (float): Max stimulus_rt phase duration in secs
+            targets (list): Possible targets to wait_on during stimulus period. [-1: left, 0: center. 1: right, np.NaN: Null]
+        """
+        # Clear the event lock -> defaults to event: false
+        self.stage_block.clear()
+        self.stim_handler.put(('initiate_stimulus'))
+        # Implement minimum stimulus viewing time by not validating responses during this period
+        self.trigger = {'type': 'WAIT_ON', 'targets': targets, 'duration': duration}
+        self.response_block.set()
+
+    def response_window(self, targets, *args, **kwargs):
+        """
+        Response window for responding to one of the targets
+        Arguments:
+            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+        """
+        # Clear the event lock -> defaults to event: false
+        self.stage_block.clear()
+        self.stim_handler.put(('initiate_response_window'))
+        self.trigger = {'type': 'GO', 'targets': targets, 'duration': []}
+        self.response_block.set()
 
     def reinforcement(self, outcome=None, duration=0.500, *args, **kwargs):
         """
@@ -158,15 +197,16 @@ class TrialConstruct(object):
         self.stim_handler.put(('initiate_reinforcement', outcome))
         threading.Timer(duration, self.stage_block.set).start()
 
-    def must_respond(self, directions, *args, **kwargs):
+    def must_respond(self, targets, *args, **kwargs):
         """
-        Give audio and/or visual reinforcement
+        Must respond in one of the targets to proceed
         Arguments:
-            directions (list): Possible responses for type. [-1: left, 0: center. 1: right]
+            targets (list): Possible responses for type. [-1: left, 0: center. 1: right]
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.trigger = {'type': 'MustGO', 'duration': 0, 'directions': directions}
+        self.stim_handler.put(('initiate_must_respond'))
+        self.trigger = {'type': 'MUST_GO', 'targets': targets, 'duration': []}
         self.response_block.set()
 
 
