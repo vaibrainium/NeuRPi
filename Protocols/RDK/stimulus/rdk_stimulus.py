@@ -18,6 +18,13 @@ class RDKStimulus(StimWindow):
             properties = self.courier_map.get(self.message)
             function = eval('self.' + properties.function)
 
+    def stimulus(self):
+        Dots.next_frame()
+        for dot in range(Dots.nDots):
+            pygame.draw.circle(screen, Dots.color, (int(Dots.x[dot]), int(Dots.y[dot])), Dots.radius)
+
+        fps = font.render(str(int(fpsClock.get_fps())), True, pygame.Color('white'))
+        
 
 
 
