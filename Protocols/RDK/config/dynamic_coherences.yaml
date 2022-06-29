@@ -127,69 +127,141 @@ STIMULUS:
         flags      : pygame.DOUBLEBUF
         vsync      : 0
 
-    audio:
-        tag: 'Source path for audion stimulus'
-        fixation_onset   : fixationTone.wav # '/NeuRPi/stimulus/fixationTone.wav'
-        stimulus_onset   : False
-        reinforcement_onset:
-            correct         : correctTone.wav # '/NeuRPi/stimulus/correctTone.wav'
-            incorrect       : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
-            invalid         : incorrectTone.wav # '/NeuRPi/stimulus/incorrectTone.wav'
-        intertrial_onset : False
+    source_paths:
+        tag: 'Source path for all audio-video stimulus, if needed'
+        type: list
+        video: False
+        audio:
+            fixation_onset   : [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
+            stimulus_onset   : False
+            reinforcement_onset:
+                correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
+                incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+                invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+            intertrial_onset : False
 
     courier_handle:
+        tag:    'Instruction on how to handle few basic and other custom messages.
+                Format: 
+                    tag (str):  what each message mean, 
+                    function (obj): which function to execute, 
+                    visual:
+                        need_update (bool): Need to update visual?
+                        is_static (bool): Is update static or in loop with provided frame rate?
+                        properties (dict): Optional parameters for update
+                    audio:
+                        need_update (bool): Need to update audio?
+                        is_static (bool): Is update static or in loop?  
+                        properties (dict): Optional parameters for update
+                '
+
         initiate_fixation: 
-            tag: 'Execution type for fixation'
+            tag: 'Execution type for fixation window'
             function: fixation
-            is_static: 
-                video: True
-                audio: True
-        initiate_stimulus: stimulus
-            tag: 'Execution type for stimulus'
+            visual: 
+                need_update: True
+                is_static: True
+                properties:
+                    load: 
+                    generate:
+                        background : (0,0,0)
+            audio:
+                need_update: True
+                is_static: True
+                properties: 
+                    load: [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
+                    generate:
+
+        initiate_stimulus: 
+            tag: 'Execution type for stimulus window'
             function: stimulus
-            is_static: 
-                video: False
-                audio: False
-        initiate_reinforcement: reinforcement
-            tag: 'Execution type for reinforcement'
+            visual: 
+                need_update: True
+                is_static: True
+                properties:
+                    load: 
+                    generate:
+                        stim_size  : (1920, 1280)
+                        background : (0,0,0)
+                        dots:
+                            radius    : 7
+                            color     : (255, 255, 255)
+                            fill_prct : 15
+                            velocity  : 150
+                            lifetime  : 30
+            audio:
+                need_update: False
+                is_static: True
+                properties: 
+                    load: 
+                    generate:
+
+        initiate_response: 
+            tag: 'Execution type for response window'
+            function: response
+            visual: 
+                need_update: True
+                is_static: True
+                properties:
+                    load: 
+                    generate: 
+                        background : (0,0,0)
+            audio:
+                need_update: True
+                is_static: True
+                properties:
+                    load: 
+                    generate:
+
+        initiate_reinforcement: 
+            tag: 'Execution type for reinforcement window'
             function: reinforcement
-            is_static: 
-                video: False
-                audio: True
-        initiate_intertrial: intertrial
-            tag: 'Execution type for intertrial'
+            visual: 
+                need_update: False
+                is_static: True
+                properties: False
+            audio:
+                need_update: True
+                is_static: True
+                properties:
+                    load: 
+                        correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
+                        incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+                        invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+                    generate:
+
+        initiate_must_response: 
+            tag: 'Execution type for must respond window'
+            function: must_respond
+            visual: 
+                need_update: False
+                is_static: True
+                properties: False
+            audio:
+                need_update: False
+                is_static: True
+                properties:
+                    load: 
+                    generate:
+
+        initiate_intertrial:
+            tag: 'Execution type for intertrial window'
             function: intertrial
-            is_static: 
-                video: True
-                audio: True
+            visual: 
+                need_update: True
+                is_static: True
+                properties: 
+                    load: 
+                    generate:
+                        background : (50,50,50)
+            audio:
+                need_update: False
+                is_static: True
+                properties: 
+                    load: 
+                    generate:
 
-    fixation:
-        background: (0,0,0)
-        audio: True
-
-    stimulus:
-        background : (0,0,0)
-        audio      : False
-        stim_size  : (1920, 1280)
-        dots:
-            radius    : 7
-            color     : (255, 255, 255)
-            fill_prct : 15
-            velocity  : 150
-            lifetime  : 30
-
-    reinforcement:
-        background : None
-        audio      : 
-            correct   : True
-            incorrect : True
-            invalid   : True
-    
-    intertrial:
-        background : (50,50,50)
-        audio      : False
-
-        
+          
 
 
 

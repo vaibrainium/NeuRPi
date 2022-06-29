@@ -222,7 +222,7 @@ class RDK(TrialConstruct):
             }
         """
         # Agent must consume reward before proceeding
-        self.must_respond(direction=[self.target])
+        self.must_respond(targets=[self.target])
         data = {
             'DC_timestamp': datetime.datetime.now().isoformat(),
             'trial_num': self.current_trial,
