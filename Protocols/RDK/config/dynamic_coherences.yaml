@@ -121,24 +121,24 @@ TASK_PARAMETERS:
 STIMULUS:
     display:
         num_screens: 1
-        screen     : 0 
+        screen     : 1#0 
         window_size: (1920, 1280)
         frame_rate : 60
-        flags      : pygame.DOUBLEBUF
+        flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN
         vsync      : 0
 
-    source_paths:
-        tag: 'Source path for all audio-video stimulus, if needed'
-        type: list
-        video: False
-        audio:
-            fixation_onset   : [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
-            stimulus_onset   : False
-            reinforcement_onset:
-                correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
-                incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
-                invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
-            intertrial_onset : False
+    # source_paths:
+    #     tag: 'Source path for all audio-video stimulus, if needed'
+    #     type: list
+    #     video: False
+    #     audio:
+    #         fixation_onset   : [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
+    #         stimulus_onset   : False
+    #         reinforcement_onset:
+    #             correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
+    #             incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+    #             invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+    #         intertrial_onset : False
 
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
@@ -184,7 +184,7 @@ STIMULUS:
                         stim_size  : (1920, 1280)
                         background : (0,0,0)
                         dots:
-                            radius    : 7
+                            radius    : 15
                             color     : (255, 255, 255)
                             fill_prct : 15
                             velocity  : 150
@@ -219,7 +219,9 @@ STIMULUS:
             visual: 
                 need_update: False
                 is_static: True
-                properties: False
+                properties: 
+                    load:
+                    generate:
             audio:
                 need_update: True
                 is_static: True
@@ -236,7 +238,9 @@ STIMULUS:
             visual: 
                 need_update: False
                 is_static: True
-                properties: False
+                properties: 
+                    load: 
+                    generate:
             audio:
                 need_update: False
                 is_static: True
