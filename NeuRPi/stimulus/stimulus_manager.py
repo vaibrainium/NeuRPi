@@ -1,32 +1,41 @@
+import threading
+from queue import Queue
+from omegaconf import OmegaConf, DictConfig
 import pygame
-from queue import Queue, Empty
-from omegaconf import DictConfig, OmegaConf
 
-
-class Display():
+class StimulusManager():
     """
-    Base class for video stimulus display. Defines display properties.
+    Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
+
     """
 
-    def __init__(self, configuration=None):
-        """
-        Inputs configuration file
-        """
+    def __init__(self, configuration=None, courier=None):
+        self.courier = courier
+        self.message = {}
+        self.render_block = threading.Event()
+        self.render_block.clear()
+        self.frame_queue_size = 100
+        self.frame_queue = Queue(maxsize=self.frame_queue_size)
+
         self.stim_config = configuration.STIMULUS
+        self.courier_map = self.stim_config.courier_handle
         self.window_size = eval(self.stim_config.display.window_size)
+
+        self.pygame = pygame
         self.frame_rate = self.stim_config.display.frame_rate
         self.flags = eval(self.stim_config.display.flags)  # Converting flags from string to method name
         self.vsync = self.stim_config.display.vsync
-        self.pygame = pygame
         self.clock = self.pygame.time.Clock()
         self.screen = {}
 
         self.audio = {}
-        self.gen_visual = {}
-        self._start()
+        self.video = {}
+        self.start()
 
+        self.thread = threading.Thread(target=self.render_visual, args=[], daemon=False).start()
+        self.courier_manager()
 
-    def _start(self):
+    def start(self):
         # Initialize all screens with black background
         self.pygame.init()
         self.pygame.mixer.init()
@@ -42,7 +51,7 @@ class Display():
                 exec(
                     f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
                 exec(f"""self.screen[{screen}].fill((0,0,0))""")
-        self._update()
+        self.update()
 
         self.gather_media()
 
@@ -101,14 +110,59 @@ class Display():
                 finally:
                     self.audio[key] = temp_list
 
-    def _update(self):
+    def courier_manager(self):
+        properties = OmegaConf.create({'visual': {'is_static': False}})
+        while 1:
+            if not self.courier.empty():
+                (message, arguments) = self.courier.get()
+                properties = self.courier_map.get(message)
+                function = eval('self.' + properties.function)
+                try:
+                    function(arguments)
+                except:
+                    raise Warning(f'Unable to process {function}')
+
+                if properties.visual.need_update:
+                    self.frame_queue.queue.clear()
+                if properties.visual.update_function:
+                    update_function = eval('self.' + properties.visual.update_function)
+
+            if not properties.visual.is_static:
+                try:
+                    if self.frame_queue.qsize() < self.frame_queue_size*0.2:
+                        for _ in range(self.frame_queue_size*70):
+                            (func, pars, screen) = update_function()
+                            self.frame_queue.put([func, pars, screen])
+                except:
+                    raise Warning(f'Failed to update visual for {message}')
+
+    def render_visual(self):
+        while 1:
+            (func, screen, pars) = self.frame_queue.get()
+            try:
+                func(screen=screen, pars=pars)
+            except:
+                raise Warning(f'Unable to process {func}')
+            if self.stim_config.display.show_fps:
+                fps = self.font.render(str(int(self.clock.get_fps())), 1, pygame.Color("coral"))
+                self.screen[screen].blit(fps, (1900, 1000))
+
+            self.update()
+
+
+    def update(self):
         self.pygame.display.update()
         self.clock.tick(self.frame_rate)
         self.pygame.event.pump()
 
-    def _display_fps(self, screen):
-        fps = self.font.render(str(int(self.clock.get_fps())), 1, pygame.Color("coral"))
-        self.screen[screen].blit(fps, (1900, 1000))
 
-    def _end(self):
-        self.pygame.quit()
+if __name__ == '__main__':
+
+    import hydra
+
+    path = '../../Protocols/RDK/config'
+    filename = 'dynamic_coherences'
+    hydra.initialize(version_base=None, config_path=path)
+    config = hydra.compose(filename, overrides=[])
+
+    stim_window = StimulusManager(configuration=config)

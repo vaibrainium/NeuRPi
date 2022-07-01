@@ -127,19 +127,6 @@ STIMULUS:
         flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN
         vsync      : 0
 
-    # source_paths:
-    #     tag: 'Source path for all audio-video stimulus, if needed'
-    #     type: list
-    #     video: False
-    #     audio:
-    #         fixation_onset   : [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
-    #         stimulus_onset   : False
-    #         reinforcement_onset:
-    #             correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
-    #             incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
-    #             invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
-    #         intertrial_onset : False
-
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
                 Format: 
@@ -157,10 +144,11 @@ STIMULUS:
 
         initiate_fixation: 
             tag: 'Execution type for fixation window'
-            function: fixation
+            function: initiate_fixation
             visual: 
                 need_update: True
                 is_static: True
+                update_function: next_frame_fixation
                 properties:
                     load: 
                     generate:
@@ -168,16 +156,18 @@ STIMULUS:
             audio:
                 need_update: True
                 is_static: True
+                update_function: 
                 properties: 
                     load: [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
                     generate:
 
         initiate_stimulus: 
             tag: 'Execution type for stimulus window'
-            function: stimulus
+            function: initiate_stimulus
             visual: 
                 need_update: True
-                is_static: True
+                is_static: False
+                update_function: next_frame_stimulus
                 properties:
                     load: 
                     generate:
@@ -191,17 +181,19 @@ STIMULUS:
                             lifetime  : 30
             audio:
                 need_update: False
-                is_static: True
+                is_static: False
+                update_function: 
                 properties: 
                     load: 
                     generate:
 
         initiate_response: 
             tag: 'Execution type for response window'
-            function: response
+            function: initiate_response
             visual: 
                 need_update: True
                 is_static: True
+                update_function: next_frame_response
                 properties:
                     load: 
                     generate: 
@@ -209,22 +201,25 @@ STIMULUS:
             audio:
                 need_update: True
                 is_static: True
+                update_function: 
                 properties:
                     load: 
                     generate:
 
         initiate_reinforcement: 
             tag: 'Execution type for reinforcement window'
-            function: reinforcement
+            function: initiate_reinforcement
             visual: 
                 need_update: False
-                is_static: True
+                is_static: False
+                update_function: next_frame_reinforcement
                 properties: 
                     load:
                     generate:
             audio:
                 need_update: True
                 is_static: True
+                update_function: 
                 properties:
                     load: 
                         correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
@@ -234,26 +229,29 @@ STIMULUS:
 
         initiate_must_response: 
             tag: 'Execution type for must respond window'
-            function: must_respond
+            function: initiate_must_respond
             visual: 
                 need_update: False
                 is_static: True
+                update_function: next_frame_must_response
                 properties: 
                     load: 
                     generate:
             audio:
                 need_update: False
                 is_static: True
+                update_function: 
                 properties:
                     load: 
                     generate:
 
         initiate_intertrial:
             tag: 'Execution type for intertrial window'
-            function: intertrial
+            function: initiate_intertrial
             visual: 
                 need_update: True
                 is_static: True
+                update_function: next_frame_next_frame
                 properties: 
                     load: 
                     generate:
@@ -261,6 +259,7 @@ STIMULUS:
             audio:
                 need_update: False
                 is_static: True
+                update_function: 
                 properties: 
                     load: 
                     generate:

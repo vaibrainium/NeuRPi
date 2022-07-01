@@ -141,7 +141,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_fixation'))
+        arguments = {}
+        self.stim_handler.put(('initiate_fixation', arguments))
         self.trigger = {'type': 'FIXATE_ON', 'targets': targets, 'duration': duration}
         self.response_block.set()
 
@@ -154,7 +155,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_stimulus'))
+        arguments = {}
+        self.stim_handler.put(('initiate_stimulus', arguments))
         # Implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {'type': 'GO', 'targets': targets, 'duration': duration - min_viewing_duration}
         threading.Timer(min_viewing_duration, self.response_block.set).start()
@@ -168,7 +170,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_stimulus'))
+        arguments = {}
+        self.stim_handler.put(('initiate_stimulus', arguments))
         # Implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {'type': 'WAIT_ON', 'targets': targets, 'duration': duration}
         self.response_block.set()
@@ -181,7 +184,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_response_window'))
+        arguments = {}
+        self.stim_handler.put(('initiate_response_window', arguments))
         self.trigger = {'type': 'GO', 'targets': targets, 'duration': []}
         self.response_block.set()
 
@@ -194,7 +198,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_reinforcement', outcome))
+        arguments = {'outcome': outcome}
+        self.stim_handler.put(('initiate_reinforcement', arguments))
         threading.Timer(duration, self.stage_block.set).start()
 
     def must_respond(self, targets, *args, **kwargs):
@@ -205,7 +210,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put(('initiate_must_respond'))
+        arguments = {}
+        self.stim_handler.put(('initiate_must_respond', arguments))
         self.trigger = {'type': 'MUST_GO', 'targets': targets, 'duration': []}
         self.response_block.set()
 
@@ -218,7 +224,8 @@ class TrialConstruct(object):
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stim_handler.put('initiate_intertrial')
+        pars = {}
+        self.stim_handler.put(('initiate_intertrial', pars))
         # Setting timer to trigger stage_block event after defined inter-trial interval
         threading.Timer(duration, self.stage_block.set).start()
 

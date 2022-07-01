@@ -1,0 +1,7 @@
+numpy~=1.23.0
+scipy~=1.8.1
+pyserial~=3.5
+pygame~=2.1.2
+omegaconf~=2.2.2
+setuptools~=60.2.0
+tables~=3.7.0
