@@ -9,6 +9,7 @@ window_size = (root.winfo_screenwidth(), root.winfo_screenheight())
 
 class RandomDotKinematogram(object):
     def __init__(self):
+        self.stimulus_size = (None, None)
         self.radius = 7
         self.color = (255, 255, 255)
         self.vel = 300
@@ -20,6 +21,7 @@ class RandomDotKinematogram(object):
         self.age = []
         self.theta = []
         self.randTheta = [0,45,90,135,180,225,270,315,360]
+        self.coherence = None
         self.cohDots = []
         self.noncohDots = []
         self.Xpath = np.array([])
@@ -32,7 +34,8 @@ class RandomDotKinematogram(object):
 
     def new_stimulus(self, pars):
         self.rdk_generator.seed(pars['seed'])
-        self.coherence = pars['dotCoherence']
+        self.coherence = pars['coherence']
+        self.stimulus_size = pars['stimulus_size']
         self.nDots = round((self.fill/100) * window_size[0] * window_size[1] / (np.pi * self.radius ** 2))
         self.x = self.rdk_generator.randint(window_size[0],size=self.nDots)
         self.y = self.rdk_generator.randint(window_size[1],size=self.nDots)
@@ -41,23 +44,23 @@ class RandomDotKinematogram(object):
         # self.theta = self.rdk_generator.choice(self.randTheta, size=self.nDots)     # Non coherent dots in one of 8 direction separated by 45 degrees
         self.cohDots = list(range(round(np.abs(self.coherence) * self.nDots / 100)))
         if not self.cohDots: self.noncohDots = list(range(self.nDots))        # If cohDots are empty all dots are non-coherent
-        else: self.noncohDots = list(range(self.cohDots[-1]+1,self.nDots))
-        self.theta[self.cohDots] = np.sign(pars['dotCoherence'])*90
+        else: self.noncohDots = list(range(self.cohDots[-1]+1, self.nDots))
+        self.theta[self.cohDots] = np.sign(pars['coherence'])*90
 
-    def moveDots(self,FrameRate=60):
+    def move_dots(self, frame_rate):
         self.x[self.age == self.lifetime] = self.rdk_generator.randint(window_size[0],size=np.count_nonzero(self.age == self.lifetime))
         self.y[self.age == self.lifetime] = self.rdk_generator.randint(window_size[1],size=np.count_nonzero(self.age == self.lifetime))
         self.age[self.age == self.lifetime] = 0
         # Accounting for boundaries
-        self.x[self.x >= window_size[0]] = 0
+        self.x[self.x >= self.stimulus_size[0]] = 0
         self.x[self.x < 0] = window_size[0]
-        self.y[self.y >= window_size[1]] = 0
+        self.y[self.y >= self.stimulus_size[1]] = 0
         self.y[self.y < 0] = window_size[1]
 
         # Moving dots one step a time
-        self.x = self.x + int(self.vel/FrameRate)*np.sin(np.deg2rad(self.theta))
-        self.y = self.y + int(self.vel/FrameRate)*np.cos(np.deg2rad(self.theta))
-        self.age = self.age+1
+        self.x = self.x + int(self.vel/frame_rate)*np.sin(np.deg2rad(self.theta))
+        self.y = self.y + int(self.vel/frame_rate)*np.cos(np.deg2rad(self.theta))
+        self.age += 1
 
     # def updateBurst(self, burstCoherence):
     #     # Congruent burst - high coherence

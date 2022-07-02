@@ -121,11 +121,12 @@ TASK_PARAMETERS:
 STIMULUS:
     display:
         num_screens: 1
-        screen     : 1#0 
+        screen     : 1 #0 
         window_size: (1920, 1280)
-        frame_rate : 60
-        flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN
-        vsync      : 0
+        frame_rate : 58
+        flags      : pygame.DOUBLEBUF | pygame.constants.SCALED # | pygame.FULLSCREEN
+        vsync      : False
+        show_fps   : True
 
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
@@ -158,7 +159,7 @@ STIMULUS:
                 is_static: True
                 update_function: 
                 properties: 
-                    load: [fixationTone.wav] # '/NeuRPi/stimulus/fixationTone.wav'
+                    load: ['audio/fixationTone.wav']
                     generate:
 
         initiate_stimulus: 
@@ -171,7 +172,7 @@ STIMULUS:
                 properties:
                     load: 
                     generate:
-                        stim_size  : (1920, 1280)
+                        stimulus_size  : (1920, 1280)
                         background : (0,0,0)
                         dots:
                             radius    : 15
@@ -222,9 +223,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : [correctTone.wav] # '/NeuRPi/stimulus/correctTone.wav'
-                        incorrect       : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
-                        invalid         : [incorrectTone.wav] # '/NeuRPi/stimulus/incorrectTone.wav'
+                        correct         : ['audio/correctTone.wav']
+                        incorrect       : ['audio/incorrectTone.wav']
+                        invalid         : ['audio/incorrectTone.wav']
                     generate:
 
         initiate_must_response: 

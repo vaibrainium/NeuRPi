@@ -186,21 +186,21 @@ class RDK(TrialConstruct):
             }
         """
         if np.isnan(self.response):  # Invalid Trial
-            self.reinforcement(outcome='Invalid', duration=self.task_pars.feedback.correct.time.value)
+            self.reinforcement(outcome='iInvalid', duration=self.task_pars.feedback.correct.time.value)
             self.valid, self.correct, self.correction_trial = [0, 0, 1]
             iti_decay = self.task_pars.feedback.invalid.intertrial
             self.intertrial_duration = self.task_pars.timings.intertrial + (
                         iti_decay.base * np.exp(iti_decay.power * self.task_pars.timings.stimulus.min_viewing))
 
         elif self.stim_pars['target'] != self.response:  # Incorrect Trial
-            self.reinforcement(outcome='Incorrect', duration=self.task_pars.feedback.correct.time.value)
+            self.reinforcement(outcome='incorrect', duration=self.task_pars.feedback.correct.time.value)
             self.valid, self.correct, self.correction_trial = [1, 0, 1]
             iti_decay = self.task_pars.feedback.incorrect.intertrial
             self.intertrial_duration = self.task_pars.timings.intertrial + (
                         iti_decay.base * np.exp(iti_decay.power * self.response_time))
 
         elif self.stim_pars['target'] == self.response:  # Correct Trial
-            self.reinforcement(outcome='Correct', duration=self.task_pars.feedback.correct.time.value)
+            self.reinforcement(outcome='correct', duration=self.task_pars.feedback.correct.time.value)
             if self.response == -1:  # Left Correct
                 self.hardware_manager.reward_left(volume=2)
             elif self.response == 1:  # Right Correct
