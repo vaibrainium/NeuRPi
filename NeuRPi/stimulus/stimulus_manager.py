@@ -2,6 +2,9 @@ import threading
 from queue import Queue
 from omegaconf import OmegaConf, DictConfig
 import pygame
+# import multiprocessing
+# from multiprocessing import Queue
+import time
 
 class StimulusManager():
     """
@@ -12,6 +15,8 @@ class StimulusManager():
     def __init__(self, configuration=None, courier=None):
         self.courier = courier
         self.message = {}
+
+        self.lock = threading.Lock()
         self.render_block = threading.Event()
         self.render_block.clear()
         self.frame_queue_size = 100
@@ -33,7 +38,8 @@ class StimulusManager():
         self.start()
 
         self.thread = threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-        self.courier_manager()
+        # multiprocessing.Process(target=self.render_visual, args=(self.frame_queue,)).start()
+        self.thread = threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
 
     def start(self):
         # Initialize all screens with black background
@@ -44,7 +50,7 @@ class StimulusManager():
 
         if self.stim_config.display.num_screens == 1:
             self.screen[0] = self.pygame.display.set_mode(self.window_size, flags=self.flags,
-                                                     display=eval(self.stim_config.display.screen), vsync=self.vsync)
+                                                     display=self.stim_config.display.screen, vsync=self.vsync)
             self.screen[0].fill((0, 0, 0))
         else:
             for screen in range(self.stim_config.display.num_screens):
@@ -111,48 +117,89 @@ class StimulusManager():
                     self.audio[key] = temp_list
 
     def courier_manager(self):
-        properties = OmegaConf.create({'visual': {'is_static': False}})
+        properties = OmegaConf.create({'visual': {'is_static': True}})
         while 1:
             if not self.courier.empty():
                 (message, arguments) = self.courier.get()
                 properties = self.courier_map.get(message)
                 function = eval('self.' + properties.function)
+                if properties.visual.update_function:
+                    update_function = eval('self.' + properties.visual.update_function)
+                else:
+                    update_function = ()
+
+                if properties.visual.need_update:
+                    print(message, 'Entered', properties.visual.need_update)
+                    self.lock.acquire()
+                    # self.frame_queue.queue.clear()
+                    self.lock.release()
                 try:
-                    function(arguments)
+                    if arguments:
+                        function(arguments)
+                    else:
+                        function()
                 except:
                     raise Warning(f'Unable to process {function}')
 
+            if not properties.visual.is_static and not self.frame_queue.full():
+                try:
+                    (func, pars, screen) = update_function()
+                    self.frame_queue.put([func, pars, screen])
+                except:
+                    print('Error occured here')
+                    raise Warning(f'Failed to update visual for {message}')
+
+
+    def courier_manager_old(self):
+        properties = OmegaConf.create({'visual': {'is_static': True}})
+        while 1:
+            if not self.courier.empty():
+                (message, arguments) = self.courier.get()
+                properties = self.courier_map.get(message)
+                function = eval('self.' + properties.function)
                 if properties.visual.need_update:
                     self.frame_queue.queue.clear()
+                    update_function = ()
                 if properties.visual.update_function:
                     update_function = eval('self.' + properties.visual.update_function)
+                try:
+                    if arguments:
+                        function(arguments)
+                    else:
+                        function()
+                except:
+                    raise Warning(f'Unable to process {function}')
 
             if not properties.visual.is_static:
                 try:
-                    if self.frame_queue.qsize() < self.frame_queue_size*0.2:
-                        for _ in range(self.frame_queue_size*70):
-                            (func, pars, screen) = update_function()
-                            self.frame_queue.put([func, pars, screen])
+                    while self.frame_queue.qsize() < self.frame_queue_size*0.8:# or self.courier.empty():
+                        (func, pars, screen) = update_function()
+                        self.frame_queue.put([func, pars, screen])
                 except:
                     raise Warning(f'Failed to update visual for {message}')
 
+
     def render_visual(self):
         while 1:
-            (func, screen, pars) = self.frame_queue.get()
-            try:
-                func(screen=screen, pars=pars)
-            except:
-                raise Warning(f'Unable to process {func}')
-            if self.stim_config.display.show_fps:
-                fps = self.font.render(str(int(self.clock.get_fps())), 1, pygame.Color("coral"))
-                self.screen[screen].blit(fps, (1900, 1000))
+            if not self.frame_queue.empty():
+                (func, pars, screen) = self.frame_queue.get()
+                self.lock.acquire()
+                self.draw(func,pars, screen)
+                self.lock.release()
+                self.clock.tick_busy_loop(self.frame_rate)
 
-            self.update()
-
+    def draw(self, func, pars, screen):
+        try:
+            func(pars=pars, screen=screen)
+        except:
+            raise Warning(f'Rendering error: Unable to process {func}')
+        if self.stim_config.display.show_fps:
+            fps = self.font.render(str(int(self.clock.get_fps())), 1, pygame.Color("coral"))
+            self.screen[screen].blit(fps, (1900, 1000))
+        self.update()
 
     def update(self):
         self.pygame.display.update()
-        self.clock.tick(self.frame_rate)
         self.pygame.event.pump()
 
 
