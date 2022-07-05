@@ -1,5 +1,4 @@
 import time
-
 from NeuRPi.stimulus.stimulus_manager import StimulusManager
 from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
 
@@ -14,9 +13,9 @@ class RDKManager(StimulusManager):
         self.courier_map = self.stim_config.courier_handle
 
     def initiate_fixation(self):
-        # if self.courier_map.initiate_fixation.visual.need_update:
-        #     self.screen[0].fill(eval(self.courier_map.initiate_fixation.visual.properties.generate.background))
-        #     self.update()
+        if self.courier_map.initiate_fixation.visual.need_update:
+            self.screen[0].fill(eval(self.courier_map.initiate_fixation.visual.properties.generate.background))
+            self.update()
         if self.courier_map.initiate_fixation.audio.need_update:
             self.pygame.mixer.stop()
             if self.courier_map.initiate_fixation.audio.is_static:
@@ -28,7 +27,7 @@ class RDKManager(StimulusManager):
 
     def next_frame_stimulus(self):
         if self.clock.get_fps():
-            self.RDK.move_dots(frame_rate=self.clock.get_fps()) #self.frame_rate)
+            self.RDK.move_dots(frame_rate=self.clock.get_fps())
         else:
             self.RDK.move_dots(frame_rate=self.frame_rate)
 
@@ -69,7 +68,7 @@ class RDKManager(StimulusManager):
     # def next_frame_reinforcement(self):
     #     return self.next_frame_stimulus()
 
-    def initiate_must_response(self, pars):
+    def initiate_must_respond(self, pars):
         pass
 
 
@@ -83,7 +82,7 @@ class RDKManager(StimulusManager):
                 self.audio['initiate_fixation'].play(self.courier_map.initiate_intertrial.audio.is_static - 1)
 
 
-    def next_frame_must_response(self, pars):
+    def next_frame_must_respond(self, pars):
         raise Warning('next_frame_must_response Function Not Implemented')
 
     def next_frame_intertrial(self, pars):
@@ -110,12 +109,16 @@ def main():
     courier = queue.Queue()
     a = RDKManager(configuration=config, courier=courier)
     while True:
-        # print('Starting Fixation')
+        print('Starting Fixation')
         message = "('initiate_fixation', {})"
         courier.put(eval(message))
         time.sleep(2)
-        # print('Starting Stimulus')
+        print('Starting Stimulus')
         message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
+        courier.put(eval(message))
+        time.sleep(2)
+        print('Starting Intertrial')
+        message = "('initiate_intertrial', {})"
         courier.put(eval(message))
         time.sleep(2)
         print('Loop complete')
