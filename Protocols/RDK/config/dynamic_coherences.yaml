@@ -124,7 +124,7 @@ STIMULUS:
         screen     : 1 #0 
         window_size: (1920, 1280)
         frame_rate : 58
-        flags      : pygame.DOUBLEBUF | pygame.constants.SCALED # | pygame.FULLSCREEN
+        flags      : pygame.DOUBLEBUF # | pygame.constants.SCALED # | pygame.FULLSCREEN
         vsync      : False
         show_fps   : True
 
@@ -178,7 +178,7 @@ STIMULUS:
                             radius    : 15
                             color     : (255, 255, 255)
                             fill_prct : 15
-                            velocity  : 150
+                            velocity  : 125
                             lifetime  : 30
             audio:
                 need_update: False
@@ -228,13 +228,13 @@ STIMULUS:
                         invalid         : ['audio/incorrectTone.wav']
                     generate:
 
-        initiate_must_response: 
+        initiate_must_respond: 
             tag: 'Execution type for must respond window'
             function: initiate_must_respond
             visual: 
-                need_update: False
+                need_update: True
                 is_static: True
-                update_function: next_frame_must_response
+                update_function: next_frame_must_respond
                 properties: 
                     load: 
                     generate:
@@ -252,11 +252,11 @@ STIMULUS:
             visual: 
                 need_update: True
                 is_static: True
-                update_function: next_frame_next_frame
+                update_function: next_frame_intertrial
                 properties: 
                     load: 
                     generate:
-                        background : (50,50,50)
+                        background : (100,100,100)
             audio:
                 need_update: False
                 is_static: True
