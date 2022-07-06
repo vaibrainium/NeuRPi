@@ -1,22 +1,23 @@
 import threading
 from queue import Queue as thread_queue
+import hydra
 from omegaconf import OmegaConf, DictConfig
 import pygame
 # import multiprocessing
-from multiprocessing import Process, Queue
+# from multiprocessing import Process, Queue
 import time
 
 
-class DisplayManager(Process):
+class DisplayManager():
     """
     Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
     """
 
-    def __init__(self, configuration=None):
+    def __init__(self, configuration=None, courier=None):
 
         super(DisplayManager, self).__init__()
-        self.courier = Queue()
+        self.courier = courier
         self.message = {}
 
         self.lock = threading.Lock()
@@ -42,6 +43,18 @@ class DisplayManager(Process):
 
         self.thread = threading.Thread(target=self.render_visual, args=[], daemon=False).start()
         self.thread = threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
+
+    def get_configuration(self, directory=None, filename=None):
+        '''
+        Getting configuration from respective config.yaml file.
+
+        Arguments:
+            directory (str): Path to configuration directory relative to root directory (as Protocols/../...)
+            filename (str): Specific file name of the configuration file
+        '''
+        path = '../../' + directory
+        hydra.initialize(version_base=None, config_path=path)
+        return hydra.compose(filename, overrides=[])
 
     def start(self):
         # Initialize all screens with black background
