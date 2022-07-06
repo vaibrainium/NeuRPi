@@ -1,5 +1,9 @@
+import time
 
 from Protocols.RDK.tasks.rt_task import rtTask
+from Protocols.RDK.stimulus.RDK_manager import RDKManager
+from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
+import multiprocessing
 import threading
 import socket
 import datetime
@@ -8,12 +12,15 @@ import sys
 class RigManager():
     def __init__(self):
 
+        self.stimulus_manager = None
         self.task = None
 
         # Creating events for event lock
         self.stage_block = threading.Event()  # is stage block finished?
         self.quitting = threading.Event()     # Quitting the task?
         self.running = threading.Event()      # Is task running or paused?
+
+        self.stimulus_handler = multiprocessing.Queue()
 
         # # Establishing connection
         # self.ip = self.get_ip()
@@ -106,20 +113,23 @@ class RigManager():
 
     def run_task(self, task_class, task_params):
         # Creating task object and setting running event
-        self.task = task_class(stage_block=self.stage_block, **task_params)
+        self.task = task_class(stage_block=self.stage_block, stimulus_handler=self.stimulus_handler, **task_params)
+        self.stimulus_manager = multiprocessing.Process(target=RDKManager, args=(self.stimulus_handler,), daemon=True)
+        self.stimulus_manager.start()
+        time.sleep(2)
         self.running.set()
 
-        # while True:
-        #     data = next(self.task.stages)()
-        #
-        #     self.stage_block.wait()
-        #
-        #     # Has trial ended?
-        #     if 'TRIAL_END' in data.keys():
-        #         self.running.wait()         # If paused, waiting for running event set?
-        #         if self.quitting.is_set():  # is quitting event set?
-        #             break                   # Won't quit if the task is paused.
-        #
+        while True:
+            data = next(self.task.stages)()
+
+            self.stage_block.wait()
+
+            # Has trial ended?
+            if 'TRIAL_END' in data.keys():
+                self.running.wait()         # If paused, waiting for running event set?
+                if self.quitting.is_set():  # is quitting event set?
+                    break                   # Won't quit if the task is paused.
+
         # self.task.stop()
 
 

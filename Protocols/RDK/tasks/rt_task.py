@@ -48,8 +48,9 @@ class rtTask(TrialConstruct):
         DC_timestamp = tables.StringCol(26)
         bailed = tables.Int32Col()
 
+    def __init__(self, trial_manager=TrainingDynamic, stimulus_handler=None, stage_block=None, **kwargs):
     # def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=RDKManager, stage_block=None, **kwargs):
-    def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=None, stage_block=None, **kwargs):
+    # def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=None, stage_block=None, **kwargs):
 
         """
         Args:
@@ -77,8 +78,7 @@ class rtTask(TrialConstruct):
         self.task_pars = self.config.TASK_PARAMETERS  # Get all task parameters
 
         # Event locks, triggers
-        self.stage_block = threading.Event()
-        self.stage_block.clear()
+        self.stage_block = stage_block
         self.response_block = threading.Event()
         self.response_block.clear()
 
@@ -92,10 +92,10 @@ class rtTask(TrialConstruct):
                                  response_block=self.response_block)
         self.behavior.start()
 
-        super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_handler=self.courier, response_handler=self.behavior.response_handler)
+        # super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_handler=self.stimulus_manager.courier, response_handler=self.behavior.response_handler)
+        super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_handler=stimulus_handler, response_handler=self.behavior.response_handler)
 
-
-        # Variable parameters
+    # Variable parameters
         self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
         self.target = None
         self.response = None
@@ -114,26 +114,34 @@ class rtTask(TrialConstruct):
         self.resetting_variables = [self.response, self.response_time]
 
         # This allows us to cycle through the task by just repeatedly calling self.stages.next()
-        stage_list = [self.fixation_stage, self.stimulus_stage, self.reinforcement_stage, self.intertrial_stage]
+        stage_list = [self.fixation_stage, self.stimulus_stage, self.reinforcement_stage, self.must_respond_to_proceed, self.intertrial_stage]
         self.num_stages = len(stage_list)
         self.stages = itertools.cycle(stage_list)
 
-        self.run()
-
-    def run(self):
-
-        while True:
-            self.start = time.time()
-            data = self.fixation_stage()
-
-            data = self.stimulus_stage()
-
-            data = self.reinforcement_stage()
-
-            data = self.intertrial_stage()
+    #     self.run()
+    #
+    # def run(self):
+    #
+    #     while True:
+    #         self.start = time.time()
+    #         data = self.fixation_stage()
+    #         self.stage_block.wait()
+    #
+    #         data = self.stimulus_stage()
+    #         self.stage_block.wait()
+    #
+    #         data = self.reinforcement_stage()
+    #         self.stage_block.wait()
+    #
+    #         data = self.must_respond_to_proceed()
+    #         self.stage_block.wait()
+    #
+    #         data = self.intertrial_stage()
+    #         self.stage_block.wait()
 
     def fixation_stage(self):
         print(1)
+        self.trial_timer = time.time()
         self.fixation_duration = self.task_pars.timings.fixation.value
         self.fixation(duration=self.fixation_duration)
         # Get current trial properties
@@ -144,7 +152,7 @@ class rtTask(TrialConstruct):
             'DC_timestamp': datetime.datetime.now().isoformat(),
             'trial_num': self.current_trial,
         }
-        self.stage_block.wait()
+        # self.stage_block.wait()
         return data
 
     def stimulus_stage(self):
@@ -171,9 +179,10 @@ class rtTask(TrialConstruct):
             'response': self.response,
             'response_time': self.response_time
         }
-        self.stage_block.wait()
+        # self.stage_block.wait()
         self.response_time = self.response_time + self.task_pars.timings.stimulus.min_viewing
-        print(f'Responded with {self.response} in {self.response_time} secs')
+        self.stage_block.wait()
+        print(f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}")
         return data
 
     def reinforcement_stage(self):
@@ -206,9 +215,28 @@ class rtTask(TrialConstruct):
             elif self.response == 1:  # Right Correct
                 self.hardware_manager.reward_left(volume=2)
             self.valid, self.correct, self.correction_trial = [1, 1, 0]
-            # self.must_respond(targets=[self.target])
+            # self.must_respond(targets=[self.stimulus_pars['target']])
             self.intertrial_duration = self.task_pars.timings.intertrial.value
-        self.stage_block.wait()
+        # self.stage_block.wait()
+        data = {
+            'DC_timestamp': datetime.datetime.now().isoformat(),
+            'trial_num': self.current_trial,
+        }
+        return data
+
+    def must_respond_to_proceed(self):
+        """
+        Returns:
+            data (dict):
+            {
+            }
+        """
+        print(4)
+        # Agent must consume reward before proceeding
+        if self.correct:
+            self.stage_block.clear()
+            self.must_respond(targets=[ self.stimulus_pars['target']])
+            # self.stage_block.wait()
         data = {
             'DC_timestamp': datetime.datetime.now().isoformat(),
             'trial_num': self.current_trial,
@@ -223,7 +251,7 @@ class rtTask(TrialConstruct):
             {
             }
         """
-        print(4)
+        print(5)
         self.intertrial(duration=self.intertrial_duration)
         self.trial_manager.update_EOT()
 
