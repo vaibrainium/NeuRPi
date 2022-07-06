@@ -1,8 +1,7 @@
 
 from NeuRPi.tasks.task import Task
 from Protocols.RDK.hardware.hardware_manager import HardwareManager
-from Protocols.RDK.tasks.behavior import Behavior
-import numpy as np
+from Protocols.RDK.hardware.behavior import Behavior
 import itertools
 import tables
 import threading

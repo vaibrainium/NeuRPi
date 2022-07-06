@@ -1,27 +1,29 @@
 import threading
-from queue import Queue
+from queue import Queue as thread_queue
 from omegaconf import OmegaConf, DictConfig
 import pygame
 # import multiprocessing
-# from multiprocessing import Queue
+from multiprocessing import Process, Queue
 import time
 
 
-class DisplayManager():
+class DisplayManager(Process):
     """
     Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
     """
 
-    def __init__(self, configuration=None, courier=None):
-        self.courier = courier
+    def __init__(self, configuration=None):
+
+        super(DisplayManager, self).__init__()
+        self.courier = Queue()
         self.message = {}
 
         self.lock = threading.Lock()
         self.render_block = threading.Event()
         self.render_block.clear()
         self.frame_queue_size = 100
-        self.frame_queue = Queue(maxsize=self.frame_queue_size)
+        self.frame_queue = thread_queue(maxsize=self.frame_queue_size)
 
         self.stim_config = configuration.STIMULUS
         self.courier_map = self.stim_config.courier_handle
@@ -38,8 +40,8 @@ class DisplayManager():
         self.video = {}
         self.start()
 
-        self.thread = threading.Thread(target=self.render_visual, args=[], daemon=True).start()
-        self.thread = threading.Thread(target=self.courier_manager, args=[], daemon=True).start()
+        self.thread = threading.Thread(target=self.render_visual, args=[], daemon=False).start()
+        self.thread = threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
 
     def start(self):
         # Initialize all screens with black background

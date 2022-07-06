@@ -1,7 +1,5 @@
-import numpy as np
 import threading
-from queue import Queue, Empty
-import time
+from queue import Queue
 
 
 class Behavior():
@@ -13,12 +11,12 @@ class Behavior():
         stage_block: Stage_Block event for controlling trial progression
     """
 
-    def __init__(self, hardware_manager=None, stage_block=None, response_block=None, response_handler=None):
+    def __init__(self, hardware_manager=None, stage_block=None, response_block=None):
         self.hardware_manager = hardware_manager
         self.stage_block = stage_block
         self.response_block = response_block
         self.trigger = {}
-        self.response_handler = response_handler
+        self.response_handler = Queue()
         self.response = None
         self.response_time = None
         self.thread = None

@@ -1,5 +1,5 @@
 
-from Protocols.RDK.tasks.dynamic_coherences import DynamicCoherences
+from Protocols.RDK.tasks.rt_task import rtTask
 import threading
 import socket
 import datetime
@@ -96,7 +96,7 @@ class RigManager():
     #     pass
 
     def command_start_session(self):
-        task_class = rttask()
+        task_class = rtTask
         value = {}
         threading.Thread(target=self.run_task, args=(task_class, value)).start()
 
@@ -109,18 +109,18 @@ class RigManager():
         self.task = task_class(stage_block=self.stage_block, **task_params)
         self.running.set()
 
-        while True:
-            data = next(self.task.stages)()
-
-            self.stage_block.wait()
-
-            # Has trial ended?
-            if 'TRIAL_END' in data.keys():
-                self.running.wait()         # If paused, waiting for running event set?
-                if self.quitting.is_set():  # is quitting event set?
-                    break                   # Won't quit if the task is paused.
-
-        self.task.stop()
+        # while True:
+        #     data = next(self.task.stages)()
+        #
+        #     self.stage_block.wait()
+        #
+        #     # Has trial ended?
+        #     if 'TRIAL_END' in data.keys():
+        #         self.running.wait()         # If paused, waiting for running event set?
+        #         if self.quitting.is_set():  # is quitting event set?
+        #             break                   # Won't quit if the task is paused.
+        #
+        # self.task.stop()
 
 
 
@@ -129,8 +129,6 @@ class RigManager():
 
 
 if __name__ == "__main__":
-
-
 
     a = RigManager()
     a.quitting.wait(timeout=1)

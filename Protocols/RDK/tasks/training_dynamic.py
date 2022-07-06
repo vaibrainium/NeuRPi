@@ -15,7 +15,7 @@ class TrainingDynamic():
         # Setting session parameters
         self.rolling_bias = np.zeros(self.task_pars.bias.passive_correction.rolling_window)  # Initializing at no bias
         self.rolling_bias_index = 0
-        self.stim_pars = {}
+        self.stimulus_pars = {}
 
     def get_full_coherences(self):
         """
@@ -78,23 +78,23 @@ class TrainingDynamic():
 
         # If correction trial and above passive correction threshold
         if correction_trial:
-            if self.stim_pars['coh'] > self.task_pars.bias.passive_correction.threshold:
+            if self.stimulus_pars['coherence'] > self.task_pars.bias.passive_correction.threshold:
                 # Drawing incorrect trial from normal distribution with high prob to direction
                 self.rolling_Bias = 0.5
                 temp_bias = np.sign(np.random.normal(np.mean(self.rolling_Bias), 0.5))
-                self.stim_pars['coh'] = int(-temp_bias) * np.abs(
-                    self.stim_pars['coh'])  # Repeat probability to opposite side of bias
+                self.stimulus_pars['coherence'] = int(-temp_bias) * np.abs(
+                    self.stimulus_pars['coherence'])  # Repeat probability to opposite side of bias
 
         else:
             # Generate new trial schedule if at the end of schedule
             if self.schedule_counter == 0 or self.schedule_counter == len(self.trials_schedule):
                 self.graduation_check()
                 self.generate_trials_schedule()
-            self.stim_pars = {'coh': self.trials_schedule[self.schedule_counter] + np.random.choice(
-                [-1e-2, 1e-2])}  # Adding small random coherence to distinguish 0.01 vs -0.01 coherence direction
-            self.stim_pars['target'] = np.sign(self.stim_pars['coh'])
+            # Adding small random coherence to distinguish 0.01 vs -0.01 coherence direction
+            self.stimulus_pars = {'coherence': self.trials_schedule[self.schedule_counter] + np.random.choice([-1e-2, 1e-2])}
+            self.stimulus_pars['target'] = np.sign(self.stimulus_pars['coherence'])
             self.schedule_counter += 1  # Incrementing within trial_schedule counter
-        # return self.stimulus
+        return self.stimulus_pars
 
     def update_EOT(self):
         """
