@@ -96,7 +96,7 @@ class RigManager():
     #     pass
 
     def command_start_session(self):
-        task_class = DynamicCoherences
+        task_class = rttask()
         value = {}
         threading.Thread(target=self.run_task, args=(task_class, value)).start()
 

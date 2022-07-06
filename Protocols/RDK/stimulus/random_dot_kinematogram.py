@@ -5,8 +5,6 @@ global window_size
 root = tkinter.Tk()
 window_size = (root.winfo_screenwidth(), root.winfo_screenheight())
 
-
-
 class RandomDotKinematogram(object):
     def __init__(self):
         self.stimulus_size = (None, None)

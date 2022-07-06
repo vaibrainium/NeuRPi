@@ -7,7 +7,7 @@ import pygame
 import time
 
 
-class StimulusManager():
+class DisplayManager():
     """
     Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
@@ -183,4 +183,4 @@ if __name__ == '__main__':
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
 
-    stim_window = StimulusManager(configuration=config)
+    display_window = DisplayManager(configuration=config)

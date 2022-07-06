@@ -12,7 +12,7 @@ from scipy.stats import pearson3
 import time
 
 
-class RDK(TrialConstruct):
+class rtTask(TrialConstruct):
     """
     Two-alternative force choice task for random dot motion tasks
     **Stages**
@@ -46,7 +46,7 @@ class RDK(TrialConstruct):
         DC_timestamp = tables.StringCol(26)
         bailed = tables.Int32Col()
 
-    def __init__(self, trial_manager=None, stage_block=None, **kwargs):
+    def __init__(self, trial_manager=None, stimulus_manager = None, stage_block=None, **kwargs):
 
         """
         Args:
@@ -80,9 +80,10 @@ class RDK(TrialConstruct):
         self.response_block.clear()
 
         self.stim_handler = queue.Queue()
-        super(RDK, self).__init__(self.stage_block, self.stim_handler)
+        super(rtTask, self).__init__(self.stage_block, self.stim_handler)
 
         # Initializing managers
+        self.stimulus_manager = stimulus_manager(self.config, self.courier, )
         self.trial_manager = trial_manager(self.task_pars)
         self.hardware_manager = HardwareManager(self.config)
         self.behavior = Behavior(hardware_manager=self.hardware_manager, stage_block=self.stage_block,
