@@ -1,9 +1,9 @@
 import time
-from NeuRPi.stimulus.stimulus_manager import StimulusManager
+from NeuRPi.stimulus.display_manager import DisplayManager
 from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
 
 
-class RDKManager(StimulusManager):
+class RDKManager(DisplayManager):
 
     def __init__(self, configuration=None, courier=None, stimulus=RandomDotKinematogram):
         self.config = configuration
@@ -65,8 +65,8 @@ class RDKManager(StimulusManager):
                 except:
                     raise Warning('invalid audio path not set')
 
-    # def next_frame_reinforcement(self):
-    #     return self.next_frame_stimulus()
+    def next_frame_reinforcement(self):
+        return self.next_frame_stimulus()
 
     def initiate_must_respond(self, pars):
         pass
