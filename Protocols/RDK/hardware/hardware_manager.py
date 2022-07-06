@@ -12,7 +12,7 @@ class HardwareManager(Arduino, GPIO):
         Arguments:
             config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
         """
-        self.calibration = None
+        self.calibration = 0
         self.hardware = {}
         self.config = config
         self.init_hardware()
@@ -56,7 +56,7 @@ class HardwareManager(Arduino, GPIO):
 
         """
         open_time = self.vol_to_dur(volume)
-        raise Warning("Reward delivery needs to be implemented")
+        # raise Warning("Reward delivery needs to be implemented")
 
     def reward_right(self, volume):
         """
@@ -67,7 +67,7 @@ class HardwareManager(Arduino, GPIO):
 
         """
         open_duration = self.vol_to_dur(volume)
-        raise Warning("Reward delivery needs to be implemented")
+        # raise Warning("Reward delivery needs to be implemented")
 
     def vol_to_dur(self, volume):
         """
@@ -76,7 +76,7 @@ class HardwareManager(Arduino, GPIO):
         Arguments:
             volume (float): Amount of reward to be given in ml
         """
-        open_duration = self.caliberation * volume
+        open_duration = self.calibration * volume
         return open_duration
 
     def reward_caliberation(self):

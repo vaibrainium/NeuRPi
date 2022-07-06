@@ -31,7 +31,8 @@ class RandomDotKinematogram(object):
         self.lifetime = pars['lifetime']
 
     def new_stimulus(self, pars):
-        self.rdk_generator.seed(pars['seed'])
+        if 'seed' in pars:
+            self.rdk_generator.seed(pars['seed'])
         self.coherence = pars['coherence']
         self.stimulus_size = pars['stimulus_size']
         self.nDots = round((self.fill/100) * window_size[0] * window_size[1] / (np.pi * self.radius ** 2))
@@ -60,7 +61,7 @@ class RandomDotKinematogram(object):
         self.y = self.y + int(self.vel/frame_rate)*np.cos(np.deg2rad(self.theta))
         self.age += 1
 
-    # def updateBurst(self, burstCoherence):
+    # def update_burst(self, burstCoherence):
     #     # Congruent burst - high coherence
     #     if (np.sign(burstCoherence) == np.sign(self.coherence)) and (np.abs(burstCoherence) > np.abs(self.coherence)):
     #         Nchangedots = round(self.nDots*(np.abs(burstCoherence - self.coherence))/100)

@@ -1,15 +1,14 @@
 import time
 from NeuRPi.stimulus.display_manager import DisplayManager
-from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
-
+from multiprocessing import Process
 
 class RDKManager(DisplayManager):
 
-    def __init__(self, configuration=None, courier=None, stimulus=RandomDotKinematogram):
+    def __init__(self, configuration=None, stimulus=None):
+
         self.config = configuration
-        self.courier = courier
         self.RDK = stimulus()
-        super(RDKManager, self).__init__(configuration=configuration, courier=courier)
+        super(RDKManager, self).__init__(configuration=configuration)
         self.courier_map = self.stim_config.courier_handle
 
     def initiate_fixation(self):
