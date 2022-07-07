@@ -3,7 +3,7 @@ STIMULUS:
     display:
         num_screens: 1
         screen     : 1 #0 
-        window_size: (1920, 1280)
+        window_size: (1920, 1080)
         frame_rate : 58
         flags      : pygame.DOUBLEBUF # | pygame.constants.SCALED # | pygame.FULLSCREEN
         vsync      : False
@@ -53,7 +53,7 @@ STIMULUS:
                 properties:
                     load: 
                     generate:
-                        stimulus_size  : (1920, 1280)
+                        stimulus_size  : (1920, 1080)
                         background : (0,0,0)
                         dots:
                             radius    : 15
@@ -114,7 +114,7 @@ STIMULUS:
             function: initiate_must_respond
             visual: 
                 need_update: True
-                is_static: True
+                is_static: False
                 update_function: next_frame_must_respond
                 properties: 
                     load: 

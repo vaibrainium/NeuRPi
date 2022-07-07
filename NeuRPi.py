@@ -114,7 +114,8 @@ class RigManager():
     def run_task(self, task_class, task_params):
         # Creating task object and setting running event
         self.task = task_class(stage_block=self.stage_block, stimulus_handler=self.stimulus_handler, **task_params)
-        self.stimulus_manager = multiprocessing.Process(target=RDKManager, args=(self.stimulus_handler,), daemon=True)
+        stim_arguments = {'stimulus': RandomDotKinematogram, 'configuration': self.task.config, 'courier': self.stimulus_handler}
+        self.stimulus_manager = multiprocessing.Process(target=RDKManager, kwargs=stim_arguments, daemon=True)
         self.stimulus_manager.start()
         time.sleep(2)
         self.running.set()
