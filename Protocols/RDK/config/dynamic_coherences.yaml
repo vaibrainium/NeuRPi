@@ -2,7 +2,7 @@ HARDWARE:
     Arduino:
         Primary:
             connection:
-                port    : "COM7"
+                port    : "COM7"  # '/dev/ttyACM0'
                 baudrate: None
                 timeout : None
             tag: "[Lick, Reward]"
