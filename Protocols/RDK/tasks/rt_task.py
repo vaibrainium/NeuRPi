@@ -50,7 +50,6 @@ class rtTask(TrialConstruct):
 
     def __init__(self, trial_manager=TrainingDynamic, stimulus_handler=None, stage_block=None, **kwargs):
     # def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=RDKManager, stage_block=None, **kwargs):
-    # def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=None, stage_block=None, **kwargs):
 
         """
         Args:

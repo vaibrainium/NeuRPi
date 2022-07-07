@@ -5,11 +5,13 @@ from multiprocessing import Process
 
 class RDKManager(DisplayManager):
 
-    def __init__(self, courier=None):
+    def __init__(self, stimulus=None, configuration=None, courier=None):
 
-        # Get configuration for this task -> self.config
-        self.config = self.get_configuration(directory='Protocols/RDK/config', filename='stimulus.yaml')
-        self.RDK = RandomDotKinematogram()
+        self.config = configuration
+        # # Get configuration for this task -> self.config
+        # self.config = self.get_configuration(directory='Protocols/RDK/config', filename='stimulus.yaml')
+        self.RDK = stimulus() #RandomDotKinematogram()
+
         super(RDKManager, self).__init__(configuration=self.config, courier=courier)
         self.courier_map = self.stim_config.courier_handle
 
@@ -24,6 +26,7 @@ class RDKManager(DisplayManager):
 
     def initiate_stimulus(self, pars):
         pars['stimulus_size'] = eval(self.courier_map.initiate_stimulus.visual.properties.generate.stimulus_size)
+        print('New Stimulus Initiated')
         self.RDK.new_stimulus(pars)
 
     def next_frame_stimulus(self):
@@ -70,6 +73,9 @@ class RDKManager(DisplayManager):
         return self.next_frame_stimulus()
 
     def initiate_must_respond(self):
+        pass
+
+    def next_frame_must_respond(self):
         return self.next_frame_stimulus()
 
 
@@ -83,8 +89,6 @@ class RDKManager(DisplayManager):
                 self.audio['initiate_fixation'].play(self.courier_map.initiate_intertrial.audio.is_static - 1)
 
 
-    def next_frame_must_respond(self, pars):
-        raise Warning('next_frame_must_response Function Not Implemented')
 
     def next_frame_intertrial(self, pars):
         raise Warning('next_frame_intertrial Function Not Implemented')
