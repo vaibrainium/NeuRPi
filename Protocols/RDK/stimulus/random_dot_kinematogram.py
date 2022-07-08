@@ -1,9 +1,4 @@
 import numpy as np
-import tkinter
-
-global window_size
-root = tkinter.Tk()
-window_size = (root.winfo_screenwidth(), root.winfo_screenheight())
 
 class RandomDotKinematogram(object):
     def __init__(self):
@@ -35,9 +30,9 @@ class RandomDotKinematogram(object):
             self.rdk_generator.seed(pars['seed'])
         self.coherence = pars['coherence']
         self.stimulus_size = pars['stimulus_size']
-        self.nDots = round((self.fill/100) * window_size[0] * window_size[1] / (np.pi * self.radius ** 2))
-        self.x = self.rdk_generator.randint(window_size[0],size=self.nDots)
-        self.y = self.rdk_generator.randint(window_size[1],size=self.nDots)
+        self.nDots = round((self.fill/100) * self.stimulus_size[0] * self.stimulus_size[1] / (np.pi * self.radius ** 2))
+        self.x = self.rdk_generator.randint(self.stimulus_size[0],size=self.nDots)
+        self.y = self.rdk_generator.randint(self.stimulus_size[1],size=self.nDots)
         self.age = self.rdk_generator.randint(self.lifetime, size=self.nDots)
         self.theta = self.rdk_generator.randint(360, size=self.nDots)                 # Non coherent dots in all direction of 360 degrees
         # self.theta = self.rdk_generator.choice(self.randTheta, size=self.nDots)     # Non coherent dots in one of 8 direction separated by 45 degrees
@@ -47,14 +42,14 @@ class RandomDotKinematogram(object):
         self.theta[self.cohDots] = np.sign(pars['coherence'])*90
 
     def move_dots(self, frame_rate):
-        self.x[self.age == self.lifetime] = self.rdk_generator.randint(window_size[0],size=np.count_nonzero(self.age == self.lifetime))
-        self.y[self.age == self.lifetime] = self.rdk_generator.randint(window_size[1],size=np.count_nonzero(self.age == self.lifetime))
+        self.x[self.age == self.lifetime] = self.rdk_generator.randint(self.stimulus_size[0],size=np.count_nonzero(self.age == self.lifetime))
+        self.y[self.age == self.lifetime] = self.rdk_generator.randint(self.stimulus_size[1],size=np.count_nonzero(self.age == self.lifetime))
         self.age[self.age == self.lifetime] = 0
         # Accounting for boundaries
         self.x[self.x >= self.stimulus_size[0]] = 0
-        self.x[self.x < 0] = window_size[0]
+        self.x[self.x < 0] = self.stimulus_size[0]
         self.y[self.y >= self.stimulus_size[1]] = 0
-        self.y[self.y < 0] = window_size[1]
+        self.y[self.y < 0] = self.stimulus_size[1]
 
         # Moving dots one step a time
         self.x = self.x + int(self.vel/frame_rate)*np.sin(np.deg2rad(self.theta))

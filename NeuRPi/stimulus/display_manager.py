@@ -2,7 +2,6 @@ import threading
 from queue import Queue as thread_queue
 import hydra
 from omegaconf import OmegaConf, DictConfig
-import pygame
 # import multiprocessing
 # from multiprocessing import Process, Queue
 import time
@@ -17,6 +16,8 @@ class DisplayManager():
     def __init__(self, configuration=None, courier=None):
 
         super(DisplayManager, self).__init__()
+        import pygame
+
         self.courier = courier
         self.message = {}
 
@@ -181,7 +182,7 @@ class DisplayManager():
             raise Warning(f'Rendering error: Unable to process {func}')
 
         if self.stim_config.display.show_fps:
-            fps = self.font.render(str(int(self.clock.get_fps())), 1, pygame.Color("coral"))
+            fps = self.font.render(str(int(self.clock.get_fps())), 1, self.pygame.Color("coral"))
             self.screen[screen].blit(fps, (1900, 1000))
         self.update()
 
