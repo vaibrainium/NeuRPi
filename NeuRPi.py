@@ -1,15 +1,20 @@
+import datetime
+import multiprocessing
+import socket
+import sys
+import threading
 import time
 
-from Protocols.RDK.tasks.rt_task import rtTask
-from Protocols.RDK.stimulus.RDK_manager import RDKManager
 from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
-import multiprocessing
-import threading
-import socket
-import datetime
-import sys
+from Protocols.RDK.stimulus.RDK_manager import RDKManager
+from Protocols.RDK.tasks.rt_task import rtTask
 
-class RigManager():
+
+class RigManager:
+    """
+    Class for managing the Rig Manager
+    """
+
     def __init__(self):
 
         self.stimulus_manager = None
@@ -17,8 +22,8 @@ class RigManager():
 
         # Creating events for event lock
         self.stage_block = threading.Event()  # is stage block finished?
-        self.quitting = threading.Event()     # Quitting the task?
-        self.running = threading.Event()      # Is task running or paused?
+        self.quitting = threading.Event()  # Quitting the task?
+        self.running = threading.Event()  # Is task running or paused?
 
         self.stimulus_handler = multiprocessing.Queue()
 
@@ -27,7 +32,6 @@ class RigManager():
         # self.handshake()
 
         self.command_start_session()
-
 
     # def get_parameters(self, _dict, keys, default=None):
     #     for key in keys:
@@ -113,9 +117,19 @@ class RigManager():
 
     def run_task(self, task_class, task_params):
         # Creating task object and setting running event
-        self.task = task_class(stage_block=self.stage_block, stimulus_handler=self.stimulus_handler, **task_params)
-        stim_arguments = {'stimulus': RandomDotKinematogram, 'configuration': self.task.config, 'courier': self.stimulus_handler}
-        self.stimulus_manager = multiprocessing.Process(target=RDKManager, kwargs=stim_arguments, daemon=True)
+        self.task = task_class(
+            stage_block=self.stage_block,
+            stimulus_handler=self.stimulus_handler,
+            **task_params
+        )
+        stim_arguments = {
+            "stimulus": RandomDotKinematogram,
+            "configuration": self.task.config,
+            "courier": self.stimulus_handler,
+        }
+        self.stimulus_manager = multiprocessing.Process(
+            target=RDKManager, kwargs=stim_arguments, daemon=True
+        )
         self.stimulus_manager.start()
         time.sleep(2)
         self.running.set()
@@ -126,17 +140,12 @@ class RigManager():
             self.stage_block.wait()
 
             # Has trial ended?
-            if 'TRIAL_END' in data.keys():
-                self.running.wait()         # If paused, waiting for running event set?
+            if "TRIAL_END" in data.keys():
+                self.running.wait()  # If paused, waiting for running event set?
                 if self.quitting.is_set():  # is quitting event set?
-                    break                   # Won't quit if the task is paused.
+                    break  # Won't quit if the task is paused.
 
         # self.task.stop()
-
-
-
-
-
 
 
 if __name__ == "__main__":

@@ -1,13 +1,15 @@
 import threading
-from queue import Queue as thread_queue
-import hydra
-from omegaconf import OmegaConf, DictConfig
+
 # import multiprocessing
 # from multiprocessing import Process, Queue
 import time
+from queue import Queue as thread_queue
+
+import hydra
+from omegaconf import DictConfig, OmegaConf
 
 
-class DisplayManager():
+class DisplayManager:
     """
     Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
@@ -33,7 +35,9 @@ class DisplayManager():
 
         self.pygame = pygame
         self.frame_rate = self.stim_config.display.frame_rate
-        self.flags = eval(self.stim_config.display.flags)  # Converting flags from string to method name
+        self.flags = eval(
+            self.stim_config.display.flags
+        )  # Converting flags from string to method name
         self.vsync = self.stim_config.display.vsync
         self.clock = self.pygame.time.Clock()
         self.screen = {}
@@ -42,18 +46,18 @@ class DisplayManager():
         self.video = {}
         self.start()
 
-        self.thread = threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-        self.thread = threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
+        threading.Thread(target=self.render_visual, args=[], daemon=False).start()
+        threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
 
     def get_configuration(self, directory=None, filename=None):
-        '''
+        """
         Getting configuration from respective config.yaml file.
 
         Arguments:
             directory (str): Path to configuration directory relative to root directory (as Protocols/../...)
             filename (str): Specific file name of the configuration file
-        '''
-        path = '../../' + directory
+        """
+        path = "../../" + directory
         hydra.initialize(version_base=None, config_path=path)
         return hydra.compose(filename, overrides=[])
 
@@ -65,13 +69,18 @@ class DisplayManager():
         self.font = self.pygame.font.SysFont("Arial", 20)
 
         if self.stim_config.display.num_screens == 1:
-            self.screen[0] = self.pygame.display.set_mode(self.window_size, flags=self.flags,
-                                                          display=self.stim_config.display.screen, vsync=self.vsync)
+            self.screen[0] = self.pygame.display.set_mode(
+                self.window_size,
+                flags=self.flags,
+                display=self.stim_config.display.screen,
+                vsync=self.vsync,
+            )
             self.screen[0].fill((0, 0, 0))
         else:
             for screen in range(self.stim_config.display.num_screens):
                 exec(
-                    f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
+                    f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)"""
+                )
                 exec(f"""self.screen[{screen}].fill((0,0,0))""")
         self.update()
 
@@ -79,7 +88,7 @@ class DisplayManager():
 
     def gather_media(self):
         for key, val in self.stim_config.courier_handle.items():
-            if key not in ['tag', 'type']:
+            if key not in ["tag", "type"]:
                 # exec(f"self.{key} = dict()")
                 if val.visual.properties.load:
                     self.load_videos(key, val.audio.properties.load)
@@ -96,7 +105,7 @@ class DisplayManager():
                         pass
                         # temp_list.append(pygame.mixer.Sound(file))
                     except:
-                        raise Warning(f'Could not initialize {file} in {key2} in {key}')
+                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
                     finally:
                         self.audio[key][key2] = temp_list
         else:
@@ -106,7 +115,7 @@ class DisplayManager():
                     pass
                     # temp_list.append(pygame.mixer.Sound(file))
                 except:
-                    raise Warning(f'Could not initialize {file} in {key}')
+                    raise Warning(f"Could not initialize {file} in {key}")
                 finally:
                     self.audio[key] = temp_list
 
@@ -119,7 +128,7 @@ class DisplayManager():
                     try:
                         temp_list.append(self.pygame.mixer.Sound(file))
                     except:
-                        raise Warning(f'Could not initialize {file} in {key2} in {key}')
+                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
                     finally:
                         self.audio[key][key2] = temp_list
         else:
@@ -128,12 +137,12 @@ class DisplayManager():
                 try:
                     temp_list.append(self.pygame.mixer.Sound(file))
                 except:
-                    raise Warning(f'Could not initialize {file} in {key}')
+                    raise Warning(f"Could not initialize {file} in {key}")
                 finally:
                     self.audio[key] = temp_list
 
     def courier_manager(self):
-        properties = OmegaConf.create({'visual': {'is_static': True}})
+        properties = OmegaConf.create({"visual": {"is_static": True}})
         while 1:
             if not self.courier.empty():
                 (message, arguments) = self.courier.get()
@@ -141,7 +150,7 @@ class DisplayManager():
                 if properties.visual.need_update:
                     self.clock = self.pygame.time.Clock()
                     self.frame_queue.queue.clear()
-                function = eval('self.' + properties.function)
+                function = eval("self." + properties.function)
                 self.render_block.wait()
                 try:
                     if arguments:
@@ -149,19 +158,19 @@ class DisplayManager():
                     else:
                         function()
                 except:
-                    raise Warning(f'Unable to process {function}')
+                    raise Warning(f"Unable to process {function}")
 
             if properties.visual.is_static:
                 self.frame_queue.queue.clear()
             else:
                 if not self.frame_queue.full():
                     try:
-                        (func, pars, screen) = eval('self.' + properties.visual.update_function)()
+                        (func, pars, screen) = eval(
+                            "self." + properties.visual.update_function
+                        )()
                         self.frame_queue.put([func, pars, screen])
                     except:
-                        raise Warning(f'Failed to update visual for {message}')
-
-
+                        raise Warning(f"Failed to update visual for {message}")
 
     def render_visual(self):
         self.render_block.set()
@@ -179,10 +188,12 @@ class DisplayManager():
         try:
             func(pars=pars, screen=screen)
         except:
-            raise Warning(f'Rendering error: Unable to process {func}')
+            raise Warning(f"Rendering error: Unable to process {func}")
 
         if self.stim_config.display.show_fps:
-            fps = self.font.render(str(int(self.clock.get_fps())), 1, self.pygame.Color("coral"))
+            fps = self.font.render(
+                str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")
+            )
             self.screen[screen].blit(fps, (1900, 1000))
         self.update()
 
@@ -191,11 +202,11 @@ class DisplayManager():
         self.pygame.event.pump()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import hydra
 
-    path = '../../Protocols/RDK/config'
-    filename = 'dynamic_coherences'
+    path = "../../Protocols/RDK/config"
+    filename = "dynamic_coherences"
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
 
