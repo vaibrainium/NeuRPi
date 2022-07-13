@@ -113,7 +113,7 @@ STIMULUS:
             tag: 'Execution type for must respond window'
             function: initiate_must_respond
             visual: 
-                need_update: True
+                need_update: False
                 is_static: False
                 update_function: next_frame_must_respond
                 properties: 

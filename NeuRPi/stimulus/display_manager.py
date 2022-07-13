@@ -142,7 +142,9 @@ class DisplayManager:
                     self.audio[key] = temp_list
 
     def courier_manager(self):
-        properties = OmegaConf.create({"visual": {"is_static": True}})
+        properties = OmegaConf.create(
+            {"visual": {"is_static": True, "need_update": True}}
+        )
         while 1:
             if not self.courier.empty():
                 (message, arguments) = self.courier.get()
