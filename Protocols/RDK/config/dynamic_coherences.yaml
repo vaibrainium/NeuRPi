@@ -123,8 +123,8 @@ STIMULUS:
         num_screens: 1
         screen     : 1 #0 
         window_size: (1920, 1080)
-        frame_rate : 58
-        flags      : pygame.DOUBLEBUF # | pygame.constants.SCALED # | pygame.FULLSCREEN
+        frame_rate : 100
+        flags      : pygame.DOUBLEBUF | pygame.constants.SCALED | pygame.FULLSCREEN
         vsync      : False
         show_fps   : True
 

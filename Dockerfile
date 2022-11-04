@@ -1,15 +1,11 @@
 # Basic ubuntu distrivution with python 3.9
-FROM python:3.9.13
-LABEL maintainer='vaibrainium'
+FROM python:3.8-bullseye
+LABEL maintainer='Vaibhav Thakur <vaibhavt459 at gmail.com>'
 
-# Setting working directory
-VOLUME = 'NeuRPi'
-WORKDIR /NeuRPi
+WORKDIR /src
 
 # Installing dependencies
-COPY ./requirements.txt /NeuRPi
+COPY . /src/NeuRPi
 RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
-# Copy the scripts to the folder
-COPY . /NeuRPi
-
+# CMD ["/bin/bash"]

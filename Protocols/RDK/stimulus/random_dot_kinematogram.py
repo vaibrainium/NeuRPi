@@ -3,7 +3,7 @@ import numpy as np
 class RandomDotKinematogram(object):
     def __init__(self):
         self.stimulus_size = (None, None)
-        self.radius = 7
+        self.radius = 10
         self.color = (255, 255, 255)
         self.vel = 300
         self.lifetime = 60
