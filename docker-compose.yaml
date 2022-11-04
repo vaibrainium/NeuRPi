@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  # Name of service
+  dev:
+    # same as docker build .
+    build: .
+    volumes:
+      - ./:/src/NeuRPi
+    # ports:
+    #   - "8890:8890"
+    env_file:
+      - .env

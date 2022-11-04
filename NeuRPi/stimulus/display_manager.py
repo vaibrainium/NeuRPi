@@ -186,6 +186,7 @@ class DisplayManager:
                 self.render_block.set()
                 self.clock.tick_busy_loop(self.frame_rate)
 
+
     def draw(self, func, pars, screen):
         try:
             func(pars=pars, screen=screen)

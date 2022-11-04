@@ -4,7 +4,7 @@ STIMULUS:
         num_screens: 1
         screen     : 1 #0 
         window_size: (1920, 1080)
-        frame_rate : 58
+        frame_rate : 30
         flags      : pygame.DOUBLEBUF # | pygame.constants.SCALED # | pygame.FULLSCREEN
         vsync      : False
         show_fps   : True
@@ -56,7 +56,7 @@ STIMULUS:
                         stimulus_size  : (1920, 1080)
                         background : (0,0,0)
                         dots:
-                            radius    : 15
+                            radius    : 150
                             color     : (255, 255, 255)
                             fill_prct : 15
                             velocity  : 125
