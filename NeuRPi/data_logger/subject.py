@@ -4,10 +4,11 @@ from pathlib import Path
 from typing import Optional, Union
 
 import tables
-from NeuRPi.data.logger import init_logger
-from NeuRPi.data.models.biography import Biography
-from NeuRPi.data.models.protocol import Protocol_Group
-from NeuRPi.data.models.subject import (
+
+from NeuRPi.data_logger.logger import init_logger
+from NeuRPi.data_logger.models.biography import Biography
+from NeuRPi.data_logger.models.protocol import Protocol_Group
+from NeuRPi.data_logger.models.subject import (
     Hashes,
     History,
     ProtocolStatus,

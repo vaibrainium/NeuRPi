@@ -6,9 +6,10 @@ import uuid
 from datetime import date, datetime, timedelta
 from typing import List, Literal, Optional, Union
 
-from NeuRPi.data.modeling.base import Attributes, Data
-from NeuRPi.data.units.base import Mass
 from pydantic import Field
+
+from NeuRPi.data_logger.modeling.base import Attributes, Data
+from NeuRPi.data_logger.units.base import Mass
 
 SEX = Literal["F", "M", "U", "O"]
 """
