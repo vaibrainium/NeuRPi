@@ -3,31 +3,23 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional, Union
 
+import pandas as pd
 import tables
 
 from NeuRPi.data_logger.logger import init_logger
-from NeuRPi.data_logger.models.biography import Biography
-from NeuRPi.data_logger.models.protocol import Protocol_Group
-from NeuRPi.data_logger.models.subject import (
-    Hashes,
-    History,
-    ProtocolStatus,
-    SubjectStructure,
-    Weights,
-)
 
 
 class Subject:
     """
     Class for managing each subject's data in experiment.
 
-    Creates a data file for subject with structure:
+    Creates and stores trial data for subject with structure:
 
         /root
         |--- info - Subjects Biographical information
         |--- data
         |    |--- task_name
-        |         |--- phase
+        |         |--- task_    phase
         |           |--- history
         |                |--- weight
         |                |--- performance
@@ -41,10 +33,8 @@ class Subject:
 
     Attributes:
         name (str): Subject ID
-        file (str): Path to hdf5 file
+        dir (str): Path to hdf5 file
         running (bool): Indicator if subject is currently running or not
-        data_queue (:class: `queue.Queue`): Queue to dump data while running task
-        did_graduate (:class: `threading.Event`): Event used to signal if the subject has graduated the current step
     """
 
     def __init__(
@@ -52,7 +42,6 @@ class Subject:
         name: str = None,
         dir: Optional[Path] = None,
         file: Optional[Path] = None,
-        structure: Subject_Structure = Subject_Structure(),
     ):
 
         """
@@ -62,9 +51,6 @@ class Subject:
             file (str): load a subject from a filename. if `None`, ignored.
             structure (:class:`.Subject_Structure`): Structure to use with this subject.
         """
-        pass
-
-        self.structure = structure
 
         self._lock = threading.Lock()
 
