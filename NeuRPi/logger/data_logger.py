@@ -21,42 +21,49 @@ class DataLogger:
         name: str = None,
         dir: Optional[Path] = None,
         file: Optional[Path] = None,
-        mode: str = "r+",
     ):
-
-        self._lock = threading.Lock()
 
         if file:
             file = Path(file)
             if not name:
                 name = file.stem
-
         else:
             if not name or not dir:
                 raise FileNotFoundError("Need to pass a name and directory path")
             file = dir / (name + ".csv")
 
-        self.name = name
+        self._lock = threading.Lock()
         self.logger = init_logger(self)
+        self.name = name
         self.file = file
 
-        if not self.file.exists():
-            self.create_file()
-            self.logger.warning(
-                "Subject file {str(self.file)} does not exist! Creating new file"
+    def create_file(self, headers: list):
+        """
+        Create csv file with provided name and headers
+        """
+        with open(self.file, "x") as csvfile:
+            file_handle = csv.DictWriter(
+                csvfile, fieldnames=headers, lineterminator="\n"
             )
-
-    def create_file(self):
-        """
-        Create csv file with provided name
-        """
-        with open(self.file, "x"):
-            pass
+            file_handle.writeheader()
 
     def read_file(self):
-        pass
+        """
+        Reads file if exists and returns content as a pandas dataframe
+        """
+        if not self.file.exists():
+            self.logger.warning(
+                "Subject file {str(self.file)} does not exist! Please create new file"
+            )
+        dataframe = pd.DataFrame()
+        try:
+            dataframe = pd.read_csv(self.file)
+        except:
+            self.logger.warning("Could not read subject file {str(self.file)}")
 
-    def write_file(self, mode: str = "a"):
+        return dataframe
+
+    def write_file(self, data, mode: str = "a"):
         """
         Write into file with one of the following mode. Default mode is append.
 
@@ -67,50 +74,28 @@ class DataLogger:
         r+:	Read+Write	open a file for both reading and writing
         x:	Create	Create a new file
         """
-        pass
 
-    # @contextmanager
-    # def _csv(self, lock: bool = True):
-    #     """
-    #     Context manager for access to hdf5 file.
-    #     Args:
-    #         lock (bool): Lock the file while it is open, only use ``False`` for operations
-    #             that are read-only: there should only ever be one write operation at a time.
-    #     Examples:
-    #         with self._h5f as h5f:
-    #             # ... do hdf5 stuff
-    #     Returns:
-    #         function wrapped with contextmanager that will open the hdf file
-    #     """
+        if not self.file.exists():
+            self.logger.warning(
+                "Subject file {str(self.file)} does not exist! Please create new file"
+            )
 
-    #     if lock:
-    #         with self._lock:
-    #             try:
-    #                 h5f = tables.open_file(str(self.file), mode="r+")
-    #                 yield h5f
-    #             finally:
-    #                 h5f.flush()
-    #                 h5f.close()
+        with self._lock:
+            try:
+                # writing to csv file
+                with open(self.file, mode) as csvfile:
+                    if isinstance(data, list):
+                        csvwriter = csv.writer(csvfile)
+                    elif isinstance(data, dict):
+                        csvwriter = csv.DictWriter(
+                            csvfile, fieldnames=list(data.keys())
+                        )
 
-    #     else:
-    #         try:
-    #             try:
-    #                 h5f = tables.open_file(str(self.file), mode="r")
-    #             except ValueError as error_list:
-    #                 if (
-    #                     "already opened, but not in read-only mode"
-    #                     in error_list.args[0]
-    #                 ):
-    #                     h5f = tables.open_file(str(self.file), mode="r+")
-    #                 else:
-    #                     raise error_list
-    #             yield h5f
-    #         finally:
-    #             h5f.flush()
-    #             h5f.close()
+                    # writing the data rows
+                    csvwriter.writerows(data)
 
-
-if __name__ == "__main__":
-    whl_file = DataLogger(Path("data_check"))
-
-    pass
+            except BaseException:
+                self.logger.error("Could not write to Subject file {str(self.file)}")
+            finally:
+                csvfile.flush()
+                csvfile.close()
