@@ -1,9 +1,9 @@
 import base64
 import datetime
 import json
-import numpy as np
 
 import blosc2 as blosc
+import numpy as np
 
 
 class Message(object):
@@ -41,7 +41,7 @@ class Message(object):
             * ``NOLOG`` - don't log this message! for streaming, or other instances where the constant printing of the logger is performance prohibitive
     """
 
-    def __init__(self, msg=None, expand_arrays = False, blosc:bool=True,  **kwargs):
+    def __init__(self, msg=None, expand_arrays=False, blosc: bool = True, **kwargs):
         """
         Args:
             msg (str): A serialized message made with :meth:`.serialize`. Optional -- can be passed rather than
@@ -69,12 +69,14 @@ class Message(object):
         self.timestamp = None
         self.blosc = blosc
 
-        self.ttl = kwargs.get('ttl', 2)
+        self.ttl = kwargs.get("ttl", 2)
 
         if msg:
             self.serialized = msg
             if expand_arrays:
-                deserialized = json.loads(msg, object_pairs_hook=self._deserialize_numpy)
+                deserialized = json.loads(
+                    msg, object_pairs_hook=self._deserialize_numpy
+                )
             else:
                 deserialized = json.loads(msg)
             kwargs.update(deserialized)
@@ -83,7 +85,7 @@ class Message(object):
             setattr(self, k, v)
 
         # if we're not a previous message being recreated, get a timestamp for our creation
-        if 'timestamp' not in kwargs.keys():
+        if "timestamp" not in kwargs.keys():
             self.get_timestamp()
 
         # self.DETECTED_MINPRINT = False
@@ -93,11 +95,17 @@ class Message(object):
         # if len(str(self.value))>100:
         #     self.DETECTED_MINPRINT = True
         # TODO: Make verbose/debugging mode, print value in that case.
-        if self.key == 'FILE' or ('MINPRINT' in self.flags.keys()):
-            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}, FLAGS: {}".format(self.id, self.to, self.sender, self.key, self.flags)
+        if self.key == "FILE" or ("MINPRINT" in self.flags.keys()):
+            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}, FLAGS: {}".format(
+                self.id, self.to, self.sender, self.key, self.flags
+            )
         else:
-            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}; FLAGS: {}; VALUE: {}".format(self.id, self.to, self.sender, self.key, self.flags, self.value)
-        #me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}".format(self.id, self.to, self.sender, self.key)
+            me_string = (
+                "ID: {}; TO: {}; SENDER: {}; KEY: {}; FLAGS: {}; VALUE: {}".format(
+                    self.id, self.to, self.sender, self.key, self.flags, self.value
+                )
+            )
+        # me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}".format(self.id, self.to, self.sender, self.key)
 
         return me_string
 
@@ -107,7 +115,7 @@ class Message(object):
         Args:
             key:
         """
-        #value = self._check_dec(self.__dict__[key])
+        # value = self._check_dec(self.__dict__[key])
         # TODO: Recursively walk looking for 'NUMPY ARRAY' and expand before giving
         return self.__dict__[key]
 
@@ -117,12 +125,11 @@ class Message(object):
             key:
             value:
         """
-        self.changed=True
-        #value = self._check_enc(value)
+        self.changed = True
+        # value = self._check_enc(value)
         self.__dict__[key] = value
 
-
-    def _serialize_numpy(self, array:np.ndarray):
+    def _serialize_numpy(self, array: np.ndarray):
         """
         Serialize a numpy array for sending over the wire
 
@@ -133,11 +140,14 @@ class Message(object):
 
         """
         if self.blosc:
-            compressed = base64.b64encode(blosc.pack_array(array)).decode('ascii')
+            compressed = base64.b64encode(blosc.pack_array(array)).decode("ascii")
         else:
-            compressed = base64.b64encode(array.tobytes()).decode('ascii')
-        return {'NUMPY_ARRAY': compressed, 'DTYPE': str(array.dtype), 'SHAPE':array.shape}
-
+            compressed = base64.b64encode(array.tobytes()).decode("ascii")
+        return {
+            "NUMPY_ARRAY": compressed,
+            "DTYPE": str(array.dtype),
+            "SHAPE": array.shape,
+        }
 
     def _deserialize_numpy(self, obj_pairs):
         # print(len(obj_pairs), obj_pairs)
@@ -147,7 +157,9 @@ class Message(object):
                 arr = blosc.unpack_array(decode)
             except RuntimeError:
                 # cannot decompress, maybe because wasn't compressed
-                arr = np.frombuffer(decode, dtype=obj_pairs[1][1]).reshape(obj_pairs[2][1])
+                arr = np.frombuffer(decode, dtype=obj_pairs[1][1]).reshape(
+                    obj_pairs[2][1]
+                )
 
             return arr
         else:
@@ -161,17 +173,12 @@ class Message(object):
         """
         pass
 
-
-
-
-
-
     def __delitem__(self, key):
         """
         Args:
             key:
         """
-        self.changed=True
+        self.changed = True
         del self.__dict__[key]
 
     def __contains__(self, key):
@@ -206,9 +213,6 @@ class Message(object):
                 valid = False
         return valid
 
-
-
-
     def serialize(self):
         """
         Serializes all attributes in `__dict__` using json.
@@ -222,20 +226,24 @@ class Message(object):
 
         valid = self.validate()
         if not valid:
-            Exception("""Message invalid at the time of serialization!\n {}""".format(str(self)))
+            Exception(
+                """Message invalid at the time of serialization!\n {}""".format(
+                    str(self)
+                )
+            )
             return False
 
         msg = self.__dict__
         # exclude 'serialized' so it's not in there twice
         try:
-            del msg['serialized']
+            del msg["serialized"]
         except KeyError:
             pass
 
         try:
-            msg_enc = json.dumps(msg, default=self._serialize_numpy).encode('utf-8')
+            msg_enc = json.dumps(msg, default=self._serialize_numpy).encode("utf-8")
             self.serialized = msg_enc
-            self.changed=False
+            self.changed = False
             return msg_enc
         except:
             return False
