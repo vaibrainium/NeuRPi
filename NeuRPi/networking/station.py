@@ -58,7 +58,7 @@ class Station(multiprocessing.Process):
         listen_port: Optional[int] = None,
         listens: Optional[typing.Dict[str, typing.Callable]] = None,
     ):
-        super(Network, self).__init__()
+        super(Station, self).__init__()
         self.id = id
         self.context = None
         self.loop = None
@@ -633,7 +633,7 @@ class Station(multiprocessing.Process):
             )
 
 
-class Termianl_Station(Station):
+class Terminal_Station(Station):
     """
     class obj for master computer inheriting networking.Station.
 
