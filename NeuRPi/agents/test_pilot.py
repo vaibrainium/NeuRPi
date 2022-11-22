@@ -3,8 +3,15 @@ import threading
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
+from NeuRPi.utils.configs import get_configuration
 
-MSGPORT = 9000
+global net_config
+
+config = get_configuration(directory="../config/", filename="setup_config.yaml")
+net_config = config.NETWORKING
+
+
+from NeuRPi.utils import configs
 
 
 class Pilot:
