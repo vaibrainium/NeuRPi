@@ -1,17 +1,9 @@
 import logging
 import threading
 
+# from NeuRPi import prefs
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
-from NeuRPi.utils.configs import get_configuration
-
-global net_config
-
-config = get_configuration(directory="../config/", filename="setup_config.yaml")
-net_config = config.NETWORKING
-
-
-from NeuRPi.utils import configs
 
 
 class Pilot:
@@ -58,7 +50,7 @@ class Pilot:
         self.node = Net_Node(
             id="_{}".format(self.name),
             upstream=self.name,
-            port=MSGPORT,
+            port=prefs.get("MSGPORT"),
             listens=self.listens,
             instance=False,
         )

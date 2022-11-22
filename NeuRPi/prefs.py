@@ -81,8 +81,8 @@ from enum import Enum, auto
 from pathlib import Path
 from threading import Lock
 
+from autopilot.root import Autopilot_Pref
 from NeuRPi.exceptions import DefaultPrefWarning
-from NeuRPi.root import Autopilot_Pref
 
 
 class Scopes(Enum):
@@ -166,7 +166,7 @@ Initially None, created once prefs are populated because init_logger requires so
 
 # not documenting, just so that the full function doesn't need to be put in for each directory
 # lol at this literal reanimated fossil halfway evolved between os.path and pathlib
-_basedir = Path(os.path.join(os.path.expanduser("~"), "autopilot"))
+_basedir = Path(os.path.join(os.path.expanduser("~"), "NeuRPi"))
 
 
 class Common_Prefs(Autopilot_Pref):
