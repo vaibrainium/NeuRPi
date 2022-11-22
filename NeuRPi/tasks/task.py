@@ -1,12 +1,13 @@
-
-from itertools import count
 # import tables
 import threading
-from NeuRPi.hardware.arduino import Arduino
+from itertools import count
+
 import hydra
 
+from NeuRPi.hardware.arduino import Arduino
 
 # If need be, work on multithreading later
+
 
 class Task(object):
     """
@@ -67,7 +68,6 @@ class Task(object):
     #     trial_num = tables.Int32Col()
     #     session = tables.Int32Col()
 
-
     def __init__(self, *args, **kwargs):
         """
         Private class variables
@@ -78,13 +78,15 @@ class Task(object):
 
         # Task Variables
         self.task_manages = None
-        self.subject = kwargs.get('subject', None)
+        self.subject = kwargs.get("subject", None)
         self.trigger = {}
-        self.stage_block = None  # threading.Event used by the pilot to manage stage transitions
+        self.stage_block = (
+            None  # threading.Event used by the pilot to manage stage transitions
+        )
         self.stages = None
 
-        self.trial_counter = count(int(kwargs.get('current_trial',0)))
-        self.current_trial = int(kwargs.get('current_trial',0))
+        self.trial_counter = count(int(kwargs.get("current_trial", 0)))
+        self.current_trial = int(kwargs.get("current_trial", 0))
 
         self.punish_block = threading.Event()
         self.punish_block.set()
@@ -95,20 +97,17 @@ class Task(object):
 
         self.trigger_lock = threading.Lock()
 
-
     def get_configuration(self, directory=None, filename=None):
-        '''
+        """
         Getting configuration from respective config.yaml file.
 
         Arguments:
             directory (str): Path to configuration directory relative to root directory (as Protocols/../...)
             filename (str): Specific file name of the configuration file
-        '''
-        path = '../../' + directory
+        """
+        path = "../../" + directory
         hydra.initialize(version_base=None, config_path=path)
         return hydra.compose(filename, overrides=[])
-
-
 
     def set_reward(self, vol=None, duration=None, port=None):
         """
@@ -119,32 +118,32 @@ class Task(object):
             port (None, Port_ID): If None, set value to all ports in 'PORTS', otherwise only set in 'port'
         """
         if not vol and not duration:
-            raise Exception("Did not provide either volume or duration of trigger for each pulse")
+            raise Exception(
+                "Did not provide either volume or duration of trigger for each pulse"
+            )
         if vol and duration:
             raise Warning("Both volume and duration provided. Using volume")
 
         if not port:
-            for k, port in self.hardware['PORTS'].items():
+            for k, port in self.hardware["PORTS"].items():
                 if vol:
                     try:
                         port.dur_from_vol(vol)
                     except AttributeError:
-                        port.duration = 20.0 # If conversion not provided, setting value to 20 (randomly chosen)
+                        port.duration = 20.0  # If conversion not provided, setting value to 20 (randomly chosen)
                 else:
                     port.duration = float(duration)
         else:
             try:
                 if vol:
                     try:
-                        self.hardware['PORTS'][port].dur_from_vol(vol)
+                        self.hardware["PORTS"][port].dur_from_vol(vol)
                     except AttributeError:
-                        port.duration = 20.0 # If conversion not provided, setting value to 20 (randomly chosen)
+                        port.duration = 20.0  # If conversion not provided, setting value to 20 (randomly chosen)
                 else:
                     port.duration = float(duration)
             except KeyError:
-                raise Exception('Port {} not available'.format(port))
-
-
+                raise Exception("Port {} not available".format(port))
 
     def end(self):
         """
@@ -154,7 +153,7 @@ class Task(object):
             for pin, obj in v.items():
                 obj.release()
 
-        if hasattr(self, 'stim_manager'):
+        if hasattr(self, "stim_manager"):
             if self.stim_manager is not None:
                 self.stim_manager.end()
                 del self.stim_manager
