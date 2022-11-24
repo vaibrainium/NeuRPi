@@ -5,12 +5,36 @@ from threading import Lock
 import hydra
 from omegaconf import OmegaConf
 
-mp.freeze_support()
-
 
 def get_configuration(directory, filename):
     hydra.initialize(version_base=None, config_path=directory)
     return hydra.compose(filename, overrides=[])
+
+
+# _PREFS = get_configuration(directory, filename)
+using_manager = False
+try:
+    _PREF_MANAGER = (
+        mp.Manager()
+    )  # initializing multiprocess.Manager to store sync variable across processes
+
+    _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
+
+    _INITIALIZED = mp.Value(
+        c_bool, False
+    )  #  Boolean flag to indicate whether prefs have been initialzied from file
+
+    _LOCK = mp.Lock()  # threading lock to control prefs file access
+    using_manager = True
+
+except (EOFError, FileNotFoundError):
+    # can't use mp.Manager in ipython and other interactive contexts
+    # fallback to just regular old dict
+    print("NOT WORKING")
+    _PREF_MANAGER = None
+    _PREFS = {}
+    _INITIALIZED = False
+    _LOCK = Lock()
 
 
 def get(key=None):
@@ -78,39 +102,15 @@ def clear():
         _PREFS = {}
 
 
-if __name__ == "__main__":
-    mp.freeze_support()
+directory = "config/"
+filename = "setup_config.yaml"
 
-    using_manager = False
-    try:
-        _PREF_MANAGER = (
-            mp.Manager()
-        )  # initializing multiprocess.Manager to store sync variable across processes
+if using_manager:
+    if not _INITIALIZED.value:
+        init(directory, filename)
+else:
+    if not _INITIALIZED:
+        init(directory, filename)
 
-        _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
 
-        _INITIALIZED = mp.Value(
-            c_bool, False
-        )  #  Boolean flag to indicate whether prefs have been initialzied from file
-
-        _LOCK = mp.Lock()  # threading lock to control prefs file access
-        using_manager = True
-
-    except (EOFError, FileNotFoundError):
-        # can't use mp.Manager in ipython and other interactive contexts
-        # fallback to just regular old dict
-        print("NOT WORKING")
-        _PREF_MANAGER = None
-        _PREFS = {}
-        _INITIALIZED = False
-        _LOCK = Lock()
-
-    directory = "config/"
-    filename = "setup_config.yaml"
-
-    if using_manager:
-        if not _INITIALIZED.value:
-            init(directory, filename)
-    else:
-        if not _INITIALIZED:
-            init(directory, filename)
+print(1)
