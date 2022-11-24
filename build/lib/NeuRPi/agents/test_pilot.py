@@ -5,6 +5,8 @@ from NeuRPi import prefs
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
 
+print(1)
+
 
 class Pilot:
 
@@ -79,10 +81,5 @@ class Pilot:
         pass
 
 
-import multiprocessing as mp
-
 if __name__ == "__main__":
-
-    # mp.set_start_method("spawn")
-    print(1)
     a = Pilot()
