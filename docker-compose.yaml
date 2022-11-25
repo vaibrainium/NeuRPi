@@ -6,7 +6,8 @@ services:
     build: .
     volumes:
       - ./:/src/NeuRPi
-    # ports:
-    #   - "8890:8890"
     env_file:
       - .env
+    command: sleep infinity
+
+# networks:

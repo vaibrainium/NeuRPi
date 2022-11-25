@@ -1,11 +1,6 @@
 import logging
+import multiprocessing as mp
 import threading
-
-from NeuRPi import prefs
-from NeuRPi.loggers.logger import init_logger
-from NeuRPi.networking import Message, Net_Node, Pilot_Station
-
-print(1)
 
 
 class Pilot:
@@ -24,9 +19,13 @@ class Pilot:
 
     def __init__(self, warn_defaults=True):
 
-        self.name = "rig_1"
-        self.child = False
-        self.parentid = "T"
+        self.name = prefs.get("NAME")
+        if prefs.get("LINEAGE") == "CHILD":
+            self.child = True
+            self.parentid = prefs.get("PARENTID")
+        else:
+            self.child = False
+            self.parentid = "T"
 
         self.logger = init_logger(self)
         self.logger.debug("pilot logger initialized")
@@ -52,7 +51,7 @@ class Pilot:
         self.node = Net_Node(
             id="_{}".format(self.name),
             upstream=self.name,
-            port=MSGPORT,
+            port=int(prefs.get("MSGPORT")),
             listens=self.listens,
             instance=False,
         )
@@ -82,4 +81,9 @@ class Pilot:
 
 
 if __name__ == "__main__":
+
+    from NeuRPi.loggers.logger import init_logger
+    from NeuRPi.networking import Message, Net_Node, Pilot_Station
+    from NeuRPi.prefs import prefs
+
     a = Pilot()

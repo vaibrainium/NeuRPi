@@ -15,6 +15,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
+from NeuRPi.prefs import prefs
 
 
 class Station(multiprocessing.Process):
@@ -906,66 +907,62 @@ class Pilot_Station(Station):
     def __init__(self):
         # Pilot has a pusher - connects back to terminal
         super(Pilot_Station, self).__init__()
-        prefs = {}
         self.pusher = True
-        global net_config
-        print(net_config)
-        print("ACCESSING GLOBAL VAR")
 
-        # if None:  # prefs.get("LINEAGE") == "CHILD":
-        #     self.push_id = prefs.get("PARENTID").encode("utf-8")
-        #     self.push_port = prefs.get("PARENTPORT")
-        #     self.push_ip = prefs.get("PARENTIP")
-        #     self.child = True
-        # else:
-        #     self.push_id = b"T"
-        #     self.push_port = prefs.get("PUSHPORT")
-        #     self.push_ip = prefs.get("TERMINALIP")
-        #     self.child = False
+        if None:  # prefs.get("LINEAGE") == "CHILD":
+            self.push_id = prefs.get("PARENTID").encode("utf-8")
+            self.push_port = prefs.get("PARENTPORT")
+            self.push_ip = prefs.get("PARENTIP")
+            self.child = True
+        else:
+            self.push_id = b"T"
+            self.push_port = prefs.get("PUSHPORT")
+            self.push_ip = prefs.get("TERMINALIP")
+            self.child = False
 
-        # # Store some prefs values
-        # self.listen_port = prefs.get("MSGPORT")
+        # Store some prefs values
+        self.listen_port = prefs.get("MSGPORT")
 
-        # self.id = prefs.get("NAME")
-        # if self.id is None or self.id == "":
-        #     # self.logger.exception(
-        #     #     f"pilot NAME in prefs.json cannot be blank, got {self.id}"
-        #     # )
-        #     raise ValueError(f"pilot NAME in prefs.json cannot be blank, got {self.id}")
-        # self.pi_id = "_{}".format(self.id)
-        # self.subject = None  # Store current subject ID
-        # self.state = "IDLE"  # store current pi state
-        # self.child = False  # Are we acting as a child right now?
-        # self.parent = False  # Are we acting as a parent right now?
+        self.id = prefs.get("NAME")
+        if self.id is None or self.id == "":
+            # self.logger.exception(
+            #     f"pilot NAME in prefs.json cannot be blank, got {self.id}"
+            # )
+            raise ValueError(f"pilot NAME in prefs.json cannot be blank, got {self.id}")
+        self.pi_id = "_{}".format(self.id)
+        self.subject = None  # Store current subject ID
+        self.state = "IDLE"  # store current pi state
+        self.child = False  # Are we acting as a child right now?
+        self.parent = False  # Are we acting as a parent right now?
 
-        # self.listens.update(
-        #     {
-        #         "STATE": self.l_state,  # Confirm or notify terminal of state change
-        #         "COHERE": self.l_cohere,  # Sending our temporary data table at the end of a run to compare w/ terminal's copy
-        #         "PING": self.l_ping,  # The Terminal wants to know if we're listening
-        #         "START": self.l_start,  # We are being sent a task to start
-        #         "STOP": self.l_stop,  # We are being told to stop the current task
-        #         "PARAM": self.l_change,  # The Terminal is changing some task parameter
-        #         "FILE": self.l_file,  # We are receiving a file
-        #         "CONTINUOUS": self.l_continuous,  # we are sending continuous data to the terminal
-        #         "CHILD": self.l_child,
-        #         "HANDSHAKE": self.l_noop,
-        #         "CALIBRATE_PORT": self.l_forward,
-        #         "CALIBRATE_RESULT": self.l_forward,
-        #         "BANDWIDTH": self.l_forward,
-        #         "STREAM_VIDEO": self.l_forward,
-        #     }
-        # )
+        self.listens.update(
+            {
+                "STATE": self.l_state,  # Confirm or notify terminal of state change
+                "COHERE": self.l_cohere,  # Sending our temporary data table at the end of a run to compare w/ terminal's copy
+                "PING": self.l_ping,  # The Terminal wants to know if we're listening
+                "START": self.l_start,  # We are being sent a task to start
+                "STOP": self.l_stop,  # We are being told to stop the current task
+                "PARAM": self.l_change,  # The Terminal is changing some task parameter
+                "FILE": self.l_file,  # We are receiving a file
+                "CONTINUOUS": self.l_continuous,  # we are sending continuous data to the terminal
+                "CHILD": self.l_child,
+                "HANDSHAKE": self.l_noop,
+                "CALIBRATE_PORT": self.l_forward,
+                "CALIBRATE_RESULT": self.l_forward,
+                "BANDWIDTH": self.l_forward,
+                "STREAM_VIDEO": self.l_forward,
+            }
+        )
 
-        # # ping back our status to the terminal every so often
-        # if prefs.get("PING_INTERVAL") is None:
-        #     self.ping_interval = 5
-        # else:
-        #     self.ping_interval = float(prefs.get("PING_INTERVAL"))
+        # ping back our status to the terminal every so often
+        if prefs.get("PING_INTERVAL") is None:
+            self.ping_interval = 5
+        else:
+            self.ping_interval = float(prefs.get("PING_INTERVAL"))
 
-        # self._ping_thread = threading.Timer(self.ping_interval, self._pinger)
-        # self._ping_thread.setDaemon(True)
-        # self._ping_thread.start()
+        self._ping_thread = threading.Timer(self.ping_interval, self._pinger)
+        self._ping_thread.setDaemon(True)
+        self._ping_thread.start()
 
     def _pinger(self):
         """
