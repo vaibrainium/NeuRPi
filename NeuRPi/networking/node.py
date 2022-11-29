@@ -11,6 +11,7 @@ import zmq
 from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
+from NeuRPi.prefs import config
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
 
