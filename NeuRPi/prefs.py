@@ -4,7 +4,7 @@ from pathlib import Path
 from threading import Lock
 
 import hydra
-from omegaconf import OmegaConf
+from omegaconf import OmegaConf, DictConfig
 
 global _PREF_MANAGER
 global _PREFS
@@ -94,6 +94,9 @@ class Prefs:
         Saves preferences to ``prefs_filename`` .json
         """
 
+        if not prefs_filename:
+            prefs_filename = self.filename
+
         with globals()["_LOCK"]:
             with open(prefs_filename, "w") as f:
                 if self.using_manager:
@@ -131,6 +134,21 @@ class Prefs:
             _PREFS = {}
 
 
-directory = Path("..\\..\\..\\..\\NeuRPi\\config")
-prefs = Prefs(directory=directory, filename="networking.yaml")
-print("Network config imported")
+# directory = Path("config")
+# prefs = Prefs(directory=directory, filename="networking.yaml")
+# print("Network config imported")
+
+global config
+
+
+@hydra.main(version_base="1.2", config_path="config", config_name="config.yaml")
+def import_config(cfg: DictConfig) -> None:
+
+    global config
+    config = hydra.utils.instantiate(cfg)
+    config.NAME.default = "rig_3"
+
+
+import_config()
+print("Config Imported")
+print(config)

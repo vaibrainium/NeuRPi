@@ -15,7 +15,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
-from NeuRPi.prefs import prefs
+from NeuRPi.prefs import config
 
 
 class Station(multiprocessing.Process):
@@ -909,7 +909,7 @@ class Pilot_Station(Station):
         super(Pilot_Station, self).__init__()
         self.pusher = True
 
-        if None:  # prefs.get("LINEAGE") == "CHILD":
+        if prefs.get("LINEAGE") == "CHILD":
             self.push_id = prefs.get("PARENTID").encode("utf-8")
             self.push_port = prefs.get("PARENTPORT")
             self.push_ip = prefs.get("PARENTIP")

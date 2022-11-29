@@ -2,6 +2,11 @@ import logging
 import multiprocessing as mp
 import threading
 
+import sys
+from NeuRPi.prefs import config
+from NeuRPi.loggers.logger import init_logger
+from NeuRPi.networking import Message, Net_Node, Pilot_Station
+
 
 class Pilot:
 
@@ -80,10 +85,15 @@ class Pilot:
         pass
 
 
+def main():
+    config.NAME = "rig_2"
+    # a = Pilot()
+    # prefs.set(key="NAME", val="rig_2")
+    # prefs.save_prefs()
+    # print(2)
+    # a.quitting.wait(timeout=1)
+    # sys.exit()
+
+
 if __name__ == "__main__":
-
-    from NeuRPi.prefs import prefs
-    from NeuRPi.loggers.logger import init_logger
-    from NeuRPi.networking import Message, Net_Node, Pilot_Station
-
-    a = Pilot()
+    main()
