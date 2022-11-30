@@ -85,7 +85,10 @@ def init_logger(
 
         if MAKE_NEW:
             parent_logger = logging.getLogger(module_name)
-            loglevel = "WARNING"  # getattr(logging, prefs.get('LOGLEVEL'))
+            try:
+                loglevel = getattr(logging, prefs.get("LOGLEVEL"))
+            except:
+                loglevel = "INFO"
             parent_logger.setLevel(loglevel)
 
             # make formatter that includes name

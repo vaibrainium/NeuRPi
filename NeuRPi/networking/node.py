@@ -11,7 +11,7 @@ import zmq
 from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from NeuRPi.prefs import config
+from NeuRPi.prefs import prefs
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
 
@@ -125,9 +125,10 @@ class Net_Node(object):
         self.timers = {}
         self.expand = expand_on_receive
 
-        if prefs.get("SUBJECT"):
+        try:
+            prefs.get("SUBJECT")
             self.subject = prefs.get("SUBJECT").encode("utf-8")
-        else:
+        except:
             self.subject = None
 
         self.init_networking()

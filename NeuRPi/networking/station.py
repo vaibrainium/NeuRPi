@@ -15,7 +15,7 @@ from zmq.eventloop.zmqstream import ZMQStream
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
-from NeuRPi.prefs import config
+from NeuRPi.prefs import prefs
 
 
 class Station(multiprocessing.Process):

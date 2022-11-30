@@ -2,7 +2,7 @@ import multiprocessing as mp
 from ctypes import c_bool
 from pathlib import Path
 from threading import Lock
-
+import collections
 import hydra
 from omegaconf import OmegaConf, DictConfig
 
@@ -59,7 +59,7 @@ class Prefs:
         """
         Import saved config file
         """
-        hydra.initialize(version_base=None, config_path=self.directory)
+        hydra.initialize(version_base="1.2", config_path=self.directory)
         return hydra.compose(self.filename, overrides=[])
 
     def get(self, key=None):
@@ -79,8 +79,15 @@ class Prefs:
     def set(self, key: str, val):
         """
         Change parameter value
+        Args:
+        key: Dictionary key that needs to be changed
+        val: updated value of the key parameter
+        session_time: timestamp of session
         """
-        globals()["_PREFS"][key] = val
+        temp_dict_holder = globals()["_PREFS"][key]
+        temp_dict_holder["default"] = val
+        globals()["_PREFS"][key] = temp_dict_holder
+
         if self.using_manager:
             initialized = globals()["_INITIALIZED"].value
         else:
@@ -95,7 +102,8 @@ class Prefs:
         """
 
         if not prefs_filename:
-            prefs_filename = self.filename
+            prefs_filename = Path(".").resolve() / "NeuRPi/config" / self.filename
+            #  Path(self.directory / self.filename)
 
         with globals()["_LOCK"]:
             with open(prefs_filename, "w") as f:
@@ -134,21 +142,6 @@ class Prefs:
             _PREFS = {}
 
 
-# directory = Path("config")
-# prefs = Prefs(directory=directory, filename="networking.yaml")
-# print("Network config imported")
-
-global config
-
-
-@hydra.main(version_base="1.2", config_path="config", config_name="config.yaml")
-def import_config(cfg: DictConfig) -> None:
-
-    global config
-    config = hydra.utils.instantiate(cfg)
-    config.NAME.default = "rig_3"
-
-
-import_config()
-print("Config Imported")
-print(config)
+global prefs
+directory, filename = Path("./config"), "config.yaml"
+prefs = Prefs(directory=directory, filename=filename)
