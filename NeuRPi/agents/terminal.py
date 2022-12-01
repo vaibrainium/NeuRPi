@@ -14,7 +14,7 @@ from pprint import pformat
 
 import numpy as np
 
-from NeuRPi import prefs_orig
+from NeuRPi.prefs import prefs
 
 # from NeuRPi.gui import styles
 # from PySide2 import QtCore, QtGui, QtWidgets
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         prefs_file = args.prefs
 
     # init prefs for module access
-    prefs_orig.init(prefs_file)
+    prefs.init(prefs_file)
 
 from NeuRPi.data.subject import Subject
 from NeuRPi.gui.dialog import pop_dialog

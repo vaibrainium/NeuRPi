@@ -86,11 +86,9 @@ class Pilot:
 
 
 def main():
-    prefs.NAME = "rig_2"
     a = Pilot()
-    prefs.set(key="NAME", val="rig_2")
-    # prefs.save_prefs()
-    # print(2)
+    prefs.set(key="NAME", val="rig_4")
+    print(2)
     # a.quitting.wait(timeout=1)
     # sys.exit()
 

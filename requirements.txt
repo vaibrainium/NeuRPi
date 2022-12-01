@@ -11,4 +11,3 @@ blosc2
 numpy
 zmq
 tornado
-hydra-core
