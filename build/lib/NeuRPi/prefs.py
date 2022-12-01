@@ -76,7 +76,7 @@ class Prefs:
             # try to get value from prefs manager
             return globals()["_PREFS"][key].default
 
-    def set(self, key: str, val, session_time=None, trial=None, trial_time=None):
+    def set(self, key: str, val):
         """
         Change parameter value
         Args:
@@ -84,7 +84,9 @@ class Prefs:
         val: updated value of the key parameter
         session_time: timestamp of session
         """
-        globals()["_PREFS"][key].default = val
+        temp_dict_holder = globals()["_PREFS"][key]
+        temp_dict_holder["default"] = val
+        globals()["_PREFS"][key] = temp_dict_holder
 
         if self.using_manager:
             initialized = globals()["_INITIALIZED"].value
@@ -100,7 +102,8 @@ class Prefs:
         """
 
         if not prefs_filename:
-            prefs_filename = self.directory / self.filename
+            prefs_filename = Path(".").resolve() / "NeuRPi/config" / self.filename
+            #  Path(self.directory / self.filename)
 
         with globals()["_LOCK"]:
             with open(prefs_filename, "w") as f:
@@ -140,5 +143,5 @@ class Prefs:
 
 
 global prefs
-directory, filename = Path("config"), "config.yaml"
+directory, filename = Path("./config"), "config.yaml"
 prefs = Prefs(directory=directory, filename=filename)

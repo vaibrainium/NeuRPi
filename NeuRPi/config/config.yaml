@@ -16,7 +16,7 @@ MSGPORT:
 TERMINALIP:
   type: str
   text: 'Terminal IP:'
-  default: 192.168.0.100
+  default: tcp://localhost
   scope: Scopes.COMMON
 LOGLEVEL:
   type: choice

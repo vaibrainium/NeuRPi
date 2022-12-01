@@ -9,6 +9,7 @@ from pathlib import Path
 from threading import Lock
 from typing import Literal
 
+from NeuRPi.prefs import prefs
 from rich.logging import RichHandler
 
 LOGLEVELS = Literal["DEBUG", "INFO", "WARNING", "ERROR"]
@@ -42,6 +43,7 @@ def init_logger(
                 module_name = "__main__"
 
         module_name = re.sub("^NeuRPi.", "", module_name)
+        module_name = "log_" + module_name
 
         class_name = instance.__class__.__name__
 
@@ -140,7 +142,47 @@ def _file_handler(base_filename: Path) -> RotatingFileHandler:
     if not base_filename.parent.exists():
         base_filename.parent.mkdir(parents=True, exist_ok=True)
 
-    fh = RotatingFileHandler(
-        str(base_filename), mode="a", maxBytes=int(20 * (2**20)), backupCount=int(4)
-    )
+    try:
+        fh = RotatingFileHandler(
+            str(base_filename),
+            mode="a",
+            maxBytes=int(prefs.get("LOGSIZE")),
+            backupCount=int(prefs.get("LOGNUM")),
+        )
+    except PermissionError as e:
+        # catch permissions errors, try to chmod our way out of it
+        try:
+            for mod_file in Path(base_filename).parent.glob(
+                f"{Path(base_filename).stem}*"
+            ):
+                os.chmod(mod_file, 0o777)
+                warnings.warn(
+                    f"Couldnt access {mod_file}, changed permissions to 0o777"
+                )
+
+            fh = RotatingFileHandler(
+                base_filename,
+                mode="a",
+                maxBytes=int(prefs.get("LOGSIZE")),
+                backupCount=int(prefs.get("LOGNUM")),
+            )
+        except Exception as f:
+            raise PermissionError(
+                f"Couldnt open logfile {base_filename}, and couldnt chmod our way out of it.\n"
+                + "-" * 20
+                + f"\ngot errors:\n{e}\n\n{f}\n"
+                + "-" * 20
+            )
+
     return fh
+
+
+# def _file_handler(base_filename: Path) -> RotatingFileHandler:
+#     # if directory doesn't exist, try to make it
+#     if not base_filename.parent.exists():
+#         base_filename.parent.mkdir(parents=True, exist_ok=True)
+
+#     fh = RotatingFileHandler(
+#         str(base_filename), mode="a", maxBytes=int(20 * (2**20)), backupCount=int(4)
+#     )
+#     return fh
