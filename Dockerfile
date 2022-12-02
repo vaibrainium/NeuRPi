@@ -6,7 +6,7 @@ WORKDIR /src/NeuRPi
 
 # Installing dependencies
 # COPY . /src/NeuRPi
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
-RUN pip install .
+# RUN pip install --no-cache-dir --upgrade -r requirements.txt
+# RUN pip install .
 
 # CMD ["/bin/bash"]
