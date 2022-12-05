@@ -1,11 +1,11 @@
 import logging
 import multiprocessing as mp
+import sys
 import threading
 
-import sys
-from NeuRPi.prefs import prefs
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
+from NeuRPi.prefs import prefs
 
 
 class Pilot:
@@ -72,6 +72,16 @@ class Pilot:
     def update_state(self):
         pass
 
+    def handshake(self):
+        hello = {
+            "pilot": self.name,
+            "ip": self.ip,
+            "state": self.state,
+            "prefs": prefs.get(),
+        }
+
+        self.node.send(self.parentid, "HANDSHAKE", value=hello)
+
     def l_start(self):
         pass
 
@@ -87,7 +97,8 @@ class Pilot:
 
 def main():
     a = Pilot()
-    prefs.set(key="NAME", val="rig_4")
+    a.handshake()
+    # prefs.set(key="NAME", val="rig_4")
     print(2)
     # a.quitting.wait(timeout=1)
     # sys.exit()

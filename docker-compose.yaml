@@ -9,6 +9,5 @@ services:
     env_file:
       - .env
     command: sleep infinity
-    network_mode: "host"
-
-# networks:
+    ports:
+      - 10000-10010:10000-10010
