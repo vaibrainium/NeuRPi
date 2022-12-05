@@ -1,5 +1,11 @@
 *.egg-info
+.gitignore
+.gitattributes
+
 data
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 */__pycache__/*
+logs
+env
+.dockerignore
