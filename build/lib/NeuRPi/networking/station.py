@@ -676,12 +676,12 @@ class Terminal_Station(Station):
         Args:
             pilots (dict): All node pilot dictionary
         """
-        super(Termianl_Station, self).__init__()
+        super(Terminal_Station, self).__init__()
 
         # by default terminal doesn't have a puster, since it's a end tree node and everything connects to it
         self.pusher = False
 
-        self.listen_port = CONFIG("MSGPORT")
+        self.listen_port = prefs.get("MSGPORT")
         self.id = "T"
 
         # message dictionary - what method to call for each typr of message received by the terminal class
@@ -700,7 +700,7 @@ class Terminal_Station(Station):
         )
 
         # dictionary that keep tracks of pilots
-        self.pilot = pilots
+        self.pilots = pilots
 
         # start a timer at the draw FPS of the terminal -- only send
         self.data_fps = 30
