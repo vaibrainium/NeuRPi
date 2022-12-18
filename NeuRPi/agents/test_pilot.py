@@ -1,7 +1,9 @@
 import logging
 import multiprocessing as mp
+import os
 import sys
 import threading
+from pathlib import Path
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
@@ -82,7 +84,7 @@ class Pilot:
 
         self.node.send(self.parentid, "HANDSHAKE", value=hello)
 
-    def l_start(self):
+    def l_start(self, msg):
         pass
 
     def l_stop(self):
@@ -98,6 +100,14 @@ class Pilot:
 def main():
     a = Pilot()
     a.handshake()
+
+    msg = {
+        "subjectID": "test_subject",
+        "task_module": "dynamic_coherence",
+        "task_phase": "4",
+    }
+
+    a.init_session_setup(msg)
     # prefs.set(key="NAME", val="rig_4")
     print(2)
     # a.quitting.wait(timeout=1)
