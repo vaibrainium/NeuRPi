@@ -608,7 +608,6 @@ class Station(multiprocessing.Process):
             # Log and spawn thread to respond to listen
             try:
                 listen_funk = self.listens[msg.key]
-                print(msg.key)
                 listen_thread = threading.Thread(target=listen_funk, args=(msg,))
                 listen_thread.start()
             except KeyError:

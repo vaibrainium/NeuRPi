@@ -1,3 +1,4 @@
+import os
 import threading
 from collections import OrderedDict as odict
 from pathlib import Path
@@ -83,37 +84,6 @@ class Terminal:
         if self._pilots is None:
             self._pilots = odict()
             self._pilots["rig_4"] = {"ip": "10.155.205.81"}
-
-            # pilot_db_fn = Path(prefs.get("PILOT_DB"))
-
-            # # if pilot file doesn't exist, make blank one
-            # if not pilot_db_fn.exists():
-            #     self.logger.warning(
-            #         f"No pilot_db.json file was found at {pilot_db_fn}, creating a new one"
-            #     )
-            #     self._pilots = odict()
-            #     with open(pilot_db_fn, "w") as pilot_file:
-            #         json.dump(self._pilots, pilot_file)
-
-            # # otherwise, try to load it
-            # else:
-            #     try:
-            #         # Load pilots db as ordered dictionary
-            #         with open(pilot_db_fn, "r") as pilot_file:
-            #             self._pilots = json.load(pilot_file, object_pairs_hook=odict)
-            #         self.logger.info(
-            #             f"successfully loaded pilot_db.json file from {pilot_db_fn}"
-            #         )
-            #         self.logger.debug(pformat(self._pilots))
-            #     except Exception as e:
-            #         self.logger.exception(
-            #             (
-            #                 f"Exception opening pilot_db.json file at {pilot_db_fn}, got exception: {e}.\n",
-            #                 "Not proceeding to prevent possibly overwriting corrupt pilot_db.file",
-            #             )
-            #         )
-            #         raise e
-
         return self._pilots
 
     # Listens & inter-object methods
@@ -146,8 +116,22 @@ class Terminal:
     def l_data(self):
         pass
 
-    def l_handshake(self):
+    def l_handshake(self, msg):
+        print(msg)
         pass
+
+    def init_session_setup(self, msg):
+        self.subjectID = msg["subjectID"]
+        self.task_module = msg["task_module"]
+        self.task_phase = msg["task_phase"]
+
+        self.data_path = Path(
+            prefs.get("DATADIR"), self.subjectID, self.task_module, self.task_phase
+        )
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
+
+        if
 
     def run(self):
         while True:
@@ -159,4 +143,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
