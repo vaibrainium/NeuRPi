@@ -1,10 +1,11 @@
+import collections
 import multiprocessing as mp
 from ctypes import c_bool
 from pathlib import Path
 from threading import Lock
-import collections
+
 import hydra
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 global _PREF_MANAGER
 global _PREFS
@@ -74,7 +75,7 @@ class Prefs:
                 return globals()["_PREFS"].copy()
         else:
             # try to get value from prefs manager
-            return globals()["_PREFS"][key].default
+            return globals()["_PREFS"][key]
 
     def set(self, key: str, val):
         """

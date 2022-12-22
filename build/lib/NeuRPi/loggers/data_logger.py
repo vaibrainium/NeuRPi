@@ -7,7 +7,7 @@ from typing import Optional, Union
 import pandas as pd
 
 import NeuRPi
-from NeuRPi.logger.logger import init_logger
+from NeuRPi.loggers.logger import init_logger
 
 
 class DataLogger:
