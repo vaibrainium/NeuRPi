@@ -49,7 +49,6 @@ class Pilot:
             "START": self.l_start,
             "STOP": self.l_stop,
             "PARAM": self.l_param,
-            "CHECK": self.l_checking,
         }
 
         # initialize station and node
@@ -70,9 +69,9 @@ class Pilot:
 
         # handshake on initialization
         self.ip = self.networking.get_ip()
-
-    def update_state(self):
-        pass
+        self.handshake()
+        self.logger.debug("handshake sent")
+        self.task = None
 
     def handshake(self):
         hello = {
@@ -81,37 +80,152 @@ class Pilot:
             "state": self.state,
             "prefs": prefs.get(),
         }
-
         self.node.send(self.parentid, "HANDSHAKE", value=hello)
 
-    def l_start(self, msg):
-        pass
+    def update_state(self):
+        """
+        Send current state to terminal
+        """
+        self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
-    def l_stop(self):
-        pass
+    def l_start(self, value):
+        """
+        Terminal requested to start running the task
+
+        Args:
+            value (dict): protocol parameters
+        """
+
+        if self.state == "RUNNING" or self.running.is_set():
+            self.logger.warning("Task already running. Cannot start new task")
+            return
+        self.logger.info(f"Starting task: {value['task_module']}")
+
+        self.state = "RUNNING"
+        self.running.set()
+        try:
+            self.task_module = value["task_module"]
+            self.subject_id = value["subject_id"]
+            self.stage_block.clear()
+
+            # Start the task on separate thread and update terminal
+            threading.Thread(
+                target=self.run_task, args=(self.task_module, value)
+            ).start()
+            self.update_state()
+
+        except Exception as e:
+            self.state = "IDLE"
+            self.logger.exception(f"Could not start the task: {e}")
+
+    def l_stop(self, value):
+        """
+        Terminal requested to stop the task
+        Clearing all running events and set stage_block
+
+        Args:
+            value: Ignored for now. Might implement in future to match terminal and pilot data
+        """
+        # Letting terminal know that we are stopping task
+        self.state = "STOPPING"
+        self.update_state()
+
+        self.running.clear()
+        self.stage_block.set()
+
+        # TODO: Perform data matching or post task routines
+
+        self.state = "IDLE"
+        self.update_state()
 
     def l_param(self):
         pass
 
-    def l_checking(self):
-        pass
+    def run_task(self, task_module, task_params):
+        """
+        Start running task under new thread
+
+        Initiate the task, and progress through each stage of task with `task.stages.next`
+
+        Send data to terminal after every stage
+
+        Waits for the task to clear `stage_block` between stages
+
+        """
+
+        self.logger.debug("initialing task")
+        self.task = task_module(stage_block=self.stage_block, **task_params)
+        self.logger.debug("task initialized")
+
+        # Is trial data expected?
+        trial_data = False
+        if hasattr(self.task, "TrialData"):
+            trial_data = True
+
+        # TODO: Initialize sending continuous data here
+        self.logger.debug("Starting task loop")
+        try:
+            while True:
+                # Calculate next stage data and prepare triggers
+                data = next(self.task.stages())()
+                self.logger.debug("called stage method")
+
+                if data:
+                    data["pilot"] = self.name
+                    data["subject_id"] = self.subject_id
+
+                    # send data back to terminal
+                    self.node.send("T", "DATA", data)
+
+                    # # TODO: Store a local copy
+                    # # the task class has a class variable DATA that lets us know which data the row is expecting
+                    # if trial_data:
+                    #     for k, v in data.items():
+                    #         if k in self.task.TrialData.columns.keys():
+                    #             row[k] = v
+                    # # If the trial is over (either completed or bailed), flush the row
+                    # if 'TRIAL_END' in data.keys():
+                    #     row.append()
+                    #     table.flush()
+                    # self.logger.debug('sent data')
+
+                # Waiting for stage block to clear
+                self.stage_block.wait()
+                self.logger.debug("stage block passed")
+
+                # Exit loop if the running flag is not set.
+                if not self.running.is_set():
+                    break
+        except Exception as e:
+            self.logger.exception(
+                f"got exception while running task; stopping task\n {e}"
+            )
+
+        finally:
+            self.logger.debug("stopping task")
+            try:
+                self.task.end()
+            except Exception as e:
+                self.logger.exception(f"got exception while stopping task: {e}")
+            del self.task
+            self.task = None
+            self.logger.debug("task stopped")
 
 
 def main():
-    a = Pilot()
-    a.handshake()
+    try:
+        pi = Pilot()
+        pi.handshake()
 
-    msg = {
-        "subjectID": "test_subject",
-        "task_module": "dynamic_coherence",
-        "task_phase": "4",
-    }
-
-    a.init_session_setup(msg)
-    # prefs.set(key="NAME", val="rig_4")
-    print(2)
-    # a.quitting.wait(timeout=1)
-    # sys.exit()
+        msg = {
+            "subjectID": "test_subject",
+            "task_module": "dynamic_coherence",
+            "task_phase": "4",
+        }
+        pi.quitting.wait()
+    except KeyboardInterrupt:
+        pi.quitting.set()
+        sys.exit()
 
 
 if __name__ == "__main__":
