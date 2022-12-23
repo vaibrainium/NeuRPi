@@ -1,19 +1,20 @@
-import queue
-from NeuRPi.tasks.trial_construct import TrialConstruct
-from Protocols.RDK.hardware.hardware_manager import HardwareManager
-from Protocols.RDK.hardware.behavior import Behavior
-from Protocols.RDK.tasks.training_dynamic import TrainingDynamic
-from Protocols.RDK.stimulus.RDK_manager import RDKManager
-from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
-
-import numpy as np
-import itertools
-import tables
-import threading
 import datetime
-from scipy.stats import pearson3
+import itertools
+import queue
+import threading
 import time
 
+import numpy as np
+import tables
+from scipy.stats import pearson3
+
+from NeuRPi.tasks.trial_construct import TrialConstruct
+from protocols.RDK.hardware.behavior import Behavior
+from protocols.RDK.hardware.hardware_manager import HardwareManager
+from protocols.RDK.stimulus.random_dot_kinematogram import \
+    RandomDotKinematogram
+from protocols.RDK.stimulus.RDK_manager import RDKManager
+from protocols.RDK.tasks.training_dynamic import TrainingDynamic
 
 
 class rtTask(TrialConstruct):

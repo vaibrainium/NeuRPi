@@ -2,7 +2,7 @@ import time
 from multiprocessing import Process
 
 from NeuRPi.stimulus.display_manager import DisplayManager
-from Protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
+from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
 
 
 class RDKManager(DisplayManager):
