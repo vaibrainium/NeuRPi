@@ -9,22 +9,21 @@
 #     pass
 
 
-class temp:
-    def __init__(self) -> None:
-        self._name = None
+import importlib
+import threading
 
-    @property
-    def name(self):
-        self._name = 2
-        return self._name
+# from protocols.RDK.data_model.subject import Subject
+from protocols.RDK.tasks.dynamic_training_rt import dynamic_training_rt
 
-    def change_name(self):
-        self._name = None
+if __name__ == "__main__":
+    stage_block = threading.Event()
+    # dynamic_training_rt(stage_block, subject_name="PSUIM4")
 
+    value = {
+        "task_module": "RDK",
+        "task_phase": "dynamic_training_rt",
+        "subject_id": "PSUIM4",
+    }
 
-a = temp()
-print(a.name)
-print(a._name)
-a.change_name()
-print(a.name)
-print(a._name)
+    # Importing protocol function/class object using importlib
+    a = dynamic_training_rt(stage_block, **value)

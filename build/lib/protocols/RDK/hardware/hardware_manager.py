@@ -1,38 +1,35 @@
 from NeuRPi.hardware.arduino import Arduino
-from NeuRPi.hardware.gpio import GPIO
 from NeuRPi.hardware.hardware import Hardware
-
+from NeuRPi.hardware.gpio import GPIO
 
 class HardwareManager(Arduino, GPIO):
     """
     Hardware Manager for RDK protocol
     """
 
-    def __init__(self, hardware_config=None):
+    def __init__(self, config = None):
         """
         Arguments:
             config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
         """
         self.calibration = 0
         self.hardware = {}
-        self.config = hardware_config
+        self.config = config
         self.init_hardware()
 
     def init_hardware(self):
         """
         Initialize all hardware required by the task. Defined in HARDWARE dictionary in configuration file.
         """
-        for group, container in self.config.items():
-            if group == "Arduino":
+        for group, container in self.config.HARDWARE.items():
+            if group == 'Arduino':
                 for name, properties in container.items():
-                    connect = properties["connection"]
-                    exec(
-                        f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})"""
-                    )
+                    connect = properties['connection']
+                    exec(f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})""")
                     exec(f"""self.hardware['{name}'].connect()""")
 
     def close_hardware(self):
-        raise Warning("TODO: Not Implemented")
+        raise Warning('TODO: Not Implemented')
 
     def read_licks(self):
         """
@@ -45,7 +42,7 @@ class HardwareManager(Arduino, GPIO):
                          2: Right Spout Free}
         """
         lick = None
-        message = self.hardware["Primary"].read()
+        message = self.hardware['Primary'].read()
         if message:
             lick = int(message) - 3
         return lick
@@ -95,17 +92,15 @@ class HardwareManager(Arduino, GPIO):
         Arguments:
             spout (str): 'Left','Right' or 'Center'
         """
-        if spout == "Left":
+        if spout == 'Left':
             raise Warning("TODO: Not Implemented")
-        elif spout == "Right":
+        elif spout == 'Right':
             raise Warning("TODO: Not Implemented")
-        elif spout == "Center":
+        elif spout == 'Center':
             raise Warning("TODO: Not Implemented")
         else:
-            raise Exception(
-                "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
-                " \n 'Right': For right spout \n 'Center': For center spout"
-            )
+            raise Exception("Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
+                            " \n 'Right': For right spout \n 'Center': For center spout")
 
     def close_reward_indefinitely(self, spout):
         """
@@ -113,19 +108,20 @@ class HardwareManager(Arduino, GPIO):
         Arguments:
             spout (str): 'Left','Right' or 'Center'
         """
-        if spout == "Left":
+        if spout == 'Left':
             raise Warning("TODO: Not Implemented")
-        elif spout == "Right":
+        elif spout == 'Right':
             raise Warning("TODO: Not Implemented")
-        elif spout == "Center":
+        elif spout == 'Center':
             raise Warning("TODO: Not Implemented")
         else:
             raise Exception(
                 "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
-                " \n 'Right': For right spout \n 'Center': For center spout"
-            )
+                " \n 'Right': For right spout \n 'Center': For center spout")
 
 
-if __name__ == "__main__":
+
+
+if __name__ == '__main__':
     a = HardwareManager()
     print(2)

@@ -7,7 +7,7 @@ import threading
 import time
 
 from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
-from protocols.RDK.stimulus.RDK_manager import RDKManager
+from protocols.RDK.stimulus.display_manager import RDKManager
 from protocols.RDK.tasks.rt_task import rtTask
 
 
