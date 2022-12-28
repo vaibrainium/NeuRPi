@@ -1,3 +1,4 @@
+import importlib
 import logging
 import multiprocessing as mp
 import os
@@ -108,13 +109,18 @@ class Pilot:
         self.running.set()
         try:
             self.task_module = value["task_module"]
+            self.task_phase = value["task_phase"]
             self.subject_id = value["subject_id"]
+
+            # Importing protocol function/class object using importlib
+            task = importlib.import_module(
+                "protocols." + self.task_module + ".tasks." + self.task_phase
+            )
+
             self.stage_block.clear()
 
             # Start the task on separate thread and update terminal
-            threading.Thread(
-                target=self.run_task, args=(self.task_module, value)
-            ).start()
+            threading.Thread(target=self.run_task, args=(self.task, value)).start()
             self.update_state()
 
         except Exception as e:
@@ -144,7 +150,7 @@ class Pilot:
     def l_param(self):
         pass
 
-    def run_task(self, task_module, task_params):
+    def run_task(self, task, task_params):
         """
         Start running task under new thread
 
@@ -157,7 +163,7 @@ class Pilot:
         """
 
         self.logger.debug("initialing task")
-        self.task = task_module(stage_block=self.stage_block, **task_params)
+        self.task = task(stage_block=self.stage_block, **task_params)
         self.logger.debug("task initialized")
 
         # Is trial data expected?
@@ -196,9 +202,10 @@ class Pilot:
                 self.stage_block.wait()
                 self.logger.debug("stage block passed")
 
-                # Exit loop if the running flag is not set.
-                if not self.running.is_set():
+                # Exit loop if the running flag is not set and current trial has ended.
+                if not self.running.is_set() and "TRIAL_END" in data.keys():
                     break
+
         except Exception as e:
             self.logger.exception(
                 f"got exception while running task; stopping task\n {e}"
@@ -222,10 +229,11 @@ def main():
 
         msg = {
             "subjectID": "test_subject",
-            "task_module": "dynamic_coherence",
+            "task_module": "dynamic_coherence_rt",
             "task_phase": "4",
         }
         pi.quitting.wait()
+
     except KeyboardInterrupt:
         pi.quitting.set()
         sys.exit()

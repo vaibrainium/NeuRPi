@@ -1,7 +1,4 @@
 import threading
-
-# import multiprocessing
-# from multiprocessing import Process, Queue
 import time
 from queue import Queue as thread_queue
 
@@ -11,7 +8,7 @@ from omegaconf import DictConfig, OmegaConf
 
 class Display:
     """
-    Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
+    Show Stimulus based on incoming messages.
 
     """
 

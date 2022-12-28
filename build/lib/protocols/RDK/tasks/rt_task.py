@@ -35,6 +35,16 @@ class RTTask(TrialConstruct):
         current_stage (int): As each is reached, update for asynchronous event reference
     """
 
+    class TrialData(tables.IsDescription):
+        trial_num = tables.Int32Col()
+        target = tables.StringCol(1)
+        response = tables.StringCol(1)
+        correct = tables.Int32Col()
+        correction = tables.Int32Col()
+        RQ_timestamp = tables.StringCol(26)
+        DC_timestamp = tables.StringCol(26)
+        bailed = tables.Int32Col()
+
     def __init__(
         self,
         trial_manager=None,

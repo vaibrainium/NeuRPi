@@ -1,5 +1,4 @@
 import threading
-
 # import multiprocessing
 # from multiprocessing import Process, Queue
 import time
@@ -9,7 +8,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 
-class Display:
+class DisplayRoutine:
     """
     Show Stimulus based on incoming messages. MUST CONTAIN FOLLOWING BASIC TRIAL PHASES:
 
@@ -17,7 +16,7 @@ class Display:
 
     def __init__(self, configuration=None, courier=None):
 
-        super(Display, self).__init__()
+        super(DisplayRoutine, self).__init__()
         import pygame
 
         self.courier = courier
@@ -212,4 +211,4 @@ if __name__ == "__main__":
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
 
-    display_window = Display(configuration=config)
+    display_window = DisplayRoutine(configuration=config)

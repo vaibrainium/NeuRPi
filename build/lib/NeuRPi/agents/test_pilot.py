@@ -24,7 +24,7 @@ class Pilot:
     node = None
     networking = None
 
-    def __init__(self, warn_defaults=True):
+    def __init__(self):
 
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
@@ -71,7 +71,10 @@ class Pilot:
         self.ip = self.networking.get_ip()
         self.handshake()
         self.logger.debug("handshake sent")
+
         self.task = None
+        self.stimulus_manager = None
+        self.stimulus_handler = None
 
     def handshake(self):
         hello = {
