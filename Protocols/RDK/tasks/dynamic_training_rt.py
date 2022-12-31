@@ -14,10 +14,10 @@ from NeuRPi.utils.get_config import get_configuration
 from protocols.RDK.data_model.subject import Subject
 from protocols.RDK.hardware.behavior import Behavior
 from protocols.RDK.hardware.hardware_manager import HardwareManager
-from protocols.RDK.stimulus.display_manager import \
-    DisplayManager as BaseDisplayManager
-from protocols.RDK.stimulus.random_dot_kinematogram import \
-    RandomDotKinematogram as BaseRDKManager
+from protocols.RDK.stimulus.display_manager import DisplayManager as BaseDisplayManager
+from protocols.RDK.stimulus.random_dot_kinematogram import (
+    RandomDotKinematogram as BaseRDKManager,
+)
 from protocols.RDK.tasks.rt_task import RTTask
 
 
@@ -441,6 +441,12 @@ class TrialRoutine(TrialConstruct):
             f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
         )
         return data
+
+    def reinforcement_stage(self):
+        """
+        Shows stimulus (in this case, visual stimulus) for certain time after response has been made or response window is passed. This stage reinforces the stimulus-choice association.
+
+        """
 
     def must_respond_to_proceed(self):
         """
