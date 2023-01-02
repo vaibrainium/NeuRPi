@@ -278,7 +278,10 @@ class SessionManager:
 
 class TrialRoutine(TrialConstruct):
     """
-    Class for running trial structure i.e., how each trial should progress given `SessionManager`. Here we will run reaction time task.
+    Class for executing each trial with provided structure.
+    Basic trial structures inhereted from :class: `TrialConstruch` are:
+
+    running trial structure i.e., how each trial should progress given `SessionManager`. Here we will run reaction time task.
 
     Two-alternative force choice task for random dot motion tasks
     **Stages**
@@ -442,11 +445,14 @@ class TrialRoutine(TrialConstruct):
         )
         return data
 
-    def reinforcement_stage(self):
-        """
-        Shows stimulus (in this case, visual stimulus) for certain time after response has been made or response window is passed. This stage reinforces the stimulus-choice association.
+    def reinforcement_state(self):
+        """Shows stimulus (in this case, visual stimulus) for certain time after response has been made or response window is passed.
+        This stage reinforces the stimulus-choice association.
 
+        Args:
+            duration (_type_): _description_
         """
+        d
 
     def must_respond_to_proceed(self):
         """

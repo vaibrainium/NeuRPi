@@ -13,11 +13,11 @@ from scipy.stats import pearson3
 # If need be, work on multithreading later
 
 
-class TrialConstruct(object):
+class TrialConstruct:
     """
     Meta Class for contructing trial phases such as fixation, stimulus_rt, stimulus_delay, response, reinforcement, intertrial
 
-    Phases:
+    Arguments:
         fixation: Runs fixation phase of the trial. Repeats phase until agent doesn't respond for given trigger time.
         stimulus_rt: Runs stimulus phase till agent responds till set max time.
         stimulus_delay: Runs stimulus passively for set time. If subject responds before delay period, makes trial invalid.
