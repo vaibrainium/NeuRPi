@@ -6,8 +6,8 @@ import sys
 import threading
 import time
 
-from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
 from protocols.RDK.stimulus.display_manager import RDKManager
+from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
 from protocols.RDK.tasks.rt_task import rtTask
 
 
@@ -26,7 +26,7 @@ class RigManager:
         self.quitting = threading.Event()  # Quitting the task?
         self.running = threading.Event()  # Is task running or paused?
 
-        self.stimulus_handler = multiprocessing.Queue()
+        self.stimulus_queue = multiprocessing.Queue()
 
         # # Establishing connection
         # self.ip = self.get_ip()
@@ -125,13 +125,13 @@ class RigManager:
         # Creating task object and setting running event
         self.task = task_class(
             stage_block=self.stage_block,
-            stimulus_handler=self.stimulus_handler,
+            stimulus_queue=self.stimulus_queue,
             **task_params
         )
         stim_arguments = {
             "stimulus": RandomDotKinematogram,
             "configuration": self.task.config,
-            "courier": self.stimulus_handler,
+            "courier": self.stimulus_queue,
         }
         self.stimulus_manager = multiprocessing.Process(
             target=RDKManager, kwargs=stim_arguments, daemon=True

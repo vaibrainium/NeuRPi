@@ -2,7 +2,7 @@ import threading
 from queue import Queue
 
 
-class Behavior():
+class Behavior:
     """
     General class for monitoring behavior during the task. This also takes care of interacting between multiple
     hardwares (lick sensors, camera, rotary encoder etc). This class runs on its own thread to achieve better accuracy.
@@ -16,7 +16,7 @@ class Behavior():
         self.stage_block = stage_block
         self.response_block = response_block
         self.trigger = {}
-        self.response_handler = Queue()
+        self.response_queue = Queue()
         self.response = None
         self.response_time = None
         self.thread = None
@@ -25,8 +25,8 @@ class Behavior():
 
     def start(self):
         # Starting acquisition process on different thread
-        if not self.response_handler:
-            raise Warning('Starting behavior acquisition with monitoring for response')
+        if not self.response_queue:
+            raise Warning("Starting behavior acquisition with monitoring for response")
         self.thread = threading.Thread(target=self._acquire, daemon=True).start()
 
     def stop(self):
@@ -42,8 +42,8 @@ class Behavior():
             if lick:
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
-                    self.response_handler.put(lick)
+                    self.response_queue.put(lick)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

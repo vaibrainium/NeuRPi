@@ -1,27 +1,27 @@
 import datetime
 import itertools
+import multiprocessing as mp
 import queue
 import threading
 import time
-from copy import copy, deepcopy
 
+import hydra
 import numpy as np
 from scipy.stats import pearson3
 
 from NeuRPi.prefs import prefs
-from NeuRPi.tasks.trial_construct import TrialConstruct
 from NeuRPi.utils.get_config import get_configuration
 from protocols.RDK.data_model.subject import Subject
 from protocols.RDK.hardware.behavior import Behavior
 from protocols.RDK.hardware.hardware_manager import HardwareManager
 from protocols.RDK.stimulus.display_manager import DisplayManager as BaseDisplayManager
 from protocols.RDK.stimulus.random_dot_kinematogram import (
-    RandomDotKinematogram as BaseRDKManager,
+    RandomDotKinematogram as BaseRDK,
 )
 from protocols.RDK.tasks.rt_task import RTTask
 
 
-class RDKManager(BaseRDKManager):
+class RandomDotKinematogram(BaseRDK):
     """
     Class for managing stimulus structure i.e., shape, size and location of the stimuli
 
@@ -29,17 +29,21 @@ class RDKManager(BaseRDKManager):
     """
 
     def __init__(self):
-        super(RDKManager, self).__init__()
+        super(RandomDotKinematogram, self).__init__()
         pass
 
 
-class DisplayManager(BaseDisplayManager):
+class Stimulus_Display(BaseDisplayManager):
     """
-    Class for managing stimulus display
+    Class for diplaying stimulus
+
+    Inhereting from base :class: `DisplayManager`
     """
 
-    def __init__(self):
-        super(DisplayManager, self).__init__()
+    def __init__(
+        self, stimulus_manager=RandomDotKinematogram, configuration=None, courier=None
+    ):
+        super().__init__(stimulus_manager, configuration, courier)
         pass
 
 
@@ -50,7 +54,7 @@ class SessionManager:
 
     def __init__(self, config, subject=None):
         self.config = config
-        self.task_pars = self.config.TASK_PARAMETERS
+        self.task_pars = self.config.TASK
         self.subject = subject
         self.coh_to_xactive = None
         self.coh_to_xrange = None
@@ -276,269 +280,87 @@ class SessionManager:
         self.subject.save()
 
 
-class TrialRoutine(TrialConstruct):
+class dynamic_training_rt:
     """
-    Class for executing each trial with provided structure.
-    Basic trial structures inhereted from :class: `TrialConstruch` are:
-
-    running trial structure i.e., how each trial should progress given `SessionManager`. Here we will run reaction time task.
-
-    Two-alternative force choice task for random dot motion tasks
-    **Stages**
-    * **fixation** - fixation time for baseline
-    * **stimulus** - Stimulus display
-    * **reinforcement** - deliver reward/punishment
-    * **intertrial** - waiting period between two trials
-
-    Attributes:
-        stim: Current stimulus (coherence)
-        target ("L","R"): Correct response
-        distractor ("L", "R"): Incorrect response
-        response ("L", "R"): Response to discrimination
-        correct (0, 1): Current trial was correct/incorrect
-        correction_trial (bool): If using correction trial was
-        trial_counter (from itertools.count): What is the currect trial was
-        discrim_playiong (bool): In the stimulus playing?
-        bailed (0, 1): Invalid trial
-        current_stage (int): As each is reached, update for asynchronous event reference
+    Dynamic Training Routine with reaction time trial structure
     """
 
     def __init__(
         self,
-        config=None,
-        SessionManager=None,
-        stimulus_handler=None,
         stage_block=None,
-        **kwargs,
-    ) -> None:
-        """
-        Args:
-            stage_block (:class:`threading.Event`): Signal when task stages complete.
-            rollling_perf (dict): Dictionary for keeping track of rolling performance over multiple sessions.
-            stim (dict): Stimuli like::
-                "sitm": {
-                    "L": [{"type": "Tone", ...}],
-                    "R": [{"type": "Tone", ...}]
-                }
-            reward (float): duration of solenoid open in ms
-            req_reward (bool): Whether to give a water reward in the center port for requesting trials
-            punish_stim (bool): Do a white noise punishment stimulus
-            punish_dur (float): Duration of white noise in ms
-            correction (bool): Should we do correction trials?
-            correction_pct (float):  (0-1), What proportion of trials should randomly be correction trials?
-            bias_mode (False, "thresholded_linear"): False, or some bias correction type (see :class:`.managers.Bias_Correction` )
-            bias_threshold (float): If using a bias correction mode, what threshold should bias be corrected for?
-            current_trial (int): If starting at nonzero trial number, which?
-            stim_light (bool): Should the LED be turned blue while the stimulus is playing?
-            **kwargs:
-        """
-        # Gathering all parameters
-        self.config = config
-        self.task_pars = config.TASK_PARAMETERS
-        # Event locks and triggers
+        subject_id=None,
+        task_module=None,
+        task_phase=None,
+        **kwargs
+    ):
+
+        self.subject_id = subject_id
+        self.task_module = task_module
+        self.task_phase = task_phase
+        self.__dict__.update(kwargs)
+
+        # Preparing parameters parameters
+        directory = "protocols/RDK/config"
+        filename = "dynamic_coherences.yaml"
+        self.config = get_configuration(directory=directory, filename=filename)
+        self.task_pars = self.config.TASK_PARAMETERS  # Get all task parameters
+        self.stim_pars = self.config.STIMULUS
+
+        # Preparing subject
+        self.subject = Subject(
+            name=self.subject_id,
+            task_module=self.task_module,
+            task_phase=self.task_phase,
+            config=self.config,
+        )
+
+        # Event locks, triggers
         self.stage_block = stage_block
         self.response_block = threading.Event()
         self.response_block.clear()
 
-        self.courier = queue.Queue()
+        # Preparing display
+        self.stimulus_queue = mp.Queue()
+        stim_arguments = {
+            "stimulus_manager": RandomDotKinematogram,
+            "stimulus_configuration": self.config.STIMULUS,
+            "stimulus_courier": self.stimulus_queue,
+        }
 
-        # Instantiate all objects
-        self.session_manager = SessionManager(self.task_pars)
-        self.hardware_manager = HardwareManager(self.config.HARDWARE)
-        self.behavior = Behavior(
-            hardware_manager=self.hardware_manager,
+        self.timers = {
+            "session": datetime.datetime.now(),
+            "trial": datetime.datetime.now(),
+        }
+        # Preparing Managers
+        self.managers = {}
+        self.managers["session"] = SessionManager(
+            config=self.config, subject=self.subject
+        )
+        self.managers["hardware"] = HardwareManager(self.config)
+        self.managers["display"] = mp.Process(
+            target=Stimulus_Display, kwargs=stim_arguments, daemon=True
+        )
+        self.managers["behavior"] = Behavior(
+            hardware_manager=self.managers["hardware"],
+            response_block=self.response_block,
+            response_log=self.subject["lick"],
+            timers=self.timers,
+        )
+
+        self.managers["trial"]: RTTask(
             stage_block=self.stage_block,
             response_block=self.response_block,
+            stimulus_queue=self.stimulus_queue,
+            managers=self.managers,
+            timers=self.timers,
         )
-        self.behavior.start()
-        super(TrialRoutine, self).__init__(
-            stage_block=self.stage_block,
-            response_block=self.response_block,
-            stimulus_handler=stimulus_handler,
-            response_handler=self.behavior.response_handler,
-        )
+        self.stages = self.managers["trial"].stages
 
-        # Variable parameters
-        self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
-        self.target = None
-        self.response = None
-        self.bailed = None
-        self.correct = None
-        self.response_time = None
-        self.correction_trial = None
-        self.valid = None
-        self.start = None
-        self.fixation_duration = None
-        self.stimulus_duration = None
-        self.stimulus_pars = None
-        self.intertrial_duration = None
-
-        # We make a list of the variables that need to be reset each trial, so it's easier to do
-        self.resetting_variables = [self.response, self.response_time]
-
-        # This allows us to cycle through the task by just repeatedly calling self.stages.next()
-        stage_list = [
-            self.fixation_stage,
-            self.stimulus_stage,
-            self.reinforcement_stage,
-            self.must_respond_to_proceed,
-            self.intertrial_stage,
-        ]
-        self.num_stages = len(stage_list)
-        self.stages = itertools.cycle(stage_list)
-
-    def fixation_stage(self):
-        self.trial_timer = time.time()
-        self.fixation_duration = self.task_pars.timings.fixation.value
-        self.fixation(duration=self.fixation_duration)
-        # Get current trial properties
-        if not self.correction_trial:
-            self.current_trial = next(self.trial_counter)
-        self.stimulus_pars = self.session_manager.next_trial(self.correction_trial)
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
-        }
-        return data
-
-    def stimulus_stage(self):
-        """
-        Stage 1: Show stimulus and wait for response trigger on target/distractor input
-        Returns:
-            data (dict):
-            {
-            }
-        """
-        print(2)
-        # Set triggers, set display and start timer
-        if self.task_pars.training_type.value < 2:
-            self.stimulus_duration = (
-                self.task_pars.training_type.active_passive.passive_rt_mu
-                + (
-                    pearson3.rvs(
-                        self.task_pars.training_type.active_passive.passive_rt_sigma
-                    )
-                    * 1.5
-                )
-            )
-        else:
-            self.stimulus_duration = self.task_pars.timings.stimulus.max_viewing
-
-        self.stimulus_rt(
-            duration=self.stimulus_duration,
-            min_viewing_duration=self.task_pars.timings.stimulus.min_viewing,
-            arguments=self.stimulus_pars,
-        )
-
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
-            "response": self.response,
-            "response_time": self.response_time,
-        }
-        self.response_time = (
-            self.response_time + self.task_pars.timings.stimulus.min_viewing
-        )
-        self.stage_block.wait()
-        print(
-            f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
-        )
-        return data
-
-    def reinforcement_state(self):
-        """Shows stimulus (in this case, visual stimulus) for certain time after response has been made or response window is passed.
-        This stage reinforces the stimulus-choice association.
-
-        Args:
-            duration (_type_): _description_
-        """
-        d
-
-    def must_respond_to_proceed(self):
-        """
-        Returns:
-            data (dict):
-            {
-            }
-        """
-        print(4)
-        # Agent must consume reward before proceeding
-        if self.correct:
-            self.stage_block.clear()
-            self.must_respond(targets=[self.stimulus_pars["target"]])
-            # self.stage_block.wait()
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
-        }
-        return data
-
-    def intertrial_stage(self, *args, **kwargs):
-        """
-        Stage 3: Inter-trial Interval.
-        Returns:
-            data (dict):
-            {
-            }
-        """
-        print(5)
-        self.intertrial(duration=self.intertrial_duration)
-        self.trial_manager.update_EOT()
-
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
-            "TRIAL_END": True,
-        }
-        self.stage_block.wait()
-        return data
-
-
-class dynamic_training_rt:
-    """
-    Dynamic Training Routine
-    """
-
-    def __init__(self, stage_block, **kwargs):
-        self.subject_id = None
-        self.task_module = None
-        self.task_phase = None
-        self.__dict__.update(kwargs)
-
-        import hydra
-
-        directory = "protocols/RDK/config"
-        filename = "dynamic_coherences.yaml"
-        config = get_configuration(directory=directory, filename=filename)
-
-        subject = Subject(
-            name=self.subject_id,
-            task_module=self.task_module,
-            task_phase=self.task_phase,
-            config=config,
-        )
-
-        a = SessionManager(config=config, subject=subject)
-        a.subject.rolling_perf["accuracy"][:2] = 0.8
-        a.subject.rolling_perf["accuracy"][-2:] = 0.8
-        coherence = a.next_trial(None)
-        coherence = a.next_trial(1)
-        pass
-
-    # TrialRoutine(
-    #     config=config,
-    #     session_manager=SessionManager,
-    #     stimulus_handler=None,
-    #     stage_block=stage_block,
-    # )
-    # a = SessionManager(config=config)
-    # a.generate_trials_schedule()
-    # a.next_trial()
-    # pass
-
-    # subject = Subject("PSUIM4", task_module="RDK", task_phase="dynamic_training")
-    # pass
-    # pass
+        # Starting required managers
+        self.managers["display"].start()
+        time.sleep(2)
+        self.session_timer = datetime.datetime.now()
+        self.managers["behavior"].start(self.session_timer)
 
 
 if __name__ == "__main__":

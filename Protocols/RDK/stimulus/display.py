@@ -12,12 +12,12 @@ class Display:
 
     """
 
-    def __init__(self, configuration=None, courier=None):
+    def __init__(self, stimulus_configuration=None, stimulus_courier=None):
 
         super(Display, self).__init__()
         import pygame
 
-        self.courier = courier
+        self.courier = stimulus_courier
         self.message = {}
 
         self.lock = threading.Lock()
@@ -26,7 +26,7 @@ class Display:
         self.frame_queue_size = 100
         self.frame_queue = thread_queue(maxsize=self.frame_queue_size)
 
-        self.stim_config = configuration.STIMULUS
+        self.stim_config = stimulus_configuration
         self.courier_map = self.stim_config.courier_handle
         self.window_size = eval(self.stim_config.display.window_size)
 

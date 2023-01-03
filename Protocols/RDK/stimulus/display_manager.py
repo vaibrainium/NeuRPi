@@ -21,15 +21,16 @@ class DisplayManager(Display):
         initiate_intertrial - show intertrial display
     """
 
-    def __init__(self, stimulus_manager=None, configuration=None, courier=None):
+    def __init__(
+        self, stimulus_manager=None, stimulus_configuration=None, stimulus_courier=None
+    ):
+        super(DisplayManager, self).__init__(
+            stimulus_configuration,
+            stimulus_courier,
+        )
 
-        self.config = configuration
-        # # Get configuration for this task -> self.config
-        # self.config = self.get_configuration(directory='Protocols/RDK/config', filename='stimulus.yaml')
+        self.courier_map = stimulus_configuration.courier_handle
         self.RDK = stimulus_manager()  # RandomDotKinematogram()
-
-        super(DisplayManager, self).__init__(configuration=self.config, courier=courier)
-        self.courier_map = self.stim_config.courier_handle
 
     def initiate_fixation(self):
         if self.courier_map.initiate_fixation.visual.need_update:
@@ -159,7 +160,7 @@ def main():
     config = hydra.compose(filename, overrides=[])
 
     courier = queue.Queue()
-    a = DisplayManager(configuration=config, courier=courier)
+    a = DisplayManager(stimulus_configuration=config.STIMULUS, stimulus_courier=courier)
     while True:
         print("Starting Fixation")
         message = "('initiate_fixation', {})"
