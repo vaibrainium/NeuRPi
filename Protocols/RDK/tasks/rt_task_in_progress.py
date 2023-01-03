@@ -9,8 +9,6 @@ import tables
 from scipy.stats import pearson3
 
 from NeuRPi.tasks.trial_construct import TrialConstruct
-from protocols.RDK.hardware.behavior import Behavior
-from protocols.RDK.hardware.hardware_manager import HardwareManager
 
 
 class RTTask(TrialConstruct):
@@ -41,6 +39,7 @@ class RTTask(TrialConstruct):
         response_block=None,
         stimulus_queue=None,
         managers=None,
+        subject=None,
         config=None,
         timers=None,
         **kwargs,
@@ -73,6 +72,7 @@ class RTTask(TrialConstruct):
             response_queue=managers["behavior"].response_queue,
         )
 
+        self.subject = subject
         self.config = config
         self.timers = timers
 
@@ -81,13 +81,17 @@ class RTTask(TrialConstruct):
         self.response_block = response_block
 
         # Initializing managers
-        self.session_manager = managers["session"]
-        self.hardware_manager = managers["hardware"]
+        self.managers = managers
 
         # Variable parameters
         # Counters
-        self.trial_counter = itertools.count(int(kwargs.get("current_trial", 0)))
-        self.attempt_counter = itertools.count(int(kwargs.get("current_attempt", 0)))
+        self.counters = {
+            "trial": 0,
+            "attempt": 0,
+            "correct": 0,
+            "incorrect": 0,
+            "noresponse_no": 0,
+        }
         self.current_trial = None
         self.current_attempt = None
         self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
@@ -116,7 +120,6 @@ class RTTask(TrialConstruct):
             self.fixation_stage,
             self.stimulus_stage,
             self.reinforcement_stage,
-            self.must_respond_to_proceed,
             self.intertrial_stage,
         ]
         self.num_stages = len(stage_list)
@@ -138,15 +141,16 @@ class RTTask(TrialConstruct):
 
         # Get current trial properties
         if not self.correction_trial:
-            self.current_trial = next(self.trial_counter)
-            self.attempt_counter = itertools.count(int(0))
+            self.counters["trial"] += 1
+            self.counters["attempt"] = 0
         else:
-            self.current_attempt = next(self.attempt_counter)
+            self.counters["attempt"] += 1
 
-        self.stimulus_pars = self.session_manager.next_trial(self.correction_trial)
+        self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
+            "subject_id": self.subject.name,
+            "trial_counters": self.counters,
         }
         return data
 
@@ -160,18 +164,18 @@ class RTTask(TrialConstruct):
         # Clear stage block
         self.stage_block.clear()
         # Determine stage parameters
-        min_viewing_duration = self.task_pars.timings.stimulus.min_viewing
+        min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
         stimulus_arguments = self.stimulus_pars
         targets = [-1, 1]
-        if self.task_pars.training_type.value < 0:
-            duration = self.task_pars.training_type.active_passive.passive_rt_mu + (
+        if self.config.TASK.training_type.value < 0:
+            duration = self.config.TASK.training_type.active_passive.passive_rt_mu + (
                 pearson3.rvs(
-                    self.task_pars.training_type.active_passive.passive_rt_sigma
+                    self.config.TASK.training_type.active_passive.passive_rt_sigma
                 )
                 * 1.5
             )
         else:
-            duration = self.task_pars.timings.stimulus.max_viewing
+            duration = self.config.TASK.timings.stimulus.max_viewing
 
         # implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {
@@ -193,7 +197,7 @@ class RTTask(TrialConstruct):
         }
 
         self.response_time = (
-            self.response_time + self.task_pars.timings.stimulus.min_viewing
+            self.response_time + self.config.TASK.timings.stimulus.min_viewing
         )
         self.stage_block.wait()
         print(
@@ -231,10 +235,10 @@ class RTTask(TrialConstruct):
 
         elif self.stimulus_pars["target"] != self.response:  # Incorrect Trial
             stimulus_arguments["outcome"] = "incorrect"
-            duration = self.task_pars.feedback.incorrect.time.value
+            duration = self.config.TASK.feedback.incorrect.time.value
             self.valid, self.correct, self.correction_trial = [1, 0, 1]
-            iti_decay = self.task_pars.feedback.incorrect.intertrial
-            self.intertrial_duration = self.task_pars.timings.intertrial.value + (
+            iti_decay = self.config.TASK.feedback.incorrect.intertrial
+            self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base * np.exp(iti_decay.power * self.response_time)
             )
             # Starting reinforcement
@@ -245,7 +249,7 @@ class RTTask(TrialConstruct):
 
         elif self.stimulus_pars["target"] == self.response:  # Correct Trial
             stimulus_arguments["outcome"] = "correct"
-            duration = self.task_pars.feedback.correct.time.value
+            duration = self.config.TASK.feedback.correct.time.value
 
             if self.response == -1:  # Left Correct
                 self.managers["hardware"].reward_left(
@@ -256,7 +260,7 @@ class RTTask(TrialConstruct):
                     self.config.SUBJECT.reward_per_pulse
                 )
             self.valid, self.correct, self.correction_trial = [1, 1, 0]
-            self.intertrial_duration = self.task_pars.timings.intertrial.value
+            self.intertrial_duration = self.config.TASK.timings.intertrial.value
 
             # Starting reinforcement
             self.stimulus_queue.put(
