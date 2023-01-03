@@ -333,9 +333,6 @@ class dynamic_training_rt:
         }
         # Preparing Managers
         self.managers = {}
-        self.managers["session"] = SessionManager(
-            config=self.config, subject=self.subject
-        )
         self.managers["hardware"] = HardwareManager(self.config)
         self.managers["display"] = mp.Process(
             target=Stimulus_Display, kwargs=stim_arguments, daemon=True
@@ -343,17 +340,23 @@ class dynamic_training_rt:
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
-            response_log=self.subject["lick"],
+            response_log=self.subject.lick,
             timers=self.timers,
         )
-
+        self.managers["session"] = SessionManager(
+            subject=self.subject,
+            config=self.config,
+        )
         self.managers["trial"]: RTTask(
             stage_block=self.stage_block,
             response_block=self.response_block,
             stimulus_queue=self.stimulus_queue,
             managers=self.managers,
+            subject=self.subject,
+            config=self.config,
             timers=self.timers,
         )
+
         self.stages = self.managers["trial"].stages
 
         # Starting required managers

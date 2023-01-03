@@ -1,7 +1,6 @@
 import csv
 import os
 import pickle
-from copy import copy, deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -71,10 +70,6 @@ class Subject(BaseSubject):
             # Trial parameters
             "total_trials": self.rolling_perf["total_trials"],
             "total_reward": self.rolling_perf["total_reward"],
-            "attempt_no": 0,
-            "correct_no": 0,
-            "incorrect_no": 0,
-            "noresponse_no": 0,
             "passive_bias_correction": True,
             "active_bias_correction": False,
             "bias_replace": 1,
