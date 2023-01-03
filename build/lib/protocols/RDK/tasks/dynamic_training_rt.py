@@ -62,7 +62,7 @@ class TrialRoutine(SessionManager):
         self,
         task_pars=None,
         session_manager=None,
-        stimulus_handler=None,
+        stimulus_queue=None,
         stage_block=None,
         **kwargs
     ) -> None:

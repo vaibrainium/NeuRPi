@@ -38,7 +38,7 @@ class RTTask(TrialConstruct):
     def __init__(
         self,
         trial_manager=None,
-        stimulus_handler=None,
+        stimulus_queue=None,
         stage_block=None,
         **kwargs,
     ):
@@ -89,12 +89,12 @@ class RTTask(TrialConstruct):
         )
         self.behavior.start()
 
-        # super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_handler=self.stimulus_manager.courier, response_handler=self.behavior.response_handler)
+        # super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_queue=self.stimulus_manager.courier, response_queue=self.behavior.response_queue)
         super(rtTask, self).__init__(
             stage_block=self.stage_block,
             response_block=self.response_block,
-            stimulus_handler=stimulus_handler,
-            response_handler=self.behavior.response_handler,
+            stimulus_queue=stimulus_queue,
+            response_queue=self.behavior.response_queue,
         )
 
         # Variable parameters

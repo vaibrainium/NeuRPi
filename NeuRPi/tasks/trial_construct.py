@@ -32,8 +32,8 @@ class TrialConstruct:
         self,
         stage_block,
         response_block,
-        stimulus_handler,
-        response_handler,
+        stimulus_queue,
+        response_queue,
         *args,
         **kwargs,
     ):
@@ -41,12 +41,12 @@ class TrialConstruct:
         Arguments:
             stage_block (threading.Event): Managing stage
             stim_handler (queue.Queue): Queue for sending message to stim_manager
-            response_handler (queue.Queue): Queue for checking if response has been made
+            response_queue (queue.Queue): Queue for checking if response has been made
         """
 
         # Task Variables
-        self.stimulus_handler = stimulus_handler
-        # self.response_handler = response_handler
+        self.stimulus_queue = stimulus_queue
+        # self.response_queue = response_queue
         self.stages = (
             "fixation",
             "stimulus_rt",
@@ -61,44 +61,44 @@ class TrialConstruct:
         self.response_block = response_block  # threading.Event used by the pilot to manage stage transitions
         self.trigger = {}
 
-        self.trial_counter = count(int(kwargs.get("current_trial", 0)))
-        self.current_trial = int(kwargs.get("current_trial", 0))
         self.response = None
         self.response_time = None
+        self.responded = None
 
         self.thread = threading.Thread(
-            target=self.monitor_response, args=[response_handler], daemon=True
+            target=self.monitor_response, args=[response_queue], daemon=True
         )
         self.thread.start()
 
-    def monitor_response(self, response_handler):
+    def monitor_response(self, response_queue):
         """
         Monitoring response from agent when requested by 'response_block.set()'.
         Monitoring can be either GO or NoGO for requested time. Conditions are passed by
         setting 'self.trigger' dictionary type: NoGO/GO and time: float in ms
         """
         while True:
-            response_handler.queue.clear()
+            response_queue.queue.clear()
             self.response_block.wait()
-            monitor_behavior = True
+            monitoring_behavior = True
             self.response = np.NaN
             self.response_time = np.NaN
+            self.responded = False
 
             start = time.time()
             wait_time = self.trigger["duration"]  # Converting wait time from ms to sec
             try:
                 # When agent is supposed to fixate on one of the targets
                 if self.trigger["type"] == "FIXATE_ON":
-                    while monitor_behavior:
+                    while monitoring_behavior:
                         if time.time() - start > wait_time:
-                            monitor_behavior = False
-                        if not response_handler.empty():
-                            self.response = response_handler.get()
+                            monitoring_behavior = False
+                        if not response_queue.empty():
+                            self.response = response_queue.get()
                             if self.response not in self.trigger["targets"]:
                                 self.response_time = time.time() - start
-                                response_handler.queue.clear()
-                                monitor_behavior = False
-                                # self.monitor_response(response_handler)
+                                response_queue.queue.clear()
+                                monitoring_behavior = False
+                                # self.monitor_response(response_queue)
                     if self.response in self.trigger["targets"]:
                         self.response_block.clear()
                         self.stage_block.set()
@@ -106,43 +106,46 @@ class TrialConstruct:
 
                 # When agent is supposed to wait on one of the targets
                 elif self.trigger["type"] == "WAIT_ON":
-                    while monitor_behavior:
+                    while monitoring_behavior:
                         if time.time() - start > wait_time:
-                            monitor_behavior = False
-                        if not response_handler.empty():
-                            self.response = response_handler.get()
+                            monitoring_behavior = False
+                        if not response_queue.empty():
+                            self.response = response_queue.get()
                             if self.response not in self.trigger["targets"]:
                                 self.response_time = time.time() - start
-                                response_handler.queue.clear()
+                                response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
-                                monitor_behavior = False
+                                monitoring_behavior = False
 
                 # When agent is supposed to go to one of the targets
                 elif self.trigger["type"] == "GO":
-                    while monitor_behavior:
+                    while monitoring_behavior:
                         if time.time() - start > wait_time:
-                            monitor_behavior = False
-                        if not response_handler.empty():
-                            self.response = response_handler.get()
+                            monitoring_behavior = False
+                        if not response_queue.empty():
+                            self.response = response_queue.get()
                             if self.response in self.trigger["targets"]:
                                 self.response_time = time.time() - start
-                                response_handler.queue.clear()
+                                response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
-                                monitor_behavior = False
+                                monitoring_behavior = False
 
                 # When agent Must respond
                 elif self.trigger["type"] == "MUST_GO":
-                    while monitor_behavior:
-                        if not response_handler.empty():
-                            self.response = response_handler.get()
-                            if self.response in self.trigger["targets"]:
-                                self.response_time = time.time() - start
-                                response_handler.queue.clear()
+                    while monitoring_behavior:
+                        if not response_queue.empty():
+                            response = response_queue.get()
+                            if (
+                                response in self.trigger["targets"]
+                                and time.time() - start > wait_time
+                            ):
+                                self.responded = True
+                                response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
-                                monitor_behavior = False
+                                monitoring_behavior = False
 
             except:
                 raise Warning(
@@ -158,7 +161,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_fixation", arguments))
+        self.stimulus_queue.put(("initiate_fixation", arguments))
         self.trigger = {"type": "FIXATE_ON", "targets": targets, "duration": duration}
         self.response_block.set()
 
@@ -179,7 +182,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_stimulus", arguments))
+        self.stimulus_queue.put(("initiate_stimulus", arguments))
         # Implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {
             "type": "GO",
@@ -197,7 +200,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_stimulus", arguments))
+        self.stimulus_queue.put(("initiate_stimulus", arguments))
         # Implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {"type": "WAIT_ON", "targets": targets, "duration": duration}
         self.response_block.set()
@@ -211,7 +214,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_response_window", arguments))
+        self.stimulus_queue.put(("initiate_response_window", arguments))
         self.trigger = {"type": "GO", "targets": targets, "duration": duration}
         self.response_block.set()
 
@@ -225,7 +228,7 @@ class TrialConstruct:
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
         arguments["outcome"] = outcome
-        self.stimulus_handler.put(("initiate_reinforcement", arguments))
+        self.stimulus_queue.put(("initiate_reinforcement", arguments))
         threading.Timer(duration, self.stage_block.set).start()
 
     def must_respond(self, targets, arguments={}):
@@ -236,7 +239,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_must_respond", arguments))
+        self.stimulus_queue.put(("initiate_must_respond", arguments))
         self.trigger = {"type": "MUST_GO", "targets": targets, "duration": []}
         self.response_block.set()
 
@@ -248,7 +251,7 @@ class TrialConstruct:
         """
         # Clear the event lock -> defaults to event: false
         self.stage_block.clear()
-        self.stimulus_handler.put(("initiate_intertrial", arguments))
+        self.stimulus_queue.put(("initiate_intertrial", arguments))
         # Setting timer to trigger stage_block event after defined inter-trial interval
         threading.Timer(duration, self.stage_block.set).start()
 
@@ -259,11 +262,11 @@ if __name__ == "__main__":
     stage_block = threading.Event()
     stage_block.clear()
     stim_handler = queue.Queue()
-    response_handler = queue.Queue()
+    response_queue = queue.Queue()
     a = TrialConstruct(
         stage_block=stage_block,
-        stimulus_handler=stim_handler,
-        response_handler=response_handler,
+        stimulus_queue=stim_handler,
+        response_queue=response_queue,
     )
     stage_list = [a.fixation, a.stimulus_rt, a.intertrial]
     num_stages = len(stage_list)

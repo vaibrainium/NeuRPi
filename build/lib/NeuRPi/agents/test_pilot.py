@@ -74,7 +74,7 @@ class Pilot:
 
         self.task = None
         self.stimulus_manager = None
-        self.stimulus_handler = None
+        self.stimulus_queue = None
 
     def handshake(self):
         hello = {

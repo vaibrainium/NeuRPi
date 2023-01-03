@@ -60,7 +60,7 @@ class Subject(BaseSubject):
         else:
             self.rolling_perf = pickle.load(open(self.rolling_perf_pkl, "rb"))
 
-    def initiate_subject_parameters(self, full_coherences):
+    def initiate_parameters(self, full_coherences):
         """ "
         Initiating subject and session specific parameters. This dictionary will also be shared with terminal at the end of each trial to update GUI
 
@@ -78,7 +78,7 @@ class Subject(BaseSubject):
             "passive_bias_correction": True,
             "active_bias_correction": False,
             "bias_replace": 1,
-            "passive_rt_mu": self.config.TASK_PARAMETERS.training_type.active_passive.passive_rt_mu,
+            # "passive_rt_mu": self.config.TASK_PARAMETERS.training_type.active_passive.passive_rt_mu,
             # Plotting traces
             "current_coh_level": self.rolling_perf["current_coh_level"],
             "reaction_times": np.zeros(len(full_coherences)) * np.NaN,
@@ -105,6 +105,7 @@ class Subject(BaseSubject):
             if self.rolling_perf["total_trials"] > 200:
                 subject_parameters["reward_per_pulse"] -= 0.1
 
+        self.config.SUBJECT = subject_parameters
         return subject_parameters
 
     def get(self, key):
