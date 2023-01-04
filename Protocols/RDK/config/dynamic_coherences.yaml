@@ -123,7 +123,7 @@ TASK:
 STIMULUS:
     display:
         num_screens: 1
-        screen     : 1 #0 
+        screen     : 0 #0 
         window_size: (1920, 1080)
         frame_rate : 100
         flags      : pygame.DOUBLEBUF | pygame.constants.SCALED | pygame.FULLSCREEN
@@ -161,7 +161,7 @@ STIMULUS:
                 is_static: True
                 update_function: 
                 properties: 
-                    load: ['Protocols/RDK/stimulus/audio/fixationTone.wav']
+                    load: ['protocols/RDK/stimulus/audio/fixationTone.wav']
                     generate:
 
         initiate_stimulus: 
@@ -225,9 +225,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : ['Protocols/RDK/stimulus/audio/correctTone.wav']
-                        incorrect       : ['Protocols/RDK/stimulus/audio/incorrectTone.wav']
-                        invalid         : ['Protocols/RDK/stimulus/audio/incorrectTone.wav']
+                        correct         : ['protocols/RDK/stimulus/audio/correctTone.wav']
+                        incorrect       : ['protocols/RDK/stimulus/audio/incorrectTone.wav']
+                        invalid         : ['protocols/RDK/stimulus/audio/incorrectTone.wav']
                     generate:
 
         initiate_must_respond: 
