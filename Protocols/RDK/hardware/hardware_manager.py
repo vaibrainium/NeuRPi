@@ -8,21 +8,21 @@ class HardwareManager(Arduino, GPIO):
     Hardware Manager for RDK protocol
     """
 
-    def __init__(self, hardware_config=None):
+    def __init__(self, config=None):
         """
         Arguments:
             config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
         """
         self.calibration = 0
         self.hardware = {}
-        self.config = hardware_config
+        self.config = config
         self.init_hardware()
 
     def init_hardware(self):
         """
         Initialize all hardware required by the task. Defined in HARDWARE dictionary in configuration file.
         """
-        for group, container in self.config.items():
+        for group, container in self.config.HARDWARE.items():
             if group == "Arduino":
                 for name, properties in container.items():
                     connect = properties["connection"]
@@ -58,7 +58,8 @@ class HardwareManager(Arduino, GPIO):
             volume (float): Amount of reward to be given in ml
 
         """
-        open_time = self.vol_to_dur(volume)
+        open_duration = self.vol_to_dur(volume)
+        self.config.SUBJECT.total_reward += volume
         # raise Warning("Reward delivery needs to be implemented")
 
     def reward_right(self, volume):
@@ -70,6 +71,7 @@ class HardwareManager(Arduino, GPIO):
 
         """
         open_duration = self.vol_to_dur(volume)
+        self.config.SUBJECT.total_reward += volume
         # raise Warning("Reward delivery needs to be implemented")
 
     def vol_to_dur(self, volume):

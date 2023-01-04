@@ -1,3 +1,4 @@
+import csv
 import datetime
 import itertools
 import multiprocessing as mp
@@ -41,9 +42,12 @@ class Stimulus_Display(BaseDisplayManager):
     """
 
     def __init__(
-        self, stimulus_manager=RandomDotKinematogram, configuration=None, courier=None
+        self,
+        stimulus_manager=RandomDotKinematogram,
+        stimulus_configuration=None,
+        stimulus_courier=None,
     ):
-        super().__init__(stimulus_manager, configuration, courier)
+        super().__init__(stimulus_manager, stimulus_configuration, stimulus_courier)
         pass
 
 
@@ -54,7 +58,6 @@ class SessionManager:
 
     def __init__(self, config, subject=None):
         self.config = config
-        self.task_pars = self.config.TASK
         self.subject = subject
         self.coh_to_xactive = None
         self.coh_to_xrange = None
@@ -62,9 +65,7 @@ class SessionManager:
         self.schedule_counter = 0
         self.full_coherences, self.coh_to_xrange = self.get_full_coherences()
         self.subject.prepare_run(self.full_coherences)
-        self.subject_pars = self.subject.initiate_subject_parameters(
-            self.full_coherences
-        )
+        self.subject_pars = self.subject.initiate_parameters(self.full_coherences)
         self.next_coherence_level = self.subject_pars["current_coh_level"]
         self.stimulus_pars = {}
 
@@ -75,7 +76,7 @@ class SessionManager:
             full_coherences (list): List of all direction-wise coherences with adjustment for zero coherence (remove duplicates).
             coh_to_xrange (dict): Mapping dictionary from coherence level to corresponding x values for plotting of psychometric function
         """
-        coherences = np.array(self.task_pars.stimulus._coherences.value)
+        coherences = np.array(self.config.TASK.stimulus._coherences.value)
         self.full_coherences = sorted(np.concatenate([coherences, -coherences]))
         if (
             0 in coherences
@@ -126,8 +127,8 @@ class SessionManager:
         self.schedule_counter = 0
         self.set_coherence_level()
         # Generate array of active signed-coherences based on current coherence level
-        coherences = np.array(self.task_pars.stimulus._coherences.value)
-        repeats_per_block = self.task_pars.stimulus.repeats_per_block.value
+        coherences = np.array(self.config.TASK.stimulus._coherences.value)
+        repeats_per_block = self.config.TASK.stimulus.repeats_per_block.value
         active_coherences = sorted(
             np.concatenate(
                 [
@@ -149,7 +150,7 @@ class SessionManager:
         for _, coh in enumerate(
             coherences[: self.subject_pars["current_coherence_level"]]
         ):
-            if coh > self.task_pars.bias.active_correction.threshold:
+            if coh > self.config.TASK.bias.active_correction.threshold:
                 self.trial_schedule.remove(
                     coh * self.subject_pars["rolling_bias"]
                 )  # Removing high coherence from biased direction (-1:left; 1:right)
@@ -177,7 +178,7 @@ class SessionManager:
             coherence = self.stimulus_pars["coherence"]
             if (
                 self.stimulus_pars["coherence"]
-                > self.task_pars.bias.passive_correction.threshold
+                > self.config.TASK.bias.passive_correction.threshold
             ):
                 # Drawing incorrect trial from normal distribution with high prob to direction
                 self.rolling_Bias = 0.5
@@ -207,9 +208,9 @@ class SessionManager:
         # Deciding Coherence level based on rolling performance (50 trials of each coherence)
         accuracy = self.subject.rolling_perf["accuracy"]
         # Bi-directional shift in coherence level
-        if self.config.TASK_PARAMETERS.training_type.graduation_direction.value == 0:
+        if self.config.TASK.training_type.graduation_direction.value == 0:
             # If 100% and 70% coherence have accuracy above 70%
-            if all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7)):
+            if all(np.array(accuracy[:2]) > 0.7) and all(np.array(accuracy[-2:]) > 0.7):
                 # Increase coherence level to 3 i.e., introduce 36% coherence
                 self.next_coherence_level = 3
                 # If 100%, 70% and 36% coherence have accuracy above 70%
@@ -230,7 +231,7 @@ class SessionManager:
                 else:
                     self.subject.rolling_perf["trial_counter_after_4th"] = 0
 
-        elif self.config.TASK_PARAMETERS.training_type.graduation_direction.value == 1:
+        elif self.config.TASK.training_type.graduation_direction.value == 1:
             # If 100% and 70% coherence have accuracy above 70%
             if self.subject_pars["current_coherence_level"] > 3 or (
                 all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7))
@@ -254,29 +255,94 @@ class SessionManager:
                     if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
 
-    def update_EOT(self, correction_trial):
+    def update_EOT(self, response, response_time, outcome):
         """
         End of trial updates: Updating end of trial parameters such as psychometric function, chronometric function, total trials, rolling_perf
         bias, rolling_bias
         """
-        if not correction_trial:
-            self.subject.rolling_perf["index"][self.stimulus_pars["index"]] = (
-                self.subject.rolling_perf["index"][self.stimulus_pars["index"]] + 1
-            ) % self.subject.rolling_perf["window"]
+        coh_index, coh = (
+            self.stimulus_pars["index"],
+            self.stimulus_pars["coherence"],
+        )
 
-    def update_EOS(self, total_trials, total_reward):
+        # uptading rolling performance
+        ## update history block
+        self.subject.rolling_perf["hist_" + str(coh)][
+            self.subject.rolling_perf["index"][coh_index]
+        ] = outcome
+        ## calculate accuracy
+        self.subject.rolling_perf["accuracy"][coh_index] = np.mean(
+            self.subject.rolling_perf["hist_" + str(coh)]
+        )
+        ## update index
+        self.subject.rolling_perf["index"][coh_index] = (
+            self.subject.rolling_perf["index"][coh_index] + 1
+        ) % self.subject.rolling_perf["window"]
+
+        # Updating plot parameters
+        if response == -1:
+            # computing left choices coherence-wise
+            self.config.SUBJECT.psych_left[coh_index] += 1
+        elif response == 1:
+            # computing right choices coherence-wise
+            self.config.SUBJECT.psych_left[coh_index] += 1
+        tot_trials_in_coh = (
+            self.config.SUBJECT.psych_left[coh_index]
+            + self.config.SUBJECT.psych_right[coh_index]
+        )
+
+        # update running accuracy
+        if (
+            self.config.SUBJECT.counters["correct"]
+            + self.config.SUBJECT.counters["incorrect"]
+            > 0
+        ):
+            self.config.SUBJECT.running_accuracy.append(
+                self.config.SUBJECT.counters["trial"],
+                self.config.SUBJECT.counters["correct"]
+                / (
+                    self.config.SUBJECT.counters["correct"]
+                    + self.config.SUBJECT.counters["incorrect"]
+                ),
+                outcome,
+            )
+
+        # update psychometric array
+        self.config.SUBJECT.psych[coh_index] = (
+            self.config.SUBJECT.psych_right[coh_index] / tot_trials_in_coh
+        )
+
+        # update total trial array
+        self.config.SUBJECT.trial_distribution[coh_index] += 1
+
+        # update reaction time array
+        if np.isnan(self.config.SUBJECT.response_time_distribution[coh_index]):
+            self.config.SUBJECT.response_time_distribution[coh_index] = response_time
+        else:
+            if True:  # self.coh_to_xrange, self.coh_to_xactive
+                self.config.SUBJECT.response_time_distribution[coh_index] = (
+                    (
+                        (tot_trials_in_coh - 1)
+                        * self.config.SUBJECT.response_time_distribution[coh_index]
+                    )
+                    + response_time
+                ) / tot_trials_in_coh
+
+    def update_EOS(self):
         """
         End of session updates: Updating all files and session parameters such as rolling performance
         """
         # Rolling performance
-        self.subject.rolling_perf["current_coherence_level"] = self.subject_pars[
+        self.subject.rolling_perf[
             "current_coherence_level"
-        ]
-        self.subject.rolling_perf["reward_per_pulse"] = self.subject_pars[
+        ] = self.config.SUBJECT.current_coherence_level
+        self.subject.rolling_perf[
             "reward_per_pulse"
-        ]
-        self.subject.rolling_perf["total_trials"] = total_trials
-        self.subject.rolling_perf["total_reward"] = total_reward
+        ] = self.config.SUBJECT.reward_per_pulse
+        self.subject.rolling_perf[
+            "total_attempts"
+        ] = self.config.SUBJECT.counters.attempt
+        self.subject.rolling_perf["total_reward"] = self.config.SUBJECT.total_reward
         self.subject.save()
 
 
@@ -303,8 +369,8 @@ class dynamic_training_rt:
         directory = "protocols/RDK/config"
         filename = "dynamic_coherences.yaml"
         self.config = get_configuration(directory=directory, filename=filename)
-        self.task_pars = self.config.TASK_PARAMETERS  # Get all task parameters
-        self.stim_pars = self.config.STIMULUS
+        # self.task_pars = self.config.TASK  # Get all task parameters
+        # self.stim_pars = self.config.STIMULUS
 
         # Preparing subject
         self.subject = Subject(
@@ -337,17 +403,20 @@ class dynamic_training_rt:
         self.managers["display"] = mp.Process(
             target=Stimulus_Display, kwargs=stim_arguments, daemon=True
         )
+        self.managers["display"].start()
+
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
             response_log=self.subject.lick,
             timers=self.timers,
         )
+
         self.managers["session"] = SessionManager(
             subject=self.subject,
             config=self.config,
         )
-        self.managers["trial"]: RTTask(
+        self.managers["trial"] = RTTask(
             stage_block=self.stage_block,
             response_block=self.response_block,
             stimulus_queue=self.stimulus_queue,
@@ -360,11 +429,23 @@ class dynamic_training_rt:
         self.stages = self.managers["trial"].stages
 
         # Starting required managers
-        self.managers["display"].start()
-        time.sleep(2)
         self.session_timer = datetime.datetime.now()
         self.managers["behavior"].start(self.session_timer)
 
+    def pause_session(self):
+        pass
+
+    def end_session(self):
+        self.managers["session"].update_EOS()
+        self.managers["behavior"].stop()
+        self.managers["display"].kill()
+
 
 if __name__ == "__main__":
-    dynamic_training_rt(stage_block=threading.Event())
+    value = {
+        "task_module": "RDK",
+        "task_phase": "dynamic_training_rt",
+        "subject_id": "PSUIM4",
+    }
+
+    dynamic_training_rt(stage_block=threading.Event(), **value)

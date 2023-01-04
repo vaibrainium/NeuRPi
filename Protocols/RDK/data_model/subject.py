@@ -41,16 +41,16 @@ class Subject(BaseSubject):
             self.rolling_perf = {
                 "window": 50,  # rolling window
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
-                "total_trials": 0,
+                "total_attempts": 0,
                 "total_reward": 0,
                 "reward_per_pulse": 3,
                 "current_coh_level": 2,
-                "index": np.zeros(len(full_coherences)),
-                "accuracy": np.zeros(len(full_coherences)),
+                "index": list(np.zeros(len(full_coherences))),
+                "accuracy": list(np.zeros(len(full_coherences))),
             }
             for index, coh in enumerate(full_coherences):
-                self.rolling_perf["hist_" + str(coh)] = np.zeros(
-                    self.rolling_perf["window"]
+                self.rolling_perf["hist_" + str(coh)] = list(
+                    np.zeros(self.rolling_perf["window"])
                 )
                 self.rolling_perf["accuracy"][index] = np.mean(
                     self.rolling_perf["hist_" + str(coh)]
@@ -67,25 +67,34 @@ class Subject(BaseSubject):
             full_coherences (list): array of all coherences included in the task
         """
         subject_parameters = {
+            "counters": {
+                "trial": 0,
+                "attempt": 0,
+                "correct": 0,
+                "incorrect": 0,
+                "noresponse": 0,
+            },
             # Trial parameters
-            "total_trials": self.rolling_perf["total_trials"],
-            "total_reward": self.rolling_perf["total_reward"],
+            "total_reward": 0,
             "passive_bias_correction": True,
             "active_bias_correction": False,
             "bias_replace": 1,
-            # "passive_rt_mu": self.config.TASK_PARAMETERS.training_type.active_passive.passive_rt_mu,
             # Plotting traces
             "current_coh_level": self.rolling_perf["current_coh_level"],
-            "reaction_times": np.zeros(len(full_coherences)) * np.NaN,
-            "psych_right": np.zeros(len(full_coherences)),
-            "psych_left": np.zeros(len(full_coherences)),
-            "psych": np.zeros(len(full_coherences)) + 0.5,
+            "running_accuracy": [],
+            "psych_right": np.zeros(len(full_coherences)).tolist(),
+            "psych_left": np.zeros(len(full_coherences)).tolist(),
+            "psych": np.array(np.zeros(len(full_coherences)) + 0.5).tolist(),
+            "trial_distribution": np.zeros(len(full_coherences)).tolist(),
+            "reaction_time_distribution": np.array(
+                np.zeros(len(full_coherences)) * np.NaN
+            ).tolist(),
             # Within session tracking
-            "rolling_bias_window": self.config.TASK_PARAMETERS.bias.passive_correction.rolling_window,
+            "rolling_bias_window": self.config.TASK.bias.passive_correction.rolling_window,
             "rolling_bias_index": 0,
             "rolling_bias": np.zeros(
-                self.config.TASK_PARAMETERS.bias.passive_correction.rolling_window
-            ),  # initiating at no bias
+                self.config.TASK.bias.passive_correction.rolling_window
+            ).tolist(),  # initiating at no bias
         }
 
         subject_parameters["reward_per_pulse"] = self.rolling_perf["reward_per_pulse"]
@@ -97,29 +106,11 @@ class Subject(BaseSubject):
                 if self.rolling_perf["total_reward"] < 500:
                     subject_parameters["reward_per_pulse"] += 0.1
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
-            if self.rolling_perf["total_trials"] > 200:
+            if self.rolling_perf["total_attempts"] > 200:
                 subject_parameters["reward_per_pulse"] -= 0.1
 
         self.config.SUBJECT = subject_parameters
         return subject_parameters
-
-    def get(self, key):
-        """
-        Method for getting variables from `self.rolling_perf`
-        """
-        try:
-            return self.rolling_perf[key]
-        except:
-            pass
-
-    def set(self, key: str, val):
-        """
-        Method of setting variables in `self.rolling_perf`
-        """
-        try:
-            self.rolling_perf[key] = val
-        except:
-            pass
 
     def save(self):
         """ "

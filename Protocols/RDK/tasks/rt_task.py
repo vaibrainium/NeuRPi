@@ -1,3 +1,4 @@
+import csv
 import datetime
 import itertools
 import queue
@@ -9,8 +10,6 @@ import tables
 from scipy.stats import pearson3
 
 from NeuRPi.tasks.trial_construct import TrialConstruct
-from protocols.RDK.hardware.behavior import Behavior
-from protocols.RDK.hardware.hardware_manager import HardwareManager
 
 
 class RTTask(TrialConstruct):
@@ -37,13 +36,15 @@ class RTTask(TrialConstruct):
 
     def __init__(
         self,
-        trial_manager=None,
-        stimulus_queue=None,
         stage_block=None,
+        response_block=None,
+        stimulus_queue=None,
+        managers=None,
+        subject=None,
+        config=None,
+        timers=None,
         **kwargs,
     ):
-        # def __init__(self, trial_manager=TrainingDynamic, stimulus_manager=RDKManager, stage_block=None, **kwargs):
-
         """
         Args:
             stage_block (:class:`threading.Event`): Signal when task stages complete.
@@ -65,132 +66,123 @@ class RTTask(TrialConstruct):
             stim_light (bool): Should the LED be turned blue while the stimulus is playing?
             **kwargs:
         """
-        # Get configuration for this task -> self.config
-        self.config = self.get_configuration(
-            directory="Protocols/RDK/config", filename="dynamic_coherences"
+        super(RTTask, self).__init__(
+            stage_block=stage_block,
+            response_block=response_block,
+            stimulus_queue=stimulus_queue,
+            response_queue=managers["behavior"].response_queue,
         )
-        self.task_pars = self.config.TASK_PARAMETERS  # Get all task parameters
+
+        self.subject = subject
+        self.config = config
+        self.timers = timers
 
         # Event locks, triggers
         self.stage_block = stage_block
-        self.response_block = threading.Event()
-        self.response_block.clear()
-
-        self.courier = queue.Queue()
+        self.response_block = response_block
 
         # Initializing managers
-        # self.stimulus_manager = stimulus_manager(configuration=self.config, stimulus=RandomDotKinematogram)
-        self.trial_manager = trial_manager(self.task_pars)
-        self.hardware_manager = HardwareManager(self.config)
-        self.behavior = Behavior(
-            hardware_manager=self.hardware_manager,
-            stage_block=self.stage_block,
-            response_block=self.response_block,
-        )
-        self.behavior.start()
-
-        # super(rtTask, self).__init__(stage_block=self.stage_block, response_block=self.response_block, stimulus_queue=self.stimulus_manager.courier, response_queue=self.behavior.response_queue)
-        super(rtTask, self).__init__(
-            stage_block=self.stage_block,
-            response_block=self.response_block,
-            stimulus_queue=stimulus_queue,
-            response_queue=self.behavior.response_queue,
-        )
+        self.managers = managers
 
         # Variable parameters
-        self.current_stage = None  # Keeping track of stages so other asynchronous callbacks can execute accordingly
+        # Trial variables
+        self.trigger = None
+        self.stimulus_pars = None
         self.target = None
         self.response = None
-        self.bailed = None
+        self.responded = None
         self.correct = None
-        self.response_time = None
-        self.correction_trial = None
         self.valid = None
-        self.start = None
+        self.correction_trial = None
+        # Durations
         self.fixation_duration = None
-        self.stimulus_duration = None
-        self.stimulus_pars = None
+        self.min_viewing_duration = None
+        self.response_time = None
+        self.reinforcement_duration = None
         self.intertrial_duration = None
 
         # We make a list of the variables that need to be reset each trial, so it's easier to do
-        self.resetting_variables = [self.response, self.response_time]
+        self.resetting_variables = [
+            self.stimulus_pars,
+            self.response,
+            self.response_time,
+            self.responded,
+        ]
 
         # This allows us to cycle through the task by just repeatedly calling self.stages.next()
         stage_list = [
             self.fixation_stage,
             self.stimulus_stage,
             self.reinforcement_stage,
-            self.must_respond_to_proceed,
             self.intertrial_stage,
         ]
         self.num_stages = len(stage_list)
         self.stages = itertools.cycle(stage_list)
 
-    #     self.run()
-    #
-    # def run(self):
-    #
-    #     while True:
-    #         self.start = time.time()
-    #         data = self.fixation_stage()
-    #         self.stage_block.wait()
-    #
-    #         data = self.stimulus_stage()
-    #         self.stage_block.wait()
-    #
-    #         data = self.reinforcement_stage()
-    #         self.stage_block.wait()
-    #
-    #         data = self.must_respond_to_proceed()
-    #         self.stage_block.wait()
-    #
-    #         data = self.intertrial_stage()
-    #         self.stage_block.wait()
-
     def fixation_stage(self):
-        print(1)
-        self.trial_timer = time.time()
-        self.fixation_duration = self.task_pars.timings.fixation.value
-        self.fixation(duration=self.fixation_duration)
+        # Clear stage block
+        self.stage_block.clear()
+        # Determine stage parameters
+        targets = np.NaN
+        self.fixation_duration = self.config.TASK.timings.fixation.value
+        self.trigger = {
+            "type": "FIXATE_ON",
+            "targets": targets,
+            "duration": self.fixation_duration,
+        }
+        stimulus_arguments = {}
+        # initiate fixation and start monitoring responses
+        self.stimulus_queue.put(("initiate_fixation", stimulus_arguments))
+        self.timers["trial"] = time.time()
+        self.response_block.set()
+
         # Get current trial properties
+        self.config.SUBJECT.counters["attempt"] += 1
         if not self.correction_trial:
-            self.current_trial = next(self.trial_counter)
-        self.stimulus_pars = self.trial_manager.next_trial(self.correction_trial)
+            self.config.SUBJECT.counters["trial"] += 1
+
+        self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
+            "subject_id": self.subject.name,
+            "trial_counters": self.config.SUBJECT.counters,
         }
-        # self.stage_block.wait()
         return data
 
     def stimulus_stage(self):
         """
         Stage 1: Show stimulus and wait for response trigger on target/distractor input
-        Returns:
-            data (dict):
-            {
-            }
+        Arguments:
+            duration (float): Max stimulus_rt phase duration in secs
+            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
         """
-        print(2)
-        # Set triggers, set display and start timer
-        if self.task_pars.training_type.value < 0:
-            self.stimulus_duration = (
-                self.task_pars.training_type.active_passive.passive_rt_mu
-                + (
-                    pearson3.rvs(
-                        self.task_pars.training_type.active_passive.passive_rt_sigma
-                    )
-                    * 1.5
+        # Clear stage block
+        self.stage_block.clear()
+        # Determine stage parameters
+        self.min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
+        stimulus_arguments = self.stimulus_pars
+        targets = [-1, 1]
+        if self.config.TASK.training_type.value < 0:
+            duration = self.config.TASK.training_type.active_passive.passive_rt_mu + (
+                pearson3.rvs(
+                    self.config.TASK.training_type.active_passive.passive_rt_sigma
                 )
+                * 1.5
             )
         else:
-            self.stimulus_duration = self.task_pars.timings.stimulus.max_viewing
+            duration = self.config.TASK.timings.stimulus.max_viewing
 
-        self.stimulus_rt(
-            duration=self.stimulus_duration,
-            min_viewing_duration=self.task_pars.timings.stimulus.min_viewing,
-            arguments=self.stimulus_pars,
-        )
+        # implement minimum stimulus viewing time by not validating responses during this period
+        self.trigger = {
+            "type": "GO",
+            "targets": targets,
+            "duration": duration - self.min_viewing_duration,
+        }
+
+        # initiate stimulus and start monitoring responses
+        self.stimulus_queue.put(("initiate_stimulus", stimulus_arguments))
+        # set respons_block after minimum viewing time
+        threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
@@ -198,9 +190,9 @@ class RTTask(TrialConstruct):
             "response": self.response,
             "response_time": self.response_time,
         }
-        # self.stage_block.wait()
+
         self.response_time = (
-            self.response_time + self.task_pars.timings.stimulus.min_viewing
+            self.response_time + self.config.TASK.timings.stimulus.min_viewing
         )
         self.stage_block.wait()
         print(
@@ -210,65 +202,77 @@ class RTTask(TrialConstruct):
 
     def reinforcement_stage(self):
         """
-        Stage 2: Evaluate choice and deliver reinforcement (reward/punishment) and respective intertrial interval
-        Returns:
-            data (dict):
-            {
-            }
+        Stage 2: Evaluate choice and deliver reinforcement (reward/punishment) and decide respective intertrial interval
+
         """
-        print(3)
-        if np.isnan(self.response):  # Invalid Trial
-            self.reinforcement(
-                outcome="invalid", duration=self.task_pars.feedback.correct.time.value
-            )
+        # Clear stage block
+        self.stage_block.clear()
+        # Evaluate trial outcome and determine stage parameters
+        stimulus_arguments = {}
+        if np.isnan(self.response):
+            self.config.SUBJECT.counters["noreponse"] += 1
+            stimulus_arguments["outcome"] = "invalid"
+            self.reinforcement_duration = self.config.TASK.feedback.invalid.time.value
             self.valid, self.correct, self.correction_trial = [0, 0, 1]
-            iti_decay = self.task_pars.feedback.invalid.intertrial
-            self.intertrial_duration = self.task_pars.timings.intertrial.value + (
+
+            iti_decay = self.config.TASK.feedback.invalid.intertrial
+            self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base
-                * np.exp(iti_decay.power * self.task_pars.timings.stimulus.min_viewing)
+                * np.exp(
+                    iti_decay.power * self.config.TASK.timings.stimulus.min_viewing
+                )
             )
+
+            # Starting reinforcement
+            self.stimulus_queue.put(
+                ("initiate_reinforcement", stimulus_arguments["outcome"])
+            )
+            threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         elif self.stimulus_pars["target"] != self.response:  # Incorrect Trial
-            self.reinforcement(
-                outcome="incorrect", duration=self.task_pars.feedback.correct.time.value
-            )
+            self.config.SUBJECT.counters["incorrect"] += 1
+            stimulus_arguments["outcome"] = "incorrect"
+            self.reinforcement_duration = self.config.TASK.feedback.incorrect.time.value
             self.valid, self.correct, self.correction_trial = [1, 0, 1]
-            iti_decay = self.task_pars.feedback.incorrect.intertrial
-            self.intertrial_duration = self.task_pars.timings.intertrial.value + (
+            iti_decay = self.config.TASK.feedback.incorrect.intertrial
+            self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base * np.exp(iti_decay.power * self.response_time)
             )
+            # Starting reinforcement
+            self.stimulus_queue.put(
+                ("initiate_reinforcement", stimulus_arguments["outcome"])
+            )
+            threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         elif self.stimulus_pars["target"] == self.response:  # Correct Trial
-            self.reinforcement(
-                outcome="correct", duration=self.task_pars.feedback.correct.time.value
-            )
-            if self.response == -1:  # Left Correct
-                self.hardware_manager.reward_left(volume=2)
-            elif self.response == 1:  # Right Correct
-                self.hardware_manager.reward_left(volume=2)
-            self.valid, self.correct, self.correction_trial = [1, 1, 0]
-            # self.must_respond(targets=[self.stimulus_pars['target']])
-            self.intertrial_duration = self.task_pars.timings.intertrial.value
-        # self.stage_block.wait()
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
-        }
-        return data
+            self.config.SUBJECT.counters["correct"] += 1
+            stimulus_arguments["outcome"] = "correct"
+            self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
-    def must_respond_to_proceed(self):
-        """
-        Returns:
-            data (dict):
-            {
+            if self.response == -1:  # Left Correct
+                self.managers["hardware"].reward_left(
+                    self.config.SUBJECT.reward_per_pulse
+                )
+            elif self.response == 1:  # Right Correct
+                self.managers["hardware"].reward_right(
+                    self.config.SUBJECT.reward_per_pulse
+                )
+            self.valid, self.correct, self.correction_trial = [1, 1, 0]
+            self.intertrial_duration = self.config.TASK.timings.intertrial.value
+
+            # Starting reinforcement
+            self.stimulus_queue.put(
+                ("initiate_reinforcement", stimulus_arguments["outcome"])
+            )
+            # threading.Timer(duration, self.stage_block.set).start()
+            # Entering must respond phase
+            self.trigger = {
+                "type": "MUST_GO",
+                "targets": self.stimulus_pars["target"],
+                "duration": self.reinforcement_duration,
             }
-        """
-        print(4)
-        # Agent must consume reward before proceeding
-        if self.correct:
-            self.stage_block.clear()
-            self.must_respond(targets=[self.stimulus_pars["target"]])
-            # self.stage_block.wait()
+            self.response_block.set
+
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_num": self.current_trial,
@@ -278,24 +282,55 @@ class RTTask(TrialConstruct):
     def intertrial_stage(self, *args, **kwargs):
         """
         Stage 3: Inter-trial Interval.
-        Returns:
-            data (dict):
-            {
-            }
+
         """
-        print(5)
-        self.intertrial(duration=self.intertrial_duration)
-        self.trial_manager.update_EOT()
+        # Clear stage block
+        self.stage_block.clear()
+        # Setting parametes
+        arguments = {}
+        duration = self.intertrial_duration
+        # Starting intertrial interval
+        self.stimulus_queue.put(("initiate_intertrial", arguments))
+        threading.Timer(duration, self.stage_block.set).start()
+        # if not correction trial -> perform end of trial analysis
+        if not self.correction_trial:
+            self.managers["session"].update_EOT(
+                self.response, self.response_time, self.correct
+            )
+        # log EOT
+        self.end_of_trial()
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_num": self.current_trial,
             "TRIAL_END": True,
         }
-        self.stage_block.wait()
         return data
+
+    def end_of_trial(self):
+        # Write trial parameters
+        with open(self.subject.trial, "a+", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(
+                self.config.SUBJECT.counters["trial"],
+                self.config.SUBJECT.counters["attempt"],
+                self.correction_trial,
+                self.stimulus_pars["coherence"],
+                self.response,
+                self.valid,
+                self.correct,
+                self.config.SUBJECT.reward_per_pulse,
+                self.fixation_duration,
+                self.min_viewing_duration,
+                self.response_time,
+                self.reinforcement_duration,
+                self.intertrial_duration,
+            )
+
+    def end_of_session(self):
+        self.managers["session"].end_of_session()
 
 
 if __name__ == "__main__":
     stage_block = threading.Event()
-    a = rtTask(stage_block=stage_block)
+    a = RTTask(stage_block=stage_block)

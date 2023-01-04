@@ -7,7 +7,8 @@ import threading
 import time
 
 from protocols.RDK.stimulus.display_manager import RDKManager
-from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
+from protocols.RDK.stimulus.random_dot_kinematogram import \
+    RandomDotKinematogram
 from protocols.RDK.tasks.rt_task import rtTask
 
 
@@ -141,6 +142,7 @@ class RigManager:
         self.running.set()
 
         while True:
+            
             data = next(self.task.stages)()
 
             self.stage_block.wait()
@@ -149,6 +151,7 @@ class RigManager:
             if "TRIAL_END" in data.keys():
                 self.running.wait()  # If paused, waiting for running event set?
                 if self.quitting.is_set():  # is quitting event set?
+                    self.task.end_session()
                     break  # Won't quit if the task is paused.
 
         # self.task.stop()
