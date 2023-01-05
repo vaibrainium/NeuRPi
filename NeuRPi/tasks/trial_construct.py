@@ -61,10 +61,6 @@ class TrialConstruct:
         self.response_block = response_block  # threading.Event used by the pilot to manage stage transitions
         self.trigger = {}
 
-        self.response = None
-        self.response_time = None
-        self.responded = None
-
         self.thread = threading.Thread(
             target=self.monitor_response, args=[response_queue], daemon=True
         )
@@ -80,29 +76,33 @@ class TrialConstruct:
             response_queue.queue.clear()
             self.response_block.wait()
             monitoring_behavior = True
-            self.response = np.NaN
-            self.response_time = np.NaN
-            self.responded = False
+            responded = False
 
             start = time.time()
             wait_time = self.trigger["duration"]  # Converting wait time from ms to sec
+
             try:
                 # When agent is supposed to fixate on one of the targets
                 if self.trigger["type"] == "FIXATE_ON":
                     while monitoring_behavior:
                         if time.time() - start > wait_time:
                             monitoring_behavior = False
-                        if not response_queue.empty():
-                            self.response = response_queue.get()
-                            if self.response not in self.trigger["targets"]:
-                                self.response_time = time.time() - start
-                                response_queue.queue.clear()
-                                monitoring_behavior = False
-                                # self.monitor_response(response_queue)
-                    if self.response in self.trigger["targets"]:
-                        self.response_block.clear()
-                        self.stage_block.set()
-                        self.trigger = None
+                            self.response_block.clear()
+                            self.stage_block.set()
+                            self.trigger = None
+                        else:
+                            if not response_queue.empty():
+                                responded = response_queue.get()
+                                if responded in self.trigger["targets"]:
+                                    monitoring_behavior = False
+                                    self.response_block.clear()
+                                    self.stage_block.set()
+                                    self.trigger = None
+                                else:
+                                    # self.response_time = time.time() - start
+                                    response_queue.queue.clear()
+                                    monitoring_behavior = False
+                                    self.monitor_response(response_queue)
 
                 # When agent is supposed to wait on one of the targets
                 elif self.trigger["type"] == "WAIT_ON":
@@ -110,9 +110,9 @@ class TrialConstruct:
                         if time.time() - start > wait_time:
                             monitoring_behavior = False
                         if not response_queue.empty():
-                            self.response = response_queue.get()
-                            if self.response not in self.trigger["targets"]:
-                                self.response_time = time.time() - start
+                            responded = response_queue.get()
+                            if responded not in self.trigger["targets"]:
+                                # self.response_time = time.time() - start
                                 response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
@@ -124,8 +124,9 @@ class TrialConstruct:
                         if time.time() - start > wait_time:
                             monitoring_behavior = False
                         if not response_queue.empty():
-                            self.response = response_queue.get()
-                            if self.response in self.trigger["targets"]:
+                            responded = response_queue.get()
+                            if responded in self.trigger["targets"]:
+                                self.response = responded
                                 self.response_time = time.time() - start
                                 response_queue.queue.clear()
                                 self.response_block.clear()
@@ -136,18 +137,18 @@ class TrialConstruct:
                 elif self.trigger["type"] == "MUST_GO":
                     while monitoring_behavior:
                         if not response_queue.empty():
-                            response = response_queue.get()
+                            responded = response_queue.get()
                             if (
-                                response in self.trigger["targets"]
+                                responded in self.trigger["targets"]
                                 and time.time() - start > wait_time
                             ):
-                                self.responded = True
                                 response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
                                 monitoring_behavior = False
 
-            except:
+            except Exception as e:
+                print(e)
                 raise Warning(
                     f"Problem with response monitoring for {self.trigger['type']}"
                 )

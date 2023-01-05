@@ -51,7 +51,6 @@ class DisplayManager(Display):
         pars["stimulus_size"] = eval(
             self.courier_map.initiate_stimulus.visual.properties.generate.stimulus_size
         )
-        print("New Stimulus Initiated")
         self.RDK.new_stimulus(pars)
 
     def next_frame_stimulus(self):

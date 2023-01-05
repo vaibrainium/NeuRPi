@@ -198,8 +198,8 @@ class SessionManager:
 
         self.stimulus_pars["index"] = self.coh_to_xrange[coherence]
         self.stimulus_pars["coherence"] = coherence
-        self.stimulus_pars["target"] = np.sign(
-            self.stimulus_pars["coherence"] + np.random.choice([-1e-2, 1e-2])
+        self.stimulus_pars["target"] = int(
+            np.sign(self.stimulus_pars["coherence"] + np.random.choice([-1e-2, 1e-2]))
         )
 
         return self.stimulus_pars
@@ -298,13 +298,15 @@ class SessionManager:
             > 0
         ):
             self.config.SUBJECT.running_accuracy.append(
-                self.config.SUBJECT.counters["trial"],
-                self.config.SUBJECT.counters["correct"]
-                / (
+                [
+                    self.config.SUBJECT.counters["trial"],
                     self.config.SUBJECT.counters["correct"]
-                    + self.config.SUBJECT.counters["incorrect"]
-                ),
-                outcome,
+                    / (
+                        self.config.SUBJECT.counters["correct"]
+                        + self.config.SUBJECT.counters["incorrect"]
+                    ),
+                    outcome,
+                ]
             )
 
         # update psychometric array
@@ -416,6 +418,7 @@ class dynamic_training_rt:
             subject=self.subject,
             config=self.config,
         )
+
         self.managers["trial"] = RTTask(
             stage_block=self.stage_block,
             response_block=self.response_block,
@@ -429,8 +432,7 @@ class dynamic_training_rt:
         self.stages = self.managers["trial"].stages
 
         # Starting required managers
-        self.session_timer = datetime.datetime.now()
-        self.managers["behavior"].start(self.session_timer)
+        self.managers["behavior"].start()
 
     def pause_session(self):
         pass

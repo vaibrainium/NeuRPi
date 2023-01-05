@@ -27,7 +27,7 @@ class Behavior:
         self.quit_monitoring.clear()
 
     def start(self, session_timer=None):
-        self.session_timer = session_timer
+        # self.session_timer = session_timer
         # Starting acquisition process on different thread
         if not self.response_queue:
             raise Warning(
@@ -38,39 +38,43 @@ class Behavior:
         self.thread.start()
 
     def _acquire(self):
+        left_clock_start = time.time()
+        right_clock_start = time.time()
 
         while not self.quit_monitoring.is_set():
             lick = self.hardware_manager.read_licks()
             if lick:
+                
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
-                    self.response_queue.put(lick)
+                    if lick == -1 or lick == 1:
+                        self.response_queue.put(lick)
 
                 with open(self.response_log, "a+") as file:
-                    if lick == 1:
+                    if lick == -1:
                         left_clock_start = time.time()
-                    elif lick == -1:
+                    elif lick == -2:
                         left_clock_end = time.time()
                         left_dur = left_clock_end - left_clock_start
                         file.write(
                             "%.6f, %.6f, %s, %.6f\n"
                             % (
-                                left_clock_start - self.timers["session"],
-                                left_clock_start - self.timers["trial"],
+                                left_clock_start - self.timers["session"].timestamp(),
+                                left_clock_start - self.timers["trial"].timestamp(),
                                 lick,
                                 left_dur,
                             )
                         )
-                    elif lick == 2:
+                    elif lick == 1:
                         right_clock_start = time.time()
-                    elif lick == -2:
+                    elif lick == 2:
                         right_clock_end = time.time()
                         right_dur = right_clock_end - right_clock_start
                         file.write(
                             "%.6f, %.6f, %s, %.6f\n"
                             % (
-                                right_clock_start - self.timers["session"],
-                                right_clock_start - self.timers["trial"],
+                                right_clock_start - self.timers["session"].timestamp(),
+                                right_clock_start - self.timers["trial"].timestamp(),
                                 lick,
                                 right_dur,
                             )

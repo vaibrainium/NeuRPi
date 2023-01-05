@@ -19,7 +19,7 @@ class Display:
         import pygame
 
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
-        # os.environ['DISPLAY'] = ':0.0'
+        os.environ["DISPLAY"] = ":0.0"
 
         self.courier = stimulus_courier
         self.message = {}

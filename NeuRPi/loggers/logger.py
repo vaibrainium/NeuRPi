@@ -46,7 +46,7 @@ def init_logger(
                 module_name = "__main__"
 
         module_name = re.sub("^NeuRPi.", "", module_name)
-        module_name = "log_" + module_name
+        # module_name = "log." + module_name
 
         class_name = instance.__class__.__name__
 
