@@ -62,7 +62,6 @@ class RTTask(TrialConstruct):
             correction_pct (float):  (0-1), What proportion of trials should randomly be correction trials?
             bias_mode (False, "thresholded_linear"): False, or some bias correction type (see :class:`.managers.Bias_Correction` )
             bias_threshold (float): If using a bias correction mode, what threshold should bias be corrected for?
-            current_trial (int): If starting at nonzero trial number, which?
             stim_light (bool): Should the LED be turned blue while the stimulus is playing?
             **kwargs:
         """
@@ -123,7 +122,7 @@ class RTTask(TrialConstruct):
         # Clear stage block
         self.stage_block.clear()
         # Determine stage parameters
-        targets = np.NaN
+        targets = [np.NaN]
         self.fixation_duration = self.config.TASK.timings.fixation.value
         self.trigger = {
             "type": "FIXATE_ON",
@@ -186,7 +185,6 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
             "response": self.response,
             "response_time": self.response_time,
         }
@@ -275,7 +273,6 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
         }
         return data
 
@@ -302,7 +299,6 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_num": self.current_trial,
             "TRIAL_END": True,
         }
         return data

@@ -68,6 +68,10 @@ class Subject:
         self.session = self.get_session()
         self._session_uuid = None
 
+        # if path doesn't exist, create it
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
+
         # Is the subject currently running?
         # Used to keep the subject object alive, otherwise close files whenever we don't need it
         self.running = False

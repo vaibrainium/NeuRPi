@@ -19,7 +19,6 @@ if __name__ == "__main__":
     stage_block = threading.Event()
     running = threading.Event()
     quitting = threading.Event()
-    # dynamic_training_rt(stage_block, subject_name="PSUIM4")
 
     value = {
         "task_module": "RDK",
