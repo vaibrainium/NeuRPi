@@ -89,7 +89,6 @@ class RTTask(TrialConstruct):
         self.stimulus_pars = None
         self.target = None
         self.response = None
-        self.responded = None
         self.correct = None
         self.valid = None
         self.correction_trial = None
@@ -99,14 +98,6 @@ class RTTask(TrialConstruct):
         self.response_time = None
         self.reinforcement_duration = None
         self.intertrial_duration = None
-
-        # We make a list of the variables that need to be reset each trial, so it's easier to do
-        self.resetting_variables = [
-            self.stimulus_pars,
-            self.response,
-            self.response_time,
-            self.responded,
-        ]
 
         # This allows us to cycle through the task by just repeatedly calling self.stages.next()
         stage_list = [
@@ -121,6 +112,12 @@ class RTTask(TrialConstruct):
     def fixation_stage(self):
         # Clear stage block
         self.stage_block.clear()
+
+        # resetting variables at the start of trial
+        self.stimulus_pars = np.NaN
+        self.response = np.NaN
+        self.response_time = np.NaN
+
         # Determine stage parameters
         targets = [np.NaN]
         self.fixation_duration = self.config.TASK.timings.fixation.value
@@ -132,7 +129,7 @@ class RTTask(TrialConstruct):
         stimulus_arguments = {}
         # initiate fixation and start monitoring responses
         self.stimulus_queue.put(("initiate_fixation", stimulus_arguments))
-        self.timers["trial"] = time.time()
+        self.timers["trial"] = datetime.datetime.now()
         self.response_block.set()
 
         # Get current trial properties
@@ -183,19 +180,20 @@ class RTTask(TrialConstruct):
         # set respons_block after minimum viewing time
         threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
+        self.stage_block.wait()
+
+        self.response_time = (
+            self.response_time + self.config.TASK.timings.stimulus.min_viewing
+        )
+        print(
+            f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
+        )
+
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "response": self.response,
             "response_time": self.response_time,
         }
-
-        self.response_time = (
-            self.response_time + self.config.TASK.timings.stimulus.min_viewing
-        )
-        self.stage_block.wait()
-        print(
-            f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
-        )
         return data
 
     def reinforcement_stage(self):
@@ -266,10 +264,13 @@ class RTTask(TrialConstruct):
             # Entering must respond phase
             self.trigger = {
                 "type": "MUST_GO",
-                "targets": self.stimulus_pars["target"],
+                "targets": [self.stimulus_pars["target"]],
                 "duration": self.reinforcement_duration,
             }
-            self.response_block.set
+
+            print(self.trigger)
+
+            self.response_block.set()
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
@@ -289,11 +290,13 @@ class RTTask(TrialConstruct):
         # Starting intertrial interval
         self.stimulus_queue.put(("initiate_intertrial", arguments))
         threading.Timer(duration, self.stage_block.set).start()
+
         # if not correction trial -> perform end of trial analysis
         if not self.correction_trial:
             self.managers["session"].update_EOT(
                 self.response, self.response_time, self.correct
             )
+
         # log EOT
         self.end_of_trial()
 
@@ -308,19 +311,21 @@ class RTTask(TrialConstruct):
         with open(self.subject.trial, "a+", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
-                self.config.SUBJECT.counters["trial"],
-                self.config.SUBJECT.counters["attempt"],
-                self.correction_trial,
-                self.stimulus_pars["coherence"],
-                self.response,
-                self.valid,
-                self.correct,
-                self.config.SUBJECT.reward_per_pulse,
-                self.fixation_duration,
-                self.min_viewing_duration,
-                self.response_time,
-                self.reinforcement_duration,
-                self.intertrial_duration,
+                [
+                    self.config.SUBJECT.counters["trial"],
+                    self.config.SUBJECT.counters["attempt"],
+                    self.correction_trial,
+                    self.stimulus_pars["coherence"],
+                    self.response,
+                    self.valid,
+                    self.correct,
+                    self.config.SUBJECT.reward_per_pulse,
+                    self.fixation_duration,
+                    self.min_viewing_duration,
+                    self.response_time,
+                    self.reinforcement_duration,
+                    self.intertrial_duration,
+                ]
             )
 
     def end_of_session(self):

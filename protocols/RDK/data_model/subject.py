@@ -37,7 +37,7 @@ class Subject(BaseSubject):
             os.makedirs(self.dir)
 
         # If first session, creating
-        if self.session == "1_1":
+        if self.session == "1_1" or os.path.getsize(self.rolling_perf_pkl) <= 0:
             self.rolling_perf = {
                 "window": 50,  # rolling window
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
@@ -45,7 +45,7 @@ class Subject(BaseSubject):
                 "total_reward": 0,
                 "reward_per_pulse": 3,
                 "current_coh_level": 2,
-                "index": list(np.zeros(len(full_coherences))),
+                "index": list(np.zeros(len(full_coherences)).astype(int)),
                 "accuracy": list(np.zeros(len(full_coherences))),
             }
             for index, coh in enumerate(full_coherences):
@@ -57,7 +57,8 @@ class Subject(BaseSubject):
                 )
 
         else:
-            self.rolling_perf = pickle.load(open(self.rolling_perf_pkl, "rb"))
+            with open(self.rolling_perf_pkl, "wb") as f:
+                self.rolling_perf = pickle.load(reader)
 
     def initiate_parameters(self, full_coherences):
         """ "
@@ -86,7 +87,7 @@ class Subject(BaseSubject):
             "psych_left": np.zeros(len(full_coherences)).tolist(),
             "psych": np.array(np.zeros(len(full_coherences)) + 0.5).tolist(),
             "trial_distribution": np.zeros(len(full_coherences)).tolist(),
-            "reaction_time_distribution": np.array(
+            "response_time_distribution": np.array(
                 np.zeros(len(full_coherences)) * np.NaN
             ).tolist(),
             # Within session tracking

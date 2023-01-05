@@ -63,14 +63,13 @@ class Subject:
             self.dir = Path(prefs.get("DATADIR"), self.name, task_module, task_phase)
 
         self.logger = init_logger(self)
-        # self.init_files()
 
         self.session = self.get_session()
         self._session_uuid = None
 
         # if path doesn't exist, create it
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
+        if not os.path.exists(self.dir / self.session):
+            os.makedirs(self.dir / self.session)
 
         # Is the subject currently running?
         # Used to keep the subject object alive, otherwise close files whenever we don't need it
@@ -105,22 +104,22 @@ class Subject:
         """
         # Checking for last day session number
         # Finding all folders with current session
-        sub_dirs = glob.glob(str(self.dir) + "/*/")
-        day = 0
+        sub_dirs = glob.glob(str(self.dir) + "/*")
+        day, session_no = 0, 0
         # Finding max number of current sessions recorded
         for file in sub_dirs:
-            num1, num2 = [
-                int(i) for i in re.search("(\d*)_" + "(\d*)", file).group(1, 2)
-            ]
-            day = num1 if num1 > day else day
-
-        # Checking for max number of sessions in a day
-        session_no = 0
-        for file in sub_dirs:
-            num1, num2 = [
-                int(i) for i in re.search("(\d*)_" + "(\d*)", file).group(1, 2)
-            ]
-            session_no = num2 if num2 > session_no else session_no
+            try:
+                num1, num2 = [
+                    int(i) for i in re.search("(\d+)_" + "(\d+)", file).group(1, 2)
+                ]
+                if num1 > day:
+                    day = num1
+                    session_no = num2
+                elif num1 == day:
+                    if num2 > session_no:
+                        session_no = num2
+            except:
+                pass
 
         # Creating folder
         # If first session under this task_module and task_phase
