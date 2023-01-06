@@ -6,7 +6,6 @@ import queue
 import threading
 import time
 
-import hydra
 import numpy as np
 from scipy.stats import pearson3
 
@@ -15,10 +14,6 @@ from NeuRPi.utils.get_config import get_configuration
 from protocols.RDK.data_model.subject import Subject
 from protocols.RDK.hardware.behavior import Behavior
 from protocols.RDK.hardware.hardware_manager import HardwareManager
-from protocols.RDK.stimulus.display_manager import DisplayManager as BaseDisplayManager
-from protocols.RDK.stimulus.random_dot_kinematogram import (
-    RandomDotKinematogram as BaseRDK,
-)
 from protocols.RDK.tasks.rt_task import RTTask
 
 
@@ -358,14 +353,6 @@ class dynamic_training_rt:
         self.response_block = threading.Event()
         self.response_block.clear()
 
-        # # Preparing display
-        # self.stimulus_queue = mp.Queue()
-        # stim_arguments = {
-        #     "stimulus_manager": RandomDotKinematogram,
-        #     "stimulus_configuration": self.config.STIMULUS,
-        #     "stimulus_courier": self.stimulus_queue,
-        # }
-
         self.timers = {
             "session": datetime.datetime.now(),
             "trial": datetime.datetime.now(),
@@ -373,11 +360,6 @@ class dynamic_training_rt:
         # # Preparing Managers
         self.managers = {}
         self.managers["hardware"] = HardwareManager(self.config)
-
-        # self.managers["display"] = mp.Process(
-        #     target=Stimulus_Display, kwargs=stim_arguments, daemon=True
-        # )
-        # self.managers["display"].start()
 
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
@@ -412,7 +394,6 @@ class dynamic_training_rt:
     def end_session(self):
         self.managers["session"].update_EOS()
         self.managers["behavior"].stop()
-        self.managers["display"].kill()
 
 
 if __name__ == "__main__":

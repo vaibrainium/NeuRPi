@@ -1,6 +1,5 @@
 import datetime
 import queue
-
 # import tables
 import threading
 import time
@@ -86,22 +85,20 @@ class TrialConstruct:
                 if self.trigger["type"] == "FIXATE_ON":
                     while monitoring_behavior:
                         if time.time() - start > wait_time:
+                            # fixation time passed
                             monitoring_behavior = False
                             self.response_block.clear()
                             self.stage_block.set()
                             self.trigger = None
                         else:
                             if not response_queue.empty():
+                                # responded
                                 responded = response_queue.get()
-                                if responded in self.trigger["targets"]:
+                                print("RESPONDED")
+                                if responded not in self.trigger["targets"]:
+                                   # incorrect response
                                     monitoring_behavior = False
-                                    self.response_block.clear()
-                                    self.stage_block.set()
-                                    self.trigger = None
-                                else:
-                                    # self.response_time = time.time() - start
                                     response_queue.queue.clear()
-                                    monitoring_behavior = False
                                     self.monitor_response(response_queue)
 
                 # When agent is supposed to wait on one of the targets
