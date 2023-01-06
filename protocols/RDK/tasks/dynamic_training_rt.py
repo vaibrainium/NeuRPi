@@ -22,35 +22,6 @@ from protocols.RDK.stimulus.random_dot_kinematogram import (
 from protocols.RDK.tasks.rt_task import RTTask
 
 
-class RandomDotKinematogram(BaseRDK):
-    """
-    Class for managing stimulus structure i.e., shape, size and location of the stimuli
-
-    Inhereting from base random dot kinematogram class and builds upon it with all new required methods
-    """
-
-    def __init__(self):
-        super(RandomDotKinematogram, self).__init__()
-        pass
-
-
-class Stimulus_Display(BaseDisplayManager):
-    """
-    Class for diplaying stimulus
-
-    Inhereting from base :class: `DisplayManager`
-    """
-
-    def __init__(
-        self,
-        stimulus_manager=RandomDotKinematogram,
-        stimulus_configuration=None,
-        stimulus_courier=None,
-    ):
-        super().__init__(stimulus_manager, stimulus_configuration, stimulus_courier)
-        pass
-
-
 class SessionManager:
     """
     Class for managing session structure i.e., trial sequence, graduation, and session level summary.
@@ -359,20 +330,20 @@ class dynamic_training_rt:
         subject_id=None,
         task_module=None,
         task_phase=None,
+        config=None,
         **kwargs
     ):
 
         self.subject_id = subject_id
         self.task_module = task_module
         self.task_phase = task_phase
+        self.config = config
         self.__dict__.update(kwargs)
 
-        # Preparing parameters parameters
-        directory = "protocols/RDK/config"
-        filename = "dynamic_coherences.yaml"
-        self.config = get_configuration(directory=directory, filename=filename)
-        # self.task_pars = self.config.TASK  # Get all task parameters
-        # self.stim_pars = self.config.STIMULUS
+        # # Preparing parameters parameters
+        # directory = "protocols/RDK/config"
+        # filename = "dynamic_coherences_rt.yaml"
+        # self.config = get_configuration(directory=directory, filename=filename)
 
         # Preparing subject
         self.subject = Subject(
@@ -387,25 +358,26 @@ class dynamic_training_rt:
         self.response_block = threading.Event()
         self.response_block.clear()
 
-        # Preparing display
-        self.stimulus_queue = mp.Queue()
-        stim_arguments = {
-            "stimulus_manager": RandomDotKinematogram,
-            "stimulus_configuration": self.config.STIMULUS,
-            "stimulus_courier": self.stimulus_queue,
-        }
+        # # Preparing display
+        # self.stimulus_queue = mp.Queue()
+        # stim_arguments = {
+        #     "stimulus_manager": RandomDotKinematogram,
+        #     "stimulus_configuration": self.config.STIMULUS,
+        #     "stimulus_courier": self.stimulus_queue,
+        # }
 
         self.timers = {
             "session": datetime.datetime.now(),
             "trial": datetime.datetime.now(),
         }
-        # Preparing Managers
+        # # Preparing Managers
         self.managers = {}
         self.managers["hardware"] = HardwareManager(self.config)
-        self.managers["display"] = mp.Process(
-            target=Stimulus_Display, kwargs=stim_arguments, daemon=True
-        )
-        self.managers["display"].start()
+
+        # self.managers["display"] = mp.Process(
+        #     target=Stimulus_Display, kwargs=stim_arguments, daemon=True
+        # )
+        # self.managers["display"].start()
 
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
