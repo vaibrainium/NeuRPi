@@ -120,7 +120,7 @@ class Pilot:
             self.stage_block.clear()
 
             # Start the task on separate thread and update terminal
-            threading.Thread(target=self.run_task, args=(self.task, value)).start()
+            threading.Thread(target=self.run_task, args=(task, value)).start()
             self.update_state()
 
         except Exception as e:
