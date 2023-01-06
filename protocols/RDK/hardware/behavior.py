@@ -26,7 +26,7 @@ class Behavior:
         self.quit_monitoring = threading.Event()
         self.quit_monitoring.clear()
 
-    def start(self, session_timer=None):
+    def start(self):
         # self.session_timer = session_timer
         # Starting acquisition process on different thread
         if not self.response_queue:
@@ -44,7 +44,6 @@ class Behavior:
         while not self.quit_monitoring.is_set():
             lick = self.hardware_manager.read_licks()
             if lick:
-                
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
                     if lick == -1 or lick == 1:
