@@ -148,33 +148,42 @@ class DisplayManager(Display):
         raise Warning("next_frame_response Function Not Implemented")
 
 
-def main():
-    import queue
+# def main():
+#     import queue
 
-    import hydra
+#     import hydra
 
-    path = "../../../Protocols/RDK/config"
-    filename = "dynamic_coherences"
-    hydra.initialize(version_base=None, config_path=path)
-    config = hydra.compose(filename, overrides=[])
+#     from protocols.RDK.stimulus.random_dot_kinematogram import \
+#         RandomDotKinematogram
 
-    courier = queue.Queue()
-    a = DisplayManager(stimulus_configuration=config.STIMULUS, stimulus_courier=courier)
-    while True:
-        print("Starting Fixation")
-        message = "('initiate_fixation', {})"
-        courier.put(eval(message))
-        time.sleep(2)
-        print("Starting Stimulus")
-        message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-        courier.put(eval(message))
-        time.sleep(2)
-        print("Starting Intertrial")
-        message = "('initiate_intertrial', {})"
-        courier.put(eval(message))
-        time.sleep(2)
-        print("Loop complete")
+#     path = "../../../protocols/RDK/config"
+#     filename = "stimulus"
+#     hydra.initialize(version_base=None, config_path=path)
+#     config = hydra.compose(filename, overrides=[])
+
+#     courier = queue.Queue()
+#     a = DisplayManager(
+#         stimulus_manager=RandomDotKinematogram,
+#         stimulus_configuration=config.STIMULUS,
+#         stimulus_courier=courier,
+#     )
+#     while True:
+#         print("Starting Fixation")
+#         message = "('initiate_fixation', {})"
+#         courier.put(eval(message))
+#         time.sleep(2)
+#         print("Starting Stimulus")
+#         message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
+#         courier.put(eval(message))
+#         time.sleep(2)
+#         print("Starting Intertrial")
+#         message = "('initiate_intertrial', {})"
+#         courier.put(eval(message))
+#         time.sleep(2)
+#         print("Loop complete")
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     import multiprocessing
+
+#     multiprocessing.Process(targer=main()).start()
