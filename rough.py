@@ -27,48 +27,41 @@ def prepare_config(task_module, filename):
     return config
 
 
+def start_display(value):
+    stim_config = prepare_config(task_module=value["task_module"], filename="stimulus")
+    display = Stimulus_Display(
+        stimulus_configuration=stim_config.STIMULUS,
+        stimulus_courier=value["stimulus_queue"],
+    )
+
+
 def run_task(value):
-    while True:
-        print("Starting Fixation")
-        message = "('initiate_fixation', {})"
-        stimulus_queue.put(eval(message))
-        time.sleep(2)
-        print("Starting Stimulus")
-        message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-        stimulus_queue.put(eval(message))
-        time.sleep(5)
-        print("Starting Intertrial")
-        message = "('initiate_intertrial', {})"
-        stimulus_queue.put(eval(message))
-        time.sleep(2)
-        print("Loop complete")
 
-    # # Importing protocol function/class object using importlib
-    # config = prepare_config(
-    #     task_module=value["task_module"], filename=value["task_phase"]
-    # )
-    # value["config"] = config
+    # Importing protocol function/class object using importlib
+    config = prepare_config(
+        task_module=value["task_module"], filename=value["task_phase"]
+    )
+    value["config"] = config
     # value["stimulus_queue"] = stimulus_queue
-    # task = dynamic_training_rt(stage_block, **value)
-    # running.set()
+    task = dynamic_training_rt(stage_block, **value)
+    running.set()
 
-    # while True:
-    #     stage = next(task.stages)
-    #     print(stage)
-    #     data = stage()
+    while True:
+        stage = next(task.stages)
+        print(stage)
+        data = stage()
 
-    #     stage_block.wait()
+        stage_block.wait()
 
-    #     # Has trial ended?
-    #     if "TRIAL_END" in data.keys():
-    #         running.wait()  # If paused, waiting for running event set?
-    #         if quitting.is_set():  # is quitting event set?
-    #             task.end_session()
-    #             break  # Won't quit if the task is paused.
+        # Has trial ended?
+        if "TRIAL_END" in data.keys():
+            running.wait()  # If paused, waiting for running event set?
+            if quitting.is_set():  # is quitting event set?
+                task.end_session()
+                break  # Won't quit if the task is paused.
 
 
 if __name__ == "__main__":
-    import queue
 
     stage_block = threading.Event()
     running = threading.Event()
@@ -80,48 +73,7 @@ if __name__ == "__main__":
         "task_phase": "dynamic_training_rt",
         "subject_id": "PSUIM4",
     }
-    stimulus_queue = queue.Queue()
-    stim_config = prepare_config(task_module=value["task_module"], filename="stimulus")
-    display = Stimulus_Display(
-        stimulus_configuration=stim_config.STIMULUS, stimulus_courier=stimulus_queue
-    )
+    value["stimulus_queue"] = mp.Manager().Queue()
 
-    threading.Thread(target=run_task, args=(value,)).start()
-
-    # while True:
-    #     print("Starting Fixation")
-    #     message = "('initiate_fixation', {})"
-    #     stimulus_queue.put(eval(message))
-    #     time.sleep(2)
-    #     print("Starting Stimulus")
-    #     message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-    #     stimulus_queue.put(eval(message))
-    #     time.sleep(5)
-    #     print("Starting Intertrial")
-    #     message = "('initiate_intertrial', {})"
-    #     stimulus_queue.put(eval(message))
-    #     time.sleep(2)
-    #     print("Loop complete")
-
-    # # Importing protocol function/class object using importlib
-    # config = prepare_config(
-    #     task_module=value["task_module"], filename=value["task_phase"]
-    # )
-    # value["config"] = config
-    # value["stimulus_queue"] = stimulus_queue
-    # task = dynamic_training_rt(stage_block, **value)
-    # running.set()
-
-    # while True:
-    #     stage = next(task.stages)
-    #     print(stage)
-    #     data = stage()
-
-    #     stage_block.wait()
-
-    #     # Has trial ended?
-    #     if "TRIAL_END" in data.keys():
-    #         running.wait()  # If paused, waiting for running event set?
-    #         if quitting.is_set():  # is quitting event set?
-    #             task.end_session()
-    #             break  # Won't quit if the task is paused.
+    mp.Process(target=start_display, args=(value,)).start()
+    run_task(value)
