@@ -6,7 +6,6 @@
 
 import multiprocessing as mp
 import threading
-
 #     test_pilot.main()
 #     # test_terminal.main()
 #     pass
@@ -15,7 +14,8 @@ import time
 # from protocols.RDK.data_model.subject import Subject
 from NeuRPi.utils.get_config import get_configuration
 from protocols.RDK.stimulus.dynamic_training_rt import Stimulus_Display
-from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
+from protocols.RDK.stimulus.random_dot_kinematogram import \
+    RandomDotKinematogram
 from protocols.RDK.tasks.dynamic_training_rt import dynamic_training_rt
 
 
@@ -33,6 +33,7 @@ def start_display(value):
         stimulus_configuration=stim_config.STIMULUS,
         stimulus_courier=value["stimulus_queue"],
     )
+    display.start()
 
 
 def run_task(value):
@@ -76,4 +77,5 @@ if __name__ == "__main__":
     value["stimulus_queue"] = mp.Manager().Queue()
 
     mp.Process(target=start_display, args=(value,)).start()
+    time.sleep(2)
     run_task(value)
