@@ -46,22 +46,6 @@ class Display:
 
         self.audio = {}
         self.video = {}
-        self.start()
-
-        threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-        threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
-
-    def get_configuration(self, directory=None, filename=None):
-        """
-        Getting configuration from respective config.yaml file.
-
-        Arguments:
-            directory (str): Path to configuration directory relative to root directory (as Protocols/../...)
-            filename (str): Specific file name of the configuration file
-        """
-        path = "../../" + directory
-        hydra.initialize(version_base=None, config_path=path)
-        return hydra.compose(filename, overrides=[])
 
     def start(self):
         # Initialize all screens with black background
@@ -87,6 +71,9 @@ class Display:
         self.update()
 
         self.gather_media()
+
+        threading.Thread(target=self.render_visual, args=[], daemon=False).start()
+        threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
 
     def gather_media(self):
         for key, val in self.stim_config.courier_handle.items():
