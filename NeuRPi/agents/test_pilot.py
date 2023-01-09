@@ -4,11 +4,13 @@ import multiprocessing as mp
 import os
 import sys
 import threading
+import time
 from pathlib import Path
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Pilot_Station
 from NeuRPi.prefs import prefs
+from NeuRPi.utils.get_config import get_configuration
 
 
 class Pilot:
@@ -18,8 +20,7 @@ class Pilot:
     # Events for thread handling
     running = None
     stage_block = None
-    file_block = None
-    quitting = None
+    stopping = None
 
     # networking
     node = None
@@ -39,15 +40,16 @@ class Pilot:
         self.logger.debug("pilot logger initialized")
 
         # Locks, etc. for threading
-        self.running = threading.Event()  # Are we running a task?
         self.stage_block = threading.Event()  # Are we waiting on stage triggers?
-        self.file_block = threading.Event()  # Are we waiting on file transfer?
-        self.quitting = threading.Event()
-        self.quitting.clear()
+        self.running = threading.Event()  # Are we running a task?
+        self.stopping = threading.Event()
+        self.stopping.clear()
 
         # initialize listens dictionary
         self.listens = {
             "START": self.l_start,
+            "PAUSE": self.l_pause,
+            "RESUME": self.l_resume,
             "STOP": self.l_stop,
             "PARAM": self.l_param,
         }
@@ -74,8 +76,7 @@ class Pilot:
         self.logger.debug("handshake sent")
 
         self.task = None
-        self.stimulus_manager = None
-        self.stimulus_queue = None
+        self.stimulus_display = None
 
     def handshake(self):
         hello = {
@@ -119,6 +120,12 @@ class Pilot:
 
             self.stage_block.clear()
 
+            # additing stimulus display queue
+            value["stimulus_queue"] = mp.Manager().Queue()
+            # Start display on separate process and wait for three secs for display initiation
+            self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
+            self.stimulus_display.start()
+            time.sleep(2)
             # Start the task on separate thread and update terminal
             threading.Thread(target=self.run_task, args=(task, value)).start()
             self.update_state()
@@ -136,19 +143,47 @@ class Pilot:
             value: Ignored for now. Might implement in future to match terminal and pilot data
         """
         # Letting terminal know that we are stopping task
-        self.state = "STOPPING"
-        self.update_state()
-
         self.running.clear()
-        self.stage_block.set()
-
-        # TODO: Perform data matching or post task routines
+        self.stopping.set()
 
         self.state = "IDLE"
         self.update_state()
 
     def l_param(self):
         pass
+
+    def l_pause(self):
+        """
+        Remove `self.running` event flag
+        """
+        self.running.clear()
+
+    def l_resume(self):
+        """
+        Resume task by setting `self.running` event
+        """
+        self.running.set()
+
+    def start_display(self, task_params):
+        """
+        Import relevant stimulus configuration
+        Import and start stimulus_display class relevant for requested task
+        """
+        display_module = (
+            "protocols."
+            + task_params["task_phase"]
+            + ".stimulus."
+            + task_params["task_phase"]
+        )
+        display_module = importlib.import_module(display_module)
+        Stimulus_Display = display_module.Stimulus_Display
+        directory = "protocols/" + task_params["task_module"] + "/config"
+        stim_config = get_configuration(directory=directory, filename="stimulus")
+        display = Stimulus_Display(
+            stimulus_configuration=stim_config.STIMULUS,
+            stimulus_courier=task_params["stimulus_queue"],
+        )
+        display.start()
 
     def run_task(self, task, task_params):
         """
@@ -166,11 +201,6 @@ class Pilot:
         self.task = task(stage_block=self.stage_block, **task_params)
         self.logger.debug("task initialized")
 
-        # Is trial data expected?
-        trial_data = False
-        if hasattr(self.task, "TrialData"):
-            trial_data = True
-
         # TODO: Initialize sending continuous data here
         self.logger.debug("Starting task loop")
         try:
@@ -186,25 +216,20 @@ class Pilot:
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
 
-                    # # TODO: Store a local copy
-                    # # the task class has a class variable DATA that lets us know which data the row is expecting
-                    # if trial_data:
-                    #     for k, v in data.items():
-                    #         if k in self.task.TrialData.columns.keys():
-                    #             row[k] = v
-                    # # If the trial is over (either completed or bailed), flush the row
-                    # if 'TRIAL_END' in data.keys():
-                    #     row.append()
-                    #     table.flush()
-                    # self.logger.debug('sent data')
-
                 # Waiting for stage block to clear
                 self.stage_block.wait()
                 self.logger.debug("stage block passed")
 
-                # Exit loop if the running flag is not set and current trial has ended.
+                # pause loop if the running flag is not set and current trial has ended.
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
-                    break
+                    # exit loop if stopping flag is set
+                    if self.stopping.is_set():
+                        task.end_session()
+                        self.stimulus_display.terminate()
+                        break
+
+                    # if paused, wait for running event set?
+                    self.running.wait()
 
         except Exception as e:
             self.logger.exception(
@@ -223,19 +248,21 @@ class Pilot:
 
 
 def main():
+    quitting = threading.Event()
+    quitting.clear()
     try:
         pi = Pilot()
         pi.handshake()
 
         msg = {
-            "subjectID": "test_subject",
+            "subjectID": "PSUIM4",
             "task_module": "dynamic_coherence_rt",
             "task_phase": "4",
         }
-        pi.quitting.wait()
+        quitting.wait()
 
     except KeyboardInterrupt:
-        pi.quitting.set()
+        quitting.set()
         sys.exit()
 
 
