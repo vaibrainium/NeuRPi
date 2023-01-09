@@ -12,7 +12,7 @@ import time
 from NeuRPi.utils.get_config import get_configuration
 
 # from protocols.RDK.stimulus.dynamic_training_rt import Stimulus_Display
-from protocols.RDK.tasks.dynamic_training_rt import dynamic_training_rt
+from protocols.RDK.tasks.dynamic_training_rt import TASK
 
 
 def prepare_config(task_module, filename):
@@ -45,7 +45,7 @@ def run_task(value):
     )
     value["config"] = config
     # value["stimulus_queue"] = stimulus_queue
-    task = dynamic_training_rt(stage_block, **value)
+    task = TASK(stage_block, **value)
     running.set()
 
     while True:

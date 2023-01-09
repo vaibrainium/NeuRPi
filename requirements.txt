@@ -12,3 +12,4 @@ numpy
 zmq
 tornado
 pandas
+blosc2

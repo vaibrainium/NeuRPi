@@ -1,16 +1,6 @@
-# import time
-
-# if __name__ == "__main__":
-
-#     from NeuRPi.agents import test_pilot, test_terminal
-
-
-#     test_pilot.main()
-#     # test_terminal.main()
-#     pass
-
 
 if __name__ == "__main__":
+    import multiprocessing
     import sys
     import threading
 
@@ -23,12 +13,17 @@ if __name__ == "__main__":
         pi.handshake()
 
         msg = {
-            "subjectID": "PSUIM4",
-            "task_module": "dynamic_coherence_rt",
-            "task_phase": "4",
+            "subject_id": "PSUIM4",
+            "task_module": "RDK",
+            "task_phase": "dynamic_training_rt",
         }
+        pi.l_start(msg)
         quitting.wait()
 
     except KeyboardInterrupt:
         quitting.set()
+        active = multiprocessing.active_children()
+        # terminate all active children
+        for child in active:
+            child.terminate()
         sys.exit()

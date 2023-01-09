@@ -314,7 +314,7 @@ class SessionManager:
         self.subject.save()
 
 
-class dynamic_training_rt:
+class TASK:
     """
     Dynamic Training Routine with reaction time trial structure
     """

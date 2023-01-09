@@ -1,8 +1,10 @@
-VENVDIR: /src/NeuRPi/venv
-BASEDIR: /src/NeuRPi/
-DATADIR: /src/NeuRPi/data/
-LOGDIR:  /src/NeuRPi/data/logs/
-PROTOCOLDIR: /src/NeuRPi/protocols/
+# Path relative to home
+BASEDIR: Desktop/NeuRPi/
+# Path relative to package
+PROTOCOLDIR: protocols/
+VENVDIR: venv/
+DATADIR: data/
+LOGDIR:  logs/
 
 LOGLEVEL: DEBUG  # Choices [DEBUG, INFO, WARNING, ERROR]
 LOGSIZE: 5000000.0

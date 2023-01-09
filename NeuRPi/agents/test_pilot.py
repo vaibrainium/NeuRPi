@@ -113,21 +113,17 @@ class Pilot:
             self.task_phase = value["task_phase"]
             self.subject_id = value["subject_id"]
 
-            # Importing protocol function/class object using importlib
-            task = importlib.import_module(
-                "protocols." + self.task_module + ".tasks." + self.task_phase
-            )
-
             self.stage_block.clear()
 
-            # additing stimulus display queue
+            # # Start display on separate process and wait for three secs for display initiation
+            # # additing stimulus display queue
             value["stimulus_queue"] = mp.Manager().Queue()
-            # Start display on separate process and wait for three secs for display initiation
             self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
             self.stimulus_display.start()
-            time.sleep(2)
+            time.sleep(3)
+
             # Start the task on separate thread and update terminal
-            threading.Thread(target=self.run_task, args=(task, value)).start()
+            threading.Thread(target=self.run_task, args=(value,)).start()
             self.update_state()
 
         except Exception as e:
@@ -171,21 +167,20 @@ class Pilot:
         """
         display_module = (
             "protocols."
-            + task_params["task_phase"]
+            + task_params["task_module"]
             + ".stimulus."
             + task_params["task_phase"]
         )
         display_module = importlib.import_module(display_module)
-        Stimulus_Display = display_module.Stimulus_Display
         directory = "protocols/" + task_params["task_module"] + "/config"
         stim_config = get_configuration(directory=directory, filename="stimulus")
-        display = Stimulus_Display(
+        display = display_module.Stimulus_Display(
             stimulus_configuration=stim_config.STIMULUS,
             stimulus_courier=task_params["stimulus_queue"],
         )
         display.start()
 
-    def run_task(self, task, task_params):
+    def run_task(self, task_params):
         """
         Start running task under new thread
 
@@ -198,7 +193,19 @@ class Pilot:
         """
 
         self.logger.debug("initialing task")
-        self.task = task(stage_block=self.stage_block, **task_params)
+        # Importing protocol function/class object using importlib
+        task_module = importlib.import_module(
+            "protocols." + self.task_module + ".tasks." + self.task_phase
+        )
+
+        self.config = get_configuration(
+            directory="protocols/" + task_params["task_module"] + "/config",
+            filename=task_params["task_phase"],
+        )
+
+        self.task = task_module.TASK(
+            stage_block=self.stage_block, config=self.config, **task_params
+        )
         self.logger.debug("task initialized")
 
         # TODO: Initialize sending continuous data here
@@ -206,7 +213,7 @@ class Pilot:
         try:
             while True:
                 # Calculate next stage data and prepare triggers
-                data = next(self.task.stages())()
+                data = next(self.task.stages)()
                 self.logger.debug("called stage method")
 
                 if data:
@@ -224,7 +231,7 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        task.end_session()
+                        self.task.end_session()
                         self.stimulus_display.terminate()
                         break
 
@@ -239,7 +246,7 @@ class Pilot:
         finally:
             self.logger.debug("stopping task")
             try:
-                self.task.end()
+                self.task.end_session()
             except Exception as e:
                 self.logger.exception(f"got exception while stopping task: {e}")
             del self.task
