@@ -4,18 +4,14 @@
 
 #     from NeuRPi.agents import test_pilot, test_terminal
 
+import importlib
 import multiprocessing as mp
 import threading
-#     test_pilot.main()
-#     # test_terminal.main()
-#     pass
 import time
 
-# from protocols.RDK.data_model.subject import Subject
 from NeuRPi.utils.get_config import get_configuration
-from protocols.RDK.stimulus.dynamic_training_rt import Stimulus_Display
-from protocols.RDK.stimulus.random_dot_kinematogram import \
-    RandomDotKinematogram
+
+# from protocols.RDK.stimulus.dynamic_training_rt import Stimulus_Display
 from protocols.RDK.tasks.dynamic_training_rt import dynamic_training_rt
 
 
@@ -27,11 +23,16 @@ def prepare_config(task_module, filename):
     return config
 
 
-def start_display(value):
-    stim_config = prepare_config(task_module=value["task_module"], filename="stimulus")
+def start_display(task_params):
+    display_module = "protocols.RDK.stimulus.dynamic_training_rt"
+    display_module = importlib.import_module(display_module)
+    Stimulus_Display = display_module.Stimulus_Display
+    stim_config = prepare_config(
+        task_module=task_params["task_module"], filename="stimulus"
+    )
     display = Stimulus_Display(
         stimulus_configuration=stim_config.STIMULUS,
-        stimulus_courier=value["stimulus_queue"],
+        stimulus_courier=task_params["stimulus_queue"],
     )
     display.start()
 
