@@ -15,15 +15,16 @@ context = zmq.Context()
 
 # Socket to receive messages on
 receiver = context.socket(zmq.PULL)
-receiver.connect("tcp://localhost:5557")
+receiver.connect("tcp://localhost:10000")
 
-# Socket to send messages to
+# # Socket to send messages to
 sender = context.socket(zmq.PUSH)
-sender.connect("tcp://localhost:5558")
+sender.bind("tcp://*:10001")
 
 # Process tasks forever
 while True:
     s = receiver.recv()
+    print(s)
 
     # Simple progress indicator for the viewer
     sys.stdout.write(".")
@@ -32,5 +33,5 @@ while True:
     # Do the work
     time.sleep(int(s) * 0.001)
 
-    # Send results to sink
-    sender.send(b"")
+    # # Send results to sink
+    # sender.send(b"")

@@ -125,7 +125,7 @@ class Station(multiprocessing.Process):
         unwrap00 = [
             ip
             for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-            if not ip.startswith("127.")
+            if not ip.startswith("10.")
         ][:1]
         # ??? truly dk
         unwrap01 = [
@@ -678,7 +678,7 @@ class Terminal_Station(Station):
         """
         super(Terminal_Station, self).__init__()
 
-        # by default terminal doesn't have a puster, since it's a end tree node and everything connects to it
+        # by default terminal doesn't have a pusher, since it's a end tree node and everything connects to it
         self.pusher = False
 
         self.listen_port = prefs.get("MSGPORT")

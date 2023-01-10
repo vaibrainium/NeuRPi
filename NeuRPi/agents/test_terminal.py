@@ -1,5 +1,6 @@
 import os
 import threading
+import time
 import typing
 from collections import OrderedDict as odict
 from pathlib import Path
@@ -74,8 +75,6 @@ class Terminal:
 
         ##########################
 
-        self.run()
-
     ################
     # Properties
 
@@ -92,7 +91,7 @@ class Terminal:
         if self._pilots is None:
             # TODO: get pilot file with GUI
             self._pilots = odict()
-            self._pilots["rig_4"] = {"ip": "10.155.205.81"}
+            self._pilots["rig_2"] = {"ip": "10.155.207.72"}
         return self._pilots
 
     @property
@@ -292,6 +291,7 @@ class Terminal:
         Args:
             value (dict): dict containing `ip` and `state`
         """
+        print("HANDSHAKE RECEIVED")
         if value["pilot"] in self.pilots.keys():
             self.pilots[value["pilot"]]["ip"] = value.get("ip", "")
             self.pilots[value["pilot"]]["state"] = value.get("state", "")
@@ -304,9 +304,9 @@ class Terminal:
                 pilot_prefs=value.get("prefs", {}),
             )
 
-        # update the pilot button
-        if value["pilot"] in self.control_panel.panels.keys():
-            self.control_panel.panels[value["pilot"]].button.set_state(value["state"])
+        # # update the pilot button
+        # if value["pilot"] in self.control_panel.panels.keys():
+        #     self.control_panel.panels[value["pilot"]].button.set_state(value["state"])
 
     ########################
     # GUI and other functions
@@ -346,6 +346,14 @@ class Terminal:
         # self.logger.info(f"added new pilot {name}")
 
     def run(self):
+        task = {
+            "subject_id": "PSUIM4",
+            "task_module": "RDK",
+            "task_phase": "dynamic_training_rt",
+        }
+
+        self.node.send(to="rig_2", key="START", value=task)
+
         while True:
             pass
 
