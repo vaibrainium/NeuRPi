@@ -322,14 +322,14 @@ class TASK:
     def __init__(
         self,
         stage_block=None,
-        subject_id=None,
+        subject=None,
         task_module=None,
         task_phase=None,
         config=None,
         **kwargs
     ):
 
-        self.subject_id = subject_id
+        self.subject = subject
         self.task_module = task_module
         self.task_phase = task_phase
         self.config = config
@@ -342,7 +342,7 @@ class TASK:
 
         # Preparing subject
         self.subject = Subject(
-            name=self.subject_id,
+            name=self.subject,
             task_module=self.task_module,
             task_phase=self.task_phase,
             config=self.config,
@@ -400,7 +400,7 @@ if __name__ == "__main__":
     value = {
         "task_module": "RDK",
         "task_phase": "dynamic_training_rt",
-        "subject_id": "PSUIM4",
+        "subject": "PSUIM4",
     }
 
     dynamic_training_rt(stage_block=threading.Event(), **value)

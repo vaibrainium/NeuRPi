@@ -1044,58 +1044,58 @@ class Pilot_Station(Station):
             msg (:class:`.Message`): value will contain a dictionary containing a task
                 description.
         """
-        self.subject = msg.value["subject"]
+        # self.subject = msg.value["subject"]
 
-        # TODO: Refactor into a general preflight check.
-        # First make sure we have any sound files that we need
-        # TODO: stim managers need to be able to return list of stimuli and this is a prime reason why
-        if "stim" in msg.value.keys():
-            if "sounds" in msg.value["stim"].keys():
+        # # TODO: Refactor into a general preflight check.
+        # # First make sure we have any sound files that we need
+        # # TODO: stim managers need to be able to return list of stimuli and this is a prime reason why
+        # if "stim" in msg.value.keys():
+        #     if "sounds" in msg.value["stim"].keys():
 
-                # nested list comprehension to get value['sounds']['L/R'][0-n]
-                f_sounds = [
-                    sound
-                    for sounds in msg.value["stim"]["sounds"].values()
-                    for sound in sounds
-                    if sound["type"] in ["File", "Speech"]
-                ]
-            elif "manager" in msg.value["stim"].keys():
-                # we have a manager
-                if msg.value["stim"]["type"] == "sounds":
-                    f_sounds = []
-                    for group in msg.value["stim"]["groups"]:
-                        f_sounds.extend(
-                            [
-                                sound
-                                for sounds in group["sounds"].values()
-                                for sound in sounds
-                                if sound["type"] in ["File", "Speech"]
-                            ]
-                        )
-            else:
-                f_sounds = []
+        #         # nested list comprehension to get value['sounds']['L/R'][0-n]
+        #         f_sounds = [
+        #             sound
+        #             for sounds in msg.value["stim"]["sounds"].values()
+        #             for sound in sounds
+        #             if sound["type"] in ["File", "Speech"]
+        #         ]
+        #     elif "manager" in msg.value["stim"].keys():
+        #         # we have a manager
+        #         if msg.value["stim"]["type"] == "sounds":
+        #             f_sounds = []
+        #             for group in msg.value["stim"]["groups"]:
+        #                 f_sounds.extend(
+        #                     [
+        #                         sound
+        #                         for sounds in group["sounds"].values()
+        #                         for sound in sounds
+        #                         if sound["type"] in ["File", "Speech"]
+        #                     ]
+        #                 )
+        #     else:
+        #         f_sounds = []
 
-            if len(f_sounds) > 0:
-                # check to see if we have these files, if not, request them
-                for sound in f_sounds:
-                    full_path = os.path.join(prefs.get("SOUNDDIR"), sound["path"])
-                    if not os.path.exists(full_path):
-                        # We ask the terminal to send us the file and then wait.
-                        self.logger.info("REQUESTING SOUND {}".format(sound["path"]))
-                        self.push(key="FILE", value=sound["path"])
-                        # wait here to get the sound,
-                        # the receiving thread will set() when we get it.
-                        self.file_block.clear()
-                        self.file_block.wait()
+        #     if len(f_sounds) > 0:
+        #         # check to see if we have these files, if not, request them
+        #         for sound in f_sounds:
+        #             full_path = os.path.join(prefs.get("SOUNDDIR"), sound["path"])
+        #             if not os.path.exists(full_path):
+        #                 # We ask the terminal to send us the file and then wait.
+        #                 self.logger.info("REQUESTING SOUND {}".format(sound["path"]))
+        #                 self.push(key="FILE", value=sound["path"])
+        #                 # wait here to get the sound,
+        #                 # the receiving thread will set() when we get it.
+        #                 self.file_block.clear()
+        #                 self.file_block.wait()
 
-        # If we're starting the task as a child, stash relevant params
-        if "child" in msg.value.keys():
-            self.child = True
-            self.parent_id = msg.value["child"]["parent"]
-            self.subject = msg.value["child"]["subject"]
+        # # If we're starting the task as a child, stash relevant params
+        # if "child" in msg.value.keys():
+        #     self.child = True
+        #     self.parent_id = msg.value["child"]["parent"]
+        #     self.subject = msg.value["child"]["subject"]
 
-        else:
-            self.child = False
+        # else:
+        #     self.child = False
 
         # once we make sure we have everything, tell the Pilot to start.
         self.send(self.pi_id, "START", msg.value)

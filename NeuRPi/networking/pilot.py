@@ -15,7 +15,7 @@ context = zmq.Context()
 
 # Socket to receive messages on
 receiver = context.socket(zmq.PULL)
-receiver.connect("tcp://localhost:5557")
+receiver.connect("tcp://10.155.206.212:10000")
 
 # Socket to send messages to
 sender = context.socket(zmq.PUSH)

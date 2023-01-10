@@ -111,7 +111,7 @@ class Pilot:
         try:
             self.task_module = value["task_module"]
             self.task_phase = value["task_phase"]
-            self.subject_id = value["subject_id"]
+            self.subject = value["subject"]
 
             self.stage_block.clear()
 
@@ -218,7 +218,7 @@ class Pilot:
 
                 if data:
                     data["pilot"] = self.name
-                    data["subject_id"] = self.subject_id
+                    data["subject"] = self.subject
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)

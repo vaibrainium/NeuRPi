@@ -63,7 +63,7 @@ if __name__ == "__main__":
     value = {
         "task_module": "RDK",
         "task_phase": "dynamic_training_rt",
-        "subject_id": "PSUIM4",
+        "subject": "PSUIM4",
     }
     stimulus_queue = mp.Manager().Queue()
     stim_config = prepare_config(task_module=value["task_module"], filename="stimulus")

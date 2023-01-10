@@ -140,8 +140,9 @@ class RTTask(TrialConstruct):
         self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
-            "subject_id": self.subject.name,
+            "subject": self.subject.name,
             "trial_counters": self.config.SUBJECT.counters,
+            "stimulus_pars": self.stimulus_pars,
         }
         return data
 

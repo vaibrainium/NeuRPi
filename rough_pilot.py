@@ -1,4 +1,3 @@
-
 if __name__ == "__main__":
     import multiprocessing
     import sys
@@ -12,12 +11,12 @@ if __name__ == "__main__":
         pi = Pilot()
         pi.handshake()
 
-        msg = {
-            "subject_id": "PSUIM4",
-            "task_module": "RDK",
-            "task_phase": "dynamic_training_rt",
-        }
-        pi.l_start(msg)
+        # msg = {
+        #     "subject": "PSUIM4",
+        #     "task_module": "RDK",
+        #     "task_phase": "dynamic_training_rt",
+        # }
+        # pi.l_start(msg)
         quitting.wait()
 
     except KeyboardInterrupt:
