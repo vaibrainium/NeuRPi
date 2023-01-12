@@ -551,3 +551,22 @@ class RDK_Application(baseclass1):
             self.startBehavior(App)
             # if Cam['Camera']:
             #     self.startCamera(Cam)
+
+
+if __name__ == '__main__':
+    multiprocessing.freeze_support()   # To create exe with multiprocessing this line is needed after "if __name__ == '__main__'". Ref: https://docs.python.org/2/library/multiprocessing.html
+    # Starting Screen
+    StimMsg = Queue()
+    Display = Process(target=StimWindow, args=(StimMsg,))
+    Display.start()
+    # Video stream camera
+    Camera = []#cv2.VideoCapture(0)
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv)
+    StartWindow = RDK_Application(StimMsg,Camera)
+    StartWindow.show()
+    sys.exit(app.exec_())
+    StimMsg.put(['quit'])
+    Display.join()
+

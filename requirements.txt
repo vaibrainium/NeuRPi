@@ -6,6 +6,7 @@ omegaconf~=2.2.2
 setuptools~=60.2.0
 tables~=3.7.0
 hydra-core~=1.2.0
+tables
 rich
 blosc
 numpy

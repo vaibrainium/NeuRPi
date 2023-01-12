@@ -5,10 +5,6 @@ LABEL maintainer='Vaibhav Thakur <vaibhavt459 at gmail.com>'
 WORKDIR /src/NeuRPi
 
 RUN apt-get update
+RUN apt-get update && apt-get install -y python3-pyqt5
 RUN apt-get install ffmpeg libsm6 libxext6  -y
-# Installing dependencies
-# COPY . /src/NeuRPi
-# RUN pip install --no-cache-dir --upgrade -r requirements.txt
-CMD pip install .
 
-# CMD ["/bin/bash"]

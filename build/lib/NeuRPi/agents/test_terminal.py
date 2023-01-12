@@ -345,17 +345,17 @@ class Terminal:
         # self.control_panel.update_db(new=new_pilot)
         # self.logger.info(f"added new pilot {name}")
 
-    def run(self):
-        task = {
-            "subject_id": "PSUIM4",
-            "task_module": "RDK",
-            "task_phase": "dynamic_training_rt",
-        }
+    # def run(self):
+    #     task = {
+    #         "subject_id": "PSUIM4",
+    #         "task_module": "RDK",
+    #         "task_phase": "dynamic_training_rt",
+    #     }
 
-        self.node.send(to="rig_2", key="START", value=task)
+    #     self.node.send(to="rig_2", key="START", value=task)
 
-        while True:
-            pass
+    #     while True:
+    #         pass
 
     def closeEvent(self, event):
         """
