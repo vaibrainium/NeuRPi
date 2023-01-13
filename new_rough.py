@@ -14,9 +14,9 @@ import time
 
 # from protocols.RDK.data_model.subject import Subject
 from NeuRPi.utils.get_config import get_configuration
-from protocols.RDK.stimulus.dynamic_training_rt import Stimulus_Display
-from protocols.RDK.stimulus.random_dot_kinematogram import RandomDotKinematogram
-from protocols.RDK.tasks.dynamic_training_rt import dynamic_training_rt
+from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
+from protocols.random_dot_motion.stimulus.rt_dynamic_training import Stimulus_Display
+from protocols.random_dot_motion.tasks.rt_dynamic_training import Task
 
 
 def prepare_config(task_module, filename):
@@ -35,7 +35,7 @@ def run_task(value):
     )
     value["config"] = config
     value["stimulus_queue"] = stimulus_queue
-    task = dynamic_training_rt(stage_block, **value)
+    task = Task(stage_block, **value)
     running.set()
 
     while True:
@@ -61,8 +61,8 @@ if __name__ == "__main__":
 
     # Preparing task
     value = {
-        "task_module": "RDK",
-        "task_phase": "dynamic_training_rt",
+        "task_module": "random_dot_motion",
+        "task_phase": "rt_dynamic_training",
         "subject": "PSUIM4",
     }
     stimulus_queue = mp.Manager().Queue()
@@ -94,7 +94,7 @@ if __name__ == "__main__":
     # )
     # value["config"] = config
     # value["stimulus_queue"] = stimulus_queue
-    # task = dynamic_training_rt(stage_block, **value)
+    # task = rt_dynamic_training(stage_block, **value)
     # running.set()
 
     # while True:

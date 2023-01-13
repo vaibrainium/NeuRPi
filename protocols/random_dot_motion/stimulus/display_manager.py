@@ -1,7 +1,7 @@
 import time
 from multiprocessing import Process
 
-from protocols.RDK.stimulus.display import Display
+from protocols.random_dot_motion.stimulus.display import Display
 
 
 class DisplayManager(Display):

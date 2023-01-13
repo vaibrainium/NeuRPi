@@ -11,10 +11,10 @@ from scipy.stats import pearson3
 
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
-from protocols.RDK.data_model.subject import Subject
-from protocols.RDK.hardware.behavior import Behavior
-from protocols.RDK.hardware.hardware_manager import HardwareManager
-from protocols.RDK.tasks.rt_task import RTTask
+from protocols.random_dot_motion.data_model.subject import Subject
+from protocols.random_dot_motion.hardware.behavior import Behavior
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
 class SessionManager:
@@ -265,7 +265,7 @@ class SessionManager:
         ):
             self.config.SUBJECT.running_accuracy.append(
                 [
-                    self.config.SUBJECT.counters["trial"],
+                    self.config.SUBJECT.counters["valid"],
                     self.config.SUBJECT.counters["correct"]
                     / (
                         self.config.SUBJECT.counters["correct"]
@@ -314,7 +314,7 @@ class SessionManager:
         self.subject.save()
 
 
-class TASK:
+class Task:
     """
     Dynamic Training Routine with reaction time trial structure
     """
@@ -399,8 +399,8 @@ class TASK:
 if __name__ == "__main__":
     value = {
         "task_module": "RDK",
-        "task_phase": "dynamic_training_rt",
+        "task_phase": "rt_dynamic_training",
         "subject": "PSUIM4",
     }
 
-    dynamic_training_rt(stage_block=threading.Event(), **value)
+    rt_dynamic_training(stage_block=threading.Event(), **value)

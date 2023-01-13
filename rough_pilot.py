@@ -9,14 +9,6 @@ if __name__ == "__main__":
     quitting.clear()
     try:
         pi = Pilot()
-        pi.handshake()
-
-        # msg = {
-        #     "subject": "PSUIM4",
-        #     "task_module": "RDK",
-        #     "task_phase": "dynamic_training_rt",
-        # }
-        # pi.l_start(msg)
         quitting.wait()
 
     except KeyboardInterrupt:

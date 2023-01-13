@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 
 from NeuRPi.loggers.logger import init_logger
-from NeuRPi.networking import Message, Net_Node, Pilot_Station
+from NeuRPi.networking import Net_Node, Pilot_Station
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 
@@ -175,7 +175,7 @@ class Pilot:
         directory = "protocols/" + task_params["task_module"] + "/config"
         stim_config = get_configuration(directory=directory, filename="stimulus")
         display = display_module.Stimulus_Display(
-            stimulus_configuration=stim_config.STIMULUS,
+            stimulus_configuration=task_params["stim_config"],
             stimulus_courier=task_params["stimulus_queue"],
         )
         display.start()
@@ -203,7 +203,7 @@ class Pilot:
             filename=task_params["task_phase"],
         )
 
-        self.task = task_module.TASK(
+        self.task = task_module.Task(
             stage_block=self.stage_block, config=self.config, **task_params
         )
         self.logger.debug("task initialized")
@@ -219,6 +219,7 @@ class Pilot:
                 if data:
                     data["pilot"] = self.name
                     data["subject"] = self.subject
+                    data["task_stage"] = str(self.task.stages)
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
@@ -274,4 +275,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     main()

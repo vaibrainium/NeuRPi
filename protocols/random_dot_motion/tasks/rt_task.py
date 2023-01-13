@@ -135,7 +135,7 @@ class RTTask(TrialConstruct):
         # Get current trial properties
         self.config.SUBJECT.counters["attempt"] += 1
         if not self.correction_trial:
-            self.config.SUBJECT.counters["trial"] += 1
+            self.config.SUBJECT.counters["valid"] += 1
 
         self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
@@ -210,7 +210,7 @@ class RTTask(TrialConstruct):
             self.config.SUBJECT.counters["noreponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
             self.reinforcement_duration = self.config.TASK.feedback.invalid.time.value
-            self.valid, self.correct, self.correction_trial = [0, 0, 1]
+            self.valid, self.correct = [0, 0]
 
             iti_decay = self.config.TASK.feedback.invalid.intertrial
             self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
@@ -230,7 +230,7 @@ class RTTask(TrialConstruct):
             self.config.SUBJECT.counters["incorrect"] += 1
             stimulus_arguments["outcome"] = "incorrect"
             self.reinforcement_duration = self.config.TASK.feedback.incorrect.time.value
-            self.valid, self.correct, self.correction_trial = [1, 0, 1]
+            self.valid, self.correct = [1, 0]
             iti_decay = self.config.TASK.feedback.incorrect.intertrial
             self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base * np.exp(iti_decay.power * self.response_time)
@@ -254,7 +254,7 @@ class RTTask(TrialConstruct):
                 self.managers["hardware"].reward_right(
                     self.config.SUBJECT.reward_per_pulse
                 )
-            self.valid, self.correct, self.correction_trial = [1, 1, 0]
+            self.valid, self.correct = [1, 1]
             self.intertrial_duration = self.config.TASK.timings.intertrial.value
 
             # Starting reinforcement
@@ -300,9 +300,20 @@ class RTTask(TrialConstruct):
 
         # log EOT
         self.end_of_trial()
+        plots = {
+            "running_accuracy": self.config.SUBJECT.running_accuracy,
+            "psychometric_function": self.config.SUBJECT.psych,
+            "total_trial_distribution": self.config.SUBJECT.trial_distribution,
+            "reaction_time_distribution": self.config.SUBJECT.response_time_distribution,
+        }
+        if self.correct:
+            self.correction_trial = 0
+        else:
+            self.correction_trial = 1
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
+            "plots": plots,
             "TRIAL_END": True,
         }
         return data
@@ -313,7 +324,7 @@ class RTTask(TrialConstruct):
             writer = csv.writer(file)
             writer.writerow(
                 [
-                    self.config.SUBJECT.counters["trial"],
+                    self.config.SUBJECT.counters["valid"],
                     self.config.SUBJECT.counters["attempt"],
                     self.correction_trial,
                     self.stimulus_pars["coherence"],

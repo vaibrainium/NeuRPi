@@ -1,10 +1,12 @@
-from protocols.RDK.stimulus.display_manager import DisplayManager as BaseDisplayManager
-from protocols.RDK.stimulus.random_dot_kinematogram import (
-    RandomDotKinematogram as BaseRDK,
+from protocols.random_dot_motion.stimulus.display_manager import (
+    DisplayManager as BaseDisplayManager,
+)
+from protocols.random_dot_motion.stimulus.random_dot_motion import (
+    RandomDotMotion as BaseRDK,
 )
 
 
-class RandomDotKinematogram(BaseRDK):
+class RandomDotMotion(BaseRDK):
     """
     Class for managing stimulus structure i.e., shape, size and location of the stimuli
 
@@ -12,7 +14,7 @@ class RandomDotKinematogram(BaseRDK):
     """
 
     def __init__(self):
-        super(RandomDotKinematogram, self).__init__()
+        super(RandomDotMotion, self).__init__()
         pass
 
 
@@ -25,7 +27,7 @@ class Stimulus_Display(BaseDisplayManager):
 
     def __init__(
         self,
-        stimulus_manager=RandomDotKinematogram,
+        stimulus_manager=RandomDotMotion,
         stimulus_configuration=None,
         stimulus_courier=None,
     ):

@@ -57,7 +57,7 @@ class Subject(BaseSubject):
                 )
 
         else:
-            with open(self.rolling_perf_pkl, "wb") as f:
+            with open(self.rolling_perf_pkl, "wb") as reader:
                 self.rolling_perf = pickle.load(reader)
 
     def initiate_parameters(self, full_coherences):
@@ -69,8 +69,8 @@ class Subject(BaseSubject):
         """
         subject_parameters = {
             "counters": {
-                "trial": 0,
                 "attempt": 0,
+                "valid": 0,
                 "correct": 0,
                 "incorrect": 0,
                 "noresponse": 0,

@@ -141,15 +141,13 @@ class Message(object):
         Returns:
 
         """
-        if isinstance(msg_block, dict) or isinstance(
-            msg_block, omegaconf.dictconfig.DictConfig
-        ):
+        if isinstance(msg_block, omegaconf.dictconfig.DictConfig):
             msg_block_str = str(msg_block)
             msg_block_byte = msg_block_str.encode("ascii")
             compressed = base64.b64encode(msg_block_byte).decode("ascii")
             return {
                 "MSG_BLOCK": compressed,
-                "TYPE": type(msg_block),
+                "TYPE": omegaconf.dictconfig.DictConfig,
                 "DTYPE": None,
                 "SHAPE": None,
             }
@@ -170,7 +168,7 @@ class Message(object):
 
     def _deserialize_numpy(self, obj_pairs):
         # print(len(obj_pairs), obj_pairs)
-        if len(obj_pairs) == 4:
+        if len(obj_pairs) == 4 and obj_pairs[0][0] == "MSG_BLOCK":
             if obj_pairs[1][1] == np.ndarray:
                 decode = base64.b64decode(obj_pairs[0][1])
                 try:
@@ -181,14 +179,11 @@ class Message(object):
                         obj_pairs[3][1]
                     )
                 return arr
-            elif (
-                obj_pairs[1][1] == dict
-                or obj_pairs[1][1] == omegaconf.dictconfig.DictConfig
-            ):
+            else:
                 message_bytes = obj_pairs[0][1].encode("ascii")
                 message_str = base64.b64decode(message_bytes).decode("ascii")
                 message = literal_eval(message_str)
-                return message
+                return omegaconf.OmegaConf.create(message)
 
         else:
             return dict(obj_pairs)
