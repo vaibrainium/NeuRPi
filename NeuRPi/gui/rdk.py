@@ -25,12 +25,8 @@ class Application(baseclass1):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Creating all required windows
-        self.thread = {}
-        App = {}
-
-        self.main_window = Ui_MainWindow()
-        self.main_window.setupUi(self)
+        self.main = Ui_MainWindow()
+        self.main.setupUi(self)
 
         self.SummaryWindow = QtWidgets.QMainWindow()
         self.summary_window = Ui_SummaryWindow()
@@ -38,8 +34,26 @@ class Application(baseclass1):
 
         self.show()
 
+        # self.setWindowFlag(QtCore.Qt.FramelessWindowHint, True)
+
         self.SummaryWindow.raise_()
-        self.initialize_plots()
+        self.rigs = {}
+        # self.create_rig_access()
+        # self.initialize_plots()
+
+        self.main_window.start_rig.clicked.connect(lambda: self.start_experiment())
+        # self.uLPP.valueChanged.connect(lambda: self.rewardPulseWidth(App))
+        # self.pulseLeft.clicked.connect(lambda: rewardLeft(App))
+        # self.pulseRight.clicked.connect(lambda: rewardRight(App))
+        # self.endExperiment.clicked.connect(lambda: self.Terminate(App))
+        # self.trialSettings.clicked.connect(self.ShowSettings)
+        # self.pauseExperiment.clicked.connect(lambda: self.pauseExperiment(App))
+        # self.closeExperiment.clicked.connect(lambda: self.closeExperiment(App, Cam))
+
+        # self.main_window.closeExperiment.setDisabled(True)
+
+    def create_rig_access(self):
+        self.rigs["rigs_1"] = {}
 
     def initialize_plots(
         self,
@@ -48,7 +62,7 @@ class Application(baseclass1):
         # initialize plots
         rig_list = ["rig_1_", "rig_2_", "rig_3_", "rig_4_"]
         for _, rig in enumerate(rig_list):
-            rig_handle = "self.main_window." + rig
+            rig_handle = "self.main." + rig
             updates = (
                 # Accuracy plots
                 rig_handle
@@ -158,6 +172,6 @@ if __name__ == "__main__":
     import sys
 
     app = QtWidgets.QApplication(sys.argv)
-    rdk_gui = RDK_Application()
+    rdk_gui = Application()
     rdk_gui.show()
     sys.exit(app.exec_())

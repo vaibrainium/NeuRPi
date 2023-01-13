@@ -33,28 +33,28 @@ class Prefs:
         global _INITIALIZED
         global _LOCK
 
-        try:
-            _PREF_MANAGER = (
-                mp.Manager()
-            )  # initializing multiprocess.Manager to store sync variable across processes
+        # try:
+        #     _PREF_MANAGER = (
+        #         mp.Manager()
+        #     )  # initializing multiprocess.Manager to store sync variable across processes
 
-            _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
+        #     _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
 
-            _INITIALIZED = mp.Value(
-                c_bool, False
-            )  #  Boolean flag to indicate whether prefs have been initialzied from file
+        #     _INITIALIZED = mp.Value(
+        #         c_bool, False
+        #     )  #  Boolean flag to indicate whether prefs have been initialzied from file
 
-            _LOCK = mp.Lock()  # threading lock to control prefs file access
-            self.using_manager = True
+        #     _LOCK = mp.Lock()  # threading lock to control prefs file access
+        #     self.using_manager = True
 
-        except (EOFError, FileNotFoundError):
-            # can't use mp.Manager in ipython and other interactive contexts
-            # fallback to just regular old dict
-            print("NOT WORKING")
-            _PREF_MANAGER = None
-            _PREFS = {}
-            _INITIALIZED = False
-            _LOCK = Lock()
+        # except (EOFError, FileNotFoundError):
+        #     # can't use mp.Manager in ipython and other interactive contexts
+        #     # fallback to just regular old dict
+        #     print("NOT WORKING")
+        _PREF_MANAGER = None
+        _PREFS = {}
+        _INITIALIZED = False
+        _LOCK = Lock()
 
     def import_configuration(self):
         """

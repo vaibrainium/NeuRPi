@@ -1,9 +1,11 @@
 import base64
 import datetime
 import json
+from ast import literal_eval
 
 import blosc2 as blosc
 import numpy as np
+import omegaconf
 
 
 class Message(object):
@@ -129,39 +131,60 @@ class Message(object):
         # value = self._check_enc(value)
         self.__dict__[key] = value
 
-    def _serialize_numpy(self, array: np.ndarray):
+    def _serialize_numpy(self, msg_block):
         """
         Serialize a numpy array for sending over the wire
 
         Args:
-            array:
+            msg_blocked:
 
         Returns:
 
         """
-        if self.blosc:
-            compressed = base64.b64encode(blosc.pack_array(array)).decode("ascii")
-        else:
-            compressed = base64.b64encode(array.tobytes()).decode("ascii")
-        return {
-            "NUMPY_ARRAY": compressed,
-            "DTYPE": str(array.dtype),
-            "SHAPE": array.shape,
-        }
+        if isinstance(msg_block, omegaconf.dictconfig.DictConfig):
+            msg_block_str = str(msg_block)
+            msg_block_byte = msg_block_str.encode("ascii")
+            compressed = base64.b64encode(msg_block_byte).decode("ascii")
+            return {
+                "MSG_BLOCK": compressed,
+                "TYPE": omegaconf.dictconfig.DictConfig,
+                "DTYPE": None,
+                "SHAPE": None,
+            }
+
+        if isinstance(msg_block, np.ndarray):
+            if self.blosc:
+                compressed = base64.b64encode(blosc.pack_array(msg_block)).decode(
+                    "ascii"
+                )
+            else:
+                compressed = base64.b64encode(msg_block.tobytes()).decode("ascii")
+            return {
+                "MSG_BLOCK": compressed,
+                "TYPE": type(msg_block),
+                "DTYPE": str(msg_block.dtype),
+                "SHAPE": msg_block.shape,
+            }
 
     def _deserialize_numpy(self, obj_pairs):
         # print(len(obj_pairs), obj_pairs)
-        if (len(obj_pairs) == 3) and obj_pairs[0][0] == "NUMPY_ARRAY":
-            decode = base64.b64decode(obj_pairs[0][1])
-            try:
-                arr = blosc.unpack_array(decode)
-            except RuntimeError:
-                # cannot decompress, maybe because wasn't compressed
-                arr = np.frombuffer(decode, dtype=obj_pairs[1][1]).reshape(
-                    obj_pairs[2][1]
-                )
+        if len(obj_pairs) == 4 and obj_pairs[0][0] == "MSG_BLOCK":
+            if obj_pairs[1][1] == np.ndarray:
+                decode = base64.b64decode(obj_pairs[0][1])
+                try:
+                    arr = blosc.unpack_array(decode)
+                except RuntimeError:
+                    # cannot decompress, maybe because wasn't compressed
+                    arr = np.frombuffer(decode, dtype=obj_pairs[2][1]).reshape(
+                        obj_pairs[3][1]
+                    )
+                return arr
+            else:
+                message_bytes = obj_pairs[0][1].encode("ascii")
+                message_str = base64.b64decode(message_bytes).decode("ascii")
+                message = literal_eval(message_str)
+                return omegaconf.OmegaConf.create(message)
 
-            return arr
         else:
             return dict(obj_pairs)
 
