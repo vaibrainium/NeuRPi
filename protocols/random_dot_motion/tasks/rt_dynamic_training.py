@@ -251,7 +251,7 @@ class SessionManager:
             self.config.SUBJECT.psych_left[coh_index] += 1
         elif response == 1:
             # computing right choices coherence-wise
-            self.config.SUBJECT.psych_left[coh_index] += 1
+            self.config.SUBJECT.psych_right[coh_index] += 1
         tot_trials_in_coh = (
             self.config.SUBJECT.psych_left[coh_index]
             + self.config.SUBJECT.psych_right[coh_index]

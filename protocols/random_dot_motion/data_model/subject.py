@@ -85,7 +85,7 @@ class Subject(BaseSubject):
             "running_accuracy": [],
             "psych_right": np.zeros(len(full_coherences)).tolist(),
             "psych_left": np.zeros(len(full_coherences)).tolist(),
-            "psych": np.array(np.zeros(len(full_coherences)) + 0.5).tolist(),
+            "psych": np.array(np.zeros(len(full_coherences)) + np.NaN).tolist(),
             "trial_distribution": np.zeros(len(full_coherences)).tolist(),
             "response_time_distribution": np.array(
                 np.zeros(len(full_coherences)) * np.NaN

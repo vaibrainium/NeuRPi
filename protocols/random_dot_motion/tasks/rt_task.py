@@ -140,8 +140,8 @@ class RTTask(TrialConstruct):
         self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
+            "trial_stage": "fixation_stage",
             "subject": self.subject.name,
-            "trial_counters": self.config.SUBJECT.counters,
             "stimulus_pars": self.stimulus_pars,
         }
         return data
@@ -192,6 +192,7 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
+            "trial_stage": "response_stage",
             "response": self.response,
             "response_time": self.response_time,
         }
@@ -207,7 +208,8 @@ class RTTask(TrialConstruct):
         # Evaluate trial outcome and determine stage parameters
         stimulus_arguments = {}
         if np.isnan(self.response):
-            self.config.SUBJECT.counters["noreponse"] += 1
+            if not self.correction_trial:
+                self.config.SUBJECT.counters["noreponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
             self.reinforcement_duration = self.config.TASK.feedback.invalid.time.value
             self.valid, self.correct = [0, 0]
@@ -227,7 +229,8 @@ class RTTask(TrialConstruct):
             threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         elif self.stimulus_pars["target"] != self.response:  # Incorrect Trial
-            self.config.SUBJECT.counters["incorrect"] += 1
+            if not self.correction_trial:
+                self.config.SUBJECT.counters["incorrect"] += 1
             stimulus_arguments["outcome"] = "incorrect"
             self.reinforcement_duration = self.config.TASK.feedback.incorrect.time.value
             self.valid, self.correct = [1, 0]
@@ -242,7 +245,8 @@ class RTTask(TrialConstruct):
             threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         elif self.stimulus_pars["target"] == self.response:  # Correct Trial
-            self.config.SUBJECT.counters["correct"] += 1
+            if not self.correction_trial:
+                self.config.SUBJECT.counters["correct"] += 1
             stimulus_arguments["outcome"] = "correct"
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
@@ -275,6 +279,7 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
+            "trial_stage": "reinforcement_stage",
         }
         return data
 
@@ -301,10 +306,12 @@ class RTTask(TrialConstruct):
         # log EOT
         self.end_of_trial()
         plots = {
-            "running_accuracy": self.config.SUBJECT.running_accuracy,
-            "psychometric_function": self.config.SUBJECT.psych,
-            "total_trial_distribution": self.config.SUBJECT.trial_distribution,
-            "reaction_time_distribution": self.config.SUBJECT.response_time_distribution,
+            "running_accuracy": list(self.config.SUBJECT.running_accuracy),
+            "psychometric_function": list(self.config.SUBJECT.psych),
+            "total_trial_distribution": list(self.config.SUBJECT.trial_distribution),
+            "reaction_time_distribution": list(
+                self.config.SUBJECT.response_time_distribution
+            ),
         }
         if self.correct:
             self.correction_trial = 0
@@ -313,6 +320,8 @@ class RTTask(TrialConstruct):
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
+            "trial_stage": "intertrial_stage",
+            "trial_counters": self.config.SUBJECT.counters,
             "plots": plots,
             "TRIAL_END": True,
         }

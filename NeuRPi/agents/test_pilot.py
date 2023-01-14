@@ -165,6 +165,7 @@ class Pilot:
         Import relevant stimulus configuration
         Import and start stimulus_display class relevant for requested task
         """
+
         display_module = (
             "protocols."
             + task_params["task_module"]
@@ -172,10 +173,17 @@ class Pilot:
             + task_params["task_phase"]
         )
         display_module = importlib.import_module(display_module)
-        directory = "protocols/" + task_params["task_module"] + "/config"
-        stim_config = get_configuration(directory=directory, filename="stimulus")
+
+        try:
+            stimulus_configuration = task_params["stim_config"]
+        except:
+            directory = "protocols/" + task_params["task_module"] + "/config"
+            stimulus_configuration = get_configuration(
+                directory=directory, filename="stimulus"
+            )
+
         display = display_module.Stimulus_Display(
-            stimulus_configuration=task_params["stim_config"],
+            stimulus_configuration=stimulus_configuration,
             stimulus_courier=task_params["stimulus_queue"],
         )
         display.start()
@@ -219,7 +227,6 @@ class Pilot:
                 if data:
                     data["pilot"] = self.name
                     data["subject"] = self.subject
-                    data["task_stage"] = str(self.task.stages)
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
