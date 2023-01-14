@@ -1,4 +1,5 @@
 import sys
+import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
@@ -40,13 +41,13 @@ class Application(mainclass):
     def add_new_rig(self, name: str = "rig_", task_gui=TaskGUI):
         try:
             display_name = self.code_to_str(name)
-            # self.rigs_gui[name] = task_gui()
             self.main_window.tabs.addTab(task_gui(), display_name)
             self.rigs_gui[name] = self.main_window.tabs.widget(
                 self.main_window.tabs.count() - 1
             )
+            self.main_window.tabs.setCurrentIndex(self.main_window.tabs.count() - 1)
         except:
-            pass
+            print("COULD NOT ADD RIG GUI")
 
     def start_experiment(self):
         """
@@ -93,7 +94,15 @@ class Application(mainclass):
             "task_phase": self.str_to_code(task_phase),
             "experiment_rig": self.str_to_code(experiment_rig),
         }
+
         return task_params
+
+    @gui_event
+    def start_timer(self, rig_name, category, start_time=time.time()):
+        if category == "session":
+            self.rigs_gui[rig_name].start_session_clock(start_time)
+        if category == "trial":
+            self.rigs_gui[rig_name].start_trial_clock(start_time)
 
     @gui_event
     def update_task_gui(self, value):

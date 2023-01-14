@@ -236,6 +236,7 @@ class Terminal(Application):
                 self.add_new_rig(
                     name=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
                 )
+                self.start_timer(task_params["experiment_rig"], "session")
             else:
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Critical)

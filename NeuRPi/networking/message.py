@@ -77,7 +77,7 @@ class Message(object):
             self.serialized = msg
             if expand_arrays:
                 deserialized = json.loads(
-                    msg, object_pairs_hook=self._deserialize_numpy
+                    msg, object_pairs_hook=self._deserialize_msg_block
                 )
             else:
                 deserialized = json.loads(msg)
@@ -131,7 +131,7 @@ class Message(object):
         # value = self._check_enc(value)
         self.__dict__[key] = value
 
-    def _serialize_numpy(self, msg_block):
+    def _serialize_msg_block(self, msg_block):
         """
         Serialize a numpy array for sending over the wire
 
@@ -141,17 +141,6 @@ class Message(object):
         Returns:
 
         """
-        if isinstance(msg_block, omegaconf.dictconfig.DictConfig):
-            msg_block_str = str(msg_block)
-            msg_block_byte = msg_block_str.encode("ascii")
-            compressed = base64.b64encode(msg_block_byte).decode("ascii")
-            return {
-                "MSG_BLOCK": compressed,
-                "TYPE": omegaconf.dictconfig.DictConfig,
-                "DTYPE": None,
-                "SHAPE": None,
-            }
-
         if isinstance(msg_block, np.ndarray):
             if self.blosc:
                 compressed = base64.b64encode(blosc.pack_array(msg_block)).decode(
@@ -161,13 +150,23 @@ class Message(object):
                 compressed = base64.b64encode(msg_block.tobytes()).decode("ascii")
             return {
                 "MSG_BLOCK": compressed,
-                "TYPE": type(msg_block),
+                "TYPE": str(type(msg_block)),
                 "DTYPE": str(msg_block.dtype),
                 "SHAPE": msg_block.shape,
             }
 
-    def _deserialize_numpy(self, obj_pairs):
-        # print(len(obj_pairs), obj_pairs)
+        else:
+            msg_block_str = str(msg_block)
+            msg_block_byte = msg_block_str.encode("ascii")
+            compressed = base64.b64encode(msg_block_byte).decode("ascii")
+            return {
+                "MSG_BLOCK": compressed,
+                "TYPE": str(type(msg_block)),
+                "DTYPE": None,
+                "SHAPE": None,
+            }
+
+    def _deserialize_msg_block(self, obj_pairs):
         if len(obj_pairs) == 4 and obj_pairs[0][0] == "MSG_BLOCK":
             if obj_pairs[1][1] == np.ndarray:
                 decode = base64.b64decode(obj_pairs[0][1])
@@ -175,15 +174,20 @@ class Message(object):
                     arr = blosc.unpack_array(decode)
                 except RuntimeError:
                     # cannot decompress, maybe because wasn't compressed
-                    arr = np.frombuffer(decode, dtype=obj_pairs[2][1]).reshape(
-                        obj_pairs[3][1]
-                    )
+                    arr = np.frombuffer(
+                        decode, dtype=literal_eval(obj_pairs[2][1])
+                    ).reshape(literal_eval(obj_pairs[3][1]))
                 return arr
             else:
                 message_bytes = obj_pairs[0][1].encode("ascii")
                 message_str = base64.b64decode(message_bytes).decode("ascii")
                 message = literal_eval(message_str)
-                return omegaconf.OmegaConf.create(message)
+                # converting to original type
+                if obj_pairs[1][1] in ['dict', 'omegaconf.dictconfig.DictConfig', "<class 'omegaconf.dictconfig.DictConfig'>"]:
+                    message = omegaconf.OmegaConf.create(message)
+                elif obj_pairs[1][1] in ['list', 'omegaconf.listconfig.ListConfig', "<class 'omegaconf.listconfig.ListConfig'>"]:
+                    message = list(message)
+                return message
 
         else:
             return dict(obj_pairs)
@@ -264,7 +268,7 @@ class Message(object):
             pass
 
         try:
-            msg_enc = json.dumps(msg, default=self._serialize_numpy).encode("utf-8")
+            msg_enc = json.dumps(msg, default=self._serialize_msg_block).encode("utf-8")
             self.serialized = msg_enc
             self.changed = False
             return msg_enc

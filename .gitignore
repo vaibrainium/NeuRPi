@@ -8,4 +8,5 @@ data
 */__pycache__/*
 logs
 env
+venv
 .dockerignore

@@ -658,7 +658,7 @@
     </property>
     <layout class="QVBoxLayout" name="SessionControlBox_2">
      <item>
-      <widget class="QLCDNumber" name="rig_1_session_timer_2">
+      <widget class="QLCDNumber" name="session_timer">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -676,7 +676,7 @@ color: rgb(255, 0, 0);</string>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="rig_1_pause_experiment_2">
+      <widget class="QPushButton" name="pause_experiment">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -698,7 +698,7 @@ color: rgb(255, 255, 255);</string>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="rig_1_end_experiment_2">
+      <widget class="QPushButton" name="end_experiment">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -829,7 +829,7 @@ color: rgb(255, 255, 255);</string>
         <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <widget class="QWidget" name="tab1_9">
         <attribute name="title">
@@ -865,7 +865,7 @@ color: rgb(255, 255, 255);</string>
         <attribute name="title">
          <string>Total Trials</string>
         </attribute>
-        <widget class="PlotWidget" name="trial_plot" native="true">
+        <widget class="PlotWidget" name="trial_distribution" native="true">
          <property name="geometry">
           <rect>
            <x>10</x>
@@ -880,7 +880,7 @@ color: rgb(255, 255, 255);</string>
         <attribute name="title">
          <string>Reaction Time</string>
         </attribute>
-        <widget class="PlotWidget" name="rt_plot" native="true">
+        <widget class="PlotWidget" name="rt_distribution" native="true">
          <property name="geometry">
           <rect>
            <x>10</x>
