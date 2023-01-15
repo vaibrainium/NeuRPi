@@ -199,10 +199,11 @@ class Pilot:
             "protocols." + self.task_module + ".tasks." + self.task_phase
         )
 
-        self.config = get_configuration(
-            directory="protocols/" + task_params["task_module"] + "/config",
-            filename=task_params["task_phase"],
-        )
+        # self.config = get_configuration(
+        #     directory="protocols/" + task_params["task_module"] + "/config",
+        #     filename=task_params["task_phase"],
+        # )
+        self.config = task_params["phase_config"]
 
         self.task = task_module.Task(
             stage_block=self.stage_block, config=self.config, **task_params
