@@ -13,7 +13,6 @@ from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
-from NeuRPi.utils.invoker import get_invoker
 from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
 
@@ -22,7 +21,9 @@ class Terminal(Application):
     Servert class to initiate and manage all downstream agents.
     """
 
-    def __init__(self):
+    def __init__(
+        self,
+    ):
         super().__init__()
 
         # store instance
@@ -54,10 +55,6 @@ class Terminal(Application):
             "STREAM": self.l_data,
             "HANDSHAKE": self.l_handshake,  # a pi is making first contact, telling us its IP
         }
-
-        # Make invoker object to send GUI events back to the main thread
-        # self.invoker = Invoker()
-        self.invoker = get_invoker()
 
         # Start external communications in own process
         # Has to be after init_network so it makes a new context
@@ -179,7 +176,7 @@ class Terminal(Application):
         Args:
             value (dict): dict containing `ip` and `state`
         """
-        print("OUTER HANDSHAKE RECEIVED")
+        print("HANDSHAKE RECEIVED")
         if value["pilot"] in self.pilots.keys():
             self.pilots[value["pilot"]]["ip"] = value.get("ip", "")
             self.pilots[value["pilot"]]["state"] = value.get("state", "")
@@ -202,17 +199,33 @@ class Terminal(Application):
         Any key in `value` that matches a column in the subject's trial data table will be saved.
 
         """
-        self.update_task_gui(value)
+        self.message_to_taskgui(value)
 
     ########################
     # GUI and other functions
 
+    def message_from_taskgui(self, message):
+        if message["to"] == "main_gui":
+            if message["key"] == "KILL":
+                self.remove_rig(message["rig_id"])
+        else:
+            self.node.send(to=message["to"], key=message["key"], value=message["value"])
+
     def update_rig_availability(self):
         for i, key in enumerate(self.pilots.keys()):
             display_name = self.code_to_str(key)
-            if self.main_window.experiment_rig.findText(display_name) == -1:
+            if self.main_gui.experiment_rig.findText(display_name) == -1:
                 # Add Rig option to the GUI
-                self.main_window.experiment_rig.addItem(display_name)
+                self.main_gui.experiment_rig.addItem(display_name)
+
+    def prepare_experiment_parameters(self, task_params):
+        module_directory = "protocols/" + task_params["task_module"]
+        config_directoty = module_directory + "/config"
+        stim_config = get_configuration(directory=config_directoty, filename="stimulus")
+        phase_config = get_configuration(
+            directory=config_directoty, filename="stimulus"
+        )
+        task_params["stim_config"] = stim_config.STIMULUS
 
     def start_experiment(self):
         task_params = super().start_experiment()
@@ -234,9 +247,9 @@ class Terminal(Application):
                     "protocols." + task_params["task_module"] + ".gui.task_gui"
                 )
                 self.add_new_rig(
-                    name=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
+                    id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
                 )
-                self.start_timer(task_params["experiment_rig"], "session")
+
             else:
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Critical)
@@ -244,24 +257,6 @@ class Terminal(Application):
                 msg.setWindowTitle("Error")
                 msg.exec_()
                 return None
-
-    def pause_experiment(self):
-        pass
-
-    def end_experiment(self):
-        pass
-
-    # def run(self):
-    #     task = {
-    #         "subject_id": "PSUIM4",
-    #         "task_module": "RDK",
-    #         "task_phase": "dynamic_training_rt",
-    #     }
-
-    #     self.node.send(to="rig_2", key="START", value=task)
-
-    #     while True:
-    #         pass
 
     def closeEvent(self, event):
         """
@@ -288,10 +283,14 @@ class Terminal(Application):
 
 
 def main():
+    app = QtWidgets.QApplication(sys.argv)
     b = Terminal()
+    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
+    import sys
+
     _TERMINAL = None
 
-    main()
+    # main()
