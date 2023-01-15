@@ -159,7 +159,7 @@ class RTTask(TrialConstruct):
         self.min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
         stimulus_arguments = self.stimulus_pars
         targets = [-1, 1]
-        if self.config.TASK.training_type.value < 0:
+        if self.config.TASK.training_type.value > 0:
             duration = self.config.TASK.training_type.active_passive.passive_rt_mu + (
                 pearson3.rvs(
                     self.config.TASK.training_type.active_passive.passive_rt_sigma

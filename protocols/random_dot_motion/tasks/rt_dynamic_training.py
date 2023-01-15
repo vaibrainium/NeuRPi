@@ -13,7 +13,8 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -302,8 +303,8 @@ class SessionManager:
         """
         # Rolling performance
         self.subject.rolling_perf[
-            "current_coherence_level"
-        ] = self.config.SUBJECT.current_coherence_level
+            "current_coh_level"
+        ] = self.config.SUBJECT.current_coh_level
         self.subject.rolling_perf[
             "reward_per_pulse"
         ] = self.config.SUBJECT.reward_per_pulse
@@ -403,4 +404,4 @@ if __name__ == "__main__":
         "subject": "PSUIM4",
     }
 
-    rt_dynamic_training(stage_block=threading.Event(), **value)
+    Task(stage_block=threading.Event(), **value)

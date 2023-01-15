@@ -48,8 +48,6 @@ class Pilot:
         # initialize listens dictionary
         self.listens = {
             "START": self.l_start,
-            "PAUSE": self.l_pause,
-            "RESUME": self.l_resume,
             "STOP": self.l_stop,
             "PARAM": self.l_param,
         }
@@ -145,20 +143,15 @@ class Pilot:
         self.state = "IDLE"
         self.update_state()
 
-    def l_param(self):
-        pass
-
-    def l_pause(self):
+    def l_param(self, value):
         """
-        Remove `self.running` event flag
+        Terminal is sending an update.
         """
-        self.running.clear()
-
-    def l_resume(self):
-        """
-        Resume task by setting `self.running` event
-        """
-        self.running.set()
+        if "EVENT" in value.keys():
+            if value["EVENT"] == "PAUSE":
+                self.running.clear()
+            if value["EVENT"] == "RESUME":
+                self.running.set()
 
     def start_display(self, task_params):
         """
@@ -240,7 +233,8 @@ class Pilot:
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
                         self.task.end_session()
-                        self.stimulus_display.terminate()
+                        self.stimulus_display.kill()
+
                         break
 
                     # if paused, wait for running event set?
