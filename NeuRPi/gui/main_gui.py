@@ -3,7 +3,6 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-from NeuRPi.gui.gui import gui_event
 from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
 Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main.ui")
@@ -12,21 +11,14 @@ Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main.ui")
 class Application(mainclass):
     def __init__(self):
         super().__init__()
-        self.main_window = Ui_Main()
-        self.main_window.setupUi(self)
+        self.main_gui = Ui_Main()
+        self.main_gui.setupUi(self)
         # Rigs
         self.rigs_gui = {}
 
-        button = QtWidgets.QToolButton()
-        button.setToolTip("Add New Tab")
-        button.setIcon(self.style().standardIcon(QtWidgets.QStyle.SP_DialogYesButton))
-        self.main_window.tabs.setCornerWidget(button, QtCore.Qt.TopRightCorner)
-        button.clicked.connect(self.add_new_rig)
         self.show()
 
-        self.main_window.start_experiment.clicked.connect(
-            lambda: self.start_experiment()
-        )
+        self.main_gui.start_experiment.clicked.connect(lambda: self.start_experiment())
 
     def code_to_str(self, var: str):
         display_var = var.replace("_", " ")
@@ -38,27 +30,43 @@ class Application(mainclass):
         code_var = code_var.lower()
         return code_var
 
-    def add_new_rig(self, name: str = "rig_", task_gui=TaskGUI):
+    def get_tab_index(self, tab_name, tab_widget=None):
+        if not tab_widget:
+            tab_widget = self.main_gui.tabs
+        tab_name = self.code_to_str(tab_name)
+        tab_index = None
+        for index in range(tab_widget.count()):
+            if tab_name == tab_widget.tabText(index):
+                tab_index = index
+        return tab_index
+
+    def add_new_rig(self, id: str = "rig_", task_gui=TaskGUI):
         try:
-            display_name = self.code_to_str(name)
-            self.main_window.tabs.addTab(task_gui(), display_name)
-            self.rigs_gui[name] = self.main_window.tabs.widget(
-                self.main_window.tabs.count() - 1
-            )
-            self.main_window.tabs.setCurrentIndex(self.main_window.tabs.count() - 1)
+            display_name = self.code_to_str(id)
+            self.rigs_gui[id] = task_gui(id)
+            tab_index = self.main_gui.tabs.addTab(self.rigs_gui[id], display_name)
+            self.main_gui.tabs.setCurrentIndex(tab_index)
+            self.rigs_gui[id].comm_from_taskgui.connect(self.message_from_taskgui)
         except:
             print("COULD NOT ADD RIG GUI")
+
+    def remove_rig(self, id: str):
+        index = self.get_tab_index(id)
+        if index:
+            self.main_gui.tabs.removeTab(index)
+            self.main_gui.tabs.setCurrentIndex(0)
+            del self.rigs_gui[id]
 
     def start_experiment(self):
         """
         Performing basic checks. Remainder functionality to be written by child class
         """
 
-        subject = self.main_window.subject.toPlainText().upper()
-        subject_weight = self.main_window.subject_weight.toPlainText()
-        task_module = self.main_window.task_module.currentText()
-        task_phase = self.main_window.task_phase.currentText()
-        experiment_rig = self.main_window.experiment_rig.currentText()
+        subject = self.main_gui.subject.toPlainText().upper()
+        subject_weight = self.main_gui.subject_weight.toPlainText()
+        task_module = self.main_gui.task_module.currentText()
+        task_phase = self.main_gui.task_phase.currentText()
+        experiment_rig = self.main_gui.experiment_rig.currentText()
 
         if subject == "":
             msg = QtWidgets.QMessageBox()
@@ -97,20 +105,16 @@ class Application(mainclass):
 
         return task_params
 
-    @gui_event
-    def start_timer(self, rig_name, category, start_time=time.time()):
-        if category == "session":
-            self.rigs_gui[rig_name].start_session_clock(start_time)
-        if category == "trial":
-            self.rigs_gui[rig_name].start_trial_clock(start_time)
+    def message_from_taskgui(self, message):
+        pass
 
-    @gui_event
-    def update_task_gui(self, value):
-        self.rigs_gui[value["pilot"]].update_gui(value)
+    def message_to_taskgui(self, value):
+        self.rigs_gui[value["pilot"]].comm_to_taskgui.emit(value)
 
 
-# if __name__ == "__main__":
-#     app = QtWidgets.QApplication(sys.argv)
-#     window = Application()
-#     window.show()
-#     sys.exit(app.exec_())
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = Application()
+    window.show()
+    window.add_new_rig(id="rig_test")
+    sys.exit(app.exec_())

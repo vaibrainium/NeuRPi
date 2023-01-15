@@ -223,20 +223,23 @@ class Terminal(Application):
         config_directoty = module_directory + "/config"
         stim_config = get_configuration(directory=config_directoty, filename="stimulus")
         phase_config = get_configuration(
-            directory=config_directoty, filename="stimulus"
+            directory=config_directoty, filename=task_params["task_phase"]
         )
         task_params["stim_config"] = stim_config.STIMULUS
+        task_params["phase_config"] = phase_config
+        return task_params
 
     def start_experiment(self):
         task_params = super().start_experiment()
         if task_params:
             if self.pilots[task_params["experiment_rig"]]["state"] == "IDLE":
                 # Collect information to pass
-                directory = "protocols/" + task_params["task_module"] + "/config"
-                task_params["stim_config"] = get_configuration(
-                    directory=directory, filename="stimulus"
-                )
-                task_params["stim_config"] = task_params["stim_config"].STIMULUS
+                task_params = self.prepare_experiment_parameters(task_params)
+                # directory = "protocols/" + task_params["task_module"] + "/config"
+                # task_params["stim_config"] = get_configuration(
+                #     directory=directory, filename="stimulus"
+                # )
+                # task_params["stim_config"] = task_params["stim_config"].STIMULUS
 
                 # Send message to rig to start
                 self.node.send(

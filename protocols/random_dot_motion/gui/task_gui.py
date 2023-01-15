@@ -9,19 +9,65 @@ Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/gui/rdk_rig.ui")
 
 
 class TaskGUI(rigclass):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    comm_to_taskgui = QtCore.pyqtSignal(dict)
+    comm_from_taskgui = QtCore.pyqtSignal(dict)
+
+    def __init__(self, rig_id=None):
+        super().__init__()
+        self.rig_id = rig_id
         self.rig = Ui_rig()
         self.rig.setupUi(self)
+        self.rig.close_experiment.hide()
 
         self.session_timer = QtCore.QTimer()
-        self.trial_timer = QtCore.QTimer()
         self.session_clock = 0
+        self.trial_timer = QtCore.QTimer()
         self.trial_clock = 0
+        self.paused = False
 
         self.coherences = [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]
         self.initialize_plots()
+        self.start_session_clock(time.time())
+        # Setting up gui intearaction connections
+        self.comm_to_taskgui.connect(self.update_gui)
+        self.rig.pause_experiment.clicked.connect(lambda: self.pause_experiment())
+        self.rig.stop_experiment.clicked.connect(lambda: self.stop_experiment())
+        self.rig.close_experiment.clicked.connect(lambda: self.close_experiment())
 
+    def pause_experiment(self):
+        """
+        If session is not paused, pause it and send the signal to terminal.
+        If session is paused, resume it and send the corresponding singal to termianl.
+        """
+        if not self.paused:
+            self.forward_signal(
+                {"to": self.rig_id, "key": "PARAM", "value": {"EVENT": "PAUSE"}}
+            )
+            self.rig.pause_experiment.setStyleSheet("background-color: green")
+            self.rig.pause_experiment.setText("Resume")
+            self.paused = True
+        else:
+            self.forward_signal(
+                {"to": self.rig_id, "key": "PARAM", "value": {"EVENT": "RESUME"}}
+            )
+            self.rig.pause_experiment.setStyleSheet("background-color: rgb(255,170,0)")
+            self.rig.pause_experiment.setText("Pause")
+            self.paused = False
+
+    def stop_experiment(self):
+        self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
+        self.rig.close_experiment.show()
+
+    def close_experiment(self):
+        self.forward_signal({"to": "main_gui", "key": "KILL", "value": None})
+        self.session_timer = None
+
+    # Outgoing communication
+    def forward_signal(self, message):
+        message["rig_id"] = self.rig_id
+        self.comm_from_taskgui.emit(message)
+
+    # Incoming communication
     def initialize_plots(
         self,
     ):
@@ -64,7 +110,7 @@ class TaskGUI(rigclass):
             [[(v, str(v)) for v in self.coherences]]
         )
 
-    def start_session_clock(self, session_start_time=time.time()):
+    def start_session_clock(self, session_start_time):
         self.session_timer.timeout.connect(
             lambda: self.update_session_clock(session_start_time)
         )
@@ -74,7 +120,7 @@ class TaskGUI(rigclass):
         self.session_timer.stop()
 
     def update_session_clock(self, session_start_time):
-        self.session_clock = session_start_time = time.time() - session_start_time
+        self.session_clock = time.time() - session_start_time
         self.rig.session_timer.display(int(self.session_clock))
 
     def start_trial_clock(self, trial_start_time=time.time()):
@@ -87,7 +133,7 @@ class TaskGUI(rigclass):
         self.trial_timer.stop()
 
     def update_trial_timer(self, trial_start_time):
-        self.trial_clock = trial_start_time = time.time() - trial_start_time
+        self.trial_clock = time.time() - trial_start_time
         self.rig.session_timer.display(int(self.session_clock))
 
     def update_gui(self, value):
