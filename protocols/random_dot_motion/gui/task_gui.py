@@ -30,9 +30,32 @@ class TaskGUI(rigclass):
         self.start_session_clock(time.time())
         # Setting up gui intearaction connections
         self.comm_to_taskgui.connect(self.update_gui)
+        self.rig.reward_left.clicked.connect(lambda: self.reward("reward_left"))
+        self.rig.reward_right.clicked.connect(lambda: self.reward("reward_right"))
+        self.rig.reward_volume.valueChanged.connect(
+            lambda: self.reward("update_reward")
+        )
+        self.rig.toggle_left_reward.clicked.connect(
+            lambda: self.reward("toggle_left_reward")
+        )
+        self.rig.toggle_right_reward.clicked.connect(
+            lambda: self.reward("toggle_right_reward")
+        )
         self.rig.pause_experiment.clicked.connect(lambda: self.pause_experiment())
         self.rig.stop_experiment.clicked.connect(lambda: self.stop_experiment())
         self.rig.close_experiment.clicked.connect(lambda: self.close_experiment())
+
+    def reward(self, message: str):
+        self.forward_signal(
+            {
+                "to": self.rig_id,
+                "key": "EVENT",
+                "value": {
+                    "key": "REWARD",
+                    "value": {"key": message, "value": self.rig.reward_volume.value()},
+                },
+            }
+        )
 
     def pause_experiment(self):
         """
@@ -41,14 +64,14 @@ class TaskGUI(rigclass):
         """
         if not self.paused:
             self.forward_signal(
-                {"to": self.rig_id, "key": "PARAM", "value": {"EVENT": "PAUSE"}}
+                {"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}}
             )
             self.rig.pause_experiment.setStyleSheet("background-color: green")
             self.rig.pause_experiment.setText("Resume")
             self.paused = True
         else:
             self.forward_signal(
-                {"to": self.rig_id, "key": "PARAM", "value": {"EVENT": "RESUME"}}
+                {"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}}
             )
             self.rig.pause_experiment.setStyleSheet("background-color: rgb(255,170,0)")
             self.rig.pause_experiment.setText("Pause")

@@ -516,7 +516,7 @@
      <rect>
       <x>710</x>
       <y>490</y>
-      <width>161</width>
+      <width>171</width>
       <height>251</height>
      </rect>
     </property>
@@ -535,12 +535,12 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>ul/pulse</string>
+          <string>Volume (in uL)</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QDoubleSpinBox" name="ulpp">
+        <widget class="QDoubleSpinBox" name="reward_volume">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
            <horstretch>0</horstretch>
@@ -560,7 +560,7 @@
           <number>1</number>
          </property>
          <property name="minimum">
-          <double>1.000000000000000</double>
+          <double>1.500000000000000</double>
          </property>
          <property name="maximum">
           <double>3.000000000000000</double>
@@ -569,7 +569,7 @@
           <double>0.100000000000000</double>
          </property>
          <property name="value">
-          <double>1.500000000000000</double>
+          <double>3.000000000000000</double>
          </property>
         </widget>
        </item>
@@ -578,14 +578,14 @@
      <item row="1" column="0">
       <layout class="QVBoxLayout" name="verticalLayout_17">
        <item>
-        <widget class="QPushButton" name="pulse_left">
+        <widget class="QPushButton" name="reward_left">
          <property name="text">
           <string>Left Reward</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pulse_right">
+        <widget class="QPushButton" name="reward_right">
          <property name="text">
           <string>Right Reward</string>
          </property>
@@ -620,7 +620,7 @@
      <item row="3" column="0">
       <layout class="QVBoxLayout" name="verticalLayout_18">
        <item>
-        <widget class="QPushButton" name="left_valve">
+        <widget class="QPushButton" name="toggle_left_reward">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
@@ -632,7 +632,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="right_valve">
+        <widget class="QPushButton" name="toggle_right_reward">
          <property name="font">
           <font>
            <pointsize>10</pointsize>
