@@ -943,6 +943,7 @@ class Pilot_Station(Station):
                 "START": self.l_start,  # We are being sent a task to start
                 "STOP": self.l_stop,  # We are being told to stop the current task
                 "PARAM": self.l_change,  # The Terminal is changing some task parameter
+                "EVENT": self.l_event,  # The Terminal is sending some task event from GUI
                 "FILE": self.l_file,  # We are receiving a file
                 "CONTINUOUS": self.l_continuous,  # we are sending continuous data to the terminal
                 "CHILD": self.l_child,
@@ -1054,6 +1055,14 @@ class Pilot_Station(Station):
             msg (:class:`.Message`):
         """
         self.send(self.pi_id, "STOP")
+
+    def l_event(self, msg: Message):
+        """
+        Forward the event to pilot
+        Args:
+            msg (:class:`.Message`):
+        """
+        self.send(self.pi_id, "EVENT", msg.value)
 
     def l_file(self, msg: Message):
         """

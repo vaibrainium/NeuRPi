@@ -85,9 +85,9 @@ class Prefs:
         val: updated value of the key parameter
         session_time: timestamp of session
         """
-        temp_dict_holder = globals()["_PREFS"][key]
-        temp_dict_holder["default"] = val
-        globals()["_PREFS"][key] = temp_dict_holder
+        # temp_dict_holder = globals()["_PREFS"][key]
+        # temp_dict_holder["default"] = val
+        globals()["_PREFS"][key] = val  # temp_dict_holder
 
         if self.using_manager:
             initialized = globals()["_INITIALIZED"].value

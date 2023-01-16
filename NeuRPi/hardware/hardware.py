@@ -2,7 +2,8 @@
 Independent task class for input and outputs of the trials.
 """
 
-class Hardware():
+
+class Hardware:
     """
     Generic class for handling all hardware. Each class will be run on separate thread.
     Must have features:
@@ -16,7 +17,7 @@ class Hardware():
         port (str,int): Connection port or pin
     """
 
-    def __init__(self, group= None, name= None, type= None, port= None):
+    def __init__(self, group=None, name=None, type=None, port=None, **kwargs):
         self.group = None
         self.name = None
         self.type = None
@@ -38,5 +39,3 @@ class Hardware():
         If not defined, a warning is given
         """
         raise Exception("Release method is not overridden by the subclass")
-
-

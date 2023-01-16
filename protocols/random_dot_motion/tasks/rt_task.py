@@ -251,13 +251,11 @@ class RTTask(TrialConstruct):
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
             if self.response == -1:  # Left Correct
-                self.managers["hardware"].reward_left(
-                    self.config.SUBJECT.reward_per_pulse
-                )
+                self.managers["hardware"].reward_left(self.config.SUBJECT.reward)
             elif self.response == 1:  # Right Correct
-                self.managers["hardware"].reward_right(
-                    self.config.SUBJECT.reward_per_pulse
-                )
+                self.managers["hardware"].reward_right(self.config.SUBJECT.reward)
+
+            self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
             self.valid, self.correct = [1, 1]
             self.intertrial_duration = self.config.TASK.timings.intertrial.value
 
@@ -340,7 +338,7 @@ class RTTask(TrialConstruct):
                     self.response,
                     self.valid,
                     self.correct,
-                    self.config.SUBJECT.reward_per_pulse,
+                    self.config.SUBJECT.reward,
                     self.fixation_duration,
                     self.min_viewing_duration,
                     self.response_time,

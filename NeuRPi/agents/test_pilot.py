@@ -50,6 +50,7 @@ class Pilot:
             "START": self.l_start,
             "STOP": self.l_stop,
             "PARAM": self.l_param,
+            "EVENT": self.l_event,
         }
 
         # initialize station and node
@@ -147,11 +148,24 @@ class Pilot:
         """
         Terminal is sending an update.
         """
-        if "EVENT" in value.keys():
-            if value["EVENT"] == "PAUSE":
-                self.running.clear()
-            if value["EVENT"] == "RESUME":
-                self.running.set()
+        pass
+
+    def l_event(self, value):
+        """
+        Terminal is sending an event passed from task
+        """
+        if value["key"] == "PAUSE":
+            self.running.clear()
+            self.state == "PAUSED"
+            self.update_state()
+        elif value["key"] == "RESUME":
+            self.running.set()
+            self.state == "RUNNING"
+            self.update_state()
+
+        elif value["key"] == "REWARD":
+            if self.task:
+                self.task.manage_reward(value["value"])
 
     def start_display(self, task_params):
         """

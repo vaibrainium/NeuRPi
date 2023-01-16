@@ -1,45 +1,112 @@
-from NeuRPi.hardware.arduino import Arduino
+import omegaconf
+
 from NeuRPi.hardware.gpio import GPIO
-from NeuRPi.hardware.hardware import Hardware
+from NeuRPi.hardware.hardware_manager import HardwareManager as BaseHWManager
+from NeuRPi.prefs import prefs
 
 
-class HardwareManager(Arduino, GPIO):
+class HardwareManager(BaseHWManager):
     """
     Hardware Manager for RDK protocol
     """
 
-    def __init__(self, config=None):
-        """
-        Arguments:
-            config (dict): Dictionary of configuration for task. ALl hardware must be inserted in HARDWARE sub-dictionary.
-        """
-        self.calibration = 0
-        self.hardware = {}
-        self.config = config
+    def __init__(self):
+        super(HardwareManager, self).__init__()
         self.init_hardware()
+        self._reward_calibration = self.config.Arduino.Primary.reward.caliberation
+        self._lick_threshold = self.config.Arduino.Primary.lick.threshold
+        self._lick_slope = self.config.Arduino.Primary.lick.slope
 
-    def init_hardware(self):
-        """
-        Initialize all hardware required by the task. Defined in HARDWARE dictionary in configuration file.
-        """
-        for group, container in self.config.HARDWARE.items():
-            if group == "Arduino":
-                for name, properties in container.items():
-                    connect = properties["connection"]
-                    exec(
-                        f"""self.hardware['{name}'] = Arduino(name='{name}', port='{connect['port']}', baudrate = {connect['baudrate']}, timeout={connect['timeout']})"""
-                    )
-                    exec(f"""self.hardware['{name}'].connect()""")
+    ## Properties of our hardwares
+    @property
+    def reward_caliberation(self):
+        return self._reward_calibration
 
-    def close_hardware(self):
-        raise Warning("TODO: Not Implemented")
+    @reward_caliberation.setter
+    def reward_caliberation(self, value: int):
+        self._reward_calibration = value
+        self.config.Arduino.Primary.reward.caliberation = value
+        prefs.set("HARDWARE", self.config)
+
+    @property
+    def lick_threshold(self):
+        return self._lick_threshold
+
+    @lick_threshold.setter
+    def lick_threshold(self, value: int):
+        self._lick_threshold = value
+        self.config.Arduino.Primary.lick.threshold = value
+        prefs.set("HARDWARE", self.config)
+        self.hardware["Primary"].write(value + "update_lick_threshold")
+
+    @property
+    def lick_slope(self):
+        return self._lick_slope
+
+    @lick_slope.setter
+    def lick_slope(self, value: int):
+        self._lick_slope = value
+        self.config.Arduino.Primary.lick.slope = value
+        prefs.set("HARDWARE", self.config)
+        self.hardware["Primary"].write(value + "update_lick_slope")
+
+    ## Other useful functions
+    def vol_to_dur(self, volume):
+        """
+        Converting volume of reward to ms
+
+        Arguments:
+            volume (float): Amount of reward to be given in ml
+        """
+        duration = self._reward_calibration * volume
+        return int(duration)
+
+    def reward_left(self, volume):
+        """
+        Dispense 'volume' of Reward to Left spout
+        """
+        duration = self.vol_to_dur(volume)
+        self.hardware["Primary"].write(duration + "reward_left")
+
+        # raise Warning("Reward delivery needs to be implemented")
+
+    def reward_right(self, volume):
+        """
+        Dispense 'volume' of Reward to Right spout
+        """
+        duration = self.vol_to_dur(volume)
+        self.hardware["Primary"].write(duration + "reward_right")
+
+    def toggle_reward(self, spout):
+        """
+        Toggle reward spout.
+        Arguments:
+            spout (str): 'Left','Right' or 'Center'
+        """
+        if spout == "Left":
+            self.hardware["Primary"].write(0 + "toggle_left_reward")
+        elif spout == "Right":
+            self.hardware["Primary"].write(0 + "toggle_right_reward")
+        elif spout == "Center":
+            self.hardware["Primary"].write(0 + "toggle_center_reward")
+        else:
+            raise Exception(
+                "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
+                " \n 'Right': For right spout \n 'Center': For center spout"
+            )
+
+    def start_caliberation_sequence(self, no_pulses):
+        """
+        Instruct arduino to give `no_pulses` on each spout
+        """
+        self.hardware["Primary"].write(no_pulses + "caliberate_reward")
 
     def read_licks(self):
         """
         Function to detect if there's an incoming signal. If so, decode the signal to lick direction and retunrn
         Returns:
             lick (int): Lick direction.
-                        {1: Left Spout Licked,
+                        {-1: Left Spout Licked,
                          -2: Left Spout Free
                          1: Right Spout Licked,
                          2: Right Spout Free}
@@ -49,83 +116,6 @@ class HardwareManager(Arduino, GPIO):
         if message:
             lick = int(message) - 3
         return lick
-
-    def reward_left(self, volume):
-        """
-        Dispense 'volume' of Reward to Left spout
-
-        Arguments:
-            volume (float): Amount of reward to be given in ml
-
-        """
-        open_duration = self.vol_to_dur(volume)
-        self.config.SUBJECT.total_reward += volume
-        # raise Warning("Reward delivery needs to be implemented")
-
-    def reward_right(self, volume):
-        """
-        Dispense 'volume' of Reward to Right spout
-
-        Arguments:
-            volume (float): Amount of reward to be given in ml
-
-        """
-        open_duration = self.vol_to_dur(volume)
-        self.config.SUBJECT.total_reward += volume
-        # raise Warning("Reward delivery needs to be implemented")
-
-    def vol_to_dur(self, volume):
-        """
-        Converting volume of reward to ms
-
-        Arguments:
-            volume (float): Amount of reward to be given in ml
-        """
-        open_duration = self.calibration * volume
-        return open_duration
-
-    def reward_caliberation(self):
-        """
-        Method to calibrate reward.
-        """
-        self.calibration = 30
-        raise Warning("TODO: Not Implemented")
-
-    def open_reward_indefinitely(self, spout):
-        """
-        Open reward spout indefinitely for priming purposes.
-        Arguments:
-            spout (str): 'Left','Right' or 'Center'
-        """
-        if spout == "Left":
-            raise Warning("TODO: Not Implemented")
-        elif spout == "Right":
-            raise Warning("TODO: Not Implemented")
-        elif spout == "Center":
-            raise Warning("TODO: Not Implemented")
-        else:
-            raise Exception(
-                "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
-                " \n 'Right': For right spout \n 'Center': For center spout"
-            )
-
-    def close_reward_indefinitely(self, spout):
-        """
-        Close reward spout indefinitely for priming purposes.
-        Arguments:
-            spout (str): 'Left','Right' or 'Center'
-        """
-        if spout == "Left":
-            raise Warning("TODO: Not Implemented")
-        elif spout == "Right":
-            raise Warning("TODO: Not Implemented")
-        elif spout == "Center":
-            raise Warning("TODO: Not Implemented")
-        else:
-            raise Exception(
-                "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
-                " \n 'Right': For right spout \n 'Center': For center spout"
-            )
 
 
 if __name__ == "__main__":

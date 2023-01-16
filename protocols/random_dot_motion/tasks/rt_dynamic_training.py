@@ -13,8 +13,7 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -56,11 +55,11 @@ class SessionManager:
 
     def set_coherence_level(self):
         # Setting reward per pulse
-        if 1.5 < self.subject_pars["reward_per_pulse"] < 3:
+        if 1.5 < self.subject_pars["reward"] < 3:
             if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
-                self.subject_pars["reward_per_pulse"] += 0.1
+                self.subject_pars["reward"] += 0.1
             if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
-                self.subject_pars["reward_per_pulse"] -= 0.1
+                self.subject_pars["reward"] -= 0.1
         # Setting coherence level
         self.subject_pars["current_coherence_level"] = self.next_coherence_level
         # Setting mean reaction time for passive trials
@@ -305,9 +304,7 @@ class SessionManager:
         self.subject.rolling_perf[
             "current_coh_level"
         ] = self.config.SUBJECT.current_coh_level
-        self.subject.rolling_perf[
-            "reward_per_pulse"
-        ] = self.config.SUBJECT.reward_per_pulse
+        self.subject.rolling_perf["reward"] = self.config.SUBJECT.reward
         self.subject.rolling_perf[
             "total_attempts"
         ] = self.config.SUBJECT.counters.attempt
@@ -327,7 +324,7 @@ class Task:
         task_module=None,
         task_phase=None,
         config=None,
-        **kwargs
+        **kwargs,
     ):
 
         self.subject = subject
@@ -360,7 +357,7 @@ class Task:
         }
         # # Preparing Managers
         self.managers = {}
-        self.managers["hardware"] = HardwareManager(self.config)
+        self.managers["hardware"] = HardwareManager()
 
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
@@ -388,6 +385,24 @@ class Task:
 
         # Starting required managers
         self.managers["behavior"].start()
+
+    # Reward management from GUI
+    def manage_reward(self, message: dict):
+        if message["key"] == "reward_left":
+            self.managers["hardware"].reward_left(message["value"])
+            self.config.SUBJECT.total_reward += message["value"]
+            print(f'REWARDED LEFT with {message["value"]}')
+        if message["key"] == "reward_right":
+            self.managers["hardware"].reward_right(message["value"])
+            self.config.SUBJECT.total_reward += message["value"]
+            print(f'REWARDED RIGHT with {message["value"]}')
+        if message["key"] == "toggle_left_reward":
+            self.managers["hardware"].toggle_reward("Left")
+        if message["key"] == "toggle_right_reward":
+            self.managers["hardware"].toggle_reward("Right")
+        if message["key"] == "update_reward":
+            self.config.SUBJECT.reward = message["value"]
+            print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward}")
 
     def pause_session(self):
         pass

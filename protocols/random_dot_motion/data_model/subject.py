@@ -43,7 +43,7 @@ class Subject(BaseSubject):
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
                 "total_attempts": 0,
                 "total_reward": 0,
-                "reward_per_pulse": 3,
+                "reward": 3,
                 "current_coh_level": 2,
                 "index": list(np.zeros(len(full_coherences)).astype(int)),
                 "accuracy": list(np.zeros(len(full_coherences))),
@@ -98,17 +98,17 @@ class Subject(BaseSubject):
             ).tolist(),  # initiating at no bias
         }
 
-        subject_parameters["reward_per_pulse"] = self.rolling_perf["reward_per_pulse"]
-        if 1.5 < subject_parameters["reward_per_pulse"] < 3:
+        subject_parameters["reward"] = self.rolling_perf["reward"]
+        if 1.5 < subject_parameters["reward"] < 3:
             # if received less than 700ul of reward on last session, increase reward by 0.1 ul.
             if self.rolling_perf["total_reward"] < 700:
-                subject_parameters["reward_per_pulse"] += 0.1
+                subject_parameters["reward"] += 0.1
                 # if received less than 500ul of reward on last session, increase reward by another 0.1 ul.
                 if self.rolling_perf["total_reward"] < 500:
-                    subject_parameters["reward_per_pulse"] += 0.1
+                    subject_parameters["reward"] += 0.1
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
             if self.rolling_perf["total_attempts"] > 200:
-                subject_parameters["reward_per_pulse"] -= 0.1
+                subject_parameters["reward"] -= 0.1
 
         self.config.SUBJECT = subject_parameters
         return subject_parameters

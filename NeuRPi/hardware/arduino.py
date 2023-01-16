@@ -1,6 +1,7 @@
+import serial
 
 from NeuRPi.hardware.hardware import Hardware
-import serial
+
 
 class Arduino(Hardware):
     """
@@ -13,21 +14,14 @@ class Arduino(Hardware):
 
     """
 
-    def __init__(self, name=None, port=None, baudrate=None, timeout=None):
+    def __init__(
+        self, name=None, port=None, baudrate=None, timeout=None, group="Arduino"
+    ):
         super(Arduino, self).__init__()
-
-        if name:
-            self.name = name
-        else:
-            self.name = port
-        self.group = 'Arduino'
-
+        self.name = name if name else port
         self.port = port
-
-        if not baudrate:
-            self.baudrate = 9600
-
-        self.timeout = timeout
+        self.baudrate = baudrate if baudrate else 9600
+        self.timeout = timeout if timeout else False
         self.connection = None
 
     def connect(self):
@@ -35,10 +29,14 @@ class Arduino(Hardware):
         Connect to serial hardware at given port with given baudrate and timeout
         """
         try:
-            self.connection = serial.Serial(port = self.port, baudrate = self.baudrate, timeout = self.timeout)
+            self.connection = serial.Serial(
+                port=self.port, baudrate=self.baudrate, timeout=self.timeout
+            )
             self.is_connected = True
         except:
-            raise Exception(f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')")
+            raise Exception(
+                f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')"
+            )
 
     def read(self):
         """
@@ -50,7 +48,9 @@ class Arduino(Hardware):
         if self.is_connected:
             message = self.connection.read(self.connection.inWaiting()).decode()
         else:
-            raise Warning(f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading")
+            raise Warning(
+                f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"
+            )
 
         return message
 
@@ -59,13 +59,15 @@ class Arduino(Hardware):
         Encode and send serial output to the device
         """
         if self.is_connected:
-            if isinstance(message,str):
-                self.connection.write(message.encode())
+            if isinstance(message, str):
+                self.connection.write(message.encode("utf-8"))
             else:
                 try:
-                    self.connection.write(str(message).encode())
+                    self.connection.write(str(message).encode("utf-8"))
                 except:
-                    raise Warning(f"Could not send message to provided {self.group} device: {self.name} (at '{self.port}')")
+                    raise Warning(
+                        f"Could not send message to provided {self.group} device: {self.name} (at '{self.port}')"
+                    )
 
     def release(self):
         """
@@ -75,6 +77,6 @@ class Arduino(Hardware):
             self.connection.close()
             self.is_connected = False
         except:
-            raise Warning(f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')")
-
-
+            raise Warning(
+                f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')"
+            )
