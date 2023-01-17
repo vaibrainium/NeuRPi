@@ -320,6 +320,7 @@ class RTTask(TrialConstruct):
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "intertrial_stage",
             "trial_counters": self.config.SUBJECT.counters,
+            "total_reward": self.config.SUBJECT.total_reward,
             "plots": plots,
             "TRIAL_END": True,
         }

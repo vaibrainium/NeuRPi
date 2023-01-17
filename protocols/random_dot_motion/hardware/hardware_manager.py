@@ -16,6 +16,7 @@ class HardwareManager(BaseHWManager):
         self._reward_calibration = self.config.Arduino.Primary.reward.caliberation
         self._lick_threshold = self.config.Arduino.Primary.lick.threshold
         self._lick_slope = self.config.Arduino.Primary.lick.slope
+        pass
 
     ## Properties of our hardwares
     @property
@@ -66,7 +67,7 @@ class HardwareManager(BaseHWManager):
         Dispense 'volume' of Reward to Left spout
         """
         duration = self.vol_to_dur(volume)
-        self.hardware["Primary"].write(duration + "reward_left")
+        self.hardware["Primary"].write(str(duration) + "reward_left")
 
         # raise Warning("Reward delivery needs to be implemented")
 
@@ -75,7 +76,7 @@ class HardwareManager(BaseHWManager):
         Dispense 'volume' of Reward to Right spout
         """
         duration = self.vol_to_dur(volume)
-        self.hardware["Primary"].write(duration + "reward_right")
+        self.hardware["Primary"].write(str(duration) + "reward_right")
 
     def toggle_reward(self, spout):
         """
@@ -84,11 +85,11 @@ class HardwareManager(BaseHWManager):
             spout (str): 'Left','Right' or 'Center'
         """
         if spout == "Left":
-            self.hardware["Primary"].write(0 + "toggle_left_reward")
+            self.hardware["Primary"].write(str(0) + "toggle_left_reward")
         elif spout == "Right":
-            self.hardware["Primary"].write(0 + "toggle_right_reward")
+            self.hardware["Primary"].write(str(0) + "toggle_right_reward")
         elif spout == "Center":
-            self.hardware["Primary"].write(0 + "toggle_center_reward")
+            self.hardware["Primary"].write(str(0) + "toggle_center_reward")
         else:
             raise Exception(
                 "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
