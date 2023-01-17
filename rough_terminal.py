@@ -1,8 +1,10 @@
 import time
 
+from NeuRPi.agents import agent_pilot
+
 if __name__ == "__main__":
 
-    from NeuRPi.agents import test_pilot, test_terminal
+    from NeuRPi.agents import test_terminal
 
     test_terminal.main()
     pass
