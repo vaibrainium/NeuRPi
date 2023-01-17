@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 
-from NeuRPi.agents.test_terminal import Terminal
+from NeuRPi.agents.agent_terminal import Terminal
 
 
 class Neurpi:

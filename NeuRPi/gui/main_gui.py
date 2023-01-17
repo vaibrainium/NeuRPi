@@ -5,7 +5,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
-Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main.ui")
+Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
 
 
 class Application(mainclass):

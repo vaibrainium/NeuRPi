@@ -24,6 +24,7 @@ class TaskGUI(rigclass):
         self.trial_timer = QtCore.QTimer()
         self.trial_clock = 0
         self.paused = False
+        self.stopped = False
 
         self.coherences = [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]
         self.initialize_plots()
@@ -82,8 +83,8 @@ class TaskGUI(rigclass):
         self.rig.close_experiment.show()
 
     def close_experiment(self):
-        self.forward_signal({"to": "main_gui", "key": "KILL", "value": None})
-        self.session_timer = None
+        # Task has ended but waiting to trial to end to close session
+        self.stopped = True
 
     # Outgoing communication
     def forward_signal(self, message):
@@ -168,6 +169,14 @@ class TaskGUI(rigclass):
 
         if "plots" in value.keys():
             self.update_plots(value["plots"])
+
+        if "total_reward" in value.keys():
+            self.rig.total_reward.setText(str(value["total_reward"]))
+
+        # Close session and Task GUI
+        if "TRIAL_END" in value.keys() and self.stopped:
+            self.forward_signal({"to": "main_gui", "key": "KILL", "value": None})
+            self.session_timer = None
 
     def update_trials(self, value):
         self.rig.attempt_trials.setText(str(value["attempt"]))

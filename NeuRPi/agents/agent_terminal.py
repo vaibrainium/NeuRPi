@@ -176,7 +176,9 @@ class Terminal(Application):
         Args:
             value (dict): dict containing `ip` and `state`
         """
-        print("HANDSHAKE RECEIVED")
+
+        print("HANDSHAKE RECEIVED from")
+        print(value["pilot"])
         if value["pilot"] in self.pilots.keys():
             self.pilots[value["pilot"]]["ip"] = value.get("ip", "")
             self.pilots[value["pilot"]]["state"] = value.get("state", "")
