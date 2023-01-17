@@ -1,12 +1,34 @@
-*.egg-info
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+#git
 .gitignore
 .gitattributes
-
-data
-.ipynb_checkpoints
+#docker
+.dockerignore
+#jupyter
 */.ipynb_checkpoints/*
-*/__pycache__/*
+.ipynb_checkpoints
+build
+
+# Package
+data
 logs
 env
-.dockerignore
-*/build/*
