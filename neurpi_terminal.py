@@ -10,7 +10,7 @@ class Neurpi:
 
         value = {
             "pilot": "rig_test",
-            "ip": "pi2",
+            "ip": "pi1",
             "state": "IDLE",
             "prefs": None,  # prefs.get(),
         }

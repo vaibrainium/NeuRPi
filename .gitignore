@@ -1,7 +1,8 @@
 *.egg-info
 .gitignore
 .gitattributes
-
+build
+__pycache__
 data
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
