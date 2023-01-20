@@ -419,6 +419,24 @@ p, li { white-space: pre-wrap; }
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="caliberate_reward">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>510</y>
+        <width>161</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Caliberate Reward</string>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

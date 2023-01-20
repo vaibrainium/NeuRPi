@@ -263,6 +263,17 @@ class Terminal(Application):
                 msg.exec_()
                 return None
 
+    def caliberate_reward(self):
+        pilot = super().caliberate_reward()
+        print(pilot)
+        if pilot:
+            # Send message to rig to caliberate reward
+            self.node.send(
+                to=pilot,
+                key="EVENT",
+                value={"key": "REWARD", "value": "caliberate_reward"},
+            )
+
     def closeEvent(self, event):
         """
         When Closing the Terminal Window, close any running subject objects,

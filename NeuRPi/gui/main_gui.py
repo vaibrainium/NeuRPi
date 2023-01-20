@@ -19,6 +19,9 @@ class Application(mainclass):
         self.show()
 
         self.main_gui.start_experiment.clicked.connect(lambda: self.start_experiment())
+        self.main_gui.caliberate_reward.clicked.connect(
+            lambda: self.caliberate_reward()
+        )
 
     def code_to_str(self, var: str):
         display_var = var.replace("_", " ")
@@ -104,6 +107,13 @@ class Application(mainclass):
         }
 
         return task_params
+
+    def caliberate_reward(self):
+        experiment_rig = self.main_gui.experiment_rig.currentText()
+        if experiment_rig in ["None"]:  # , "Rig Test"]:
+            return
+        else:
+            return self.str_to_code(experiment_rig)
 
     def message_from_taskgui(self, message):
         pass
