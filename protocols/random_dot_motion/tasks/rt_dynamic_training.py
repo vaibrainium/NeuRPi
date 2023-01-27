@@ -57,9 +57,9 @@ class SessionManager:
         # Setting reward per pulse
         if 1.5 < self.subject_pars["reward"] < 3:
             if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
-                self.subject_pars["reward"] += 0.1
+                self.subject_pars["reward"] += 0.25
             if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
-                self.subject_pars["reward"] -= 0.1
+                self.subject_pars["reward"] -= 0.25
         # Setting coherence level
         self.subject_pars["current_coherence_level"] = self.next_coherence_level
         # Setting mean reaction time for passive trials
@@ -403,6 +403,9 @@ class Task:
         if message["key"] == "update_reward":
             self.config.SUBJECT.reward = message["value"]
             print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward}")
+        if message["key"] == "caliberate_reward":
+            if self.config.SUBJECT.name in ["XXX", "xxx"]:
+                self.managers["hardware"].start_caliberation_sequence()
 
     def pause_session(self):
         pass

@@ -232,16 +232,16 @@ class Pilot:
                 data = next(self.task.stages)()
                 self.logger.debug("called stage method")
 
+                # Waiting for stage block to clear
+                self.stage_block.wait()
+                self.logger.debug("stage block passed")
+
                 if data:
                     data["pilot"] = self.name
                     data["subject"] = self.subject
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
-
-                # Waiting for stage block to clear
-                self.stage_block.wait()
-                self.logger.debug("stage block passed")
 
                 # pause loop if the running flag is not set and current trial has ended.
                 if not self.running.is_set() and "TRIAL_END" in data.keys():

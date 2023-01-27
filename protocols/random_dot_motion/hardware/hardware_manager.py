@@ -14,8 +14,8 @@ class HardwareManager(BaseHWManager):
         super(HardwareManager, self).__init__()
         self.init_hardware()
         self._reward_calibration = self.config.Arduino.Primary.reward.caliberation
-        self._lick_threshold = self.config.Arduino.Primary.lick.threshold
-        self._lick_slope = self.config.Arduino.Primary.lick.slope
+        self.lick_threshold = self.config.Arduino.Primary.lick.threshold
+        self.lick_slope = self.config.Arduino.Primary.lick.slope
         pass
 
     ## Properties of our hardwares
@@ -38,7 +38,7 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold = value
         self.config.Arduino.Primary.lick.threshold = value
         prefs.set("HARDWARE", self.config)
-        self.hardware["Primary"].write(value + "update_lick_threshold")
+        self.hardware["Primary"].write(str(value) + "update_lick_threshold")
 
     @property
     def lick_slope(self):
@@ -49,7 +49,7 @@ class HardwareManager(BaseHWManager):
         self._lick_slope = value
         self.config.Arduino.Primary.lick.slope = value
         prefs.set("HARDWARE", self.config)
-        self.hardware["Primary"].write(value + "update_lick_slope")
+        self.hardware["Primary"].write(str(value) + "update_lick_slope")
 
     ## Other useful functions
     def vol_to_dur(self, volume):
@@ -96,11 +96,11 @@ class HardwareManager(BaseHWManager):
                 " \n 'Right': For right spout \n 'Center': For center spout"
             )
 
-    def start_caliberation_sequence(self, no_pulses):
+    def start_caliberation_sequence(self, no_pulses=50):
         """
         Instruct arduino to give `no_pulses` on each spout
         """
-        self.hardware["Primary"].write(no_pulses + "caliberate_reward")
+        self.hardware["Primary"].write(str(no_pulses) + "caliberate_reward")
 
     def read_licks(self):
         """

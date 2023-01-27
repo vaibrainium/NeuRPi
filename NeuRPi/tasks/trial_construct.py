@@ -96,7 +96,7 @@ class TrialConstruct:
                                 responded = response_queue.get()
                                 print("RESPONDED")
                                 if responded not in self.trigger["targets"]:
-                                   # incorrect response
+                                    # incorrect response
                                     monitoring_behavior = False
                                     response_queue.queue.clear()
                                     self.monitor_response(response_queue)
@@ -119,8 +119,11 @@ class TrialConstruct:
                 elif self.trigger["type"] == "GO":
                     while monitoring_behavior:
                         if time.time() - start > wait_time:
+                            response_queue.queue.clear()
+                            self.response_block.clear()
+                            self.stage_block.set()
                             monitoring_behavior = False
-                        if not response_queue.empty():
+                        elif not response_queue.empty():
                             responded = response_queue.get()
                             if responded in self.trigger["targets"]:
                                 self.response = responded
@@ -132,17 +135,22 @@ class TrialConstruct:
 
                 # When agent Must respond
                 elif self.trigger["type"] == "MUST_GO":
+                    print("STARTING MUST GO")
+                    response_queue.queue.clear()
                     while monitoring_behavior:
                         if not response_queue.empty():
                             responded = response_queue.get()
+                            print("RESPONDED WITH SOME MUST GO")
                             if (
                                 responded in self.trigger["targets"]
                                 and time.time() - start > wait_time
                             ):
+                                print("RESPONDED FOR MUST GO")
                                 response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.stage_block.set()
                                 monitoring_behavior = False
+                    print(f"MONITOR BEHAVIOR {monitoring_behavior}")
 
             except Exception as e:
                 print(e)
@@ -150,108 +158,108 @@ class TrialConstruct:
                     f"Problem with response monitoring for {self.trigger['type']}"
                 )
 
-    def fixation(self, duration=0.500, targets=[np.NaN], arguments={}, *args, **kwargs):
-        """
-        Fixation stage making sure no trigger is set during fixation times.
-        Arguments:
-            duration (float): Fixation phase duration in secs
-            targets (list): Possible targets to wait_on. [-1: left, 0: center. 1: right, np.NaN: Null]
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_fixation", arguments))
-        self.trigger = {"type": "FIXATE_ON", "targets": targets, "duration": duration}
-        self.response_block.set()
+    # def fixation(self, duration=0.500, targets=[np.NaN], arguments={}, *args, **kwargs):
+    #     """
+    #     Fixation stage making sure no trigger is set during fixation times.
+    #     Arguments:
+    #         duration (float): Fixation phase duration in secs
+    #         targets (list): Possible targets to wait_on. [-1: left, 0: center. 1: right, np.NaN: Null]
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_fixation", arguments))
+    #     self.trigger = {"type": "FIXATE_ON", "targets": targets, "duration": duration}
+    #     self.response_block.set()
 
-    def stimulus_rt(
-        self,
-        duration=2.000,
-        targets=[-1, 1],
-        min_viewing_duration=0,
-        arguments={},
-        *args,
-        **kwargs,
-    ):
-        """
-        Show stimulus and wait for response trigger on target/distractor input
-        Arguments:
-            duration (float): Max stimulus_rt phase duration in secs
-            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_stimulus", arguments))
-        # Implement minimum stimulus viewing time by not validating responses during this period
-        self.trigger = {
-            "type": "GO",
-            "targets": targets,
-            "duration": duration - min_viewing_duration,
-        }
-        threading.Timer(min_viewing_duration, self.response_block.set).start()
+    # def stimulus_rt(
+    #     self,
+    #     duration=2.000,
+    #     targets=[-1, 1],
+    #     min_viewing_duration=0,
+    #     arguments={},
+    #     *args,
+    #     **kwargs,
+    # ):
+    #     """
+    #     Show stimulus and wait for response trigger on target/distractor input
+    #     Arguments:
+    #         duration (float): Max stimulus_rt phase duration in secs
+    #         targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_stimulus", arguments))
+    #     # Implement minimum stimulus viewing time by not validating responses during this period
+    #     self.trigger = {
+    #         "type": "GO",
+    #         "targets": targets,
+    #         "duration": duration - min_viewing_duration,
+    #     }
+    #     threading.Timer(min_viewing_duration, self.response_block.set).start()
 
-    def stimulus_delay(self, duration=2.000, targets=[np.NaN], arguments={}):
-        """
-        Show stimulus and make sure subject doesn't respond (waits on target like fixation)
-        Arguments:
-            duration (float): Max stimulus_rt phase duration in secs
-            targets (list): Possible targets to wait_on during stimulus period. [-1: left, 0: center. 1: right, np.NaN: Null]
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_stimulus", arguments))
-        # Implement minimum stimulus viewing time by not validating responses during this period
-        self.trigger = {"type": "WAIT_ON", "targets": targets, "duration": duration}
-        self.response_block.set()
+    # def stimulus_delay(self, duration=2.000, targets=[np.NaN], arguments={}):
+    #     """
+    #     Show stimulus and make sure subject doesn't respond (waits on target like fixation)
+    #     Arguments:
+    #         duration (float): Max stimulus_rt phase duration in secs
+    #         targets (list): Possible targets to wait_on during stimulus period. [-1: left, 0: center. 1: right, np.NaN: Null]
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_stimulus", arguments))
+    #     # Implement minimum stimulus viewing time by not validating responses during this period
+    #     self.trigger = {"type": "WAIT_ON", "targets": targets, "duration": duration}
+    #     self.response_block.set()
 
-    def response_window(self, duration=2.000, targets=[np.NaN], arguments={}):
-        """
-        Response window for responding to one of the targets. For delay task
-        Arguments:
-            duration (float): Max wait time for response phase duration in secs
-            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_response_window", arguments))
-        self.trigger = {"type": "GO", "targets": targets, "duration": duration}
-        self.response_block.set()
+    # def response_window(self, duration=2.000, targets=[np.NaN], arguments={}):
+    #     """
+    #     Response window for responding to one of the targets. For delay task
+    #     Arguments:
+    #         duration (float): Max wait time for response phase duration in secs
+    #         targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_response_window", arguments))
+    #     self.trigger = {"type": "GO", "targets": targets, "duration": duration}
+    #     self.response_block.set()
 
-    def reinforcement(self, duration=0.500, outcome=None, arguments={}):
-        """
-        Give audio and/or visual reinforcement
-        Arguments:
-            duration (float): Reinforcement display phase duration in secs
-            outcome (str): Correct, Incorrect or Invalid
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        arguments["outcome"] = outcome
-        self.stimulus_queue.put(("initiate_reinforcement", arguments))
-        threading.Timer(duration, self.stage_block.set).start()
+    # def reinforcement(self, duration=0.500, outcome=None, arguments={}):
+    #     """
+    #     Give audio and/or visual reinforcement
+    #     Arguments:
+    #         duration (float): Reinforcement display phase duration in secs
+    #         outcome (str): Correct, Incorrect or Invalid
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     arguments["outcome"] = outcome
+    #     self.stimulus_queue.put(("initiate_reinforcement", arguments))
+    #     threading.Timer(duration, self.stage_block.set).start()
 
-    def must_respond(self, targets, arguments={}):
-        """
-        Must respond in one of the targets to proceed
-        Arguments:
-            targets (list): Possible responses for type. [-1: left, 0: center. 1: right]
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_must_respond", arguments))
-        self.trigger = {"type": "MUST_GO", "targets": targets, "duration": []}
-        self.response_block.set()
+    # def must_respond(self, targets, arguments={}):
+    #     """
+    #     Must respond in one of the targets to proceed
+    #     Arguments:
+    #         targets (list): Possible responses for type. [-1: left, 0: center. 1: right]
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_must_respond", arguments))
+    #     self.trigger = {"type": "MUST_GO", "targets": targets, "duration": []}
+    #     self.response_block.set()
 
-    def intertrial(self, duration=1.000, arguments={}):
-        """
-        Stage 3: Inter-trial Interval.
-        Arguments:
-            duration (float): Max stimulus_rt phase duration in secs
-        """
-        # Clear the event lock -> defaults to event: false
-        self.stage_block.clear()
-        self.stimulus_queue.put(("initiate_intertrial", arguments))
-        # Setting timer to trigger stage_block event after defined inter-trial interval
-        threading.Timer(duration, self.stage_block.set).start()
+    # def intertrial(self, duration=1.000, arguments={}):
+    #     """
+    #     Stage 3: Inter-trial Interval.
+    #     Arguments:
+    #         duration (float): Max stimulus_rt phase duration in secs
+    #     """
+    #     # Clear the event lock -> defaults to event: false
+    #     self.stage_block.clear()
+    #     self.stimulus_queue.put(("initiate_intertrial", arguments))
+    #     # Setting timer to trigger stage_block event after defined inter-trial interval
+    #     threading.Timer(duration, self.stage_block.set).start()
 
 
 if __name__ == "__main__":

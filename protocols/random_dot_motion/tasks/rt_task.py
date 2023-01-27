@@ -159,7 +159,7 @@ class RTTask(TrialConstruct):
         self.min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
         stimulus_arguments = self.stimulus_pars
         targets = [-1, 1]
-        if self.config.TASK.training_type.value > 0:
+        if self.config.TASK.training_type.value < 2:
             duration = self.config.TASK.training_type.active_passive.passive_rt_mu + (
                 pearson3.rvs(
                     self.config.TASK.training_type.active_passive.passive_rt_sigma
@@ -168,7 +168,6 @@ class RTTask(TrialConstruct):
             )
         else:
             duration = self.config.TASK.timings.stimulus.max_viewing
-
         # implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {
             "type": "GO",
@@ -190,6 +189,7 @@ class RTTask(TrialConstruct):
             f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
         )
 
+        self.stage_block.wait()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "response_stage",
@@ -207,28 +207,58 @@ class RTTask(TrialConstruct):
         self.stage_block.clear()
         # Evaluate trial outcome and determine stage parameters
         stimulus_arguments = {}
+
         if np.isnan(self.response):
             if not self.correction_trial:
-                self.config.SUBJECT.counters["noreponse"] += 1
+                self.config.SUBJECT.counters["noresponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
-            self.reinforcement_duration = self.config.TASK.feedback.invalid.time.value
             self.valid, self.correct = [0, 0]
-
-            iti_decay = self.config.TASK.feedback.invalid.intertrial
-            self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
-                iti_decay.base
-                * np.exp(
-                    iti_decay.power * self.config.TASK.timings.stimulus.min_viewing
+            # If active training
+            if self.config.TASK.training_type.value == 2:
+                self.reinforcement_duration = (
+                    self.config.TASK.feedback.invalid.time.value
                 )
-            )
+                iti_decay = self.config.TASK.feedback.invalid.intertrial
+                self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
+                    iti_decay.base
+                    * np.exp(
+                        iti_decay.power * self.config.TASK.timings.stimulus.min_viewing
+                    )
+                )
+                # Starting reinforcement
+                self.stimulus_queue.put(
+                    ("initiate_reinforcement", stimulus_arguments["outcome"])
+                )
+                threading.Timer(
+                    self.reinforcement_duration, self.stage_block.set
+                ).start()
 
-            # Starting reinforcement
-            self.stimulus_queue.put(
-                ("initiate_reinforcement", stimulus_arguments["outcome"])
-            )
-            threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
+            # If passive training
+            else:
+                self.valid, self.correct = [0, 1]
+                self.reinforcement_duration = (
+                    self.config.TASK.feedback.correct.time.value
+                )
+                if self.stimulus_pars["target"] == -1:  # Left Correct
+                    self.managers["hardware"].reward_left(self.config.SUBJECT.reward)
+                elif self.stimulus_pars["target"] == 1:  # Right Correct
+                    self.managers["hardware"].reward_right(self.config.SUBJECT.reward)
+                self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
+                self.intertrial_duration = self.config.TASK.timings.intertrial.value
+                # Starting reinforcement
+                self.stimulus_queue.put(
+                    ("initiate_reinforcement", stimulus_arguments["outcome"])
+                )
+                # Entering must respond phase
+                self.trigger = {
+                    "type": "MUST_GO",
+                    "targets": [self.stimulus_pars["target"]],
+                    "duration": self.reinforcement_duration,
+                }
+                self.response_block.set()
 
-        elif self.stimulus_pars["target"] != self.response:  # Incorrect Trial
+        # If incorrect trial
+        elif self.stimulus_pars["target"] != self.response:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["incorrect"] += 1
             stimulus_arguments["outcome"] = "incorrect"
@@ -244,15 +274,16 @@ class RTTask(TrialConstruct):
             )
             threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
-        elif self.stimulus_pars["target"] == self.response:  # Correct Trial
+        # If correct trial
+        elif self.stimulus_pars["target"] == self.response:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["correct"] += 1
             stimulus_arguments["outcome"] = "correct"
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
-            if self.response == -1:  # Left Correct
+            if self.stimulus_pars["target"] == -1:  # Left Correct
                 self.managers["hardware"].reward_left(self.config.SUBJECT.reward)
-            elif self.response == 1:  # Right Correct
+            elif self.stimulus_pars["target"] == 1:  # Right Correct
                 self.managers["hardware"].reward_right(self.config.SUBJECT.reward)
 
             self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
@@ -263,18 +294,15 @@ class RTTask(TrialConstruct):
             self.stimulus_queue.put(
                 ("initiate_reinforcement", stimulus_arguments["outcome"])
             )
-            # threading.Timer(duration, self.stage_block.set).start()
             # Entering must respond phase
             self.trigger = {
                 "type": "MUST_GO",
                 "targets": [self.stimulus_pars["target"]],
                 "duration": self.reinforcement_duration,
             }
-
-            print(self.trigger)
-
             self.response_block.set()
 
+        self.stage_block.wait()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
@@ -296,7 +324,7 @@ class RTTask(TrialConstruct):
         threading.Timer(duration, self.stage_block.set).start()
 
         # if not correction trial -> perform end of trial analysis
-        if not self.correction_trial:
+        if not self.correction_trial and not np.isnan(self.response):
             self.managers["session"].update_EOT(
                 self.response, self.response_time, self.correct
             )
@@ -311,11 +339,12 @@ class RTTask(TrialConstruct):
                 self.config.SUBJECT.response_time_distribution
             ),
         }
-        if self.correct:
+        if self.correct < 2:
             self.correction_trial = 0
         else:
             self.correction_trial = 1
 
+        self.stage_block.wait()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "intertrial_stage",
