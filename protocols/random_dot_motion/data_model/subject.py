@@ -102,13 +102,13 @@ class Subject(BaseSubject):
         if 1.5 < subject_parameters["reward"] < 3:
             # if received less than 700ul of reward on last session, increase reward by 0.1 ul.
             if self.rolling_perf["total_reward"] < 700:
-                subject_parameters["reward"] += 0.1
+                subject_parameters["reward"] += 0.25
                 # if received less than 500ul of reward on last session, increase reward by another 0.1 ul.
                 if self.rolling_perf["total_reward"] < 500:
-                    subject_parameters["reward"] += 0.1
+                    subject_parameters["reward"] += 0.25
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
             if self.rolling_perf["total_attempts"] > 200:
-                subject_parameters["reward"] -= 0.1
+                subject_parameters["reward"] -= 0.25
 
         self.config.SUBJECT = subject_parameters
         return subject_parameters
