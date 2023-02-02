@@ -201,7 +201,10 @@ class Terminal(Application):
         Any key in `value` that matches a column in the subject's trial data table will be saved.
 
         """
-        self.message_to_taskgui(value)
+        try:
+            self.message_to_taskgui(value)
+        except:
+            print("Cound not update GUI")
 
     ########################
     # GUI and other functions
@@ -265,7 +268,7 @@ class Terminal(Application):
 
     def caliberate_reward(self):
         pilot = super().caliberate_reward()
-        print(pilot)
+        print(f" Initiate reward caliberation for {pilot}")
         if pilot:
             # Send message to rig to caliberate reward
             self.node.send(

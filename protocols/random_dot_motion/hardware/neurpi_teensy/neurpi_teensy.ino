@@ -33,8 +33,12 @@ int averageR = 0;
 
 
 void setup() {
+  // Reward arduino
+  Serial1.begin(9600);
+  // Lick
   Serial.begin(9600);
   Serial.setTimeout(50);
+  
   // initialize pins
   pinMode(left_valve_pin, OUTPUT);
   digitalWrite(left_valve_pin, LOW);
@@ -50,54 +54,61 @@ void setup() {
 void loop() {
   // see if there's incoming serial data:
   if (Serial.available() > 0) {
+    
     // read incoming string from serial buffer
     msg_int = int(Serial.parseInt());
     msg = Serial.readString();
-
-    // opening left valve for pulse_width msecs
-    if (msg=="reward_left"){
-      digitalWrite(left_valve_pin, HIGH);
-      delay(msg_int);
-      digitalWrite(left_valve_pin, LOW);   
-    }
-    // opening right valve for pulse_width msecs
-    if (msg=="reward_right"){
-      digitalWrite(right_valve_pin, HIGH);
-      delay(msg_int);
-      digitalWrite(right_valve_pin, LOW);          
-    }
-    // toggle right valve state
-    if (msg=="toggle_left_reward"){
-      if (left_valve_open){
-        digitalWrite(left_valve_pin, LOW);            
-        left_valve_open = false;
-        }
-      else{
-        digitalWrite(left_valve_pin, HIGH);
-        left_valve_open = true;
-        }         
-    }
-    // toggle right valve state
-    if (msg=="toggle_right_reward"){
-      if (right_valve_open){
-        digitalWrite(right_valve_pin, LOW);            
-        right_valve_open = false;
-        }
-      else{
-        digitalWrite(right_valve_pin, HIGH);
-        right_valve_open = true;
-        }         
-    }
-    // give `msg_int` pulses of 50ms to both spouts
-    if (msg=="caliberate_reward"){
-      for (counter=0; counter<=msg_int; counter++){ 
-          digitalWrite(left_valve_pin, HIGH);
-          digitalWrite(right_valve_pin, HIGH);
-          delay(50); 
-          digitalWrite(left_valve_pin, LOW);
-          digitalWrite(right_valve_pin, LOW);
-        }
-    }
+    
+    Serial1.print(msg_int+msg);
+    
+//    // opening left valve for pulse_width msecs
+//    if (msg=="reward_left"){
+//      digitalWrite(left_valve_pin, HIGH);
+//      delay(msg_int);
+//      digitalWrite(left_valve_pin, LOW);   
+//    }
+//    // opening right valve for pulse_width msecs
+//    if (msg=="reward_right"){
+//      digitalWrite(right_valve_pin, HIGH);
+//      delay(msg_int);
+//      digitalWrite(right_valve_pin, LOW);          
+//    }
+//    // toggle right valve state
+//    if (msg=="toggle_left_reward"){
+//      if (left_valve_open){
+//        digitalWrite(left_valve_pin, LOW);            
+//        left_valve_open = false;
+//        }
+//      else{
+//        digitalWrite(left_valve_pin, HIGH);
+//        left_valve_open = true;
+//        }         
+//    }
+//    // toggle right valve state
+//    if (msg=="toggle_right_reward"){
+//      if (right_valve_open){
+//        digitalWrite(right_valve_pin, LOW);            
+//        right_valve_open = false;
+//        }
+//      else{
+//        digitalWrite(right_valve_pin, HIGH);
+//        right_valve_open = true;
+//        }         
+//    }
+//    // give `msg_int` pulses of 50ms to both spouts
+//    if (msg=="caliberate_reward"){
+//      digitalWrite(left_valve_pin, LOW);
+//      digitalWrite(right_valve_pin, LOW);
+//      for (counter=0; counter<=msg_int; counter++){ 
+//          digitalWrite(left_valve_pin, HIGH);
+//          delay(100); 
+//          digitalWrite(left_valve_pin, LOW);
+//          delay(100);
+//          digitalWrite(right_valve_pin, HIGH);
+//          delay(100);
+//          digitalWrite(right_valve_pin, LOW);
+//        }
+//    }
     
     // updating lick_threshold
     if (msg=="update_lick_threshold"){

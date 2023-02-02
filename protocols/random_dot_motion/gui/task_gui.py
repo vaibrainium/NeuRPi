@@ -190,16 +190,19 @@ class TaskGUI(rigclass):
 
     def update_plots(self, value):
         # updating running accuracy
-        self.rig.accuracy_plot.plot(
-            x=list(list(zip(*value["running_accuracy"]))[0]),
-            y=list(list(zip(*value["running_accuracy"]))[1]),
-            pen=None,
-            symbol="o",
-            symbolPen="w",
-            symbolBrush=0.2,
-            name="Accuracy",
-            clear=True,
-        )
+        try:
+            self.rig.accuracy_plot.plot(
+                x=list(list(zip(*value["running_accuracy"]))[0]),
+                y=list(list(zip(*value["running_accuracy"]))[1]),
+                pen=None,
+                symbol="o",
+                symbolPen="w",
+                symbolBrush=0.2,
+                name="Accuracy",
+                clear=True,
+            )
+        except:
+            pass
         # updating psychometric function
         try:
             coh, psych = [], []
