@@ -76,10 +76,10 @@ TASK:
                 power: 0
         incorrect:
             visual:
-                tag  : 'Visual feedback for correct trial'
+                tag  : 'Visual feedback for incorrect trial'
                 type : 'tuple'
             audio :
-                tag  : 'Audio feedback for correct trial'
+                tag  : 'Audio feedback for incorrect trial'
                 type : 'tuple'
             time  :
                 tag  : 'Temporal delay feedback in secs'
@@ -91,10 +91,10 @@ TASK:
                 power: -4
         invalid:
             visual:
-                tag  : 'Visual feedback for correct trial'
+                tag  : 'Visual feedback for invalid trial'
                 type : 'tuple'
             audio :
-                tag  : 'Audio feedback for correct trial'
+                tag  : 'Audio feedback for invalid trial'
                 type : 'tuple'
             time  :
                 tag  : 'Temporal delay feedback in secs'
