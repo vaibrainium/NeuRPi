@@ -166,6 +166,7 @@ class RTTask(TrialConstruct):
                 )
                 * 1.5
             )
+            print(f"Passive Trial Duration is {duration}")
         else:
             duration = self.config.TASK.timings.stimulus.max_viewing
         # implement minimum stimulus viewing time by not validating responses during this period
