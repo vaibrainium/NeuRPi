@@ -241,9 +241,13 @@ class RTTask(TrialConstruct):
                     self.config.TASK.feedback.correct.time.value
                 )
                 if self.stimulus_pars["target"] == -1:  # Left Correct
-                    self.managers["hardware"].reward_left(self.config.SUBJECT.reward)
+                    self.managers["hardware"].reward_left(
+                        self.config.SUBJECT.reward * 0.7
+                    )
                 elif self.stimulus_pars["target"] == 1:  # Right Correct
-                    self.managers["hardware"].reward_right(self.config.SUBJECT.reward)
+                    self.managers["hardware"].reward_right(
+                        self.config.SUBJECT.reward * 0.7
+                    )
                 self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
                 self.intertrial_duration = self.config.TASK.timings.intertrial.value
                 # Starting reinforcement

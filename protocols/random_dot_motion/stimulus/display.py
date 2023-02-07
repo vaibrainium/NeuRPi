@@ -35,6 +35,7 @@ class Display:
         self.window_size = eval(self.stim_config.display.window_size)
 
         self.pygame = pygame
+        self.pygame.mouse.set_visible(False)
 
         self.frame_rate = self.stim_config.display.frame_rate
         self.flags = eval(

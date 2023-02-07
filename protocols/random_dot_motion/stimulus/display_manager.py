@@ -87,8 +87,8 @@ class DisplayManager(Display):
     def initiate_reinforcement(self, pars):
         if self.courier_map.initiate_stimulus.audio.need_update:
             if (
-                pars["outcome"] == "Correct"
-                and self.courier_map.initiate_stimulus.audio.properties.load.correct
+                pars["outcome"] == "correct"
+                and self.courier_map.initiate_reinforcement.audio.properties.load.correct
             ):
                 try:
                     self.audio["correct"].play()
@@ -96,7 +96,7 @@ class DisplayManager(Display):
                     raise Warning("correct audio path not set")
             if (
                 pars["outcome"] == "incorrect"
-                and self.courier_map.initiate_stimulus.audio.properties.load.incorrect
+                and self.courier_map.initiate_reinforcement.audio.properties.load.incorrect
             ):
                 try:
                     self.audio["incorrect"].play()
@@ -104,7 +104,7 @@ class DisplayManager(Display):
                     raise Warning("incorrect audio path not set")
             if (
                 pars["outcome"] == "invalid"
-                and self.courier_map.initiate_stimulus.audio.properties.load.correct.invalid
+                and self.courier_map.initiate_reinforcement.properties.load.correct.invalid
             ):
                 try:
                     self.audio["invalid"].play()
