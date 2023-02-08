@@ -59,7 +59,8 @@ class TrialConstruct:
         )
         self.response_block = response_block  # threading.Event used by the pilot to manage stage transitions
         self.trigger = {}
-
+        self.must_respond_block = threading.Event()
+        self.must_respond_block.clear()
         self.thread = threading.Thread(
             target=self.monitor_response, args=[response_queue], daemon=True
         )
@@ -135,20 +136,15 @@ class TrialConstruct:
 
                 # When agent Must respond
                 elif self.trigger["type"] == "MUST_GO":
-                    print("STARTING MUST GO")
+                    self.must_respond_block.clear()
                     response_queue.queue.clear()
                     while monitoring_behavior:
                         if not response_queue.empty():
                             responded = response_queue.get()
-                            print("RESPONDED WITH SOME MUST GO")
-                            if (
-                                responded in self.trigger["targets"]
-                                and time.time() - start > wait_time
-                            ):
-                                print("RESPONDED FOR MUST GO")
+                            if responded in self.trigger["targets"]:
                                 response_queue.queue.clear()
                                 self.response_block.clear()
-                                self.stage_block.set()
+                                self.must_respond_block.set()
                                 monitoring_behavior = False
                     print(f"MONITOR BEHAVIOR {monitoring_behavior}")
 

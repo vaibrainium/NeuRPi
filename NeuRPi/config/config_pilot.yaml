@@ -28,8 +28,8 @@ HARDWARE:
       reward:
         caliberation: 35
       lick:
-        threshold: 5
-        slope: 25
+        threshold: 10
+        slope: 30
   GPIO:
     Stim_Onset:
       pin: None

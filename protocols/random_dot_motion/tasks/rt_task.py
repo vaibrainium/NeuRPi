@@ -226,13 +226,6 @@ class RTTask(TrialConstruct):
                         iti_decay.power * self.config.TASK.timings.stimulus.min_viewing
                     )
                 )
-                # Starting reinforcement
-                self.stimulus_queue.put(
-                    ("initiate_reinforcement", stimulus_arguments["outcome"])
-                )
-                threading.Timer(
-                    self.reinforcement_duration, self.stage_block.set
-                ).start()
 
             # If passive training
             else:
@@ -250,10 +243,6 @@ class RTTask(TrialConstruct):
                     )
                 self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
                 self.intertrial_duration = self.config.TASK.timings.intertrial.value
-                # Starting reinforcement
-                self.stimulus_queue.put(
-                    ("initiate_reinforcement", stimulus_arguments["outcome"])
-                )
                 # Entering must respond phase
                 self.trigger = {
                     "type": "MUST_GO",
@@ -273,11 +262,6 @@ class RTTask(TrialConstruct):
             self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base * np.exp(iti_decay.power * self.response_time)
             )
-            # Starting reinforcement
-            self.stimulus_queue.put(
-                ("initiate_reinforcement", stimulus_arguments["outcome"])
-            )
-            threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         # If correct trial
         elif self.stimulus_pars["target"] == self.response:
@@ -294,11 +278,6 @@ class RTTask(TrialConstruct):
             self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
             self.valid, self.correct = [1, 1]
             self.intertrial_duration = self.config.TASK.timings.intertrial.value
-
-            # Starting reinforcement
-            self.stimulus_queue.put(
-                ("initiate_reinforcement", stimulus_arguments["outcome"])
-            )
             # Entering must respond phase
             self.trigger = {
                 "type": "MUST_GO",
@@ -306,6 +285,12 @@ class RTTask(TrialConstruct):
                 "duration": self.reinforcement_duration,
             }
             self.response_block.set()
+
+        # Starting reinforcement
+        self.stimulus_queue.put(
+            ("initiate_reinforcement", stimulus_arguments["outcome"])
+        )
+        threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         self.stage_block.wait()
         data = {
@@ -350,6 +335,10 @@ class RTTask(TrialConstruct):
             self.correction_trial = 1
 
         self.stage_block.wait()
+        # if correct trial wait for reward consumption
+        if self.correct:
+            self.must_respond_block.wait()
+
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "intertrial_stage",
