@@ -47,7 +47,7 @@ TASK:
         fixation:
             tag             : 'Mean fixation time in secs'
             type            : 'int'
-            value           : 0.500
+            value           : 1.00
         stimulus:
             tag             : 'Minimum and Maximum stimulus time in secs'
             type            : 'int'
@@ -84,7 +84,7 @@ TASK:
             time  :
                 tag  : 'Temporal delay feedback in secs'
                 type : 'int'
-                value: 1.000
+                value: 1.500
             intertrial:
                 tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
                 base : 25
@@ -102,8 +102,8 @@ TASK:
                 value: 0
             intertrial:
                 tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
-                base : 25
-                power: -4
+                base : 0
+                power: 0
 
     training_type:
         value: 1
@@ -258,7 +258,7 @@ STIMULUS:
                 properties: 
                     load: 
                     generate:
-                        background : (100,100,100)
+                        background : (150,150,150)
             audio:
                 need_update: False
                 is_static: True
