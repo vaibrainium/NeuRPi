@@ -11,15 +11,16 @@ long left;
 long right;
 float curr_left = 0;
 float curr_right = 0;
-float threshold_multiplier = 1.5;
 float threshold_multiplier_left = 1.1;
 float threshold_multiplier_right = 1.1;
+int total_bins = 2;
+int counter_L = 0;
+int counter_R = 0;
 
 /*
  * LowPass Filter class is taken from https://github.com/curiores/ArduinoTutorials/blob/main/BasicFilters/ArduinoImplementations/LowPass/LowPass2.0/LowPass2.0.ino
  * and corresponding video tutorial is at: https://www.youtube.com/watch?v=eM4VHtettGg
  */
-
 template <int order> // order is 1 or 2
 class LowPass
 {
@@ -131,39 +132,64 @@ Base_Licks get_licks_baseline(Base_Licks base_licks) {
   return base_licks;
 }
 
-Base_Licks get_licks(Base_Licks base_licks){  
-
-  
+Base_Licks get_licks(Base_Licks base_licks){   
   // Read and filter the lick sensor signals
   float curr_left = lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   float curr_right = lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   
-//  Serial.print(curr_left); // - threshold_multiplier_left*base_licks.left);
-//  Serial.print(',');
-//  Serial.println(curr_right); // - threshold_multiplier_right*base_licks.right);
+  Serial.print(curr_left - threshold_multiplier_left*base_licks.left);
+  Serial.print(',');
+  Serial.println(curr_right - threshold_multiplier_right*base_licks.right);
   
-  if (i==0 and (curr_left > threshold_multiplier_left*base_licks.left)){  
-    i = 1;   lick=2;
-    Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)    
-  }
-  if (i==1 and (curr_left < threshold_multiplier_left*base_licks.left)){  
-    i = 0;   lick=1;
-    Serial.println(lick);       // send 1 when left lick ends (-3 in python = -2)   
-  }
 
-  if (j==0 and (curr_right > threshold_multiplier_right*base_licks.right)){  
-    j = 1;   lick=4;
-    Serial.println(lick);      // send 4 when right lick starts (-3 in python = 1)    
-  }
-  if (j==1 and (curr_right < threshold_multiplier_right*base_licks.right)){  
-    j = 0;   lick=5;
-    Serial.println(lick);       // send 5 when right lick ends (-3 in python = 2)  
-  }
+  if (curr_left > threshold_multiplier_left*base_licks.left){
+    counter_L = counter_L + 1;
+    }
+    
+  if (curr_left < threshold_multiplier_left*base_licks.left){
+    counter_L = 0;
+    }
+    
+  if (curr_right > threshold_multiplier_right*base_licks.right){
+    counter_R = counter_R + 1;
+    }
+    
+  if (curr_right < threshold_multiplier_right*base_licks.right){
+    counter_R = 0;
+    }    
+
+//  if (i==0 and (counter_L > total_bins)){
+//      i = 1;   
+//      lick=2;
+//      Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)
+//  }
+//  if (i==1 and (counter_L < total_bins)){
+//      i=0;
+//      lick=1;
+//      Serial.println(lick);   // send 1 when left lick ends (-3 in python = -2)
+//  }
+//      
+//  if (j==0 and (counter_R > total_bins)){
+//      j = 1;
+//      lick=4;
+//      Serial.println(lick);     // send 4 when right lick starts (-3 in python = 1)
+//  }
+//  if (j==1 and (counter_R < total_bins)){
+//      j=0;
+//      lick=5;
+//      Serial.println(lick);   // send 5 when right lick ends (-3 in python = 2)  
+//  } 
+
+//  Serial.print(counter_L);
+//  Serial.print(',');
+//  Serial.println(counter_R);
+
+  
 }
 
 void setup() {  
   Serial.begin(115200);
-  Serial.setTimeout(10);
+  Serial.setTimeout(5);
   base_licks = get_licks_baseline(base_licks);
 
   pinMode(led_pin, OUTPUT);
@@ -187,11 +213,6 @@ void loop() {
     }
 
     // updating lick_threshold
-    if (msg=="update_lick_threshold"){
-        threshold_multiplier = msg_int; 
-    }
-
-    // updating lick_threshold
     if (msg=="update_lick_threshold_left"){
         threshold_multiplier_left = msg_int; 
     }
@@ -201,6 +222,57 @@ void loop() {
     }
   }
 
-  get_licks(base_licks);
+//  get_licks(base_licks);
+
+
+// Read and filter the lick sensor signals
+  float curr_left = lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
+  float curr_right = lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   
+//  Serial.print(curr_left - threshold_multiplier_left*base_licks.left);
+//  Serial.print(',');
+//  Serial.println(curr_right - threshold_multiplier_right*base_licks.right);
+
+  if (curr_left > threshold_multiplier_left*base_licks.left){
+    counter_L = counter_L + 1;
+    }
+    
+  if (curr_left < threshold_multiplier_left*base_licks.left){
+    counter_L = 0;
+    }
+    
+  if (curr_right > threshold_multiplier_right*base_licks.right){
+    counter_R = counter_R + 1;
+    }
+    
+  if (curr_right < threshold_multiplier_right*base_licks.right){
+    counter_R = 0;
+    }    
+
+  if (i==0 and (counter_L > total_bins)){
+      i = 1;   
+      lick=2;
+      Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)
+  }
+  if (i==1 and (counter_L < total_bins)){
+      i=0;
+      lick=1;
+      Serial.println(lick);   // send 1 when left lick ends (-3 in python = -2)
+  }
+      
+  if (j==0 and (counter_R > total_bins)){
+      j = 1;
+      lick=4;
+      Serial.println(lick);     // send 4 when right lick starts (-3 in python = 1)
+  }
+  if (j==1 and (counter_R < total_bins)){
+      j=0;
+      lick=5;
+      Serial.println(lick);   // send 5 when right lick ends (-3 in python = 2)  
+  } 
+
+//  Serial.print(counter_L);
+//  Serial.print(',');
+//  Serial.println(counter_R);
+
 }

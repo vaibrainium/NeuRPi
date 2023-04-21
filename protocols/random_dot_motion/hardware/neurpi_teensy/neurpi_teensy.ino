@@ -1,17 +1,25 @@
+
+#include <avr/wdt.h>
+
 #define left_touch_pin 22
 #define right_touch_pin 23
 #define left_valve_pin 20
 #define right_valve_pin 19
 
+#define SCB_AIRCR (*(volatile uint32_t *)0xE000ED0C) // Application Interrupt and Reset Control location
+/*
+SCB_AIRCR, ARMv7 ref manual, B3.2, page 717 gives bit usage and other information, page 708 is for SCB general info.
+*/
+
 String msg;
 int msg_int;
-int threshold = 4;
-int slope = 20;
+int threshold = 2;
+int slope = 200;
 bool left_valve_open = false;
 bool right_valve_open = false;
 
 byte lick;
-int upper_limit = 15000;
+int upper_limit = 20000;
 int i=0; int j=0;
 // Signal processing and filtering for lick sensor
 int counter = 0;
@@ -30,14 +38,21 @@ int readIndexR = 0;              // the index of the current reading
 int totalR = 0;                  // the running total
 int averageR = 0;  
 
+//void (*reset_func) (void) = 0;
 
+enum State {
+  RESET,
+  RUNNING
+};
 
-void setup() {
+State state = SETUP;
+
+void setup() {  
   // Reward arduino
   Serial1.begin(9600);
   // Lick
-  Serial.begin(9600);
-  Serial.setTimeout(50);
+  Serial.begin(115200);
+  Serial.setTimeout(10);
   
   // initialize pins
   pinMode(left_valve_pin, OUTPUT);
@@ -45,13 +60,29 @@ void setup() {
   pinMode(right_valve_pin, OUTPUT);
   digitalWrite(right_valve_pin, LOW);
   
-  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
-    readingsL[thisReading] = 0;
-    readingsR[thisReading] = 0;
-  }
+//  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+//    readingsL[thisReading] = 0;
+//    readingsR[thisReading] = 0;
+//  }
+//  int counter = 0;
 }
 
 void loop() {
+  switch (state) {
+    
+    case RESET:
+      // Run setup code
+      for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+        readingsL[thisReading] = 0;
+        readingsR[thisReading] = 0;
+      }
+  int counter = 0;
+      state = RUNNING;
+      break;
+  }
+  
+  Serial.println(counter);
+  
   // see if there's incoming serial data:
   if (Serial.available() > 0) {
     
@@ -60,6 +91,12 @@ void loop() {
     msg = Serial.readString();
     
     Serial1.print(msg_int+msg);
+    
+    if (msg=="reset"){
+//      reset_func();
+//      soft_restart();
+      setup();
+    }
     
 //    // opening left valve for pulse_width msecs
 //    if (msg=="reward_left"){
@@ -126,6 +163,12 @@ void loop() {
   long left = touchRead(left_touch_pin);
   long right = touchRead(right_touch_pin);
 
+//  Serial.print("Variable_L:");
+//  Serial.print(left);
+//  Serial.print(",");
+//  Serial.print("Variable_R:");
+//  Serial.println(right);
+
   // moving average calculation for left lick
   if (left < upper_limit){
     totalL = totalL - readingsL[readIndexL];
@@ -168,7 +211,7 @@ if (counter>21){    // To avoid change in moving average for first 10 cycles
       counter_L = counter_L + 1;
       }
       
-    if (averageL-prev_L < -slope){
+    if (averageL-prev_L < -(.5*slope)){
       counter_L = 0;
       }
       
@@ -176,36 +219,56 @@ if (counter>21){    // To avoid change in moving average for first 10 cycles
       counter_R = counter_R + 1;
       }
       
-    if (averageR-prev_R < -slope){
+    if (averageR-prev_R < -(.5*slope)){
       counter_R = 0;
       }    
  }
   
   prev_L = averageL;
   prev_R = averageR;
+
+//  Serial.print("Variable_L:");
+//  Serial.print(averageL);
+//  Serial.print(",");
+//  Serial.print("Variable_R:");
+//  Serial.println(averageR);
+
+//  Serial.print("Counter_L:");
+//  Serial.print(counter_L);
+//  Serial.print(",");
+//  Serial.print("Counter_R:");
+//  Serial.println(counter_R);
+
     
     if (i==0 and (counter_L > threshold)){
         i = 1;   
         lick=2;
-        Serial.print(lick);      // send 2 when left lick starts (-3 in python = -1)
+        Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)
     }
     if (i==1 and (counter_L < threshold)){
         i=0;
         lick=1;
-        Serial.print(lick);   // send 1 when left lick ends (-3 in python = -2)
+        Serial.println(lick);   // send 1 when left lick ends (-3 in python = -2)
     }
         
     if (j==0 and (counter_R > threshold)){
         j = 1;
         lick=4;
-        Serial.print(lick);     // send 4 when right lick starts (-3 in python = 1)
+        Serial.println(lick);     // send 4 when right lick starts (-3 in python = 1)
     }
     if (j==1 and (counter_R < threshold)){
         j=0;
         lick=5;
-        Serial.print(lick);   // send 5 when right lick ends (-3 in python = 2)  
+        Serial.println(lick);   // send 5 when right lick ends (-3 in python = 2)  
     } 
+
     
   counter = counter+1;
  }
+ 
+
+ void soft_restart() {
+  SCB_AIRCR = 0x05FA0004;  //value provided by P. Stoffregen, Beerware License Thank you!
+  while(1);
+}
  

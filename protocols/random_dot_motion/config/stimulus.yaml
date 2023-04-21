@@ -56,10 +56,10 @@ STIMULUS:
                         stimulus_size  : (1920, 1080)
                         background : (0,0,0)
                         dots:
-                            radius    : 150
+                            radius    : 17
                             color     : (255, 255, 255)
                             fill_prct : 15
-                            velocity  : 125
+                            velocity  : 420
                             lifetime  : 30
             audio:
                 need_update: False
