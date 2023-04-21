@@ -13,7 +13,6 @@ from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
-from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
 
 class Terminal(Application):
@@ -273,13 +272,13 @@ class Terminal(Application):
 
     def calibrate_reward(self):
         pilot = super().calibrate_reward()
-        print(f" Initiate reward caliberation for {pilot}")
+        print(f" Initiate reward calibration for {pilot}")
         if pilot:
             # Send message to rig to caliberate reward
             self.node.send(
                 to=pilot,
                 key="EVENT",
-                value={"key": "REWARD", "value": "caliberate_reward"},
+                value={"key": "REWARD", "value": "calibrate_reward"},
             )
 
     def closeEvent(self, event):

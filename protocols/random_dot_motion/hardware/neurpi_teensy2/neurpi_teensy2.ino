@@ -138,9 +138,9 @@ Base_Licks get_licks(Base_Licks base_licks){
   float curr_left = lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   float curr_right = lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   
-//  Serial.print(curr_left); // - threshold_multiplier_left*base_licks.left);
+//  Serial.print(curr_left - threshold_multiplier_left*base_licks.left);
 //  Serial.print(',');
-//  Serial.println(curr_right); // - threshold_multiplier_right*base_licks.right);
+//  Serial.println(curr_right - threshold_multiplier_right*base_licks.right);
   
   if (i==0 and (curr_left > threshold_multiplier_left*base_licks.left)){  
     i = 1;   lick=2;

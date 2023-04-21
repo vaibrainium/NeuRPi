@@ -118,6 +118,7 @@ class Application(mainclass):
 
 
 if __name__ == "__main__":
+
     from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
     app = QtWidgets.QApplication(sys.argv)

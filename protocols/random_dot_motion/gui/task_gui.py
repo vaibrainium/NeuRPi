@@ -125,7 +125,7 @@ class TaskGUI(rigclass):
 
     def update_session_clock(self):
         self.session_display_clock = (
-            time.time() - self.session_start_time - self.session_pause_time
+            time.time() - self.session_clock["start"] - self.session_clock["pause"]
         )
         self.rig.session_timer.display(int(self.session_display_clock))
 
@@ -187,16 +187,16 @@ class TaskGUI(rigclass):
         # TODO: implement function to show on summery window
         """Show summary window with summarized data"""
         summary_data = (
-            self.session_clock["start"]
+            time.ctime(self.session_clock["start"])
             + "\n\n"
-            + self.session_clock["start"]
+            + time.ctime(self.session_clock["end"])
             + "\n\n"
-            + value["trial_counters"]["valid"]
+            + str(value["trial_counters"]["valid"])
             + " ("
             + ", ".join(str(i) for i in value["plots"]["total_trial_distribution"])
             + ")"
             + "\n\n"
-            + value["plots"]["running_accuracy"][1][-1]
+            + str(value["plots"]["running_accuracy"][1][-1])
             + " ("
             + ", ".join(str(i) for i in value["plots"]["psychometric_function"])
             + ")"
@@ -205,13 +205,13 @@ class TaskGUI(rigclass):
             + ", ".join(str(i) for i in value["plots"]["reaction_time_distribution"])
             + ")"
             + "\n\n"
-            + value["trial_counters"]["incorrect"]
+            + str(value["trial_counters"]["incorrect"])
             + "/"
-            + value["trial_counters"]["valid"]
+            + str(value["trial_counters"]["valid"])
             + ";   "
-            + value["trial_counters"]["noresponse"]
+            + str(value["trial_counters"]["noresponse"])
             + "/"
-            + value["trial_counters"]["valid"]
+            + str(value["trial_counters"]["valid"])
             + "\n\n"
             + str(int(float(self.rig.total_reward.text())))
             + " ul @ "
@@ -358,4 +358,7 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = TaskGUI()
     window.show()
+
+    window.show_summary_window("value")
+
     sys.exit(app.exec_())
