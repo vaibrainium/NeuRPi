@@ -1,3 +1,5 @@
+import time
+
 import serial
 
 from NeuRPi.hardware.hardware import Hardware
@@ -33,10 +35,25 @@ class Arduino(Hardware):
                 port=self.port, baudrate=self.baudrate, timeout=self.timeout
             )
             self.is_connected = True
+            self.reset()
         except:
             raise Exception(
                 f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')"
             )
+
+    def reset(self):
+        # Resetting Teensy
+        self.connection.write((str(0) + "reset").encode("utf-8"))
+        # time.sleep(1)
+        # self.connection.flushInput()
+        # # Close the serial port before resetting the Teensy
+        # self.connection.close()
+        # # Reopen the serial port after the Teensy has reset
+        # self.connection.open()
+
+        self.connection.setDTR(False)
+        time.sleep(1)
+        self.connection.setDTR(True)
 
     def read(self):
         """
@@ -46,7 +63,8 @@ class Arduino(Hardware):
             message (str): Incoming message after byte decoded
         """
         if self.is_connected:
-            message = self.connection.read(self.connection.inWaiting()).decode()
+            # message = self.connection.readline(self.connection.inWaiting()).decode().strip()
+            message = self.connection.readline().decode().strip()
         else:
             raise Warning(
                 f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"

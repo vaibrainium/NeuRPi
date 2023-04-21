@@ -1,3 +1,5 @@
+import time
+
 import omegaconf
 
 from NeuRPi.hardware.gpio import GPIO
@@ -15,6 +17,8 @@ class HardwareManager(BaseHWManager):
         self.init_hardware()
         self._reward_calibration = self.config.Arduino.Primary.reward.caliberation
         self.lick_threshold = self.config.Arduino.Primary.lick.threshold
+        self._lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
+        self._lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
         self.lick_slope = self.config.Arduino.Primary.lick.slope
         pass
 
@@ -39,6 +43,28 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold")
+
+    @property
+    def lick_threshold_left(self):
+        return self._lick_threshold_left
+
+    @lick_threshold_left.setter
+    def lick_threshold_left(self, value: int):
+        self._lick_threshold_left = value
+        self.config.Arduino.Primary.lick.threshold_left = value
+        prefs.set("HARDWARE", self.config)
+        self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
+
+    @property
+    def lick_threshold_right(self):
+        return self._lick_threshold_right
+
+    @lick_threshold_right.setter
+    def lick_threshold_right(self, value: int):
+        self._lick_threshold_right = value
+        self.config.Arduino.Primary.lick.threshold_right = value
+        prefs.set("HARDWARE", self.config)
+        self.hardware["Primary"].write(str(value) + "update_lick_threshold_right")
 
     @property
     def lick_slope(self):
@@ -116,10 +142,15 @@ class HardwareManager(BaseHWManager):
         lick = None
         message = self.hardware["Primary"].read()
         if message:
-            lick = int(message) - 3
+            lick = int(float(message)) - 3
         return lick
 
 
 if __name__ == "__main__":
     a = HardwareManager()
+    print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
+    while True:
+        lick = a.read_licks()
+        if lick:
+            print(lick)
     print(2)

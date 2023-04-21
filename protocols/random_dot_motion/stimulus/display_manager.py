@@ -51,6 +51,21 @@ class DisplayManager(Display):
         pars["stimulus_size"] = eval(
             self.courier_map.initiate_stimulus.visual.properties.generate.stimulus_size
         )
+        pars[
+            "dot_radius"
+        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.radius
+        pars["dot_color"] = eval(
+            self.courier_map.initiate_stimulus.visual.properties.generate.dots.color
+        )
+        pars[
+            "dot_fill"
+        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.fill_prct
+        pars[
+            "dot_vel"
+        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.velocity
+        pars[
+            "dot_lifetime"
+        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.lifetime
         self.RDK.new_stimulus(pars)
 
     def next_frame_stimulus(self):
@@ -153,17 +168,16 @@ class DisplayManager(Display):
 
 #     import hydra
 
-#     from protocols.RDK.stimulus.random_dot_kinematogram import \
-#         RandomDotKinematogram
+#     from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
 
-#     path = "../../../protocols/RDK/config"
+#     path = "../../../protocols/random_dot_motion/config"
 #     filename = "stimulus"
 #     hydra.initialize(version_base=None, config_path=path)
 #     config = hydra.compose(filename, overrides=[])
 
 #     courier = queue.Queue()
 #     a = DisplayManager(
-#         stimulus_manager=RandomDotKinematogram,
+#         stimulus_manager=RandomDotMotion,
 #         stimulus_configuration=config.STIMULUS,
 #         stimulus_courier=courier,
 #     )

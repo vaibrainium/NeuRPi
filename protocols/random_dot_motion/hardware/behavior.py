@@ -44,6 +44,7 @@ class Behavior:
         while not self.quit_monitoring.is_set():
             lick = self.hardware_manager.read_licks()
             if lick:
+                print(lick)
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
                     if lick == -1 or lick == 1:

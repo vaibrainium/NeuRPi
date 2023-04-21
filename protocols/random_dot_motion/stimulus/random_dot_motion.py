@@ -33,6 +33,13 @@ class RandomDotMotion(object):
             self.rdk_generator.seed(pars["seed"])
         self.coherence = pars["coherence"]
         self.stimulus_size = pars["stimulus_size"]
+
+        self.radius = pars["dot_radius"]
+        self.color = pars["dot_color"]
+        self.fill = pars["dot_fill"]
+        self.vel = pars["dot_vel"]
+        self.lifetime = pars["dot_lifetime"]
+
         self.nDots = round(
             (self.fill / 100)
             * self.stimulus_size[0]

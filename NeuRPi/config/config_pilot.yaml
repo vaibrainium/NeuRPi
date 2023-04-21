@@ -22,14 +22,16 @@ HARDWARE:
     Primary:
       tag: '[Lick, Reward]'
       connection:
-        port: /dev/ttyACM0
-        baudrate: 9600
+        port: /dev/arduino
+        baudrate: 115200
         timeout: false
       reward:
         caliberation: 35
       lick:
-        threshold: 10
-        slope: 30
+        threshold: 1.5
+        threshold_left: 1.35
+        threshold_right: 1.35
+        slope: 0
   GPIO:
     Stim_Onset:
       pin: None
