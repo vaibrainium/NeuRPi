@@ -82,7 +82,7 @@ class Subject(BaseSubject):
             "bias_replace": 1,
             # Plotting traces
             "current_coh_level": self.rolling_perf["current_coh_level"],
-            "running_accuracy": [],
+            "running_accuracy": [[0, 0.5]],
             "psych_right": np.zeros(len(full_coherences)).tolist(),
             "psych_left": np.zeros(len(full_coherences)).tolist(),
             "psych": np.array(np.zeros(len(full_coherences)) + np.NaN).tolist(),
