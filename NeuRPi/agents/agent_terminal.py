@@ -240,11 +240,6 @@ class Terminal(Application):
             if self.pilots[task_params["experiment_rig"]]["state"] == "IDLE":
                 # Collect information to pass
                 task_params = self.prepare_experiment_parameters(task_params)
-                # directory = "protocols/" + task_params["task_module"] + "/config"
-                # task_params["stim_config"] = get_configuration(
-                #     directory=directory, filename="stimulus"
-                # )
-                # task_params["stim_config"] = task_params["stim_config"].STIMULUS
 
                 # Send message to rig to start
                 self.node.send(
@@ -258,6 +253,16 @@ class Terminal(Application):
                     id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
                 )
 
+                # Initiating subject for data logging
+                # TODO: Initiating subject for data logging on server
+
+                # Waiting for rig to initiate program
+                while (
+                    not self.pilots[task_params["experiment_rig"]]["state"] == "RUNNING"
+                ):
+                    pass
+                self.rigs_gui[task_params["experiment_rig"]].start_experiment()
+
             else:
                 msg = QtWidgets.QMessageBox()
                 msg.setIcon(QtWidgets.QMessageBox.Critical)
@@ -266,8 +271,8 @@ class Terminal(Application):
                 msg.exec_()
                 return None
 
-    def caliberate_reward(self):
-        pilot = super().caliberate_reward()
+    def calibrate_reward(self):
+        pilot = super().calibrate_reward()
         print(f" Initiate reward caliberation for {pilot}")
         if pilot:
             # Send message to rig to caliberate reward

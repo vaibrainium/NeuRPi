@@ -3,8 +3,6 @@ import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-from protocols.random_dot_motion.gui.task_gui import TaskGUI
-
 Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
 
 
@@ -13,15 +11,12 @@ class Application(mainclass):
         super().__init__()
         self.main_gui = Ui_Main()
         self.main_gui.setupUi(self)
+        self.show()
         # Rigs
         self.rigs_gui = {}
 
-        self.show()
-
         self.main_gui.start_experiment.clicked.connect(lambda: self.start_experiment())
-        self.main_gui.caliberate_reward.clicked.connect(
-            lambda: self.caliberate_reward()
-        )
+        self.main_gui.calibrate_reward.clicked.connect(lambda: self.calibrate_reward())
 
     def code_to_str(self, var: str):
         display_var = var.replace("_", " ")
@@ -43,7 +38,7 @@ class Application(mainclass):
                 tab_index = index
         return tab_index
 
-    def add_new_rig(self, id: str = "rig_", task_gui=TaskGUI):
+    def add_new_rig(self, id: str = "rig_", task_gui=None):
         try:
             display_name = self.code_to_str(id)
             self.rigs_gui[id] = task_gui(id)
@@ -108,7 +103,7 @@ class Application(mainclass):
 
         return task_params
 
-    def caliberate_reward(self):
+    def calibrate_reward(self):
         experiment_rig = self.main_gui.experiment_rig.currentText()
         if experiment_rig in ["None"]:  # , "Rig Test"]:
             return
@@ -123,8 +118,10 @@ class Application(mainclass):
 
 
 if __name__ == "__main__":
+    from protocols.random_dot_motion.gui.task_gui import TaskGUI
+
     app = QtWidgets.QApplication(sys.argv)
     window = Application()
     window.show()
-    window.add_new_rig(id="rig_test")
+    window.add_new_rig(id="rig_test", task_gui=TaskGUI)
     sys.exit(app.exec_())

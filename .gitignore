@@ -3,11 +3,15 @@
 .gitattributes
 build
 __pycache__
-data
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
 */__pycache__/*
-logs
-env
-venv
 .dockerignore
+
+# Package   
+.env
+data
+logs
+venv
+*/config/config_pilot.yaml
+*/config/config_terminal.yaml
