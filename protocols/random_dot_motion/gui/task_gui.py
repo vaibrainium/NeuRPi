@@ -1,12 +1,14 @@
 import sys
 import time
 
+import cv2
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/gui/summary.ui")
+camera_index = 1
 
 
 class TaskGUI(rigclass):
@@ -27,7 +29,8 @@ class TaskGUI(rigclass):
         self.summary = Ui_summary()
         self.summary.setupUi(self.summary_window)
         self.summary_window.raise_()
-
+        # Camera
+        self.video_device = cv2.VideoCapture(camera_index)
         # Rig parameter variables
         self.session_clock = {}
         self.pause_time = None
@@ -36,6 +39,7 @@ class TaskGUI(rigclass):
         self.session_pause_time = 0
         self.session_timer = QtCore.QTimer()
         self.trial_timer = QtCore.QTimer()
+        self.camera_timer = QtCore.QTimer()
         self.trial_clock = None
         self.stopped = False
         self.state = "IDLE"
@@ -118,6 +122,11 @@ class TaskGUI(rigclass):
         }
         self.session_timer.timeout.connect(lambda: self.update_session_clock())
         self.session_timer.start(1000)
+        # starting camera
+        if not self.video_device.isOpened():
+            print("Error: Could not open camera.")
+        self.camera_timer.timeout.connect(self.update_video_image)
+        self.camera_timer.start(30)
 
     def start_session_clock(self):
         self.session_timer.timeout.connect(lambda: self.update_session_clock())
@@ -131,6 +140,26 @@ class TaskGUI(rigclass):
 
     def stop_session_clock(self):
         self.session_timer.stop()
+
+    def update_video_image(self):
+        try:
+            # Read a frame from the camera
+            ret, frame = self.video_device.read()
+            if ret:
+                # Convert the frame to RGB format
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                # Convert the frame to a QImage
+                image = QtGui.QImage(
+                    frame.data,
+                    frame.shape[1],
+                    frame.shape[0],
+                    QtGui.QImage.Format_RGB888,
+                )
+
+                # Display the image on the label
+                self.rig.video_stream.setPixmap(QtGui.QPixmap.fromImage(image))
+        except:
+            pass
 
     # def start_trial_clock(self, trial_start_time=time.time()):
     #     self.session_timer.timeout.connect(lambda: self.update_trial_clock(trial_start_time))
@@ -358,7 +387,53 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = TaskGUI()
     window.show()
-
-    window.show_summary_window("value")
-
+    window.start_experiment()
     sys.exit(app.exec_())
+
+
+# import sys
+
+# import cv2
+# from PyQt5.QtCore import QTimer
+# from PyQt5.QtGui import QImage, QPixmap
+# from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
+
+
+# class MainWindow(QMainWindow):
+#     def __init__(self):
+#         super().__init__()
+
+#         # Create a label to display the image
+#         self.image_label = QLabel(self)
+#         self.image_label.setGeometry(0, 0, 640, 480)
+
+#         # Create a timer to update the image display
+#         self.timer = QTimer(self)
+#         self.timer.timeout.connect(self.update_image)
+#         self.timer.start(50)  # Update the image every 50 ms
+
+#         # Open the camera
+#         self.cap = cv2.VideoCapture(1)
+
+#     def update_image(self):
+#         # Read a frame from the camera
+#         ret, frame = self.cap.read()
+
+#         if ret:
+#             # Convert the frame to RGB format
+#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+#             # Convert the frame to a QImage
+#             image = QImage(
+#                 frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888
+#             )
+
+#             # Display the image on the label
+#             self.image_label.setPixmap(QPixmap.fromImage(image))
+
+
+# if __name__ == "__main__":
+#     app = QApplication(sys.argv)
+#     window = MainWindow()
+#     window.show()
+#     sys.exit(app.exec_())
