@@ -13,7 +13,8 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -219,7 +220,7 @@ class SessionManager:
                     if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
 
-    def update_EOT(self, response, response_time, outcome):
+    def update_EOT(self, choice, response_time, outcome):
         """
         End of trial updates: Updating end of trial parameters such as psychometric function, chronometric function, total trials, rolling_perf
         bias, rolling_bias
@@ -232,7 +233,7 @@ class SessionManager:
         # updating rolling bias
         self.subject_pars["rolling_bias"][
             self.subject_pars["rolling_bias_index"]
-        ] = response
+        ] = choice
         self.subject_pars["rolling_bias_index"] = (
             self.subject_pars["rolling_bias_index"] + 1
         ) % self.subject_pars["rolling_bias_window"]
@@ -252,10 +253,10 @@ class SessionManager:
         ) % self.subject.rolling_perf["window"]
 
         # Updating plot parameters
-        if response == -1:
+        if choice == -1:
             # computing left choices coherence-wise
             self.config.SUBJECT.psych_left[coh_index] += 1
-        elif response == 1:
+        elif choice == 1:
             # computing right choices coherence-wise
             self.config.SUBJECT.psych_right[coh_index] += 1
         tot_trials_in_coh = (

@@ -280,7 +280,7 @@ def main():
 
         msg = {
             "subjectID": "PSUIM4",
-            "task_module": "dynamic_coherence_rt",
+            "task_module": "rt_dynamic_training",
             "task_phase": "4",
         }
         quitting.wait()
@@ -291,5 +291,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

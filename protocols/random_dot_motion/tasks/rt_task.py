@@ -88,7 +88,7 @@ class RTTask(TrialConstruct):
         self.trigger = None
         self.stimulus_pars = None
         self.target = None
-        self.response = None
+        self.choice = None
         self.correct = None
         self.valid = None
         self.correction_trial = 0
@@ -115,7 +115,7 @@ class RTTask(TrialConstruct):
 
         # resetting variables at the start of trial
         self.stimulus_pars = np.NaN
-        self.response = np.NaN
+        self.choice = np.NaN
         self.response_time = np.NaN
 
         # Determine stage parameters
@@ -182,19 +182,20 @@ class RTTask(TrialConstruct):
         threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
         self.stage_block.wait()
+        self.choice = int(self.response)
 
         self.response_time = (
             self.response_time + self.config.TASK.timings.stimulus.min_viewing
         )
         print(
-            f"Responded with {self.response} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
+            f"Responded with {self.choice} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
         )
 
         self.stage_block.wait()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "response_stage",
-            "response": self.response,
+            "choice": self.choice,
             "response_time": self.response_time,
         }
         return data
@@ -209,7 +210,7 @@ class RTTask(TrialConstruct):
         # Evaluate trial outcome and determine stage parameters
         stimulus_arguments = {}
 
-        if np.isnan(self.response):
+        if np.isnan(self.choice):
             if not self.correction_trial:
                 self.config.SUBJECT.counters["noresponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
@@ -252,7 +253,7 @@ class RTTask(TrialConstruct):
                 self.response_block.set()
 
         # If incorrect trial
-        elif self.stimulus_pars["target"] != self.response:
+        elif self.stimulus_pars["target"] != self.choice:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["incorrect"] += 1
             stimulus_arguments["outcome"] = "incorrect"
@@ -264,7 +265,7 @@ class RTTask(TrialConstruct):
             )
 
         # If correct trial
-        elif self.stimulus_pars["target"] == self.response:
+        elif self.stimulus_pars["target"] == self.choice:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["correct"] += 1
             stimulus_arguments["outcome"] = "correct"
@@ -314,9 +315,9 @@ class RTTask(TrialConstruct):
         threading.Timer(duration, self.stage_block.set).start()
 
         # if not correction trial -> perform end of trial analysis
-        if not self.correction_trial and not np.isnan(self.response):
+        if not self.correction_trial and not np.isnan(self.choice):
             self.managers["session"].update_EOT(
-                self.response, self.response_time, self.correct
+                self.choice, self.response_time, self.correct
             )
 
         # log EOT
@@ -329,7 +330,7 @@ class RTTask(TrialConstruct):
                 self.config.SUBJECT.response_time_distribution
             ),
         }
-        if self.correct < 2:
+        if self.correct:
             self.correction_trial = 0
         else:
             self.correction_trial = 1
@@ -359,7 +360,7 @@ class RTTask(TrialConstruct):
                     self.config.SUBJECT.counters["valid"],
                     self.correction_trial,
                     self.stimulus_pars["coherence"],
-                    self.response,
+                    self.choice,
                     self.valid,
                     self.correct,
                     self.config.SUBJECT.reward,
