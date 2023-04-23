@@ -163,9 +163,9 @@ class Pilot:
             self.state == "RUNNING"
             self.update_state()
 
-        elif value["key"] == "REWARD":
+        elif value["key"] == "HARDWARE":
             if self.task:
-                self.task.manage_reward(value["value"])
+                self.task.manage_hardware(value["value"])
 
     def start_display(self, task_params):
         """

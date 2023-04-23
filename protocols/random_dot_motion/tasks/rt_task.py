@@ -91,7 +91,7 @@ class RTTask(TrialConstruct):
         self.response = None
         self.correct = None
         self.valid = None
-        self.correction_trial = None
+        self.correction_trial = 0
         # Durations
         self.fixation_duration = None
         self.min_viewing_duration = None
@@ -355,8 +355,8 @@ class RTTask(TrialConstruct):
             writer = csv.writer(file)
             writer.writerow(
                 [
-                    self.config.SUBJECT.counters["valid"],
                     self.config.SUBJECT.counters["attempt"],
+                    self.config.SUBJECT.counters["valid"],
                     self.correction_trial,
                     self.stimulus_pars["coherence"],
                     self.response,

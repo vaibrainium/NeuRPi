@@ -33,6 +33,9 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.reward.caliberation = value
         prefs.set("HARDWARE", self.config)
 
+    def reset_lick_sensor(self):
+        self.hardware["Primary"].write(str(0) + "reset")
+
     @property
     def lick_threshold(self):
         return self._lick_threshold
