@@ -13,8 +13,7 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -117,7 +116,7 @@ class SessionManager:
         for _, coh in enumerate(
             coherences[: self.subject_pars["current_coherence_level"]]
         ):
-            if coh > self.config.TASK.bias.active_correction.threshold:
+            if np.abs(coh) > self.config.TASK.bias.active_correction.threshold:
                 self.trial_schedule.remove(
                     coh * self.subject_pars["rolling_bias"]
                 )  # Removing high coherence from biased direction (-1:left; 1:right)
@@ -142,7 +141,7 @@ class SessionManager:
         if correction_trial:
             coherence = self.stimulus_pars["coherence"]
             if (
-                self.stimulus_pars["coherence"]
+                np.abs(self.stimulus_pars["coherence"])
                 > self.config.TASK.bias.passive_correction.threshold
             ):
                 # Drawing incorrect trial from normal distribution with high prob to direction
@@ -151,6 +150,12 @@ class SessionManager:
                 )
                 # Repeat probability to opposite side of bias
                 coherence = int(-temp_bias) * np.abs(self.stimulus_pars["coherence"])
+                print(
+                    f"ROLLING BIAS IS {self.subject_pars['rolling_bias']} with bias {np.mean(self.subject_pars['rolling_bias'])}"
+                )
+                print(
+                    f"CORRECTING BIAS ({np.random.normal(np.mean(self.subject_pars['rolling_bias']), 0.5)}) with {coherence}"
+                )
 
         else:
             # Generate new trial schedule if at the end of schedule
