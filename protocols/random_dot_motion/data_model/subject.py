@@ -119,7 +119,8 @@ class Subject(BaseSubject):
         """
         try:
             reader = open(self.rolling_perf_pkl, "wb")
-            pickle.dump(self.rolling_Perf, reader)
+            pickle.dump(self.rolling_perf, reader)
             reader.close()
-        except:
+        except Exception as e:
+            print(e)
             pass

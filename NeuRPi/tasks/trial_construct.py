@@ -77,8 +77,7 @@ class TrialConstruct:
             self.response_block.wait()
             monitoring_behavior = True
             responded = False
-            self.response = None
-
+            self.response = np.nan
             start = time.time()
             wait_time = self.trigger["duration"]  # Converting wait time from ms to sec
 
@@ -143,7 +142,6 @@ class TrialConstruct:
                         if not response_queue.empty():
                             responded = response_queue.get()
                             if responded in self.trigger["targets"]:
-                                self.response = responded
                                 response_queue.queue.clear()
                                 self.response_block.clear()
                                 self.must_respond_block.set()
@@ -155,7 +153,6 @@ class TrialConstruct:
                 raise Warning(
                     f"Problem with response monitoring for {self.trigger['type']}"
                 )
-
 
 
 if __name__ == "__main__":

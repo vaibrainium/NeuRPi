@@ -182,8 +182,7 @@ class RTTask(TrialConstruct):
         threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
         self.stage_block.wait()
-        self.choice = int(self.response)
-
+        self.choice = self.response
         self.response_time = (
             self.response_time + self.config.TASK.timings.stimulus.min_viewing
         )
@@ -297,6 +296,7 @@ class RTTask(TrialConstruct):
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
+            "reward_volume": self.config.SUBJECT.reward,
         }
         return data
 

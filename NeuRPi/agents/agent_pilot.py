@@ -148,6 +148,7 @@ class Pilot:
         """
         Terminal is sending an update.
         """
+        # TODO: write code to forward updated task parameters to rig
         pass
 
     def l_event(self, value):
@@ -206,7 +207,6 @@ class Pilot:
         Waits for the task to clear `stage_block` between stages
 
         """
-
         self.logger.debug("initialing task")
         # Importing protocol function/class object using importlib
         task_module = importlib.import_module(
@@ -247,9 +247,8 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        self.task.end_session()
+                        # self.task.end_session()
                         self.stimulus_display.kill()
-
                         break
 
                     # if paused, wait for running event set?

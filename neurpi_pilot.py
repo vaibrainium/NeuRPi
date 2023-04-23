@@ -10,7 +10,6 @@ if __name__ == "__main__":
     try:
         pi = Pilot()
         quitting.wait()
-
     except KeyboardInterrupt:
         quitting.set()
         active = multiprocessing.active_children()
