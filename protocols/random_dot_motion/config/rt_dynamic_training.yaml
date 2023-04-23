@@ -40,7 +40,7 @@ TASK:
         passive_correction:
             tag             : 'Repeat threshold and window'
             type            : 'int'
-            threshold       : 100
+            threshold       : 35
             rolling_window  : 10
 
     timings:

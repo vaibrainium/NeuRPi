@@ -134,10 +134,8 @@ class SessionManager:
         If correction trial (passive/soft bias correction), choose next trial as probability to unbiased direction based on rolling bias.
         Arguments:
             correction_trial (bool): Is this a correction trial?
-            rolling_bias (int): Rolling bias on last #x trials.
-                                Below 0.5 means left bias, above 0.5 mean right bias
         Return:
-            stimulus_pars (dict): returns dict of coherence_index, coherence, target_direction and
+            stimulus_pars (dict): returns dict of coherence_index, coherence, and target_direction
         """
 
         # If correction trial and above passive correction threshold
@@ -148,8 +146,7 @@ class SessionManager:
                 > self.config.TASK.bias.passive_correction.threshold
             ):
                 # Drawing incorrect trial from normal distribution with high prob to direction
-                self.rolling_Bias = 0.5
-                temp_bias = np.sign(np.random.normal(np.mean(self.rolling_Bias), 0.5))
+                temp_bias = np.sign(np.random.normal(np.mean(self.subject_pars['rolling_bias']), 0.5))
                 # Repeat probability to opposite side of bias
                 coherence = int(-temp_bias) * np.abs(self.stimulus_pars["coherence"])
 
@@ -221,7 +218,7 @@ class SessionManager:
                     # 600 trials after 4th level
                     if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
-
+    
     def update_EOT(self, response, response_time, outcome):
         """
         End of trial updates: Updating end of trial parameters such as psychometric function, chronometric function, total trials, rolling_perf
@@ -231,6 +228,10 @@ class SessionManager:
             self.stimulus_pars["index"],
             self.stimulus_pars["coherence"],
         )
+
+        # updating rolling bias
+        self.subject_pars['rolling_bias'][self.subject_pars['rolling_bias_index']] = response
+        self.subject_pars['rolling_bias_index'] = (self.subject_pars['rolling_bias_index'] + 1) % self.subject_pars['rolling_bias_window']
 
         # uptading rolling performance
         ## update history block
