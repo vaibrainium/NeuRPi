@@ -166,7 +166,6 @@ class SessionManager:
         self.stimulus_pars["target"] = int(
             np.sign(self.stimulus_pars["coherence"] + np.random.choice([-1e-2, 1e-2]))
         )
-
         return self.stimulus_pars
 
     def graduation_check(self):
