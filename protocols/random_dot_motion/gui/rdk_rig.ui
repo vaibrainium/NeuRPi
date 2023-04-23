@@ -944,7 +944,7 @@ color: rgb(255, 255, 255);</string>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="left_lick_threshold">
+       <widget class="QDoubleSpinBox" name="lick_threshold_left">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -988,7 +988,7 @@ color: rgb(255, 255, 255);</string>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="right_lick_threshold">
+       <widget class="QDoubleSpinBox" name="lick_threshold_right">
         <property name="alignment">
          <set>Qt::AlignCenter</set>
         </property>

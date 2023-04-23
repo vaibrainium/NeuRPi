@@ -8,7 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/gui/summary.ui")
-camera_index = 1
+camera_index = 0
 
 
 class TaskGUI(rigclass):
@@ -61,11 +61,11 @@ class TaskGUI(rigclass):
         self.rig.toggle_right_reward.clicked.connect(
             lambda: self.reward("toggle_right_reward")
         )
-        self.rig.left_lick_threshold.valueChanged.connect(
-            lambda: self.lick_sensor("update_left_lick_threshold")
+        self.rig.lick_threshold_left.valueChanged.connect(
+            lambda: self.lick_sensor("update_lick_threshold_left")
         )
-        self.rig.right_lick_threshold.valueChanged.connect(
-            lambda: self.lick_sensor("update_right_lick_threshold")
+        self.rig.lick_threshold_right.valueChanged.connect(
+            lambda: self.lick_sensor("update_lick_threshold_right")
         )
         self.rig.reset_lick_sensor.clicked.connect(
             lambda: self.lick_sensor("reset_lick_sensor")
@@ -187,7 +187,7 @@ class TaskGUI(rigclass):
                 "to": self.rig_id,
                 "key": "EVENT",
                 "value": {
-                    "key": "REWARD",
+                    "key": "HARDWARE",
                     "value": {"key": message, "value": self.rig.reward_volume.value()},
                 },
             }
@@ -200,17 +200,17 @@ class TaskGUI(rigclass):
             message (str): _description_
         """
         temp_val = None
-        if message == "update_left_lick_threshold":
-            temp_val = self.rig.left_lick_theshold.value()
-        elif message == "update_right_lick_threshold":
-            temp_val = self.rig.right_lick_threshold.value()
+        if message == "update_lick_threshold_left":
+            temp_val = round(self.rig.lick_threshold_left.value(), 3)
+        elif message == "update_lick_threshold_right":
+            temp_val = round(self.rig.lick_threshold_right.value(), 3)
 
         self.forward_signal(
             {
                 "to": self.rig_id,
                 "key": "EVENT",
                 "value": {
-                    "key": "LICK",
+                    "key": "HARDWARE",
                     "value": {"key": message, "value": temp_val},
                 },
             }
@@ -422,50 +422,3 @@ if __name__ == "__main__":
     window.start_experiment()
     sys.exit(app.exec_())
 
-
-# import sys
-
-# import cv2
-# from PyQt5.QtCore import QTimer
-# from PyQt5.QtGui import QImage, QPixmap
-# from PyQt5.QtWidgets import QApplication, QLabel, QMainWindow
-
-
-# class MainWindow(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-
-#         # Create a label to display the image
-#         self.image_label = QLabel(self)
-#         self.image_label.setGeometry(0, 0, 640, 480)
-
-#         # Create a timer to update the image display
-#         self.timer = QTimer(self)
-#         self.timer.timeout.connect(self.update_image)
-#         self.timer.start(50)  # Update the image every 50 ms
-
-#         # Open the camera
-#         self.cap = cv2.VideoCapture(1)
-
-#     def update_image(self):
-#         # Read a frame from the camera
-#         ret, frame = self.cap.read()
-
-#         if ret:
-#             # Convert the frame to RGB format
-#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-#             # Convert the frame to a QImage
-#             image = QImage(
-#                 frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888
-#             )
-
-#             # Display the image on the label
-#             self.image_label.setPixmap(QPixmap.fromImage(image))
-
-
-# if __name__ == "__main__":
-#     app = QApplication(sys.argv)
-#     window = MainWindow()
-#     window.show()
-#     sys.exit(app.exec_())
