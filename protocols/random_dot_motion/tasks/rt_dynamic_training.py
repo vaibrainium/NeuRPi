@@ -13,8 +13,7 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -146,7 +145,9 @@ class SessionManager:
                 > self.config.TASK.bias.passive_correction.threshold
             ):
                 # Drawing incorrect trial from normal distribution with high prob to direction
-                temp_bias = np.sign(np.random.normal(np.mean(self.subject_pars['rolling_bias']), 0.5))
+                temp_bias = np.sign(
+                    np.random.normal(np.mean(self.subject_pars["rolling_bias"]), 0.5)
+                )
                 # Repeat probability to opposite side of bias
                 coherence = int(-temp_bias) * np.abs(self.stimulus_pars["coherence"])
 
@@ -218,7 +219,7 @@ class SessionManager:
                     # 600 trials after 4th level
                     if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
-    
+
     def update_EOT(self, response, response_time, outcome):
         """
         End of trial updates: Updating end of trial parameters such as psychometric function, chronometric function, total trials, rolling_perf
@@ -230,8 +231,12 @@ class SessionManager:
         )
 
         # updating rolling bias
-        self.subject_pars['rolling_bias'][self.subject_pars['rolling_bias_index']] = response
-        self.subject_pars['rolling_bias_index'] = (self.subject_pars['rolling_bias_index'] + 1) % self.subject_pars['rolling_bias_window']
+        self.subject_pars["rolling_bias"][
+            self.subject_pars["rolling_bias_index"]
+        ] = response
+        self.subject_pars["rolling_bias_index"] = (
+            self.subject_pars["rolling_bias_index"] + 1
+        ) % self.subject_pars["rolling_bias_window"]
 
         # uptading rolling performance
         ## update history block
@@ -312,6 +317,7 @@ class SessionManager:
         ] = self.config.SUBJECT.counters.attempt
         self.subject.rolling_perf["total_reward"] = self.config.SUBJECT.total_reward
         self.subject.save()
+        print("SAVING EOS FILES")
 
 
 class Task:
@@ -389,25 +395,40 @@ class Task:
         self.managers["behavior"].start()
 
     # Reward management from GUI
-    def manage_reward(self, message: dict):
+    def manage_hardware(self, message: dict):
+        """Handle hardware request from terminal based on received message"""
+        # Reward related changes
         if message["key"] == "reward_left":
             self.managers["hardware"].reward_left(message["value"])
             self.config.SUBJECT.total_reward += message["value"]
             print(f'REWARDED LEFT with {message["value"]}')
-        if message["key"] == "reward_right":
+        elif message["key"] == "reward_right":
             self.managers["hardware"].reward_right(message["value"])
             self.config.SUBJECT.total_reward += message["value"]
             print(f'REWARDED RIGHT with {message["value"]}')
-        if message["key"] == "toggle_left_reward":
+        elif message["key"] == "toggle_left_reward":
             self.managers["hardware"].toggle_reward("Left")
-        if message["key"] == "toggle_right_reward":
+        elif message["key"] == "toggle_right_reward":
             self.managers["hardware"].toggle_reward("Right")
-        if message["key"] == "update_reward":
+        elif message["key"] == "update_reward":
             self.config.SUBJECT.reward = message["value"]
             print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward}")
-        if message["key"] == "caliberate_reward":
+        elif message["key"] == "caliberate_reward":
             if self.config.SUBJECT.name in ["XXX", "xxx"]:
                 self.managers["hardware"].start_caliberation_sequence()
+
+        # Lick related changes
+        elif message["key"] == "reset_lick_sensor":
+            self.managers["hardware"].reset_lick_sensor()
+            print(f"RESETTING LICK SENSOR")
+        elif message["key"] == "update_lick_threshold_left":
+            self.managers["hardware"].lick_threshold_left = message["value"]
+            print(f'UPDATED LEFT LICK THRESHOLD with {message["value"]}')
+            print(self.managers["hardware"].lick_threshold_left)
+        elif message["key"] == "update_lick_threshold_right":
+            self.managers["hardware"].lick_threshold_right = message["value"]
+            print(f'UPDATED RIGHT LICK THRESHOLD with {message["value"]}')
+            print(self.managers["hardware"].lick_threshold_right)
 
     def pause_session(self):
         pass
