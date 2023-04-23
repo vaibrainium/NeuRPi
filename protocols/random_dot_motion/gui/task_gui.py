@@ -17,7 +17,6 @@ class TaskGUI(rigclass):
 
     def __init__(self, rig_id=None):
         super().__init__()
-
         # Load GUIs
         # main rig window
         self.rig_id = rig_id
@@ -77,6 +76,14 @@ class TaskGUI(rigclass):
 
     ###################################################################################################
     # GUI Functions
+    def set_rig_configuration(self, prefs={}):
+        try:
+            hardware = prefs.get('HARDWARE')
+            self.rig.lick_threshold_left.setValue(hardware.Arduino.Primary.lick.threshold_left)
+            self.rig.lick_threshold_right.setValue(hardware.Arduino.Primary.lick.threshold_right)
+        except EOFError:
+            pass
+
     def initialize_plots(
         self,
     ):
@@ -242,7 +249,7 @@ class TaskGUI(rigclass):
         """End task after current trial finishes"""
         self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
         self.state = "STOPPED"
-        # self.rig.close_experiment.show()
+        self.stop_session_clock()
 
     def show_summary_window(self, value):
         # TODO: implement function to show on summery window
@@ -314,7 +321,7 @@ class TaskGUI(rigclass):
     # Incoming communication
     def update_gui(self, value):
         if "state" in value.keys():
-            if value["state"] == "RUNNING" and True:
+            if value["state"] == "RUNNING":
                 pass
 
         if "trial_counters" in value.keys():
@@ -325,6 +332,9 @@ class TaskGUI(rigclass):
 
         if "plots" in value.keys():
             self.update_plots(value["plots"])
+
+        if "reward_volume" in value.keys():
+            self.rig.reward_volume.setValue(value["reward_volume"])
 
         if "total_reward" in value.keys():
             self.rig.total_reward.setText(str(value["total_reward"]))

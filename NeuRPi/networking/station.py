@@ -758,15 +758,19 @@ class Terminal_Station(Station):
 
     def l_change(self, msg: Message):
         """
-        Change a parameter on the Pi
+        Received change of parameter from the Pi
 
         Warning:
             Not Implemented
         Args:
             msg:
         """
-        # TODO: Should also handle param changes to GUI objects like ntrials, etc.
-        pass
+        # Send through to terminal
+        self.send(to="_T", msg=msg)
+
+        # # Send to plot widget, which should be listening to "P_{pilot_name}"
+        # # self.send('P_{}'.format(msg.value['pilot']), 'DATA', msg.value, flags=msg.flags)
+        # self.send(to="P_{}".format(msg.value["pilot"]), msg=msg)
 
     def l_stopall(self, msg: Message):
         """

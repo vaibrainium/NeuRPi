@@ -49,6 +49,7 @@ class Terminal(Application):
         self.listens = {
             "STATE": self.l_state,  # A Pi has changed state
             "PING": self.l_ping,  # Someone wants to know if we're alive
+            "CHANGE": self.l_change, # A change was notified from pilot
             "DATA": self.l_data,
             "CONTINUOUS": self.l_data,  # handle continuous data same way as other data
             "STREAM": self.l_data,
@@ -205,6 +206,19 @@ class Terminal(Application):
         except:
             print("Cound not update GUI")
 
+    def l_change(self, value):
+        """
+        Incoming change from pilot.
+
+        `value` should have `subject` and `pilot` field added to dictionary for identifiation.
+        
+        """
+        pass
+        # try:
+        #     self.message_to_taskgui(value)
+        # except:
+        #     print("Cound not update GUI")
+
     ########################
     # GUI and other functions
 
@@ -244,13 +258,15 @@ class Terminal(Application):
                 self.node.send(
                     to=task_params["experiment_rig"], key="START", value=task_params
                 )
-                # Start Task GUI
+                # Start Task GUI and updating parameters from rig preferences
                 gui_module = importlib.import_module(
                     "protocols." + task_params["task_module"] + ".gui.task_gui"
                 )
                 self.add_new_rig(
                     id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
                 )
+                self.rigs_gui[task_params["experiment_rig"]].set_rig_configuration(self.pilots[task_params["experiment_rig"]]["prefs"])
+
 
                 # Initiating subject for data logging
                 # TODO: Initiating subject for data logging on server
