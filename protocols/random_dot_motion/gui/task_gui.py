@@ -61,6 +61,15 @@ class TaskGUI(rigclass):
         self.rig.toggle_right_reward.clicked.connect(
             lambda: self.reward("toggle_right_reward")
         )
+        self.rig.left_lick_threshold.valueChanged.connect(
+            lambda: self.lick_sensor("update_left_lick_threshold")
+        )
+        self.rig.right_lick_threshold.valueChanged.connect(
+            lambda: self.lick_sensor("update_right_lick_threshold")
+        )
+        self.rig.reset_lick_sensor.clicked.connect(
+            lambda: self.lick_sensor("reset_lick_sensor")
+        )
         self.rig.pause_experiment.clicked.connect(lambda: self.pause_experiment())
         self.rig.stop_experiment.clicked.connect(lambda: self.stop_experiment())
         self.rig.close_experiment.clicked.connect(lambda: self.close_experiment())
@@ -180,6 +189,29 @@ class TaskGUI(rigclass):
                 "value": {
                     "key": "REWARD",
                     "value": {"key": message, "value": self.rig.reward_volume.value()},
+                },
+            }
+        )
+
+    def lick_sensor(self, message: str):
+        """Function to modify lick sensor properties
+
+        Args:
+            message (str): _description_
+        """
+        temp_val = None
+        if message == "update_left_lick_threshold":
+            temp_val = self.rig.left_lick_theshold.value()
+        elif message == "update_right_lick_threshold":
+            temp_val = self.rig.right_lick_threshold.value()
+
+        self.forward_signal(
+            {
+                "to": self.rig_id,
+                "key": "EVENT",
+                "value": {
+                    "key": "LICK",
+                    "value": {"key": message, "value": temp_val},
                 },
             }
         )
