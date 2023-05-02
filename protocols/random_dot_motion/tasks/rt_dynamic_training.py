@@ -13,7 +13,8 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -32,7 +33,7 @@ class SessionManager:
         self.full_coherences, self.coh_to_xrange = self.get_full_coherences()
         self.subject.prepare_run(self.full_coherences)
         self.subject_pars = self.subject.initiate_parameters(self.full_coherences)
-        self.next_coherence_level = self.subject_pars["current_coh_level"]
+        self.next_coherence_level = self.subject_pars["current_coherence_level"]
         self.stimulus_pars = {}
 
     def get_full_coherences(self):
@@ -55,11 +56,20 @@ class SessionManager:
 
     def set_coherence_level(self):
         # Setting reward per pulse
-        if 1.5 < self.subject_pars["reward"] < 3:
+        if 1.5 < self.subject_pars["reward_volume"] < 3:
             if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
-                self.subject_pars["reward"] += 0.25
+                self.subject_pars["reward_volume"] += 0.25
             if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
-                self.subject_pars["reward"] -= 0.25
+                self.subject_pars["reward_volume"] -= 0.25
+            self.subject_pars["reward_volume"] = np.maximum(
+                self.subject_pars["reward_volume"], 1.5
+            )
+            self.subject_pars["reward_volume"] = np.minimum(
+                self.subject_pars["reward_volume"], 3
+            )
+            self.subject_pars["reward_volume"] = float(
+                self.subject_pars["reward_volume"]
+            )
         # Setting coherence level
         self.subject_pars["current_coherence_level"] = self.next_coherence_level
         # Setting mean reaction time for passive trials
@@ -314,9 +324,9 @@ class SessionManager:
         """
         # Rolling performance
         self.subject.rolling_perf[
-            "current_coh_level"
-        ] = self.config.SUBJECT.current_coh_level
-        self.subject.rolling_perf["reward"] = self.config.SUBJECT.reward
+            "current_coherence_level"
+        ] = self.config.SUBJECT.current_coherence_level
+        self.subject.rolling_perf["reward_volume"] = self.config.SUBJECT.reward_volume
         self.subject.rolling_perf[
             "total_attempts"
         ] = self.config.SUBJECT.counters.attempt
@@ -416,8 +426,8 @@ class Task:
         elif message["key"] == "toggle_right_reward":
             self.managers["hardware"].toggle_reward("Right")
         elif message["key"] == "update_reward":
-            self.config.SUBJECT.reward = message["value"]
-            print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward}")
+            self.config.SUBJECT.reward_volume = message["value"]
+            print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward_volume}")
         elif message["key"] == "caliberate_reward":
             if self.config.SUBJECT.name in ["XXX", "xxx"]:
                 self.managers["hardware"].start_caliberation_sequence()

@@ -43,8 +43,8 @@ class Subject(BaseSubject):
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
                 "total_attempts": 0,
                 "total_reward": 0,
-                "reward": 3,
-                "current_coh_level": 2,
+                "reward_volume": 3,
+                "current_coherence_level": 2,
                 "index": list(np.zeros(len(full_coherences)).astype(int)),
                 "accuracy": list(np.zeros(len(full_coherences))),
             }
@@ -81,7 +81,7 @@ class Subject(BaseSubject):
             "active_bias_correction": False,
             "bias_replace": 1,
             # Plotting traces
-            "current_coh_level": self.rolling_perf["current_coh_level"],
+            "current_coherence_level": self.rolling_perf["current_coherence_level"],
             "running_accuracy": [[0, 0.5]],
             "psych_right": np.zeros(len(full_coherences)).tolist(),
             "psych_left": np.zeros(len(full_coherences)).tolist(),
@@ -98,17 +98,27 @@ class Subject(BaseSubject):
             ).tolist(),  # initiating at no bias
         }
 
-        subject_parameters["reward"] = self.rolling_perf["reward"]
-        if 1.5 < subject_parameters["reward"] < 3:
+        subject_parameters["reward_volume"] = self.rolling_perf["reward_volume"]
+        if 1.5 < subject_parameters["reward_volume"] < 3:
             # if received less than 700ul of reward on last session, increase reward by 0.1 ul.
             if self.rolling_perf["total_reward"] < 700:
-                subject_parameters["reward"] += 0.25
+                subject_parameters["reward_volume"] += 0.1
                 # if received less than 500ul of reward on last session, increase reward by another 0.1 ul.
                 if self.rolling_perf["total_reward"] < 500:
-                    subject_parameters["reward"] += 0.25
+                    subject_parameters["reward_volume"] += 0.1
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
             if self.rolling_perf["total_attempts"] > 200:
-                subject_parameters["reward"] -= 0.25
+                subject_parameters["reward_volume"] -= 0.1
+            # limiting reward volume between 1.5 and 3
+            subject_parameters["reward_volume"] = np.maximum(
+                subject_parameters["reward_volume"], 1.5
+            )
+            subject_parameters["reward_volume"] = np.minimum(
+                subject_parameters["reward_volume"], 3
+            )
+            subject_parameters["reward_volume"] = float(
+                subject_parameters["reward_volume"]
+            )
 
         self.config.SUBJECT = subject_parameters
         return subject_parameters

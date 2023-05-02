@@ -235,13 +235,15 @@ class RTTask(TrialConstruct):
                 )
                 if self.stimulus_pars["target"] == -1:  # Left Correct
                     self.managers["hardware"].reward_left(
-                        self.config.SUBJECT.reward * 0.7
+                        self.config.SUBJECT.reward_volume * 0.7
                     )
                 elif self.stimulus_pars["target"] == 1:  # Right Correct
                     self.managers["hardware"].reward_right(
-                        self.config.SUBJECT.reward * 0.7
+                        self.config.SUBJECT.reward_volume * 0.7
                     )
-                self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
+                self.config.SUBJECT.total_reward += (
+                    self.config.SUBJECT.reward_volume * 0.7
+                )
                 self.intertrial_duration = self.config.TASK.timings.intertrial.value
                 # Entering must respond phase
                 self.trigger = {
@@ -271,11 +273,13 @@ class RTTask(TrialConstruct):
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
             if self.stimulus_pars["target"] == -1:  # Left Correct
-                self.managers["hardware"].reward_left(self.config.SUBJECT.reward)
+                self.managers["hardware"].reward_left(self.config.SUBJECT.reward_volume)
             elif self.stimulus_pars["target"] == 1:  # Right Correct
-                self.managers["hardware"].reward_right(self.config.SUBJECT.reward)
+                self.managers["hardware"].reward_right(
+                    self.config.SUBJECT.reward_volume
+                )
 
-            self.config.SUBJECT.total_reward += self.config.SUBJECT.reward
+            self.config.SUBJECT.total_reward += self.config.SUBJECT.reward_volume
             self.valid, self.correct = [1, 1]
             self.intertrial_duration = self.config.TASK.timings.intertrial.value
             # Entering must respond phase
@@ -296,7 +300,9 @@ class RTTask(TrialConstruct):
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
-            "reward_volume": self.config.SUBJECT.reward,
+            "reward_volume": self.config.SUBJECT.reward_volume,
+            "reinfocement_duration": self.reinforcement_duration,
+            "intertrial_duration": self.intertrial_duration,
         }
         return data
 
@@ -330,7 +336,8 @@ class RTTask(TrialConstruct):
                 self.config.SUBJECT.response_time_distribution
             ),
         }
-        if self.correct:
+        # If incorrect or no response, set correction to be true
+        if self.correct and not np.isnan(self.choice):
             self.correction_trial = 0
         else:
             self.correction_trial = 1
@@ -363,7 +370,7 @@ class RTTask(TrialConstruct):
                     self.choice,
                     self.valid,
                     self.correct,
-                    self.config.SUBJECT.reward,
+                    round(self.config.SUBJECT.reward_volume,2),
                     self.fixation_duration,
                     self.min_viewing_duration,
                     self.response_time,
