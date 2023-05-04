@@ -428,9 +428,9 @@ class Task:
         elif message["key"] == "update_reward":
             self.config.SUBJECT.reward_volume = message["value"]
             print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward_volume}")
-        elif message["key"] == "caliberate_reward":
+        elif message["key"] == "calibrate_reward":
             if self.config.SUBJECT.name in ["XXX", "xxx"]:
-                self.managers["hardware"].start_caliberation_sequence()
+                self.managers["hardware"].start_calibration_sequence()
 
         # Lick related changes
         elif message["key"] == "reset_lick_sensor":

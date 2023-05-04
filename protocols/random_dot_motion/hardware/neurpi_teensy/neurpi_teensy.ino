@@ -96,7 +96,7 @@ void loop() {
 //        }         
 //    }
 //    // give `msg_int` pulses of 50ms to both spouts
-//    if (msg=="caliberate_reward"){
+//    if (msg=="calibrate_reward"){
 //      digitalWrite(left_valve_pin, LOW);
 //      digitalWrite(right_valve_pin, LOW);
 //      for (counter=0; counter<=msg_int; counter++){ 

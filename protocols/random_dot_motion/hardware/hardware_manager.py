@@ -15,7 +15,13 @@ class HardwareManager(BaseHWManager):
     def __init__(self):
         super(HardwareManager, self).__init__()
         self.init_hardware()
-        self._reward_calibration = self.config.Arduino.Primary.reward.caliberation
+        self._reward_calibration = self.config.Arduino.Primary.reward.calibration
+        self._reward_calibration_left = (
+            self.config.Arduino.Primary.reward.calibration_left
+        )
+        self._reward_calibration_right = (
+            self.config.Arduino.Primary.reward.calibration_right
+        )
         self.lick_threshold = self.config.Arduino.Primary.lick.threshold
         self._lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
         self._lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
@@ -24,13 +30,35 @@ class HardwareManager(BaseHWManager):
 
     ## Properties of our hardwares
     @property
-    def reward_caliberation(self):
+    def reward_calibration(self):
         return self._reward_calibration
 
-    @reward_caliberation.setter
-    def reward_caliberation(self, value: int):
+    @reward_calibration.setter
+    def reward_calibration(self, value: int):
         self._reward_calibration = value
-        self.config.Arduino.Primary.reward.caliberation = value
+        self.config.Arduino.Primary.reward.calibration = value
+        prefs.set("HARDWARE", self.config)
+
+    ## Properties of our hardwares
+    @property
+    def reward_calibration_left(self):
+        return self._reward_calibration_left
+
+    @reward_calibration_left.setter
+    def reward_calibration_left(self, value: int):
+        self._reward_calibration_left = value
+        self.config.Arduino.Primary.reward.calibration_left = value
+        prefs.set("HARDWARE", self.config)
+
+    ## Properties of our hardwares
+    @property
+    def reward_calibration_right(self):
+        return self._reward_calibration_right
+
+    @reward_calibration_right.setter
+    def reward_calibration_right(self, value: int):
+        self._reward_calibration_right = value
+        self.config.Arduino.Primary.reward.calibration_right = value
         prefs.set("HARDWARE", self.config)
 
     def reset_lick_sensor(self):
@@ -81,21 +109,29 @@ class HardwareManager(BaseHWManager):
         self.hardware["Primary"].write(str(value) + "update_lick_slope")
 
     ## Other useful functions
-    def vol_to_dur(self, volume):
+    def vol_to_dur(self, volume, spout=None):
         """
         Converting volume of reward to ms
 
         Arguments:
             volume (float): Amount of reward to be given in ml
+            spout (str): 'Left' or 'Right'. If none, then default is assumed
+        Returns:
+            duration (int): Duration of reward in ms
         """
-        duration = self._reward_calibration * volume
+        if spout == "Left":
+            duration = self._reward_calibration_left * volume
+        elif spout == "Right":
+            duration = self._reward_calibration_right * volume
+        else:
+            duration = self._reward_calibration * volume
         return int(duration)
 
     def reward_left(self, volume):
         """
         Dispense 'volume' of Reward to Left spout
         """
-        duration = self.vol_to_dur(volume)
+        duration = self.vol_to_dur(volume, "Left")
         self.hardware["Primary"].write(str(duration) + "reward_left")
         print("Rewarded Left")
         # raise Warning("Reward delivery needs to be implemented")
@@ -104,7 +140,7 @@ class HardwareManager(BaseHWManager):
         """
         Dispense 'volume' of Reward to Right spout
         """
-        duration = self.vol_to_dur(volume)
+        duration = self.vol_to_dur(volume, "Right")
         self.hardware["Primary"].write(str(duration) + "reward_right")
         print("Rewarded Right")
 
@@ -126,11 +162,17 @@ class HardwareManager(BaseHWManager):
                 " \n 'Right': For right spout \n 'Center': For center spout"
             )
 
-    def start_caliberation_sequence(self, no_pulses=50):
+    def start_calibration_sequence(self, num_pulses=50):
         """
         Instruct arduino to give `no_pulses` on each spout
         """
-        self.hardware["Primary"].write(str(no_pulses) + "caliberate_reward")
+        # self.hardware["Primary"].write(str(no_pulses) + "calibrate_reward")
+        for pulse in range(num_pulses):
+            print(pulse)
+            a.reward_left(1)
+            time.sleep(0.3)
+            a.reward_right(1)
+            time.sleep(0.3)
 
     def read_licks(self):
         """
@@ -151,9 +193,20 @@ class HardwareManager(BaseHWManager):
 
 if __name__ == "__main__":
     a = HardwareManager()
-    print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
-    while True:
-        lick = a.read_licks()
-        if lick:
-            print(lick)
-    print(2)
+
+    # # Lick Calibration
+    # print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
+    # while True:
+    #     lick = a.read_licks()
+    #     if lick:
+    #         print(lick)
+    # print(2)
+
+    # Reward Calibration
+    import time
+
+    num_pulses = 100
+    print(f"Calibration for Left is {a.reward_calibration_left}")
+    print(f"Calibration for Right is {a.reward_calibration_right}")
+    time.sleep(5)
+    a.start_calibration_sequence(num_pulses)
