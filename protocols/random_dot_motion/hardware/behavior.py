@@ -15,7 +15,6 @@ class Behavior:
     def __init__(
         self, hardware_manager=None, response_block=None, response_log=None, timers=None
     ):
-
         self.hardware_manager = hardware_manager
         self.response_block = response_block
         self.response_log = response_log
@@ -44,7 +43,6 @@ class Behavior:
         while not self.quit_monitoring.is_set():
             lick = self.hardware_manager.read_licks()
             if lick:
-                print(lick)
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
                     if lick == -1 or lick == 1:

@@ -1,10 +1,39 @@
 import time
 
+import adafruit_mpr121
+import board
+import busio
 import omegaconf
+from adafruit_debouncer import Button
 
 from NeuRPi.hardware.gpio import GPIO
 from NeuRPi.hardware.hardware_manager import HardwareManager as BaseHWManager
 from NeuRPi.prefs import prefs
+
+# Import MPR121 module.
+
+# Create I2C bus.
+i2c = busio.I2C(board.SCL, board.SDA, frequency=30000)
+
+# Create MPR121 (touch pad) object.
+mpr121 = adafruit_mpr121.MPR121(i2c)
+
+# Change sensitivity
+mpr121[0].threshold = 13
+mpr121[1].threshold = 13
+# mpr121.setThreshholds(12, 6)
+# print(mpr121.baseline_data(1))
+# print(mpr121.filtered_data(1))
+
+
+# Create a pads abd fill it with Buttons, using pad as the input for creating Button objects, which are debounced
+pads = []
+for t_pad in mpr121:
+    pads.append(
+        Button(
+            t_pad, short_duration_ms=20, long_duration_ms=200, value_when_pressed=True
+        )
+    )
 
 
 class HardwareManager(BaseHWManager):
@@ -85,6 +114,7 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_left = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
+        mpr121[0].threshold = int(value * 10)
 
     @property
     def lick_threshold_right(self):
@@ -96,6 +126,7 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_right = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold_right")
+        mpr121[1].threshold = int(value * 10)
 
     @property
     def lick_slope(self):
@@ -185,22 +216,36 @@ class HardwareManager(BaseHWManager):
                          2: Right Spout Free}
         """
         lick = None
-        message = self.hardware["Primary"].read()
-        if message:
-            lick = int(float(message)) - 3
+        for i in range(2):
+            pads[i].update()
+
+        if pads[0].pressed:
+            print("RESPONDED TO LEFT")
+            lick = -1
+        elif pads[0].released:
+            lick = -2
+        elif pads[1].pressed:
+            print("RESPONDED TO RIGHT")
+            lick = 1
+        elif pads[1].released:
+            lick = 2
+
+        # message = self.hardware["Primary"].read()
+        # if message:
+        #     lick = int(float(message)) - 3
         return lick
 
 
 if __name__ == "__main__":
     a = HardwareManager()
 
-    # # Lick Calibration
-    # print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
-    # while True:
-    #     lick = a.read_licks()
-    #     if lick:
-    #         print(lick)
-    # print(2)
+    # Lick Calibration
+    print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
+    while True:
+        lick = a.read_licks()
+        # if lick:
+        #     print(lick)
+    print(2)
 
     # Reward Calibration
     import time
