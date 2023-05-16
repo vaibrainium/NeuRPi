@@ -958,19 +958,19 @@ color: rgb(255, 255, 255);</string>
          <string/>
         </property>
         <property name="decimals">
-         <number>3</number>
+         <number>0</number>
         </property>
         <property name="minimum">
-         <double>1.050000000000000</double>
+         <double>1</double>
         </property>
         <property name="maximum">
-         <double>3.000000000000000</double>
+         <double>255</double>
         </property>
         <property name="singleStep">
-         <double>0.005000000000000</double>
+         <double>1</double>
         </property>
         <property name="value">
-         <double>1.350000000000000</double>
+         <double>12</double>
         </property>
        </widget>
       </item>
@@ -996,19 +996,19 @@ color: rgb(255, 255, 255);</string>
          <string/>
         </property>
         <property name="decimals">
-         <number>3</number>
+         <number>0</number>
         </property>
         <property name="minimum">
-         <double>1.050000000000000</double>
+         <double>1</double>
         </property>
         <property name="maximum">
-         <double>3.000000000000000</double>
+         <double>255</double>
         </property>
         <property name="singleStep">
-         <double>0.005000000000000</double>
+         <double>1</double>
         </property>
         <property name="value">
-         <double>1.350000000000000</double>
+         <double>12</double>
         </property>
        </widget>
       </item>

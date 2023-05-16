@@ -104,7 +104,7 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : [] # ['protocols/random_dot_motion/stimulus/audio/correctTone.wav']
+                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
                         incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
                         invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
                     generate:
@@ -137,7 +137,7 @@ STIMULUS:
                 properties: 
                     load: 
                     generate:
-                        background : (100,100,100)
+                        background : (160,160,160)
             audio:
                 need_update: False
                 is_static: True

@@ -175,7 +175,7 @@ class TaskGUI(rigclass):
                 # Display the image on the label
                 self.rig.video_stream.setPixmap(QtGui.QPixmap.fromImage(image))
         except:
-            pass
+            self.session_timer.stop()
 
     # def start_trial_clock(self, trial_start_time=time.time()):
     #     self.session_timer.timeout.connect(lambda: self.update_trial_clock(trial_start_time))
@@ -261,25 +261,25 @@ class TaskGUI(rigclass):
             + "\n\n"
             + str(value["trial_counters"]["valid"])
             + " ("
-            + ", ".join(str(i) for i in value["plots"]["total_trial_distribution"])
+            + ", ".join(str(int(i)) for i in value["plots"]["total_trial_distribution"] if i!=0.0)
             + ")"
             + "\n\n"
-            + str(value["plots"]["running_accuracy"][1][-1])
-            + " ("
-            + ", ".join(str(i) for i in value["plots"]["psychometric_function"])
+            + str(round(value["plots"]["running_accuracy"][-1][1]*100))
+            + "% ("
+            + ", ".join(str(round(i,2)) for i in value["plots"]["psychometric_function"] if np.isnan(i) == False)
             + ")"
             + "\n\n"
             + " ("
-            + ", ".join(str(i) for i in value["plots"]["reaction_time_distribution"])
+            + ", ".join(str(round(i,2)) for i in value["plots"]["reaction_time_distribution"] if np.isnan(i) == False)
             + ")"
             + "\n\n"
             + str(value["trial_counters"]["incorrect"])
             + "/"
-            + str(value["trial_counters"]["valid"])
+            + str(value["trial_counters"]["attempt"])
             + ";   "
             + str(value["trial_counters"]["noresponse"])
             + "/"
-            + str(value["trial_counters"]["valid"])
+            + str(value["trial_counters"]["attempt"])
             + "\n\n"
             + str(int(float(self.rig.total_reward.text())))
             + " ul @ "
@@ -309,6 +309,11 @@ class TaskGUI(rigclass):
 
     def close_experiment(self):
         """Task has ended but waiting to trial to end to close session"""
+        try:
+            self.video_device.release()
+            self.video_device.destroyAllWindows()
+        except:
+            pass
         self.forward_signal({"to": "main_gui", "key": "KILL", "value": None})
 
     ###################################################################################################
@@ -337,7 +342,10 @@ class TaskGUI(rigclass):
             self.rig.reward_volume.setValue(value["reward_volume"])
 
         if "total_reward" in value.keys():
-            self.rig.total_reward.setText(str(value["total_reward"]))
+            try:
+                self.rig.total_reward.setText(str(round(value["total_reward"],2)))
+            except:
+                self.rig.total_reward.setText(str(value["total_reward"]))
 
         # Close session and Task GUI
         if "TRIAL_END" in value.keys() and self.state == "STOPPED":
