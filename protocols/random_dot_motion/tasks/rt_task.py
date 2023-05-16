@@ -235,14 +235,14 @@ class RTTask(TrialConstruct):
                 )
                 if self.stimulus_pars["target"] == -1:  # Left Correct
                     self.managers["hardware"].reward_left(
-                        self.config.SUBJECT.reward_volume * 0.7
+                        self.config.SUBJECT.reward_volume * 0.5
                     )
                 elif self.stimulus_pars["target"] == 1:  # Right Correct
                     self.managers["hardware"].reward_right(
-                        self.config.SUBJECT.reward_volume * 0.7
+                        self.config.SUBJECT.reward_volume * 0.5
                     )
                 self.config.SUBJECT.total_reward += (
-                    self.config.SUBJECT.reward_volume * 0.7
+                    self.config.SUBJECT.reward_volume * 0.5
                 )
                 self.intertrial_duration = self.config.TASK.timings.intertrial.value
                 # Entering must respond phase
@@ -262,7 +262,7 @@ class RTTask(TrialConstruct):
             self.valid, self.correct = [1, 0]
             iti_decay = self.config.TASK.feedback.incorrect.intertrial
             self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
-                iti_decay.base * np.exp(iti_decay.power * self.response_time)
+                iti_decay.base * np.exp(float(iti_decay.power) * self.response_time)
             )
 
         # If correct trial
@@ -291,9 +291,7 @@ class RTTask(TrialConstruct):
             self.response_block.set()
 
         # Starting reinforcement
-        self.stimulus_queue.put(
-            ("initiate_reinforcement", stimulus_arguments["outcome"])
-        )
+        self.stimulus_queue.put(("initiate_reinforcement", stimulus_arguments))
         threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         self.stage_block.wait()
@@ -370,7 +368,7 @@ class RTTask(TrialConstruct):
                     self.choice,
                     self.valid,
                     self.correct,
-                    round(self.config.SUBJECT.reward_volume,2),
+                    round(self.config.SUBJECT.reward_volume, 2),
                     self.fixation_duration,
                     self.min_viewing_duration,
                     self.response_time,

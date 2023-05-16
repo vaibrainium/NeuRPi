@@ -14,7 +14,6 @@ from NeuRPi.utils.get_config import get_configuration
 
 
 class Pilot:
-
     logger = None
 
     # Events for thread handling
@@ -27,7 +26,6 @@ class Pilot:
     networking = None
 
     def __init__(self):
-
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
             self.child = True
@@ -119,7 +117,7 @@ class Pilot:
             value["stimulus_queue"] = mp.Manager().Queue()
             self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
             self.stimulus_display.start()
-            time.sleep(3)
+            time.sleep(2)
 
             # Start the task on separate thread and update terminal
             threading.Thread(target=self.run_task, args=(value,)).start()

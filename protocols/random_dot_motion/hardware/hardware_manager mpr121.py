@@ -1,11 +1,63 @@
 import datetime
 import time
 
+import adafruit_mpr121
+import board
+import busio
 import omegaconf
+from adafruit_debouncer import Button
 
 from NeuRPi.hardware.gpio import GPIO
 from NeuRPi.hardware.hardware_manager import HardwareManager as BaseHWManager
 from NeuRPi.prefs import prefs
+
+# # Import MPR121 module.
+
+# # Create I2C bus.
+# i2c = busio.I2C(board.SCL, board.SDA, frequency=30000)
+
+# # Create MPR121 (touch pad) object.
+# mpr121 = adafruit_mpr121.MPR121(i2c)
+
+# left_pin = 10
+# right_pin = 11
+
+# # Change sensitivity
+# mpr121[left_pin].threshold = 1
+# mpr121[right_pin].threshold = 1
+# # mpr121.setThreshholds(12, 6)
+# # print(mpr121.baseline_data(1))
+# # print(mpr121.filtered_data(1))
+
+
+# # Create a pads abd fill it with Buttons, using pad as the input for creating Button objects, which are debounced
+# pads = []
+# for t_pad in [left_pin, right_pin]:  # mpr121:
+#     pads.append(
+#         # Button(t_pad, value_when_pressed=True)
+#         Button(
+#             mpr121[t_pad],
+#             short_duration_ms=20,
+#             long_duration_ms=200,
+#             value_when_pressed=True,
+#         )
+#     )
+# # pads.append(
+# #     Button(
+# #         mpr121[left_pin],
+# #         short_duration_ms=20,
+# #         long_duration_ms=200,
+# #         value_when_pressed=True,
+# #     )
+# # )
+# # pads.append(
+# #     Button(
+# #         mpr121[right_pin],
+# #         short_duration_ms=20,
+# #         long_duration_ms=200,
+# #         value_when_pressed=True,
+# #     )
+# # )
 
 
 class HardwareManager(BaseHWManager):
@@ -15,8 +67,10 @@ class HardwareManager(BaseHWManager):
 
     def __init__(self):
         super(HardwareManager, self).__init__()
-
         self.init_hardware()
+        self.left_pin = 10
+        self.right_pin = 11
+        self.init_lick_i2c()
         self._reward_calibration = self.config.Arduino.Primary.reward.calibration
         self._reward_calibration_left = (
             self.config.Arduino.Primary.reward.calibration_left
@@ -29,6 +83,42 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
         self.lick_slope = self.config.Arduino.Primary.lick.slope
         pass
+
+    def init_lick_i2c(self):
+        self.mpr121 = None
+        self.pads = None
+
+        # Create I2C bus.
+        i2c = busio.I2C(board.SCL, board.SDA, frequency=30000)
+
+        # Create MPR121 (touch pad) object.
+        self.mpr121 = adafruit_mpr121.MPR121(i2c)
+        # Change sensitivity
+        self.mpr121[self.left_pin].threshold = 1
+        self.mpr121[self.right_pin].threshold = 1
+        # mpr121.setThreshholds(12, 6)
+        # print(mpr121.baseline_data(1))
+        # print(mpr121.filtered_data(1))
+        self.set_debounce_buttons()
+
+    def set_debounce_buttons(self):
+        # Create a pads abd fill it with Buttons, using pad as the input for creating Button objects, which are debounced
+        self.pads = []
+        for t_pad in [self.left_pin, self.right_pin]:  # mpr121:
+            self.pads.append(
+                Button(
+                    self.mpr121[t_pad],
+                    short_duration_ms=20,
+                    long_duration_ms=200,
+                    value_when_pressed=True,
+                )
+            )
+
+    def reset_lick_i2c(self):
+        # self.init_lick_i2c()
+        self.mpr121.reset()
+        self.set_debounce_buttons()
+        time.sleep(0.5)
 
     ## Properties of our hardwares
     @property
@@ -65,6 +155,7 @@ class HardwareManager(BaseHWManager):
 
     def reset_lick_sensor(self):
         self.hardware["Primary"].write(str(0) + "reset")
+        self.reset_lick_i2c()
 
     @property
     def lick_threshold(self):
@@ -86,8 +177,8 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold_left = value
         self.config.Arduino.Primary.lick.threshold_left = value
         prefs.set("HARDWARE", self.config)
-        # self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
-        self.hardware["Primary"].write(str(value) + "update_lick_threshold")
+        self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
+        self.mpr121[self.left_pin].threshold = int(value)
 
     @property
     def lick_threshold_right(self):
@@ -99,6 +190,7 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_right = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold_right")
+        self.mpr121[self.left_pin].threshold = int(value)
 
     @property
     def lick_slope(self):
@@ -187,46 +279,54 @@ class HardwareManager(BaseHWManager):
                          1: Right Spout Licked,
                          2: Right Spout Free}
         """
-        timestamp, lick = None, None
-        # try:
-        #     if self.pads[0].pressed:
-        #         print(f"{datetime.datetime.now().isoformat()}: RESPONDED TO LEFT")
-        #         lick = -1
-        #         # print(
-        #         #     self.mpr121.filtered_data(self.left_pin)
-        #         #     - self.mpr121.baseline_data(self.left_pin),
-        #         #     self.mpr121.filtered_data(self.right_pin)
-        #         #     - self.mpr121.baseline_data(self.right_pin),
-        #         # )
+        lick = None
+        try:
+            for i in range(2):
+                self.pads[i].update()
 
-        #     elif self.pads[0].released:
-        #         lick = -2
-        #     elif self.pads[1].pressed:
-        #         print(f"{datetime.datetime.now().isoformat()}: RESPONDED TO RIGHT")
-        #         lick = 1
+            if self.pads[0].pressed:
+                print(f"{datetime.datetime.now().isoformat()}: RESPONDED TO LEFT")
+                lick = -1
+                # print(
+                #     self.mpr121.filtered_data(self.left_pin)
+                #     - self.mpr121.baseline_data(self.left_pin),
+                #     self.mpr121.filtered_data(self.right_pin)
+                #     - self.mpr121.baseline_data(self.right_pin),
+                # )
 
-        #     elif self.pads[1].released:
-        #         lick = 2
-        # except Exception as e:
-        #     print("LICK SENSOR NOT DETECTED")
+            elif self.pads[0].released:
+                lick = -2
+            elif self.pads[1].pressed:
+                print(f"{datetime.datetime.now().isoformat()}: RESPONDED TO RIGHT")
+                lick = 1
+                # print(
+                #     self.mpr121.filtered_data(self.left_pin)
+                #     - self.mpr121.baseline_data(self.left_pin),
+                #     self.mpr121.filtered_data(self.right_pin)
+                #     - self.mpr121.baseline_data(self.right_pin),
+                # )
+                
+            elif self.pads[1].released:
+                lick = 2
+        except Exception as e:
+            print("LICK PADS NOT DETECTED")
 
-        message = self.hardware["Primary"].read()
-        if message:
-            timestamp, lick = message.split("/t")
-            lick = int(lick)
-            timestamp = float(timestamp)
-            print(timestamp, lick)
-        return timestamp, lick
+        # message = self.hardware["Primary"].read()
+        # if message:
+        #     lick = int(float(message)) - 3
+        return lick
 
 
 if __name__ == "__main__":
     a = HardwareManager()
-    a.lick_threshold_left = 20
-    a.lick_threshold_right = 20
+    a.lick_threshold_left = 1
+    a.lick_threshold_right = 2
     # Lick Calibration
     print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
     while True:
         lick = a.read_licks()
+        # if lick:
+        #     print(lick)
     print(2)
 
     # # Reward Calibration

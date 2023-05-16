@@ -100,13 +100,14 @@ class DisplayManager(Display):
             )
 
     def initiate_reinforcement(self, pars):
-        if self.courier_map.initiate_stimulus.audio.need_update:
+        if self.courier_map.initiate_reinforcement.audio.need_update:
+            self.pygame.mixer.stop()
             if (
                 pars["outcome"] == "correct"
                 and self.courier_map.initiate_reinforcement.audio.properties.load.correct
             ):
                 try:
-                    self.audio["correct"].play()
+                    self.audio["initiate_reinforcement"]["correct"][0].play()
                 except:
                     raise Warning("correct audio path not set")
             if (
@@ -114,15 +115,16 @@ class DisplayManager(Display):
                 and self.courier_map.initiate_reinforcement.audio.properties.load.incorrect
             ):
                 try:
-                    self.audio["incorrect"].play()
+                    self.audio["initiate_reinforcement"]["incorrect"][0].play()
                 except:
                     raise Warning("incorrect audio path not set")
+
             if (
                 pars["outcome"] == "invalid"
-                and self.courier_map.initiate_reinforcement.properties.load.correct.invalid
+                and self.courier_map.initiate_reinforcement.audio.properties.load.invalid
             ):
                 try:
-                    self.audio["invalid"].play()
+                    self.audio["initiate_reinforcement"]["invalid"][0].play()
                 except:
                     raise Warning("invalid audio path not set")
 
@@ -146,9 +148,7 @@ class DisplayManager(Display):
         if self.courier_map.initiate_intertrial.audio.need_update:
             self.pygame.mixer.stop()
             if self.courier_map.initiate_intertrial.audio.is_static:
-                self.audio["initiate_fixation"].play(
-                    self.courier_map.initiate_intertrial.audio.is_static - 1
-                )
+                self.audio["initiate_intertrial"][0].play()
 
     def next_frame_intertrial(self, pars):
         raise Warning("next_frame_intertrial Function Not Implemented")
@@ -163,41 +163,41 @@ class DisplayManager(Display):
         raise Warning("next_frame_response Function Not Implemented")
 
 
-# def main():
-#     import queue
+def main():
+    import queue
 
-#     import hydra
+    import hydra
 
-#     from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
+    from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
 
-#     path = "../../../protocols/random_dot_motion/config"
-#     filename = "stimulus"
-#     hydra.initialize(version_base=None, config_path=path)
-#     config = hydra.compose(filename, overrides=[])
+    path = "../../../protocols/random_dot_motion/config"
+    filename = "stimulus"
+    hydra.initialize(version_base=None, config_path=path)
+    config = hydra.compose(filename, overrides=[])
 
-#     courier = queue.Queue()
-#     a = DisplayManager(
-#         stimulus_manager=RandomDotMotion,
-#         stimulus_configuration=config.STIMULUS,
-#         stimulus_courier=courier,
-#     )
-#     while True:
-#         print("Starting Fixation")
-#         message = "('initiate_fixation', {})"
-#         courier.put(eval(message))
-#         time.sleep(2)
-#         print("Starting Stimulus")
-#         message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-#         courier.put(eval(message))
-#         time.sleep(2)
-#         print("Starting Intertrial")
-#         message = "('initiate_intertrial', {})"
-#         courier.put(eval(message))
-#         time.sleep(2)
-#         print("Loop complete")
+    courier = queue.Queue()
+    a = DisplayManager(
+        stimulus_manager=RandomDotMotion,
+        stimulus_configuration=config.STIMULUS,
+        stimulus_courier=courier,
+    )
+    while True:
+        print("Starting Fixation")
+        message = "('initiate_fixation', {})"
+        courier.put(eval(message))
+        time.sleep(2)
+        print("Starting Stimulus")
+        message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
+        courier.put(eval(message))
+        time.sleep(2)
+        print("Starting Intertrial")
+        message = "('initiate_intertrial', {'invalid'})"
+        courier.put(eval(message))
+        time.sleep(2)
+        print("Loop complete")
 
 
-# if __name__ == "__main__":
-#     import multiprocessing
+if __name__ == "__main__":
+    import multiprocessing
 
-#     multiprocessing.Process(targer=main()).start()
+    multiprocessing.Process(targer=main()).start()

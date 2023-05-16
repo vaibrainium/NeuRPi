@@ -226,8 +226,8 @@ STIMULUS:
                 properties:
                     load: 
                         correct         : ['protocols/random_dot_motion/stimulus/audio/correctTone.wav']
-                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        incorrect       : [] #['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        invalid         : [] #'protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
                     generate:
 
         initiate_must_respond: 

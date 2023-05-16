@@ -41,12 +41,13 @@ class Behavior:
         right_clock_start = time.time()
 
         while not self.quit_monitoring.is_set():
-            lick = self.hardware_manager.read_licks()
-            if lick:
+            timestamp, lick = self.hardware_manager.read_licks()
+            if lick != None:
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
                     if lick == -1 or lick == 1:
                         self.response_queue.put(lick)
+                        print(timestamp, lick)
 
                 with open(self.response_log, "a+") as file:
                     if lick == -1:

@@ -14,7 +14,6 @@ class Display:
     """
 
     def __init__(self, stimulus_configuration=None, stimulus_courier=None):
-
         super(Display, self).__init__()
         import pygame
 
@@ -118,6 +117,7 @@ class Display:
                     try:
                         temp_list.append(self.pygame.mixer.Sound(file))
                     except:
+                        print(f"Could not initialize {file} in {key2} in {key}")
                         raise Warning(f"Could not initialize {file} in {key2} in {key}")
                     finally:
                         self.audio[key][key2] = temp_list
@@ -195,11 +195,13 @@ class Display:
 
 
 if __name__ == "__main__":
+    from multiprocessing import Queue
+
     import hydra
 
-    path = "../../Protocols/RDK/config"
-    filename = "dynamic_coherences"
+    path = "../../random_dot_motion/config"
+    filename = "stimulus.yaml"
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
-
-    display_window = Display(configuration=config)
+    courier = Queue()
+    display_window = Display(stimulus_configuration=config, stimulus_courier=courier)
