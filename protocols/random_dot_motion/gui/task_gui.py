@@ -139,10 +139,10 @@ class TaskGUI(rigclass):
         self.session_timer.timeout.connect(lambda: self.update_session_clock())
         self.session_timer.start(1000)
         # starting camera
-        if not self.video_device.isOpened():
-            print("Error: Could not open camera.")
-        self.camera_timer.timeout.connect(self.update_video_image)
-        self.camera_timer.start(30)
+        # if not self.video_device.isOpened():
+        #     print("Error: Could not open camera.")
+        # self.camera_timer.timeout.connect(self.update_video_image)
+        # self.camera_timer.start(50)
 
     def start_session_clock(self):
         self.session_timer.timeout.connect(lambda: self.update_session_clock())

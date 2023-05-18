@@ -9,6 +9,8 @@ Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
 class Application(mainclass):
     def __init__(self):
         super().__init__()
+        self.thread = QtCore.QThread()
+
         self.main_gui = Ui_Main()
         self.main_gui.setupUi(self)
         self.show()
