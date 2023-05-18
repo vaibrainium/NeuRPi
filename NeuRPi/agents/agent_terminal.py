@@ -276,6 +276,11 @@ class Terminal(Application):
                     not self.pilots[task_params["experiment_rig"]]["state"] == "RUNNING"
                 ):
                     pass
+                # TODO: Start new rig on new QT thread
+                # Run experiment on qt thread
+                
+
+
                 self.rigs_gui[task_params["experiment_rig"]].start_experiment()
 
             else:
