@@ -106,14 +106,14 @@ TASK:
                 power: 0
 
     training_type:
-        value: 1
+        value: 0
         tag:
             0                  : 'Passive-Only'
             1                  : 'Active-Passive'
             2                  : 'Active-Only'
         active_passive:
             tag                : 'Parameters for Active-Passive Training (time in secs)'
-            passive_rt_mu   : 10.000
+            passive_rt_mu   : 4.5
             passive_rt_loc: 0.6
             passive_rt_scale: 1.5
         graduation_direction:

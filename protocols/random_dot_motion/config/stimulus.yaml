@@ -40,7 +40,7 @@ STIMULUS:
                 is_static: True
                 update_function: 
                 properties: 
-                    load: ['protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
+                    load: [] #'protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
                     generate:
 
         initiate_stimulus: 
