@@ -113,8 +113,9 @@ TASK:
             2                  : 'Active-Only'
         active_passive:
             tag                : 'Parameters for Active-Passive Training (time in secs)'
-            passive_rt_mu   : 60.000
-            passive_rt_sigma: 0.6
+            passive_rt_mu   : 10.000
+            passive_rt_skew : 0.6
+            passive_rt_sigma: 1.5
         graduation_direction:
             tag: 'Whether graduate is unidirectional i.e., only increasing difficulty (1) or bidirectional (0)'
             value: 0

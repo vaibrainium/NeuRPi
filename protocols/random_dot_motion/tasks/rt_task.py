@@ -166,6 +166,13 @@ class RTTask(TrialConstruct):
                 )
                 * 1.5
             )
+
+            duration = pearson3.rvs(
+                loc = self.config.TASK.training_type.active_passive.passive_rt_mu,
+                skew = self.config.TASK.training_type.active_passive.passive_rt_skew,
+                scale = self.config.TASK.training_type.active_passive.passive_rt_sigma
+                )
+
             print(f"Passive Trial Duration is {duration}")
         else:
             duration = self.config.TASK.timings.stimulus.max_viewing

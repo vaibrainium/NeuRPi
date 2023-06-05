@@ -1,0 +1,274 @@
+HARDWARE:
+    Arduino:
+        Primary:
+            connection:
+                port    : '/dev/ttyACM0' #"COM7"
+                baudrate: None
+                timeout : None
+            tag: "[Lick, Reward]"
+
+    GPIO:
+        Stim_Onset:
+            pin: None
+            tag: 'TTL'
+
+        Video_Monitor:
+            pin: None
+            tag: 'Frame Time'
+
+
+TASK:
+    stimulus:
+        _coherences:
+            tag  : 'List of all coherences used in study'
+            type : 'list'
+            value: [100, 72, 36, 18, 9, 0]
+        coherence_level:
+            tag  : 'Level of difficulty for current block'
+            type : 'int'
+            value: 1
+        repeats_per_block:
+            tag  : 'Number of repeats of each coherences per block'
+            type : 'int'
+            value: 3
+
+    bias:
+        active_correction:
+            tag             : 'Repeat threshold'
+            type            : 'int'
+            threshold       : 100
+        passive_correction:
+            tag             : 'Repeat threshold and window'
+            type            : 'int'
+            threshold       : 35
+            rolling_window  : 10
+
+    timings:
+        fixation:
+            tag             : 'Mean fixation time in secs'
+            type            : 'int'
+            value           : 1.00
+        stimulus:
+            tag             : 'Minimum and Maximum stimulus time in secs'
+            type            : 'int'
+            max_viewing     : 60.000
+            min_viewing     : 0.3
+        intertrial:
+            tag             : 'Inter-trial interval in secs'
+            type            : 'int'
+            value            : 0.500
+
+    feedback:
+        correct:
+            visual:
+                tag  : 'Visual feedback for correct trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for correct trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in secs'
+                type : 'int'
+                value: 0.500
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 0
+                power: 0
+        incorrect:
+            visual:
+                tag  : 'Visual feedback for incorrect trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for incorrect trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in secs'
+                type : 'int'
+                value: 1.500
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 25
+                power: -4
+        invalid:
+            visual:
+                tag  : 'Visual feedback for invalid trial'
+                type : 'tuple'
+            audio :
+                tag  : 'Audio feedback for invalid trial'
+                type : 'tuple'
+            time  :
+                tag  : 'Temporal delay feedback in secs'
+                type : 'int'
+                value: 0
+            intertrial:
+                tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
+                base : 0
+                power: 0
+
+    training_type:
+        value: 0
+        tag:
+            0                  : 'Passive-Only'
+            1                  : 'Active-Passive'
+            2                  : 'Active-Only'
+        active_passive:
+            tag                : 'Parameters for Active-Passive Training (time in secs)'
+            passive_rt_mu   : 4.5
+            passive_rt_skew : 0.6
+            passive_rt_sigma: 1.5
+        graduation_direction:
+            tag: 'Whether graduate is unidirectional i.e., only increasing difficulty (1) or bidirectional (0)'
+            value: 0
+
+
+# STIMULUS:
+#     display:
+#         num_screens: 1
+#         screen     : 0 #0 
+#         window_size: (1920, 1080)
+#         frame_rate : 100
+#         flags      : pygame.DOUBLEBUF | pygame.constants.SCALED | pygame.FULLSCREEN
+#         vsync      : False
+#         show_fps   : True
+
+#     courier_handle:
+#         tag:    'Instruction on how to handle few basic and other custom messages.
+#                 Format: 
+#                     tag (str):  what each message mean, 
+#                     function (obj): which function to execute, 
+#                     visual:
+#                         need_update (bool): Need to update visual?
+#                         is_static (bool): Is update static or in loop with provided frame rate?
+#                         properties (dict): Optional parameters for update
+#                     audio:
+#                         need_update (bool): Need to update audio?
+#                         is_static (bool): Is update static or in loop?  
+#                         properties (dict): Optional parameters for update
+#                 '
+
+#         initiate_fixation: 
+#             tag: 'Execution type for fixation window'
+#             function: initiate_fixation
+#             visual: 
+#                 need_update: True
+#                 is_static: True
+#                 update_function: next_frame_fixation
+#                 properties:
+#                     load: 
+#                     generate:
+#                         background : (0,0,0)
+#             audio:
+#                 need_update: True
+#                 is_static: True
+#                 update_function: 
+#                 properties: 
+#                     load: ['protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
+#                     generate:
+
+#         initiate_stimulus: 
+#             tag: 'Execution type for stimulus window'
+#             function: initiate_stimulus
+#             visual: 
+#                 need_update: True
+#                 is_static: False
+#                 update_function: next_frame_stimulus
+#                 properties:
+#                     load: 
+#                     generate:
+#                         stimulus_size  : (1920, 1080)
+#                         background : (0,0,0)
+#                         dots:
+#                             radius    : 15
+#                             color     : (255, 255, 255)
+#                             fill_prct : 15
+#                             velocity  : 125
+#                             lifetime  : 30
+#             audio:
+#                 need_update: False
+#                 is_static: False
+#                 update_function: 
+#                 properties: 
+#                     load: 
+#                     generate:
+
+#         initiate_response: 
+#             tag: 'Execution type for response window'
+#             function: initiate_response
+#             visual: 
+#                 need_update: False
+#                 is_static: False
+#                 update_function: next_frame_response
+#                 properties:
+#                     load: 
+#                     generate: 
+#                         background : (0,0,0)
+#             audio:
+#                 need_update: True
+#                 is_static: True
+#                 update_function: 
+#                 properties:
+#                     load: 
+#                     generate:
+
+#         initiate_reinforcement: 
+#             tag: 'Execution type for reinforcement window'
+#             function: initiate_reinforcement
+#             visual: 
+#                 need_update: False
+#                 is_static: False
+#                 update_function: next_frame_reinforcement
+#                 properties: 
+#                     load:
+#                     generate:
+#             audio:
+#                 need_update: True
+#                 is_static: True
+#                 update_function: 
+#                 properties:
+#                     load: 
+#                         correct         : ['protocols/random_dot_motion/stimulus/audio/correctTone.wav']
+#                         incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+#                         invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+#                     generate:
+
+#         initiate_must_respond: 
+#             tag: 'Execution type for must respond window'
+#             function: initiate_must_respond
+#             visual: 
+#                 need_update: False
+#                 is_static: False
+#                 update_function: next_frame_must_respond
+#                 properties: 
+#                     load: 
+#                     generate:
+#             audio:
+#                 need_update: False
+#                 is_static: True
+#                 update_function: 
+#                 properties:
+#                     load: 
+#                     generate:
+
+#         initiate_intertrial:
+#             tag: 'Execution type for intertrial window'
+#             function: initiate_intertrial
+#             visual: 
+#                 need_update: True
+#                 is_static: True
+#                 update_function: next_frame_intertrial
+#                 properties: 
+#                     load: 
+#                     generate:
+#                         background : (150,150,150)
+#             audio:
+#                 need_update: False
+#                 is_static: True
+#                 update_function: 
+#                 properties: 
+#                     load: 
+#                     generate:
+
+SUBJECT:
+
+EVENT_FILES:
+    events: 'event_all.txt'
