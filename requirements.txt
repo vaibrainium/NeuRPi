@@ -16,8 +16,8 @@ pandas
 pigpio
 
 # Citcuitpython libraries
-adafruit-circuitpython-mpr121
-adafruit-circuitpython-debouncer
+# adafruit-circuitpython-mpr121
+# adafruit-circuitpython-debouncer
 # adafruit-circuitpython-busdevice
 # board
 # busio

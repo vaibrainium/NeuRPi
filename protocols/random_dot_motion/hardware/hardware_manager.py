@@ -221,19 +221,19 @@ class HardwareManager(BaseHWManager):
 
 if __name__ == "__main__":
     a = HardwareManager()
-    # a.lick_threshold_left = 20
-    # a.lick_threshold_right = 20
-    # # Lick Calibration
-    # print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
-    # while True:
-    #     lick = a.read_licks()
-    # print(2)
+    a.lick_threshold_left = 11
+    a.lick_threshold_right = 11
+    # Lick Calibration
+    print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
+    while True:
+        lick = a.read_licks()
+    print(2)
 
-    # Reward Calibration
-    import time
+    # # Reward Calibration
+    # import time
 
-    num_pulses = 100
-    print(f"Calibration for Left is {a.reward_calibration_left}")
-    print(f"Calibration for Right is {a.reward_calibration_right}")
-    time.sleep(5)
-    a.start_calibration_sequence(num_pulses)
+    # num_pulses = 10
+    # print(f"Calibration for Left is {a.reward_calibration_left}")
+    # print(f"Calibration for Right is {a.reward_calibration_right}")
+    # time.sleep(5)
+    # a.start_calibration_sequence(num_pulses)
