@@ -88,7 +88,7 @@ TASK:
             intertrial:
                 tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
                 base : 25
-                power: -.5
+                power: -4 #.5
         invalid:
             visual:
                 tag  : 'Visual feedback for invalid trial'
