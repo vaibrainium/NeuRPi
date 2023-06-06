@@ -254,6 +254,11 @@
          </property>
          <item>
           <property name="text">
+           <string>Free Reward Training</string>
+          </property>
+         </item>       
+         <item>
+          <property name="text">
            <string>RT Dynamic Training</string>
           </property>
          </item>
