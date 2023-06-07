@@ -1,3 +1,4 @@
+import multiprocessing as mp
 import threading
 import time
 from queue import Queue
@@ -47,7 +48,6 @@ class Behavior:
                 if self.response_block.is_set():
                     if lick == -1 or lick == 1:
                         self.response_queue.put(lick)
-                        print(timestamp, lick)
 
                 with open(self.response_log, "a+") as file:
                     if lick == -1:
