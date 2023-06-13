@@ -239,11 +239,13 @@ class Terminal(Application):
     def prepare_experiment_parameters(self, task_params):
         module_directory = "protocols/" + task_params["task_module"]
         config_directoty = module_directory + "/config"
-        stim_config = get_configuration(directory=config_directoty, filename="stimulus")
+        #TODO: remove this line is no error
+        # stim_config = get_configuration(directory=config_directoty, filename="stimulus")
         phase_config = get_configuration(
             directory=config_directoty, filename=task_params["task_phase"]
         )
-        task_params["stim_config"] = stim_config.STIMULUS
+        # task_params["stim_config"] = phase_config.STIMULUS.copy()
+        # task_params["stim_config"] = stim_config.STIMULUS
         task_params["phase_config"] = phase_config
         return task_params
 
@@ -279,8 +281,7 @@ class Terminal(Application):
                 # TODO: Start new rig on new QT thread
                 # Run experiment on qt thread
                 
-
-
+                self.clear_variables()
                 self.rigs_gui[task_params["experiment_rig"]].start_experiment()
 
             else:

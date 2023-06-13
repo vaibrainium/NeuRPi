@@ -104,6 +104,13 @@ class Application(mainclass):
         }
 
         return task_params
+    
+    def clear_variables(self):
+        self.main_gui.subject.clear()
+        self.main_gui.subject_weight.clear()
+        self.main_gui.task_module.setCurrentIndex(0)
+        self.main_gui.task_phase.setCurrentIndex(0)
+        self.main_gui.experiment_rig.setCurrentIndex(0)
 
     def calibrate_reward(self):
         experiment_rig = self.main_gui.experiment_rig.currentText()
