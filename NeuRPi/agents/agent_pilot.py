@@ -181,7 +181,7 @@ class Pilot:
         display_module = importlib.import_module(display_module)
 
         try:
-            stimulus_configuration = task_params["stim_config"]
+            stimulus_configuration = task_params["phase_config"].STIMULUS.copy()
         except:
             directory = "protocols/" + task_params["task_module"] + "/config"
             stimulus_configuration = get_configuration(

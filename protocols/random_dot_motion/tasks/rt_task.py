@@ -160,13 +160,6 @@ class RTTask(TrialConstruct):
         stimulus_arguments = self.stimulus_pars
         targets = [-1, 1]
         if self.config.TASK.training_type.value < 2:
-            duration = self.config.TASK.training_type.active_passive.passive_rt_mu + (
-                pearson3.rvs(
-                    self.config.TASK.training_type.active_passive.passive_rt_sigma
-                )
-                * 1.5
-            )
-
             duration = pearson3.rvs(
                 loc = self.config.TASK.training_type.active_passive.passive_rt_mu,
                 skew = self.config.TASK.training_type.active_passive.passive_rt_skew,
