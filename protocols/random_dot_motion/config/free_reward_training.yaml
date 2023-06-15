@@ -253,13 +253,13 @@ STIMULUS:
             tag: 'Execution type for intertrial window'
             function: initiate_intertrial
             visual: 
-                need_update: True
-                is_static: True
-                update_function: next_frame_intertrial
+                need_update: False #True
+                is_static: False #True
+                update_function: next_frame_stimulus #next_frame_intertrial
                 properties: 
                     load: 
                     generate:
-                        background : (160,160,160)
+                        background : #(160,160,160)
             audio:
                 need_update: False
                 is_static: True
