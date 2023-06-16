@@ -13,9 +13,8 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
-from protocols.random_dot_motion.tasks.rt_task import RTTask
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.tasks.rt_task import RTTask as base_RTTask
 
 
 class SessionManager:
@@ -33,7 +32,7 @@ class SessionManager:
         self.full_coherences, self.coh_to_xrange = self.get_full_coherences()
         self.subject.prepare_run(self.full_coherences)
         self.subject_pars = self.subject.initiate_parameters(self.full_coherences)
-        self.next_coherence_level = self.subject_pars["current_coherence_level"]
+        self.next_coherence_level = 2  # self.subject_pars["current_coherence_level"]
         self.stimulus_pars = {}
 
     def get_full_coherences(self):
@@ -55,23 +54,28 @@ class SessionManager:
         return self.full_coherences, self.coh_to_xrange
 
     def set_coherence_level(self):
-        # Setting reward per pulse
-        if 1.5 < self.subject_pars["reward_volume"] < 3:
-            if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
-                self.subject_pars["reward_volume"] += 0.25
-            if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
-                self.subject_pars["reward_volume"] -= 0.25
-            self.subject_pars["reward_volume"] = np.maximum(
-                self.subject_pars["reward_volume"], 1.5
-            )
-            self.subject_pars["reward_volume"] = np.minimum(
-                self.subject_pars["reward_volume"], 3
-            )
-            self.subject_pars["reward_volume"] = float(
-                self.subject_pars["reward_volume"]
-            )
-        # Setting coherence level
-        self.subject_pars["current_coherence_level"] = self.next_coherence_level
+        self.subject_pars["reward_volume"] = 3
+        self.subject_pars["current_coherence_level"] = 2
+        self.next_coherence_level = 2
+        # TODO: Remove this after debugging
+        # # Setting reward per pulse
+        # if 1.5 < self.subject_pars["reward_volume"] < 3:
+        #     if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
+        #         self.subject_pars["reward_volume"] += 0.25
+        #     if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
+        #         self.subject_pars["reward_volume"] -= 0.25
+        #     self.subject_pars["reward_volume"] = np.maximum(
+        #         self.subject_pars["reward_volume"], 1.5
+        #     )
+        #     self.subject_pars["reward_volume"] = np.minimum(
+        #         self.subject_pars["reward_volume"], 3
+        #     )
+        #     self.subject_pars["reward_volume"] = float(
+        #         self.subject_pars["reward_volume"]
+        #     )
+        # # Setting coherence level
+        # self.subject_pars["current_coherence_level"] = self.next_coherence_level
+
         # Setting mean reaction time for passive trials
         self.subject_pars["passive_rt_mu"] = 10 * (
             self.subject_pars["current_coherence_level"] - 1
@@ -335,6 +339,69 @@ class SessionManager:
         print("SAVING EOS FILES")
 
 
+class RTTask(base_RTTask):
+    """
+    Modification of RTTask (reaction time task) for free_reward specific training
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def stimulus_stage(self):
+        """
+        Stage 1: Show stimulus and wait for response trigger on target/distractor input
+        Arguments:
+            duration (float): Max stimulus_rt phase duration in secs
+            targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+        """
+        # Clear stage block
+        self.stage_block.clear()
+        # Determine stage parameters
+        self.min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
+        stimulus_arguments = self.stimulus_pars
+        targets = [stimulus_arguments["target"]]
+        # targets = [-1, 1]
+        if self.config.TASK.training_type.value < 2:
+            duration = pearson3.rvs(
+                loc=self.config.TASK.training_type.active_passive.passive_rt_mu,
+                skew=self.config.TASK.training_type.active_passive.passive_rt_skew,
+                scale=self.config.TASK.training_type.active_passive.passive_rt_sigma,
+            )
+
+            print(f"Passive Trial Duration is {duration}")
+        else:
+            duration = self.config.TASK.timings.stimulus.max_viewing
+        # implement minimum stimulus viewing time by not validating responses during this period
+        self.trigger = {
+            "type": "GO",
+            "targets": targets,
+            "duration": duration - self.min_viewing_duration,
+        }
+
+        # initiate stimulus and start monitoring responses
+        self.stimulus_queue.put(("initiate_stimulus", stimulus_arguments))
+        # set respons_block after minimum viewing time
+        threading.Timer(self.min_viewing_duration, self.response_block.set).start()
+
+        self.stage_block.wait()
+        self.choice = self.response
+        self.response_time = (
+            self.response_time + self.config.TASK.timings.stimulus.min_viewing
+        )
+        print(
+            f"Responded with {self.choice} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
+        )
+
+        self.stage_block.wait()
+        data = {
+            "DC_timestamp": datetime.datetime.now().isoformat(),
+            "trial_stage": "response_stage",
+            "choice": self.choice,
+            "response_time": self.response_time,
+        }
+        return data
+
+
 class Task:
     """
     Dynamic Training Routine with reaction time trial structure
@@ -349,7 +416,6 @@ class Task:
         config=None,
         **kwargs,
     ):
-
         self.subject = subject
         self.task_module = task_module
         self.task_phase = task_phase
