@@ -189,55 +189,56 @@ class SessionManager:
         return self.stimulus_pars
 
     def graduation_check(self):
-        # Deciding Coherence level based on rolling performance (50 trials of each coherence)
-        accuracy = self.subject.rolling_perf["accuracy"]
-        # Bi-directional shift in coherence level
-        if self.config.TASK.training_type.graduation_direction.value == 0:
-            # If 100% and 70% coherence have accuracy above 70%
-            if all(np.array(accuracy[:2]) > 0.7) and all(np.array(accuracy[-2:]) > 0.7):
-                # Increase coherence level to 3 i.e., introduce 36% coherence
-                self.next_coherence_level = 3
-                # If 100%, 70% and 36% coherence have accuracy above 70%
-                if accuracy[2] > 0.7 and accuracy[-3] > 0.7:
-                    # Increase coherence level to 3 i.e., introduce 36% coherence
-                    self.next_coherence_level = 4
-                    self.subject.rolling_perf["trial_counter_after_4th"] += 1
+        pass
+        # # Deciding Coherence level based on rolling performance (50 trials of each coherence)
+        # accuracy = self.subject.rolling_perf["accuracy"]
+        # # Bi-directional shift in coherence level
+        # if self.config.TASK.training_type.graduation_direction.value == 0:
+        #     # If 100% and 70% coherence have accuracy above 70%
+        #     if all(np.array(accuracy[:2]) > 0.7) and all(np.array(accuracy[-2:]) > 0.7):
+        #         # Increase coherence level to 3 i.e., introduce 36% coherence
+        #         self.next_coherence_level = 3
+        #         # If 100%, 70% and 36% coherence have accuracy above 70%
+        #         if accuracy[2] > 0.7 and accuracy[-3] > 0.7:
+        #             # Increase coherence level to 3 i.e., introduce 36% coherence
+        #             self.next_coherence_level = 4
+        #             self.subject.rolling_perf["trial_counter_after_4th"] += 1
 
-                    # 200 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
-                        self.next_coherence_level = 5
-                    # 400 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
-                        self.next_coherence_level = 6
-                    # 600 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
-                        pass
-                else:
-                    self.subject.rolling_perf["trial_counter_after_4th"] = 0
+        #             # 200 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
+        #                 self.next_coherence_level = 5
+        #             # 400 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
+        #                 self.next_coherence_level = 6
+        #             # 600 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
+        #                 pass
+        #         else:
+        #             self.subject.rolling_perf["trial_counter_after_4th"] = 0
 
-        elif self.config.TASK.training_type.graduation_direction.value == 1:
-            # If 100% and 70% coherence have accuracy above 70%
-            if self.subject_pars["current_coherence_level"] > 3 or (
-                all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7))
-            ):
-                # Increase coherence level to 3 i.e., introduce 36% coherence
-                self.next_coherence_level = 3
-                # If 100%, 70% and 36% coherence have accuracy above 70%
-                if self.subject_pars["current_coherence_level"] > 4 or (
-                    accuracy[2] > 0.7 and accuracy[-3] > 0.7
-                ):
-                    # Increase coherence level to 3 i.e., introduce 36% coherence
-                    self.next_coherence_level = 4
-                    self.subject.rolling_perf["trial_counter_after_4th"] += 1
-                    # 200 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
-                        self.next_coherence_level = 5
-                    # 400 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
-                        self.next_coherence_level = 6
-                    # 600 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
-                        pass
+        # elif self.config.TASK.training_type.graduation_direction.value == 1:
+        #     # If 100% and 70% coherence have accuracy above 70%
+        #     if self.subject_pars["current_coherence_level"] > 3 or (
+        #         all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7))
+        #     ):
+        #         # Increase coherence level to 3 i.e., introduce 36% coherence
+        #         self.next_coherence_level = 3
+        #         # If 100%, 70% and 36% coherence have accuracy above 70%
+        #         if self.subject_pars["current_coherence_level"] > 4 or (
+        #             accuracy[2] > 0.7 and accuracy[-3] > 0.7
+        #         ):
+        #             # Increase coherence level to 3 i.e., introduce 36% coherence
+        #             self.next_coherence_level = 4
+        #             self.subject.rolling_perf["trial_counter_after_4th"] += 1
+        #             # 200 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
+        #                 self.next_coherence_level = 5
+        #             # 400 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
+        #                 self.next_coherence_level = 6
+        #             # 600 trials after 4th level
+        #             if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
+        #                 pass
 
     def update_EOT(self, choice, response_time, outcome):
         """
