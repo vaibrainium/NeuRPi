@@ -4,7 +4,7 @@ STIMULUS:
         num_screens: 1
         screen     : 0 #0 
         window_size: (1920, 1080)
-        frame_rate : 30
+        frame_rate : 60
         flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
         vsync      : True
         show_fps   : True
@@ -36,7 +36,7 @@ STIMULUS:
                     generate:
                         background : (0,0,0)
             audio:
-                need_update: True
+                need_update: False
                 is_static: True
                 update_function: 
                 properties: 
@@ -104,9 +104,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : ['protocols/random_dot_motion/stimulus/audio/correctTone.wav']
+                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
                         incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        invalid         : [] #'protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
                     generate:
 
         initiate_must_respond: 
@@ -131,13 +131,13 @@ STIMULUS:
             tag: 'Execution type for intertrial window'
             function: initiate_intertrial
             visual: 
-                need_update: True
-                is_static: True
-                update_function: next_frame_intertrial
+                need_update: False #True
+                is_static: False #True
+                update_function: next_frame_stimulus #next_frame_intertrial
                 properties: 
                     load: 
                     generate:
-                        background : (100,100,100)
+                        background : #(160,160,160)
             audio:
                 need_update: False
                 is_static: True

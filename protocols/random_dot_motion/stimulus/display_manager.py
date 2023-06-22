@@ -91,6 +91,7 @@ class DisplayManager(Display):
                 self.courier_map.initiate_stimulus.visual.properties.generate.background
             )
         )
+
         for ind in range(len(pars["xpos"])):
             self.pygame.draw.circle(
                 self.screen[screen],
@@ -181,6 +182,8 @@ def main():
         stimulus_configuration=config.STIMULUS,
         stimulus_courier=courier,
     )
+
+    a.start()
     while True:
         print("Starting Fixation")
         message = "('initiate_fixation', {})"
@@ -190,10 +193,10 @@ def main():
         message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
         courier.put(eval(message))
         time.sleep(2)
-        print("Starting Intertrial")
-        message = "('initiate_intertrial', {'invalid'})"
-        courier.put(eval(message))
-        time.sleep(2)
+        # print("Starting Intertrial")
+        # message = "('initiate_intertrial')"
+        # courier.put(eval(message))
+        # time.sleep(2)
         print("Loop complete")
 
 
