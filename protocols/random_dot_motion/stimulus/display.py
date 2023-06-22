@@ -171,10 +171,13 @@ class Display:
                 self.render_block.clear()
                 (func, pars, screen) = self.frame_queue.get()
                 self.lock.acquire()
+                # start = time.time()
                 self.draw(func, pars, screen)
+                # end = time.time()
                 self.lock.release()
                 self.render_block.set()
                 self.clock.tick_busy_loop(self.frame_rate)
+                # print(f"Render Time: {end-start}")
 
     def draw(self, func, pars, screen):
         try:
@@ -190,6 +193,7 @@ class Display:
         self.update()
 
     def update(self):
+        # TODO: display.update is slow. Need to find a way to update only the changed pixels
         self.pygame.display.update()
         self.pygame.event.pump()
 
