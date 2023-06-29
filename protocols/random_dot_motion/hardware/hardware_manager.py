@@ -17,6 +17,9 @@ class HardwareManager(BaseHWManager):
         super(HardwareManager, self).__init__()
 
         self.init_hardware()
+        self.reset_lick_sensor()
+        self.start_clock()
+
         self._reward_calibration = self.config.Arduino.Primary.reward.calibration
         self._reward_calibration_left = (
             self.config.Arduino.Primary.reward.calibration_left
@@ -25,10 +28,9 @@ class HardwareManager(BaseHWManager):
             self.config.Arduino.Primary.reward.calibration_right
         )
         self.lick_threshold = self.config.Arduino.Primary.lick.threshold
-        self._lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
-        self._lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
+        self.lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
+        self.lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
         self.lick_slope = self.config.Arduino.Primary.lick.slope
-        pass
 
     ## Properties of our hardwares
     @property
@@ -65,6 +67,19 @@ class HardwareManager(BaseHWManager):
 
     def reset_lick_sensor(self):
         self.hardware["Primary"].write(str(0) + "reset")
+        # print("waiting for reset")
+        # while True:
+        #     message = self.hardware["Primary"].read()
+        #     if message == "board_resetted":
+        #         break
+
+    def start_clock(self):
+        self.hardware["Primary"].write(str(0) + "start_clock")
+        # print("waiting for clock to start")
+        # while True:
+        #     message = self.hardware["Primary"].read()
+        #     if message == "clock_started":
+        #         break
 
     @property
     def lick_threshold(self):
@@ -76,6 +91,11 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold")
+        # print("waiting for threshold to be modified")
+        # while True:
+        #     message = self.hardware["Primary"].read()
+        #     if message == "lick_threshold_modified":
+        #         break
 
     @property
     def lick_threshold_left(self):
@@ -86,8 +106,13 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold_left = value
         self.config.Arduino.Primary.lick.threshold_left = value
         prefs.set("HARDWARE", self.config)
-        # self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
-        self.hardware["Primary"].write(str(value) + "update_lick_threshold")
+
+        self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
+        # print("waiting for left threshold to be modified")
+        # while True:
+        #     message = self.hardware["Primary"].read()
+        #     if message == "left_threshold_modified":
+        #         break
 
     @property
     def lick_threshold_right(self):
@@ -99,6 +124,11 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_right = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(value) + "update_lick_threshold_right")
+        # print("waiting for right threshold to be modified")
+        # while True:
+        #     message = self.hardware["Primary"].read()
+        #     if message == "right_threshold_modified":
+        #         break
 
     @property
     def lick_slope(self):

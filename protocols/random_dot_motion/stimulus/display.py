@@ -19,6 +19,8 @@ class Display:
 
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
         os.environ["DISPLAY"] = ":0.0"
+        os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
+        os.environ["ENABLE_ARM_NEON"] = "1"
 
         self.courier = stimulus_courier
         self.message = {}

@@ -35,7 +35,7 @@ class Arduino(Hardware):
                 port=self.port, baudrate=self.baudrate, timeout=self.timeout
             )
             self.is_connected = True
-            self.reset()
+            # self.reset()
         except:
             raise Exception(
                 f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')"

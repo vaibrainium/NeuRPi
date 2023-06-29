@@ -42,7 +42,7 @@ class Behavior:
         right_clock_start = time.time()
 
         while not self.quit_monitoring.is_set():
-            timestamp, lick = self.hardware_manager.read_licks()
+            hw_timestamp, lick = self.hardware_manager.read_licks()
             if lick != None:
                 # Passing information if trigger is requested
                 if self.response_block.is_set():
@@ -56,8 +56,9 @@ class Behavior:
                         left_clock_end = time.time()
                         left_dur = left_clock_end - left_clock_start
                         file.write(
-                            "%.6f, %.6f, %s, %.6f\n"
+                            "%.6f, %.6f, %.6f, %s, %.6f\n"
                             % (
+                                hw_timestamp,
                                 left_clock_start - self.timers["session"].timestamp(),
                                 left_clock_start - self.timers["trial"].timestamp(),
                                 lick,
@@ -70,8 +71,9 @@ class Behavior:
                         right_clock_end = time.time()
                         right_dur = right_clock_end - right_clock_start
                         file.write(
-                            "%.6f, %.6f, %s, %.6f\n"
+                            "%.6f, %.6f, %.6f, %s, %.6f\n"
                             % (
+                                hw_timestamp,
                                 right_clock_start - self.timers["session"].timestamp(),
                                 right_clock_start - self.timers["trial"].timestamp(),
                                 lick,
