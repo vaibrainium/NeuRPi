@@ -34,52 +34,60 @@ class Behavior:
                 "Starting behavior acquisition without monitoring for response"
             )
 
-        self.thread = threading.Thread(target=self._acquire, daemon=True)
+        self.thread = threading.Thread(
+            target=self._acquire,
+            args=(self.hardware_manager.hw_update_event,),
+            daemon=True,
+        )
         self.thread.start()
 
-    def _acquire(self):
+    def _acquire(self, hw_update_event=None):
         left_clock_start = time.time()
         right_clock_start = time.time()
 
         while not self.quit_monitoring.is_set():
-            hw_timestamp, lick = self.hardware_manager.read_licks()
-            if lick != None:
-                # Passing information if trigger is requested
-                if self.response_block.is_set():
-                    if lick == -1 or lick == 1:
-                        self.response_queue.put(lick)
+            if not hw_update_event.is_set():
+                hw_timestamp, lick = self.hardware_manager.read_licks()
+                if lick != None:
+                    # Passing information if trigger is requested
+                    if self.response_block.is_set():
+                        if lick == -1 or lick == 1:
+                            self.response_queue.put(lick)
 
-                with open(self.response_log, "a+") as file:
-                    if lick == -1:
-                        left_clock_start = time.time()
-                    elif lick == -2:
-                        left_clock_end = time.time()
-                        left_dur = left_clock_end - left_clock_start
-                        file.write(
-                            "%.6f, %.6f, %.6f, %s, %.6f\n"
-                            % (
-                                hw_timestamp,
-                                left_clock_start - self.timers["session"].timestamp(),
-                                left_clock_start - self.timers["trial"].timestamp(),
-                                lick,
-                                left_dur,
+                    with open(self.response_log, "a+") as file:
+                        if lick == -1:
+                            left_clock_start = time.time()
+                        elif lick == -2:
+                            left_clock_end = time.time()
+                            left_dur = left_clock_end - left_clock_start
+                            file.write(
+                                "%.6f, %.6f, %.6f, %s, %.6f\n"
+                                % (
+                                    hw_timestamp,
+                                    left_clock_start
+                                    - self.timers["session"].timestamp(),
+                                    left_clock_start - self.timers["trial"].timestamp(),
+                                    lick,
+                                    left_dur,
+                                )
                             )
-                        )
-                    elif lick == 1:
-                        right_clock_start = time.time()
-                    elif lick == 2:
-                        right_clock_end = time.time()
-                        right_dur = right_clock_end - right_clock_start
-                        file.write(
-                            "%.6f, %.6f, %.6f, %s, %.6f\n"
-                            % (
-                                hw_timestamp,
-                                right_clock_start - self.timers["session"].timestamp(),
-                                right_clock_start - self.timers["trial"].timestamp(),
-                                lick,
-                                right_dur,
+                        elif lick == 1:
+                            right_clock_start = time.time()
+                        elif lick == 2:
+                            right_clock_end = time.time()
+                            right_dur = right_clock_end - right_clock_start
+                            file.write(
+                                "%.6f, %.6f, %.6f, %s, %.6f\n"
+                                % (
+                                    hw_timestamp,
+                                    right_clock_start
+                                    - self.timers["session"].timestamp(),
+                                    right_clock_start
+                                    - self.timers["trial"].timestamp(),
+                                    lick,
+                                    right_dur,
+                                )
                             )
-                        )
 
     def stop(self):
         """

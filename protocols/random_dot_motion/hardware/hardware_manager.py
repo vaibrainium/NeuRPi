@@ -1,4 +1,6 @@
 import datetime
+import multiprocessing as mp
+import threading
 import time
 
 import omegaconf
@@ -16,6 +18,11 @@ class HardwareManager(BaseHWManager):
     def __init__(self):
         super(HardwareManager, self).__init__()
 
+        # self.threading_lock = threading.Lock()
+        # self.threading_lock = mp.Lock()
+        self.hw_update_event = threading.Event()
+        self.hw_update_event.clear()
+
         self.init_hardware()
         self.reset_lick_sensor()
         self.start_clock()
@@ -27,7 +34,7 @@ class HardwareManager(BaseHWManager):
         self._reward_calibration_right = (
             self.config.Arduino.Primary.reward.calibration_right
         )
-        self.lick_threshold = self.config.Arduino.Primary.lick.threshold
+        # self.lick_threshold = self.config.Arduino.Primary.lick.threshold
         self.lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
         self.lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
         self.lick_slope = self.config.Arduino.Primary.lick.slope
@@ -68,18 +75,30 @@ class HardwareManager(BaseHWManager):
     def reset_lick_sensor(self):
         self.hardware["Primary"].write(str(0) + "reset")
         # print("waiting for reset")
+        # self.hw_update_event.set()
+        # # with self.threading_lock:
         # while True:
         #     message = self.hardware["Primary"].read()
-        #     if message == "board_resetted":
-        #         break
+        #     if message:
+        #         timestamp, message = message.split("\t")
+        #         if message == "board_resetted":
+        #             break
+        # print("Board resetted")
+        # self.hw_update_event.clear()
 
     def start_clock(self):
         self.hardware["Primary"].write(str(0) + "start_clock")
         # print("waiting for clock to start")
+        # self.hw_update_event.set()
+        # # with self.threading_lock:
         # while True:
         #     message = self.hardware["Primary"].read()
-        #     if message == "clock_started":
-        #         break
+        #     if message:
+        #         timestamp, message = message.split("\t")
+        #         if message == "clock_started":
+        #             break
+        # print("Clock started")
+        # self.hw_update_event.clear()
 
     @property
     def lick_threshold(self):
@@ -90,7 +109,7 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold = value
         self.config.Arduino.Primary.lick.threshold = value
         prefs.set("HARDWARE", self.config)
-        self.hardware["Primary"].write(str(value) + "update_lick_threshold")
+        self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold")
         # print("waiting for threshold to be modified")
         # while True:
         #     message = self.hardware["Primary"].read()
@@ -107,12 +126,20 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_left = value
         prefs.set("HARDWARE", self.config)
 
-        self.hardware["Primary"].write(str(value) + "update_lick_threshold_left")
+        self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold_left")
         # print("waiting for left threshold to be modified")
+        # self.hw_update_event.set()
+        # # with self.threading_lock:
         # while True:
         #     message = self.hardware["Primary"].read()
-        #     if message == "left_threshold_modified":
-        #         break
+        #     if message:
+        #         print(message)
+        #         timestamp, message = message.split("\t")
+        #         if message == "left_threshold_modified":
+        #             break
+        # print("Left threshold modified")
+        # time.sleep(1)
+        # self.hw_update_event.clear()
 
     @property
     def lick_threshold_right(self):
@@ -123,12 +150,20 @@ class HardwareManager(BaseHWManager):
         self._lick_threshold_right = value
         self.config.Arduino.Primary.lick.threshold_right = value
         prefs.set("HARDWARE", self.config)
-        self.hardware["Primary"].write(str(value) + "update_lick_threshold_right")
+        self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold_right")
         # print("waiting for right threshold to be modified")
+        # self.hw_update_event.set()
+        # # with self.threading_lock:
         # while True:
         #     message = self.hardware["Primary"].read()
-        #     if message == "right_threshold_modified":
-        #         break
+        #     if message:
+        #         print(message)
+        #         timestamp, message = message.split("\t")
+        #         if message == "right_threshold_modified":
+        #             break
+        # print("Right threshold modified")
+        # time.sleep(1)
+        # self.hw_update_event.clear()
 
     @property
     def lick_slope(self):
@@ -139,7 +174,7 @@ class HardwareManager(BaseHWManager):
         self._lick_slope = value
         self.config.Arduino.Primary.lick.slope = value
         prefs.set("HARDWARE", self.config)
-        self.hardware["Primary"].write(str(value) + "update_lick_slope")
+        self.hardware["Primary"].write(str(int(value)) + "update_lick_slope")
 
     ## Other useful functions
     def vol_to_dur(self, volume, spout=None):
@@ -242,8 +277,11 @@ class HardwareManager(BaseHWManager):
 
         message = self.hardware["Primary"].read()
         if message:
-            timestamp, lick = message.split("/t")
-            lick = int(lick)
+            timestamp, lick = message.split("\t")
+            try:
+                lick = int(lick)
+            except:
+                pass
             timestamp = float(timestamp)
             print(timestamp, lick)
         return timestamp, lick
@@ -251,13 +289,14 @@ class HardwareManager(BaseHWManager):
 
 if __name__ == "__main__":
     a = HardwareManager()
-    a.lick_threshold_left = 11
-    a.lick_threshold_right = 11
+    print("Hardware Manager Initialized")
+    a.lick_threshold_left = 3
+    a.lick_threshold_right = 3
     # Lick Calibration
-    print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
+    # print(a.lick_threshold, a.lick_threshold_left, a.lick_threshold_right, a.lick_slope)
     while True:
         lick = a.read_licks()
-    print(2)
+    # print(2)
 
     # # Reward Calibration
     # import time
