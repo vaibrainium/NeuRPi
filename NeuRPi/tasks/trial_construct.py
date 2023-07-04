@@ -153,7 +153,7 @@ class TrialConstruct:
                                 self.response_block.clear()
                                 self.must_respond_block.set()
                                 monitoring_behavior = False
-                    print(f"MONITOR BEHAVIOR {monitoring_behavior}")
+                    # print(f"MONITOR BEHAVIOR {monitoring_behavior}")
 
             except Exception as e:
                 print(e)

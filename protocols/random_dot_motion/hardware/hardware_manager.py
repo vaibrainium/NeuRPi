@@ -133,7 +133,6 @@ class HardwareManager(BaseHWManager):
         # while True:
         #     message = self.hardware["Primary"].read()
         #     if message:
-        #         print(message)
         #         timestamp, message = message.split("\t")
         #         if message == "left_threshold_modified":
         #             break
@@ -157,7 +156,6 @@ class HardwareManager(BaseHWManager):
         # while True:
         #     message = self.hardware["Primary"].read()
         #     if message:
-        #         print(message)
         #         timestamp, message = message.split("\t")
         #         if message == "right_threshold_modified":
         #             break

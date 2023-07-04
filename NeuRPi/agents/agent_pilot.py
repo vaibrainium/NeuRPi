@@ -256,6 +256,7 @@ class Pilot:
             self.logger.exception(
                 f"got exception while running task; stopping task\n {e}"
             )
+            print("GOT Exception")
 
         finally:
             self.logger.debug("stopping task")
