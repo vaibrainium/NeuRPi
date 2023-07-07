@@ -128,7 +128,7 @@ STIMULUS:
         window_size: (1920, 1080)
         frame_rate : 100
         flags      : pygame.DOUBLEBUF | pygame.constants.SCALED | pygame.FULLSCREEN
-        vsync      : False
+        vsync      : True
         show_fps   : True
 
     courier_handle:

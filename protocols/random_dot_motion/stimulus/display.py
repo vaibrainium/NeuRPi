@@ -206,7 +206,7 @@ if __name__ == "__main__":
     import hydra
 
     path = "../../random_dot_motion/config"
-    filename = "stimulus.yaml"
+    filename = "free_reward_training.yaml"
     hydra.initialize(version_base=None, config_path=path)
     config = hydra.compose(filename, overrides=[])
     courier = Queue()
