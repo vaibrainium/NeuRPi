@@ -23,12 +23,11 @@ class Behavior:
     ):
         self.hardware_manager = hardware_manager
         self.response_block = response_block
-        self.response_queue = None
+        self.response_queue = response_queue
         self.response_log = response_log
         self.timers = timers
 
-        self.thread = None
-        self.response_queue = Queue()
+        self.process = None
         self.quit_monitoring = threading.Event()
         self.quit_monitoring.clear()
 
