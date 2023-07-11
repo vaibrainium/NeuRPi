@@ -36,14 +36,14 @@ class RTTask(TrialConstruct):
 
     def __init__(
         self,
-        stage_block=None,
-        response_block=None,
-        response_queue=None,
-        stimulus_queue=None,
-        managers=None,
-        subject=None,
-        config=None,
-        timers=None,
+        stage_block,
+        response_block,
+        response_queue,
+        stimulus_queue,
+        managers,
+        subject,
+        config,
+        timers,
         **kwargs,
     ):
         """

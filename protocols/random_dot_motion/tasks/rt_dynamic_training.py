@@ -385,6 +385,7 @@ class Task:
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
             response_log=self.subject.lick,
+            response_queue=self.response_queue,
             timers=self.timers,
         )
 

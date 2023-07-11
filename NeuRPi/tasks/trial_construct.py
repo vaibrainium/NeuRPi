@@ -31,8 +31,8 @@ class TrialConstruct:
     def __init__(
         self,
         stage_block,
-        response_block,
         stimulus_queue,
+        response_block,
         response_queue,
         *args,
         **kwargs,
@@ -46,7 +46,7 @@ class TrialConstruct:
 
         # Task Variables
         self.stimulus_queue = stimulus_queue
-        # self.response_queue = response_queue
+        self.response_queue = response_queue
         self.stages = (
             "fixation",
             "stimulus_rt",
@@ -74,7 +74,7 @@ class TrialConstruct:
         setting 'self.trigger' dictionary type: NoGO/GO and time: float in ms
         """
         while True:
-            response_queue.queue.clear()
+            self.clear_queue()
             self.response_block.wait()
             monitoring_behavior = True
             responded = False
@@ -100,7 +100,7 @@ class TrialConstruct:
                                 if responded not in self.trigger["targets"]:
                                     # incorrect response
                                     self.response_block.clear()
-                                    response_queue.queue.clear()
+                                    self.clear_queue()
 
                                     responded = False
                                     self.response_block.set()
@@ -118,7 +118,7 @@ class TrialConstruct:
                             responded = response_queue.get()
                             if responded not in self.trigger["targets"]:
                                 # self.response_time = time.time() - start
-                                response_queue.queue.clear()
+                                self.clear_queue()
                                 self.response_block.clear()
                                 self.stage_block.set()
                                 monitoring_behavior = False
@@ -127,7 +127,7 @@ class TrialConstruct:
                 elif self.trigger["type"] == "GO":
                     while monitoring_behavior:
                         if time.time() - start > wait_time:
-                            response_queue.queue.clear()
+                            self.clear_queue()
                             self.response_block.clear()
                             self.stage_block.set()
                             monitoring_behavior = False
@@ -136,7 +136,7 @@ class TrialConstruct:
                             if responded in self.trigger["targets"]:
                                 self.response = responded
                                 self.response_time = time.time() - start
-                                response_queue.queue.clear()
+                                self.clear_queue()
                                 self.response_block.clear()
                                 self.stage_block.set()
                                 monitoring_behavior = False
@@ -144,12 +144,12 @@ class TrialConstruct:
                 # When agent Must respond
                 elif self.trigger["type"] == "MUST_GO":
                     self.must_respond_block.clear()
-                    response_queue.queue.clear()
+                    self.clear_queue()
                     while monitoring_behavior:
                         if not response_queue.empty():
                             responded = response_queue.get()
                             if responded in self.trigger["targets"]:
-                                response_queue.queue.clear()
+                                self.clear_queue()
                                 self.response_block.clear()
                                 self.must_respond_block.set()
                                 monitoring_behavior = False
@@ -161,18 +161,25 @@ class TrialConstruct:
                     f"Problem with response monitoring for {self.trigger['type']}"
                 )
 
+    def clear_queue(self):
+        while not self.response_queue.empty():
+            self.response_queue.get()
+
 
 if __name__ == "__main__":
     import itertools
+    import multiprocessing as mp
 
     stage_block = threading.Event()
     stage_block.clear()
     stim_handler = queue.Queue()
-    response_queue = queue.Queue()
+    response_block = threading.Event()
+    response_queue = mp.Queue()
     a = TrialConstruct(
         stage_block=stage_block,
         stimulus_queue=stim_handler,
         response_queue=response_queue,
+        response_block=response_block,
     )
     stage_list = [a.fixation, a.stimulus_rt, a.intertrial]
     num_stages = len(stage_list)
