@@ -14,10 +14,16 @@ class Behavior:
     """
 
     def __init__(
-        self, hardware_manager=None, response_block=None, response_log=None, timers=None
+        self,
+        hardware_manager=None,
+        response_block=None,
+        response_queue=None,
+        response_log=None,
+        timers=None,
     ):
         self.hardware_manager = hardware_manager
         self.response_block = response_block
+        self.response_queue = None
         self.response_log = response_log
         self.timers = timers
 
@@ -34,14 +40,24 @@ class Behavior:
                 "Starting behavior acquisition without monitoring for response"
             )
 
-        self.thread = threading.Thread(
+        # self.thread = threading.Thread(
+        #     target=self._acquire,
+        #     args=(self.hardware_manager.hw_update_event,),
+        #     daemon=True,
+        # )
+        # self.thread.start()
+
+        self.process = mp.Process(
             target=self._acquire,
-            args=(self.hardware_manager.hw_update_event,),
+            args=(
+                self.response_block,
+                self.response_queue,
+            ),
             daemon=True,
         )
-        self.thread.start()
+        self.process.start()
 
-    def _acquire(self, hw_update_event=None):
+    def _acquire(self, response_block=None, response_queue=None):
         left_clock_start = time.time()
         right_clock_start = time.time()
 
@@ -50,9 +66,9 @@ class Behavior:
             hw_timestamp, lick = self.hardware_manager.read_licks()
             if lick != None:
                 # Passing information if trigger is requested
-                if self.response_block.is_set():
+                if response_block.is_set():
                     if lick == -1 or lick == 1:
-                        self.response_queue.put(lick)
+                        response_queue.put(lick)
 
                 with open(self.response_log, "a+") as file:
                     if lick == -1:
@@ -92,7 +108,7 @@ class Behavior:
         """
         # Closing all threads
         self.quit_monitoring.set()
-        self.thread.join()
+        self.process.join()
 
 
 if __name__ == "__main__":
