@@ -61,7 +61,6 @@ class Behavior:
         right_clock_start = time.time()
 
         while not self.quit_monitoring.is_set():
-            # if not hw_update_event.is_set():
             hw_timestamp, lick = self.hardware_manager.read_licks()
             if lick != None:
                 # Passing information if trigger is requested
@@ -105,9 +104,10 @@ class Behavior:
         """
         Stopping all hardware communications and closing treads
         """
-        # Closing all threads
+        # Closing all
+        # self.hardware_manager.close_hardware()
         self.quit_monitoring.set()
-        self.process.join()
+        self.process.kill()
 
 
 if __name__ == "__main__":
