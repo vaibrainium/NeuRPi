@@ -13,8 +13,7 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -349,7 +348,6 @@ class Task:
         config=None,
         **kwargs,
     ):
-
         self.subject = subject
         self.task_module = task_module
         self.task_phase = task_phase
@@ -371,8 +369,9 @@ class Task:
 
         # Event locks, triggers
         self.stage_block = stage_block
-        self.response_block = threading.Event()
+        self.response_block = mp.Event()
         self.response_block.clear()
+        self.response_queue = mp.Queue()
 
         self.timers = {
             "session": datetime.datetime.now(),
@@ -386,6 +385,7 @@ class Task:
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
             response_log=self.subject.lick,
+            response_queue=self.response_queue,
             timers=self.timers,
         )
 
@@ -397,6 +397,7 @@ class Task:
         self.managers["trial"] = RTTask(
             stage_block=self.stage_block,
             response_block=self.response_block,
+            response_queue=self.response_queue,
             stimulus_queue=self.stimulus_queue,
             managers=self.managers,
             subject=self.subject,
