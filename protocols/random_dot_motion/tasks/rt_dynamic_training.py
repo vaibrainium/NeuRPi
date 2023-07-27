@@ -359,12 +359,12 @@ class Task:
         # filename = "dynamic_coherences_rt.yaml"
         # self.config = get_configuration(directory=directory, filename=filename)
 
-        # Preparing subject
-        self.subject = Subject(
-            name=self.subject,
-            task_module=self.task_module,
-            task_phase=self.task_phase,
-            config=self.config,
+        # # Preparing subject
+        # self.subject = Subject(
+        #     name=self.subject,
+        #     task_module=self.task_module,
+        #     task_phase=self.task_phase,
+        #     config=self.config,
         )
 
         # Event locks, triggers

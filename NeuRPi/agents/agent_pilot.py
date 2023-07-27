@@ -236,7 +236,7 @@ class Pilot:
 
                 if data:
                     data["pilot"] = self.name
-                    data["subject"] = self.subject
+                    data["subject"] = self.subject.name
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
