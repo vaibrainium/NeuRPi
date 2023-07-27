@@ -49,7 +49,7 @@ class Terminal(Application):
         self.listens = {
             "STATE": self.l_state,  # A Pi has changed state
             "PING": self.l_ping,  # Someone wants to know if we're alive
-            "CHANGE": self.l_change, # A change was notified from pilot
+            "CHANGE": self.l_change,  # A change was notified from pilot
             "DATA": self.l_data,
             "CONTINUOUS": self.l_data,  # handle continuous data same way as other data
             "STREAM": self.l_data,
@@ -211,7 +211,7 @@ class Terminal(Application):
         Incoming change from pilot.
 
         `value` should have `subject` and `pilot` field added to dictionary for identifiation.
-        
+
         """
         pass
         # try:
@@ -239,7 +239,7 @@ class Terminal(Application):
     def prepare_experiment_parameters(self, task_params):
         module_directory = "protocols/" + task_params["task_module"]
         config_directoty = module_directory + "/config"
-        #TODO: remove this line is no error
+        # TODO: remove this line is no error
         # stim_config = get_configuration(directory=config_directoty, filename="stimulus")
         phase_config = get_configuration(
             directory=config_directoty, filename=task_params["task_phase"]
@@ -247,6 +247,18 @@ class Terminal(Application):
         # task_params["stim_config"] = phase_config.STIMULUS.copy()
         # task_params["stim_config"] = stim_config.STIMULUS
         task_params["phase_config"] = phase_config
+
+        subject_module = importlib.import_module(
+            f"protocols.{task_params['task_module']}.data_model.subject"
+        )
+        task_params["subject"] = subject_module.Subject(
+            name=task_params["subject"],
+            task_module=task_params["task_module"],
+            task_phase=task_params["task_phase"],
+            config=task_params["phase_config"],
+        )
+
+        task_params["subject"] =
         return task_params
 
     def start_experiment(self):
@@ -267,11 +279,9 @@ class Terminal(Application):
                 self.add_new_rig(
                     id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
                 )
-                self.rigs_gui[task_params["experiment_rig"]].set_rig_configuration(self.pilots[task_params["experiment_rig"]]["prefs"])
-
-
-                # Initiating subject for data logging
-                # TODO: Initiating subject for data logging on server
+                self.rigs_gui[task_params["experiment_rig"]].set_rig_configuration(
+                    self.pilots[task_params["experiment_rig"]]["prefs"]
+                )
 
                 # Waiting for rig to initiate program
                 while (
@@ -280,7 +290,7 @@ class Terminal(Application):
                     pass
                 # TODO: Start new rig on new QT thread
                 # Run experiment on qt thread
-                
+
                 self.clear_variables()
                 self.rigs_gui[task_params["experiment_rig"]].start_experiment()
 
