@@ -13,7 +13,8 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -353,11 +354,6 @@ class Task:
         self.task_phase = task_phase
         self.config = config
         self.__dict__.update(kwargs)
-
-        # # Preparing parameters parameters
-        # directory = "protocols/RDK/config"
-        # filename = "dynamic_coherences_rt.yaml"
-        # self.config = get_configuration(directory=directory, filename=filename)
 
         # Preparing subject
         self.subject = Subject(
