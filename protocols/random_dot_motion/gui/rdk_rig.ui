@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1063</width>
-    <height>775</height>
+    <width>1044</width>
+    <height>816</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>10</y>
+     <y>70</y>
      <width>1041</width>
      <height>750</height>
     </rect>
@@ -906,7 +906,7 @@ color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>550</x>
-     <y>500</y>
+     <y>560</y>
      <width>171</width>
      <height>201</height>
     </rect>
@@ -961,16 +961,16 @@ color: rgb(255, 255, 255);</string>
          <number>0</number>
         </property>
         <property name="minimum">
-         <double>1</double>
+         <double>1.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>255</double>
+         <double>255.000000000000000</double>
         </property>
         <property name="singleStep">
-         <double>1</double>
+         <double>1.000000000000000</double>
         </property>
         <property name="value">
-         <double>12</double>
+         <double>12.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -999,16 +999,16 @@ color: rgb(255, 255, 255);</string>
          <number>0</number>
         </property>
         <property name="minimum">
-         <double>1</double>
+         <double>1.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>255</double>
+         <double>255.000000000000000</double>
         </property>
         <property name="singleStep">
-         <double>1</double>
+         <double>1.000000000000000</double>
         </property>
         <property name="value">
-         <double>12</double>
+         <double>12.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -1044,6 +1044,141 @@ color: rgb(255, 255, 255);</string>
      </layout>
     </item>
    </layout>
+  </widget>
+  <widget class="QGroupBox" name="groupBox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>0</y>
+     <width>1001</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="title">
+    <string>Session Information</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Subject ID:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>30</y>
+      <width>111</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Task Module:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="task_phase">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>40</y>
+      <width>281</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>30</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Task Phase:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="subject_id">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>40</y>
+      <width>151</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="task_module">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>40</y>
+      <width>251</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>11</pointsize>
+      <underline>true</underline>
+     </font>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
  </widget>
  <customwidgets>

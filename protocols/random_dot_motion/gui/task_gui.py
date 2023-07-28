@@ -15,11 +15,15 @@ class TaskGUI(rigclass):
     comm_to_taskgui = QtCore.pyqtSignal(dict)
     comm_from_taskgui = QtCore.pyqtSignal(dict)
 
-    def __init__(self, rig_id=None):
+    def __init__(self, rig_id=None, subject_id=None, task_id=None, task_phase=None):
         super().__init__()
         # Load GUIs
-        # main rig window
         self.rig_id = rig_id
+        self.subject_id = subject_id
+        self.task_id = task_id
+        self.task_phase = task_phase
+
+        # main rig window
         self.rig = Ui_rig()
         self.rig.setupUi(self)
         self.rig.close_experiment.hide()
@@ -78,9 +82,13 @@ class TaskGUI(rigclass):
     # GUI Functions
     def set_rig_configuration(self, prefs={}):
         try:
-            hardware = prefs.get('HARDWARE')
-            self.rig.lick_threshold_left.setValue(hardware.Arduino.Primary.lick.threshold_left)
-            self.rig.lick_threshold_right.setValue(hardware.Arduino.Primary.lick.threshold_right)
+            hardware = prefs.get("HARDWARE")
+            self.rig.lick_threshold_left.setValue(
+                hardware.Arduino.Primary.lick.threshold_left
+            )
+            self.rig.lick_threshold_right.setValue(
+                hardware.Arduino.Primary.lick.threshold_right
+            )
         except EOFError:
             pass
 
@@ -261,16 +269,28 @@ class TaskGUI(rigclass):
             + "\n\n"
             + str(value["trial_counters"]["valid"])
             + " ("
-            + ", ".join(str(int(i)) for i in value["plots"]["total_trial_distribution"] if i!=0.0)
+            + ", ".join(
+                str(int(i))
+                for i in value["plots"]["total_trial_distribution"]
+                if i != 0.0
+            )
             + ")"
             + "\n\n"
-            + str(round(value["plots"]["running_accuracy"][-1][1]*100))
+            + str(round(value["plots"]["running_accuracy"][-1][1] * 100))
             + "% ("
-            + ", ".join(str(round(i,2)) for i in value["plots"]["psychometric_function"] if np.isnan(i) == False)
+            + ", ".join(
+                str(round(i, 2))
+                for i in value["plots"]["psychometric_function"]
+                if np.isnan(i) == False
+            )
             + ")"
             + "\n\n"
             + " ("
-            + ", ".join(str(round(i,2)) for i in value["plots"]["reaction_time_distribution"] if np.isnan(i) == False)
+            + ", ".join(
+                str(round(i, 2))
+                for i in value["plots"]["reaction_time_distribution"]
+                if np.isnan(i) == False
+            )
             + ")"
             + "\n\n"
             + str(value["trial_counters"]["incorrect"])
@@ -343,7 +363,7 @@ class TaskGUI(rigclass):
 
         if "total_reward" in value.keys():
             try:
-                self.rig.total_reward.setText(str(round(value["total_reward"],2)))
+                self.rig.total_reward.setText(str(round(value["total_reward"], 2)))
             except:
                 self.rig.total_reward.setText(str(value["total_reward"]))
 
@@ -439,4 +459,3 @@ if __name__ == "__main__":
     window.show()
     window.start_experiment()
     sys.exit(app.exec_())
-

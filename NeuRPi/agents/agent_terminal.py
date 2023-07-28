@@ -239,13 +239,9 @@ class Terminal(Application):
     def prepare_experiment_parameters(self, task_params):
         module_directory = "protocols/" + task_params["task_module"]
         config_directoty = module_directory + "/config"
-        # TODO: remove this line is no error
-        # stim_config = get_configuration(directory=config_directoty, filename="stimulus")
         phase_config = get_configuration(
             directory=config_directoty, filename=task_params["task_phase"]
         )
-        # task_params["stim_config"] = phase_config.STIMULUS.copy()
-        # task_params["stim_config"] = stim_config.STIMULUS
         task_params["phase_config"] = phase_config
 
         subject_module = importlib.import_module(
@@ -257,8 +253,6 @@ class Terminal(Application):
             task_phase=task_params["task_phase"],
             config=task_params["phase_config"],
         )
-
-        task_params["subject"] =
         return task_params
 
     def start_experiment(self):

@@ -40,10 +40,22 @@ class Application(mainclass):
                 tab_index = index
         return tab_index
 
-    def add_new_rig(self, id: str = "rig_", task_gui=None):
+    def add_new_rig(
+        self,
+        id: str = "rig_",
+        task_gui=None,
+        subject_id=None,
+        task_id=None,
+        task_phase=None,
+    ):
         try:
             display_name = self.code_to_str(id)
-            self.rigs_gui[id] = task_gui(id)
+            self.rigs_gui[id] = task_gui(
+                id,
+                self.code_to_string(subject_id),
+                self.code_to_string(task_id),
+                self.code_to_string(task_phase),
+            )
             tab_index = self.main_gui.tabs.addTab(self.rigs_gui[id], display_name)
             self.main_gui.tabs.setCurrentIndex(tab_index)
             self.rigs_gui[id].comm_from_taskgui.connect(self.message_from_taskgui)
@@ -104,7 +116,7 @@ class Application(mainclass):
         }
 
         return task_params
-    
+
     def clear_variables(self):
         self.main_gui.subject.clear()
         self.main_gui.subject_weight.clear()
@@ -127,7 +139,6 @@ class Application(mainclass):
 
 
 if __name__ == "__main__":
-
     from protocols.random_dot_motion.gui.task_gui import TaskGUI
 
     app = QtWidgets.QApplication(sys.argv)

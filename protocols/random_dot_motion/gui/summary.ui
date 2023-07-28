@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>898</width>
-    <height>576</height>
+    <width>921</width>
+    <height>605</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -164,7 +164,7 @@
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>410</y>
+     <y>440</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -182,8 +182,8 @@
    <property name="geometry">
     <rect>
      <x>240</x>
-     <y>370</y>
-     <width>601</width>
+     <y>400</y>
+     <width>611</width>
      <height>131</height>
     </rect>
    </property>
@@ -226,8 +226,8 @@
     <rect>
      <x>240</x>
      <y>120</y>
-     <width>601</width>
-     <height>231</height>
+     <width>611</width>
+     <height>261</height>
     </rect>
    </property>
    <property name="font">
@@ -256,7 +256,7 @@ p, li { white-space: pre-wrap; }
    <property name="geometry">
     <rect>
      <x>440</x>
-     <y>510</y>
+     <y>540</y>
      <width>131</width>
      <height>51</height>
     </rect>
@@ -361,6 +361,24 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="placeholderText">
     <string>00.0</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_12">
+   <property name="geometry">
+    <rect>
+     <x>147</x>
+     <y>350</y>
+     <width>51</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Entropy</string>
    </property>
   </widget>
  </widget>
