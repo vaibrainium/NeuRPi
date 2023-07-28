@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1072</width>
-    <height>804</height>
+    <height>900</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>10</y>
       <width>1051</width>
-      <height>780</height>
+      <height>880</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -256,7 +256,7 @@
           <property name="text">
            <string>Free Reward Training</string>
           </property>
-         </item>       
+         </item>
          <item>
           <property name="text">
            <string>RT Dynamic Training</string>
