@@ -43,8 +43,8 @@ class Subject(BaseSubject):
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
                 "total_attempts": 0,
                 "total_reward": 0,
-                "reward_per_pulse": 3,
-                "current_coh_level": 2,
+                "reward_volume": 3,
+                "current_coherence_level": 2,
                 "index": list(np.zeros(len(full_coherences)).astype(int)),
                 "accuracy": list(np.zeros(len(full_coherences))),
             }
@@ -57,7 +57,7 @@ class Subject(BaseSubject):
                 )
 
         else:
-            with open(self.rolling_perf_pkl, "wb") as f:
+            with open(self.rolling_perf_pkl, "rb") as reader:
                 self.rolling_perf = pickle.load(reader)
 
     def initiate_parameters(self, full_coherences):
@@ -69,8 +69,8 @@ class Subject(BaseSubject):
         """
         subject_parameters = {
             "counters": {
-                "trial": 0,
                 "attempt": 0,
+                "valid": 0,
                 "correct": 0,
                 "incorrect": 0,
                 "noresponse": 0,
@@ -81,11 +81,11 @@ class Subject(BaseSubject):
             "active_bias_correction": False,
             "bias_replace": 1,
             # Plotting traces
-            "current_coh_level": self.rolling_perf["current_coh_level"],
-            "running_accuracy": [],
+            "current_coherence_level": self.rolling_perf["current_coherence_level"],
+            "running_accuracy": [[0, 0.5]],
             "psych_right": np.zeros(len(full_coherences)).tolist(),
             "psych_left": np.zeros(len(full_coherences)).tolist(),
-            "psych": np.array(np.zeros(len(full_coherences)) + 0.5).tolist(),
+            "psych": np.array(np.zeros(len(full_coherences)) + np.NaN).tolist(),
             "trial_distribution": np.zeros(len(full_coherences)).tolist(),
             "response_time_distribution": np.array(
                 np.zeros(len(full_coherences)) * np.NaN
@@ -98,17 +98,27 @@ class Subject(BaseSubject):
             ).tolist(),  # initiating at no bias
         }
 
-        subject_parameters["reward_per_pulse"] = self.rolling_perf["reward_per_pulse"]
-        if 1.5 < subject_parameters["reward_per_pulse"] < 3:
+        subject_parameters["reward_volume"] = self.rolling_perf["reward_volume"]
+        if 1.5 < subject_parameters["reward_volume"] < 3:
             # if received less than 700ul of reward on last session, increase reward by 0.1 ul.
             if self.rolling_perf["total_reward"] < 700:
-                subject_parameters["reward_per_pulse"] += 0.1
+                subject_parameters["reward_volume"] += 0.1
                 # if received less than 500ul of reward on last session, increase reward by another 0.1 ul.
                 if self.rolling_perf["total_reward"] < 500:
-                    subject_parameters["reward_per_pulse"] += 0.1
+                    subject_parameters["reward_volume"] += 0.1
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
             if self.rolling_perf["total_attempts"] > 200:
-                subject_parameters["reward_per_pulse"] -= 0.1
+                subject_parameters["reward_volume"] -= 0.1
+            # limiting reward volume between 1.5 and 3
+            subject_parameters["reward_volume"] = np.maximum(
+                subject_parameters["reward_volume"], 1.5
+            )
+            subject_parameters["reward_volume"] = np.minimum(
+                subject_parameters["reward_volume"], 3
+            )
+            subject_parameters["reward_volume"] = float(
+                subject_parameters["reward_volume"]
+            )
 
         self.config.SUBJECT = subject_parameters
         return subject_parameters
@@ -119,7 +129,8 @@ class Subject(BaseSubject):
         """
         try:
             reader = open(self.rolling_perf_pkl, "wb")
-            pickle.dump(self.rolling_Perf, reader)
+            pickle.dump(self.rolling_perf, reader)
             reader.close()
-        except:
+        except Exception as e:
+            print(e)
             pass
