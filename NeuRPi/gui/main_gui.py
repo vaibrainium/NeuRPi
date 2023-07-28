@@ -45,16 +45,16 @@ class Application(mainclass):
         id: str = "rig_",
         task_gui=None,
         subject_id=None,
-        task_id=None,
+        task_module=None,
         task_phase=None,
     ):
         try:
             display_name = self.code_to_str(id)
             self.rigs_gui[id] = task_gui(
                 id,
-                self.code_to_string(subject_id),
-                self.code_to_string(task_id),
-                self.code_to_string(task_phase),
+                subject_id,
+                self.code_to_str(task_module),
+                self.code_to_str(task_phase),
             )
             tab_index = self.main_gui.tabs.addTab(self.rigs_gui[id], display_name)
             self.main_gui.tabs.setCurrentIndex(tab_index)

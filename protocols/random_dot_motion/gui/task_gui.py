@@ -15,18 +15,22 @@ class TaskGUI(rigclass):
     comm_to_taskgui = QtCore.pyqtSignal(dict)
     comm_from_taskgui = QtCore.pyqtSignal(dict)
 
-    def __init__(self, rig_id=None, subject_id=None, task_id=None, task_phase=None):
+    def __init__(self, rig_id=None, subject_id=None, task_module=None, task_phase=None):
         super().__init__()
         # Load GUIs
         self.rig_id = rig_id
         self.subject_id = subject_id
-        self.task_id = task_id
+        self.task_module = task_module
         self.task_phase = task_phase
 
         # main rig window
         self.rig = Ui_rig()
         self.rig.setupUi(self)
         self.rig.close_experiment.hide()
+        self.rig.subject_id.setText(self.subject_id)
+        self.rig.task_module.setText(self.task_module)
+        self.rig.task_phase.setText(self.task_phase)
+
         # summary dialogue
         self.summary_window = QtWidgets.QDialog()
         self.summary = Ui_summary()

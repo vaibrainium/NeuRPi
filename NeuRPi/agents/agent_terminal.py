@@ -244,15 +244,15 @@ class Terminal(Application):
         )
         task_params["phase_config"] = phase_config
 
-        subject_module = importlib.import_module(
-            f"protocols.{task_params['task_module']}.data_model.subject"
-        )
-        task_params["subject"] = subject_module.Subject(
-            name=task_params["subject"],
-            task_module=task_params["task_module"],
-            task_phase=task_params["task_phase"],
-            config=task_params["phase_config"],
-        )
+        # subject_module = importlib.import_module(
+        #     f"protocols.{task_params['task_module']}.data_model.subject"
+        # )
+        # task_params["subject"] = subject_module.Subject(
+        #     name=task_params["subject"],
+        #     task_module=task_params["task_module"],
+        #     task_phase=task_params["task_phase"],
+        #     config=task_params["phase_config"],
+        # )
         return task_params
 
     def start_experiment(self):
@@ -271,7 +271,9 @@ class Terminal(Application):
                     "protocols." + task_params["task_module"] + ".gui.task_gui"
                 )
                 self.add_new_rig(
-                    id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI
+                    id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI, 
+                    subject_id=task_params["subject"], task_module=task_params["task_module"],
+                    task_phase=task_params["task_phase"]
                 )
                 self.rigs_gui[task_params["experiment_rig"]].set_rig_configuration(
                     self.pilots[task_params["experiment_rig"]]["prefs"]
