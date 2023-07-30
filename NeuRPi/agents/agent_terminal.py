@@ -236,7 +236,8 @@ class Terminal(Application):
                 # Add Rig option to the GUI
                 self.main_gui.experiment_rig.addItem(display_name)
 
-    def prepare_experiment_parameters(self, task_params):
+    def prepare_experiment(self, task_params):
+        
         module_directory = "protocols/" + task_params["task_module"]
         config_directoty = module_directory + "/config"
         phase_config = get_configuration(
@@ -244,15 +245,16 @@ class Terminal(Application):
         )
         task_params["phase_config"] = phase_config
 
-        # subject_module = importlib.import_module(
-        #     f"protocols.{task_params['task_module']}.data_model.subject"
-        # )
-        # task_params["subject"] = subject_module.Subject(
-        #     name=task_params["subject"],
-        #     task_module=task_params["task_module"],
-        #     task_phase=task_params["task_phase"],
-        #     config=task_params["phase_config"],
-        # )
+        subject_module = importlib.import_module(
+            f"protocols.{task_params['task_module']}.data_model.subject"
+        )
+        self.subjects[task_params["subject"]] = subject_module.Subject(
+            name=task_params["subject"],
+            task_module=task_params["task_module"],
+            task_phase=task_params["task_phase"],
+            config=task_params["phase_config"],
+        )
+        task_params["subject_config"] = self.subjects[task_params["subject"]].initiate_config()
         return task_params
 
     def start_experiment(self):
@@ -260,7 +262,7 @@ class Terminal(Application):
         if task_params:
             if self.pilots[task_params["experiment_rig"]]["state"] == "IDLE":
                 # Collect information to pass
-                task_params = self.prepare_experiment_parameters(task_params)
+                task_params = self.prepare_experiment(task_params)
 
                 # Send message to rig to start
                 self.node.send(
