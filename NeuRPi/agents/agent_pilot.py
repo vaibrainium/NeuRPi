@@ -117,7 +117,14 @@ class Pilot:
             value["stimulus_queue"] = mp.Manager().Queue()
             self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
             self.stimulus_display.start()
-            time.sleep(2)
+
+            # Wait for display to initialize before starting task
+            while True:
+                # Check for stimulus queue for display ready signal
+                if not value["stimulus_queue"].empty():
+                    if value["stimulus_queue"].get() == "display_ready":
+                        value["stimulus_queue"].put("start")
+                        break
 
             # Start the task on separate thread and update terminal
             threading.Thread(target=self.run_task, args=(value,)).start()
@@ -206,17 +213,14 @@ class Pilot:
 
         """
         self.logger.debug("initialing task")
+
+        self.config = task_params["phase_config"]
+        self.config.SUBJECT = task_params["subject_config"]
+
         # Importing protocol function/class object using importlib
         task_module = importlib.import_module(
             "protocols." + self.task_module + ".tasks." + self.task_phase
         )
-
-        # self.config = get_configuration(
-        #     directory="protocols/" + task_params["task_module"] + "/config",
-        #     filename=task_params["task_phase"],
-        # )
-        self.config = task_params["phase_config"]
-
         self.task = task_module.Task(
             stage_block=self.stage_block, config=self.config, **task_params
         )
