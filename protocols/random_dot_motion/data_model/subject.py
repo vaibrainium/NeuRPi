@@ -23,21 +23,29 @@ class Subject(BaseSubject):
         self.rolling_perf = {}
 
         # Initializing all directory and files. Currently, hardcoded file names. In future, will take input form external config to determine files
-        self.summary = str(Path(self.dir, self.name + "_summary.csv"))
-        self.trial = str(Path(self.dir, self.session, self.name + "_trial.csv"))
-        self.event = str(Path(self.dir, self.session, self.name + "_event.csv"))
-        self.lick = str(Path(self.dir, self.session, self.name + "_lick.csv"))
-        self.rolling_perf_pkl = str(Path(self.dir, "rolling_performance.pkl"))
+        self.files = {
+            "summary": str(Path(self.dir, self.name + "_summary.csv")),
+            "trial": str(Path(self.dir, self.session, self.name + "_trial.csv")),
+            "event": str(Path(self.dir, self.session, self.name + "_event.csv")),
+            "lick": str(Path(self.dir, self.session, self.name + "_lick.csv")),
+            "rolling_perf": str(Path(self.dir, "rolling_performance.pkl")),
+        }
 
-    def prepare_run(self, full_coherences):
+        self.prepare_run()
+
+    def prepare_run(self, full_coherences=None):
         "Creating file structure and essential folders"
+
+        # If coherences not provided, using default values
+        if full_coherences is None:
+            full_coherences = self.config.TASK.coherence.full
 
         # If this is a new subject
         if not os.path.exists(self.dir):
             os.makedirs(self.dir)
 
         # If first session, creating
-        if self.session == "1_1" or os.path.getsize(self.rolling_perf_pkl) <= 0:
+        if self.session == "1_1" or os.path.getsize(self.files["rolling_perf"]) <= 0:
             self.rolling_perf = {
                 "window": 50,  # rolling window
                 "trial_counter_after_4th": 0,  # trial counter for when lower coh (18%) are introduced
@@ -57,17 +65,27 @@ class Subject(BaseSubject):
                 )
 
         else:
-            with open(self.rolling_perf_pkl, "rb") as reader:
+            with open(self.files["rolling_perf"], "rb") as reader:
                 self.rolling_perf = pickle.load(reader)
 
-    def initiate_parameters(self, full_coherences):
+    def initiate_config(self, full_coherences=None):
         """ "
         Initiating subject and session specific parameters. This dictionary will also be shared with terminal at the end of each trial to update GUI
 
         Arguments:
             full_coherences (list): array of all coherences included in the task
         """
-        subject_parameters = {
+        # If coherences not provided, using default values
+        if full_coherences is None:
+            full_coherences = self.config.TASK.coherence.full
+
+        subject_config = {
+            # Subject and task identification
+            "name": self.name,
+            "task_module": self.task_module,
+            "task_phase": self.task_phase,
+            "session": self.session,
+            # Counters
             "counters": {
                 "attempt": 0,
                 "valid": 0,
@@ -96,39 +114,41 @@ class Subject(BaseSubject):
             "rolling_bias": np.zeros(
                 self.config.TASK.bias.passive_correction.rolling_window
             ).tolist(),  # initiating at no bias
+            # Between session tracking
+            "rolling_perf": self.rolling_perf,
         }
 
-        subject_parameters["reward_volume"] = self.rolling_perf["reward_volume"]
-        if 1.5 < subject_parameters["reward_volume"] < 3:
+        subject_config["reward_volume"] = self.rolling_perf["reward_volume"]
+        if 1.5 < subject_config["reward_volume"] < 3:
             # if received less than 700ul of reward on last session, increase reward by 0.1 ul.
             if self.rolling_perf["total_reward"] < 700:
-                subject_parameters["reward_volume"] += 0.1
+                subject_config["reward_volume"] += 0.1
                 # if received less than 500ul of reward on last session, increase reward by another 0.1 ul.
                 if self.rolling_perf["total_reward"] < 500:
-                    subject_parameters["reward_volume"] += 0.1
+                    subject_config["reward_volume"] += 0.1
             # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
             if self.rolling_perf["total_attempts"] > 200:
-                subject_parameters["reward_volume"] -= 0.1
+                subject_config["reward_volume"] -= 0.1
             # limiting reward volume between 1.5 and 3
-            subject_parameters["reward_volume"] = np.maximum(
-                subject_parameters["reward_volume"], 1.5
+            subject_config["reward_volume"] = np.maximum(
+                subject_config["reward_volume"], 1.5
             )
-            subject_parameters["reward_volume"] = np.minimum(
-                subject_parameters["reward_volume"], 3
+            subject_config["reward_volume"] = np.minimum(
+                subject_config["reward_volume"], 3
             )
-            subject_parameters["reward_volume"] = float(
-                subject_parameters["reward_volume"]
+            subject_config["reward_volume"] = float(
+                subject_config["reward_volume"]
             )
 
-        self.config.SUBJECT = subject_parameters
-        return subject_parameters
+        # self.config.SUBJECT = subject_config
+        return subject_config
 
     def save(self):
         """ "
         Save rolling performance in a  pickle file
         """
         try:
-            reader = open(self.rolling_perf_pkl, "wb")
+            reader = open(self.files["rolling_perf"], "wb")
             pickle.dump(self.rolling_perf, reader)
             reader.close()
         except Exception as e:
