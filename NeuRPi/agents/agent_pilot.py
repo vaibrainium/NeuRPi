@@ -75,6 +75,14 @@ class Pilot:
         self.task = None
         self.stimulus_display = None
 
+        # initialize default variables required for any task
+        self.session_info = None
+        self.session_config = None
+        self.subject_config = None
+        self.task_manager = None
+        self.handware_manager = None
+        self.stimulus_manager = None
+
     def handshake(self):
         hello = {
             "pilot": self.name,
@@ -90,6 +98,8 @@ class Pilot:
         """
         self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
+    ############################### LISTEN FUNCTIONS ########################################
+
     def l_start(self, value):
         """
         Terminal requested to start running the task
@@ -101,30 +111,51 @@ class Pilot:
         if self.state == "RUNNING" or self.running.is_set():
             self.logger.warning("Task already running. Cannot start new task")
             return
-        self.logger.info(f"Starting task: {value['task_module']}")
+
+        # Required parameteres from terminal to start task
+        try:
+            self.session_info = value["session_info"]
+            self.session_config = value["session_config"]
+            self.subject_config = value["subject_config"]
+        except KeyError as e:
+            self.logger.exception(f"Missing required parameter: {e}")
+            return
+
+        self.logger.info(f"Starting task: {self.session_info.task_module}")
 
         self.state = "RUNNING"
         self.running.set()
         try:
-            self.task_module = value["task_module"]
-            self.task_phase = value["task_phase"]
-            self.subject = value["subject"]
+            self.subject_name = self.session_info.subject_name
+            self.task_module = self.session_info.task_module
+            self.task_phase = self.session_info.task_phase
 
             self.stage_block.clear()
 
-            # # Start display on separate process and wait for three secs for display initiation
-            # # additing stimulus display queue
-            value["stimulus_queue"] = mp.Manager().Queue()
-            self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
-            self.stimulus_display.start()
+            # # verify that the task module exists with Path module
+            # task_module_path = Path(
+            #     f"protocols/{self.task_module}/tasks/{self.task_phase}.py"
+            # )
+            # if not task_module_path.exists():
 
-            # Wait for display to initialize before starting task
-            while True:
-                # Check for stimulus queue for display ready signal
-                if not value["stimulus_queue"].empty():
-                    if value["stimulus_queue"].get() == "display_ready":
-                        value["stimulus_queue"].put("start")
-                        break
+            # Start Display process if display hardware is required
+            if "Display" in self.session_config.HARDWARE.keys():
+                self.logger.debug("Starting display")
+                # # Start display on separate process and wait for three secs for display initiation
+                # # additing stimulus display queue
+                value["stimulus_queue"] = mp.Manager().Queue()
+                self.stimulus_display = mp.Process(
+                    target=self.start_display, args=(value,)
+                )
+                self.stimulus_display.start()
+
+                # Wait for display to initialize before starting task
+                while True:
+                    # Check for stimulus queue for display ready signal
+                    if not value["stimulus_queue"].empty():
+                        if value["stimulus_queue"].get() == "display_ready":
+                            value["stimulus_queue"].put("start")
+                            break
 
             # Start the task on separate thread and update terminal
             threading.Thread(target=self.run_task, args=(value,)).start()
@@ -173,27 +204,95 @@ class Pilot:
             if self.task:
                 self.task.manage_hardware(value["value"])
 
+    ############################### SECONDARY FUNCTIONS ########################################
+
+    def validate_task_requirements(self):
+        """
+        Function to check all task requirements are met including hardware and software requirements.
+
+        Any task module must have following structure:
+            protocols/
+                task_module/
+                    hardware/
+                        hardware_manager.py
+                    stimulus/
+                        task_phase.py
+                    tasks/
+                        task_phase.py
+        """
+
+        task_module_path = Path(f"protocols/{self.session_info.task_module}")
+        hardware_manager_path = Path(f"{task_module_path}/hardware/hardware_manager.py")
+        task_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
+        stimulus_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
+
+        # Try to import task module
+        try:
+            task_module = importlib.import_module(task_path
+
+        # Does task module exists?
+        if not Path(f"protocols/{self.session_info.task_module}").exists():
+            self.logger.error(
+                f"Task module {self.session_info.task_module} does not exist"
+            )
+            return False
+        # Does path has hardware management module?
+        if not Path(
+            f"protocols/{self.session_info.task_module}/hardware/hardware_manager.py"
+        ).exists():
+            self.logger.error(
+                f"Hardware management module for {self.session_info.task_module} does not exist"
+            )
+            return False
+        # Does task module has stimulus class for the requested phase?
+        if not Path(
+            f"protocols/{self.session_info.task_module}/stimulus/{self.session_info.task_phase}.py"
+        ).exists():
+            self.logger.error(
+                f"Stimulus class for {self.session_info.task_module} does not exist"
+            )
+            return False
+        # Does task module has task class for the requested phase?
+        if not Path(
+            f"protocols/{self.session_info.task_module}/tasks/{self.session_info.task_phase}.py"
+        ).exists():
+            self.logger.error(
+                f"Task class for {self.session_info.task_module} does not exist"
+            )
+            return False
+
     def start_display(self, task_params):
         """
         Import relevant stimulus configuration
         Import and start stimulus_display class relevant for requested task
         """
-
-        display_module = (
-            "protocols."
-            + task_params["task_module"]
-            + ".stimulus."
-            + task_params["task_phase"]
+        display_module = importlib.import_module(
+            f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}"
         )
-        display_module = importlib.import_module(display_module)
-
+        # display_module = (
+        #     "protocols."
+        #     + task_params["task_module"]
+        #     + ".stimulus."
+        #     + task_params["task_phase"]
+        # )
+        # display_module = importlib.import_module(display_module)
         try:
-            stimulus_configuration = task_params["phase_config"].STIMULUS.copy()
-        except:
-            directory = "protocols/" + task_params["task_module"] + "/config"
+            stimulus_configuration = self.session_config.STIMULUS.copy()
+        except KeyError:
+            self.logger.exception(
+                f"Could not find stimulus configuration for task {self.session_info.task_module}. Using default stimulus configuration."
+            )
+            directory = f"protocols/{self.session_info.task_module}/config"
             stimulus_configuration = get_configuration(
                 directory=directory, filename="stimulus"
             )
+        # try:
+        #     stimulus_configuration = task_params["phase_config"].STIMULUS.copy()
+        # except:
+        #     directory = "protocols/" + task_params["task_module"] + "/config"
+        #     stimulus_configuration = get_configuration(
+        #         directory=directory, filename="stimulus"
+        #     )
 
         display = display_module.Stimulus_Display(
             stimulus_configuration=stimulus_configuration,
@@ -240,7 +339,7 @@ class Pilot:
 
                 if data:
                     data["pilot"] = self.name
-                    data["subject"] = self.subject.name
+                    data["subject"] = self.session_info.subject_name
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
@@ -249,7 +348,6 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        # self.task.end_session()
                         self.stimulus_display.kill()
                         break
 
@@ -293,4 +391,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    from omegaconf import OmegaConf
+
+    dicto = OmegaConf.create()
