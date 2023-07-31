@@ -79,10 +79,10 @@ class Pilot:
         self.session_info = None
         self.session_config = None
         self.subject_config = None
-        self.task_manager = None
         self.handware_manager = None
+        self.task_manager = None
         self.stimulus_manager = None
-
+        
     def handshake(self):
         hello = {
             "pilot": self.name,
@@ -121,14 +121,22 @@ class Pilot:
             self.logger.exception(f"Missing required parameter: {e}")
             return
 
+        # Initialize task modules
+        if not self.init_task_modules():
+            self.logger.exception("Could not initialize task modules")
+            return
+        
+        # Initialize all required hardwares
+        
+        
         self.logger.info(f"Starting task: {self.session_info.task_module}")
 
         self.state = "RUNNING"
         self.running.set()
         try:
-            self.subject_name = self.session_info.subject_name
-            self.task_module = self.session_info.task_module
-            self.task_phase = self.session_info.task_phase
+            # self.subject_name = self.session_info.subject_name
+            # self.task_module = self.session_info.task_module
+            # self.task_phase = self.session_info.task_phase
 
             self.stage_block.clear()
 
@@ -206,61 +214,43 @@ class Pilot:
 
     ############################### SECONDARY FUNCTIONS ########################################
 
-    def validate_task_requirements(self):
+    def init_task_modules(self):
         """
-        Function to check all task requirements are met including hardware and software requirements.
-
-        Any task module must have following structure:
-            protocols/
-                task_module/
-                    hardware/
-                        hardware_manager.py
-                    stimulus/
-                        task_phase.py
-                    tasks/
-                        task_phase.py
+        Import task module and initialize hardware, stimulus and task managers.
+        Required for any task to run on the rig and should be called before starting the task.
         """
 
         task_module_path = Path(f"protocols/{self.session_info.task_module}")
         hardware_manager_path = Path(f"{task_module_path}/hardware/hardware_manager.py")
-        task_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
-        stimulus_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
+        task_manager_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
+        stimulus_manager_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
 
         # Try to import task module
         try:
-            task_module = importlib.import_module(task_path
-
-        # Does task module exists?
-        if not Path(f"protocols/{self.session_info.task_module}").exists():
-            self.logger.error(
-                f"Task module {self.session_info.task_module} does not exist"
-            )
-            return False
-        # Does path has hardware management module?
-        if not Path(
-            f"protocols/{self.session_info.task_module}/hardware/hardware_manager.py"
-        ).exists():
-            self.logger.error(
-                f"Hardware management module for {self.session_info.task_module} does not exist"
-            )
-            return False
-        # Does task module has stimulus class for the requested phase?
-        if not Path(
-            f"protocols/{self.session_info.task_module}/stimulus/{self.session_info.task_phase}.py"
-        ).exists():
-            self.logger.error(
-                f"Stimulus class for {self.session_info.task_module} does not exist"
-            )
-            return False
-        # Does task module has task class for the requested phase?
-        if not Path(
-            f"protocols/{self.session_info.task_module}/tasks/{self.session_info.task_phase}.py"
-        ).exists():
-            self.logger.error(
-                f"Task class for {self.session_info.task_module} does not exist"
-            )
+            task_manager_module = importlib.import_module(task_manager_path)
+            self.task_manager = task_manager_module.Task(self.session_info, self.session_config, self.subject_config)
+        except Exception as e:
+            self.logger.exception(f"Could not import task module: {e}")
             return False
 
+        # Import and initialize hardware manager
+        try:
+            hardware_manager_module = importlib.import_module(hardware_manager_path)
+            self.hardware_manager = hardware_manager_module.Hardware_Manager(self.session_info, self.session_config, self.subject_config)
+        except Exception as e:
+            self.logger.exception(f"Could not import hardware manager: {e}")
+            return False
+        
+        # Import and initialize stimulus manager
+        try:
+            stimulus_manager_module = importlib.import_module(stimulus_manager_path)
+            self.stimulus_manager = stimulus_manager_module.Stimulus_Manager(self.session_info, self.session_config, self.subject_config)
+        except Exception as e:
+            self.logger.exception(f"Could not import stimulus manager: {e}")
+            return False
+       
+        return True
+    
     def start_display(self, task_params):
         """
         Import relevant stimulus configuration

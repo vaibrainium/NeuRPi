@@ -20,7 +20,6 @@ class Display(Hardware):
 
     def __init__(
         self, name=None, port=0, refresh_rate=60, window_size=[1920,1080], flags=['FULLSCREEN', 'DOUBLEBUF', 'HWSURFACE', 'SCALED', 'HWACCEL'], vsync=True, font='Arial', group="Display"):
-        # self, name=None, port=0, refresh_rate=60, window_size=[1920,1080], flags=['DOUBLEBUF'], vsync=True, font='Arial', group="Display"):
         super(Display, self).__init__()
         
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
@@ -86,6 +85,7 @@ class Display(Hardware):
 
 
 if __name__ == "__main__":
+    import os
     
     os.environ["DISPLAY"] = ":0.0"
     a = Display()
@@ -94,3 +94,5 @@ if __name__ == "__main__":
     while True:
         a.render_display(0)
         # a.render_display(1)
+
+
