@@ -15,11 +15,12 @@ class Display(Hardware):
     pygame.init()
     pygame.mixer.init()
     pygame.font.init()
-    # pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(False)
     
 
     def __init__(
-        self, name=None, port=0, refresh_rate=60, window_size=[1920,1080], flags=['FULLSCREEN', 'DOUBLEBUF', 'HWSURFACE', 'SCALED'], vsync=True, font='Arial', group="Display"):
+        self, name=None, port=0, refresh_rate=60, window_size=[1920,1080], flags=['FULLSCREEN', 'DOUBLEBUF', 'HWSURFACE', 'SCALED', 'HWACCEL'], vsync=True, font='Arial', group="Display"):
+        # self, name=None, port=0, refresh_rate=60, window_size=[1920,1080], flags=['DOUBLEBUF'], vsync=True, font='Arial', group="Display"):
         super(Display, self).__init__()
         
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
@@ -28,8 +29,8 @@ class Display(Hardware):
         self.group = group
         self.port = port
         self.window_size = window_size
-        self.refresh_rate = refresh_rate
-        self.vsync = False #vsync
+        self.refresh_rate = 100# refresh_rate
+        self.vsync = vsync
         self.font = Display.pygame.font.SysFont(font, 50)
         self.flags = 0
         for flag in flags:
