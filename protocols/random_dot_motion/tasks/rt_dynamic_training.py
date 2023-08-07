@@ -13,8 +13,7 @@ from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
 from protocols.random_dot_motion.data_model.subject import Subject
 from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
 
@@ -214,8 +213,10 @@ class SessionManager:
         elif self.config.TASK.training_type.graduation_direction.value == 1:
             # If 100% and 70% coherence have accuracy above 70%
             if self.subject_pars["current_coherence_level"] > 3 or (
-                all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7))
+                all(np.array(accuracy[:2]) > 0.7) and all(np.array(accuracy[-2:]) > 0.7)
             ):
+                #### ERROR -> > not supported between instances of list and int
+
                 # Increase coherence level to 3 i.e., introduce 36% coherence
                 self.next_coherence_level = 3
                 # If 100%, 70% and 36% coherence have accuracy above 70%
