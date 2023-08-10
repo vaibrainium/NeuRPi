@@ -13,6 +13,7 @@ from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
+from omegaconf import OmegaConf
 
 
 class Terminal(Application):
@@ -236,61 +237,99 @@ class Terminal(Application):
                 # Add Rig option to the GUI
                 self.main_gui.experiment_rig.addItem(display_name)
 
-    def prepare_experiment(self, task_params):
-        
-        module_directory = "protocols/" + task_params["task_module"]
-        config_directoty = module_directory + "/config"
-        phase_config = get_configuration(
-            directory=config_directoty, filename=task_params["task_phase"]
-        )
-        task_params["phase_config"] = phase_config
+    def prepare_session_config(self, session_info):
+        """_summary_
 
+        Args:
+            session_info (dict): Takes user defined information from GUI and prepares a configuration dictionary to pass to rig
+
+        Returns:
+            session_config (OmegaConfdict): Configuration dictionary to pass to rig
+        """
+        # TODO: In future, get rid of hydra and use OmegaConf to load config files
+        # session_config = OmegaConf.create()
+
+        module_directory = "protocols/" + session_info["task_module"]
+        session_config = get_configuration(
+            directory=str(module_directory + "/config"), filename=session_info["task_phase"]
+        )
+        # session_config["phase"] = phase_config
+        return session_config
+    
+    def initiate_subject(self, session_info, session_config):
+        """
+        Initiating subject object and creating file structure for data collection
+        
+        Args:
+            session_info (dict): Takes user defined information from GUI and prepares a configuration dictionary to pass to rig
+        
+        Returns:
+            subject (Subject): Subject object
+        
+        """
         subject_module = importlib.import_module(
-            f"protocols.{task_params['task_module']}.data_model.subject"
+            f"protocols.{session_info['task_module']}.data_model.subject"
         )
-        self.subjects[task_params["subject"]] = subject_module.Subject(
-            name=task_params["subject"],
-            task_module=task_params["task_module"],
-            task_phase=task_params["task_phase"],
-            config=task_params["phase_config"],
+        self.subjects[session_info.subject_name] = subject_module.Subject(
+            name=session_info.subject_name,
+            task_module=session_info.task_module,
+            task_phase=session_info.task_phase,
+            session_config=session_config,
         )
-        task_params["subject_config"] = self.subjects[task_params["subject"]].initiate_config()
-        return task_params
+        subject_config = self.subjects[session_info.subject_name].initiate_config()
+        return subject_config
+    
+    def verify_hardware_requirements(self, session_config):
+        """
+        Before starting the task, verify that all the hardware requirements to run the task as met
+        """
+        pass
 
     def start_experiment(self):
-        task_params = super().start_experiment()
-        if task_params:
-            if self.pilots[task_params["experiment_rig"]]["state"] == "IDLE":
-                # Collect information to pass
-                task_params = self.prepare_experiment(task_params)
+        session_info = super().start_experiment()
+        if session_info:
+            if self.pilots[session_info.experiment_rig]["state"] == "IDLE":
+                # Gathering session configuration
+                session_config = self.prepare_session_config(session_info)
+                # Initializing subject
+                subject_config = self.initiate_subject(session_info, session_config)
+
+                self.verify_hardware_requirements(session_config)
 
                 # Send message to rig to start
                 self.node.send(
-                    to=task_params["experiment_rig"], key="START", value=task_params
+                    to=session_info.experiment_rig, 
+                    key="START", 
+                    value={
+                        'session_info': session_info,
+                        'session_config': session_config,
+                        'subject_config': subject_config
+                        }
                 )
+
                 # Start Task GUI and updating parameters from rig preferences
                 gui_module = importlib.import_module(
-                    "protocols." + task_params["task_module"] + ".gui.task_gui"
+                    f"protocols.{session_info.task_module}.gui.task_gui"
                 )
                 self.add_new_rig(
-                    id=task_params["experiment_rig"], task_gui=gui_module.TaskGUI, 
-                    subject_id=task_params["subject"], task_module=task_params["task_module"],
-                    task_phase=task_params["task_phase"]
+                    id=session_info["experiment_rig"], task_gui=gui_module.TaskGUI, 
+                    subject_id=session_info["subject"], task_module=session_info["task_module"],
+                    task_phase=session_info["task_phase"]
                 )
-                self.rigs_gui[task_params["experiment_rig"]].set_rig_configuration(
-                    self.pilots[task_params["experiment_rig"]]["prefs"]
+                self.rigs_gui[session_info["experiment_rig"]].set_rig_configuration(
+                    self.pilots[session_config["experiment_rig"]]["prefs"]
                 )
 
-                # Waiting for rig to initiate program
+                # Waiting for rig to initiate hardware and start session
                 while (
-                    not self.pilots[task_params["experiment_rig"]]["state"] == "RUNNING"
+                    not self.pilots[session_config["experiment_rig"]]["state"] == "RUNNING"
                 ):
                     pass
+                
                 # TODO: Start new rig on new QT thread
-                # Run experiment on qt thread
 
-                self.clear_variables()
-                self.rigs_gui[task_params["experiment_rig"]].start_experiment()
+                # self.clear_variables()
+                self.rigs_gui[session_info.experiment_rig].start_experiment()
 
             else:
                 msg = QtWidgets.QMessageBox()

@@ -1,8 +1,10 @@
 HARDWARE:
     Arduino:
+        tag: 'List and properties of all arduinos required for session'
+        num_arduinos: 1
         Primary:
             connection:
-                port    : '/dev/ttyACM0' #"COM7"
+                port    : '/dev/ttyACM0'
                 baudrate: None
                 timeout : None
             tag: "[Lick, Reward]"
@@ -15,6 +17,18 @@ HARDWARE:
         Video_Monitor:
             pin: None
             tag: 'Frame Time'
+
+    Display:
+        tag: 'List and properties of all displays needed for session'
+        num_screens: 1
+        Primary:
+            connection:
+                port  : 0 
+                window_size: (1920, 1080)
+                refresh_rate : 30
+                flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
+                vsync      : True
+                show_fps   : True
 
 
 TASK:
@@ -130,6 +144,72 @@ STIMULUS:
         flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
         vsync      : True
         show_fps   : True
+
+    load_media:
+        tag: 'Load media for visual and audio stimuli if any (relative to root directory)'
+        value:
+            images:
+            videos:
+            audios:
+                fixation_tone:  'protocols/random_dot_motion/stimulus/audio/fixation_tone.wav'
+                correct_tone :  'protocols/random_dot_motion/stimulus/audio/correct_tone.wav'
+                incorrect_tone: 'protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav'
+                stimulus_tone:  'protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav'
+
+    required_functions:
+        tag: 'List of all functions required for this phase'
+        value:
+            initiate_fixation:
+                stimulus_size  : (1920, 1080)
+                background_color: (0,0,0)
+                audio: fixation_tone       
+            initiate_stimulus:
+                stimulus_size  : (1920, 1080)
+                background_color: (0,0,0)
+                dots:
+                    radius    : 17
+                    color     : (255, 255, 255)
+                    fill_prct : 15
+                    velocity  : 420
+                    lifetime  : 30
+                audio: stimulus_tone
+            update_stimulus:
+            initiate_reinforcement:
+                audio: 
+                    correct: correct_tone
+                    incorrect: incorrect_tone
+                    invalid: incorrect_tone
+            update_reinforcement:
+            initiate_must_respond:
+            update_must_respond:
+            initiate_intertrial:
+                background_color: (160,160,160)
+            
+
+    task_epochs:
+        tag: 'List of all epochs and their respective functions
+              Format:
+                epoch_name:
+                    init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
+                    update_func: function to update epoch. This will be executed continuously until epoch is over.'
+        value:
+            fixation_epoch:
+                init_func: initiate_fixation
+                update_func:
+            stimulus_epoch:
+                init_func: initiate_stimulus
+                update_func: update_stimulus
+            reinforcement_epoch:
+                init_func: initiate_reinforcement
+                update_func: update_reinforcement
+            must_respond_epoch:
+                init_func: initiate_must_respond
+                update_func: update_must_respond
+            intertrial_epoch:
+                init_func: initiate_intertrial
+                update_func:
+
+
 
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
@@ -271,4 +351,3 @@ STIMULUS:
 
 
 EVENT_FILES:
-    events: 'event_all.txt'

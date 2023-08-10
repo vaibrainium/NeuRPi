@@ -16,6 +16,18 @@ HARDWARE:
             pin: None
             tag: 'Frame Time'
 
+    Display:
+        tag: 'List and properties of all displays used in study'
+        num_screens: 1
+        Screen_0:
+            tag: 'Primary'
+            screen_id  : 0 
+            window_size: (1920, 1080)
+            frame_rate : 30
+            flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
+            vsync      : True
+            show_fps   : True
+
 
 TASK:
     stimulus:
@@ -131,6 +143,17 @@ STIMULUS:
         vsync      : True
         show_fps   : True
 
+    load_media:
+        tag: 'Load media for visual and audio stimuli if any (relative to root directory)'
+        value:
+            images:
+            videos:
+            audios:
+                fixation_tone:  'protocols/random_dot_motion/stimulus/audio/fixation_tone.wav'
+                correct_tone :  'protocols/random_dot_motion/stimulus/audio/correct_tone.wav'
+                incorrect_tone: 'protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav'
+                stimulus_tone:  'protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav'
+
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
                 Format: 
@@ -201,7 +224,7 @@ STIMULUS:
                 properties:
                     load: 
                     generate: 
-                        background : (0,0,0)
+                        background : [0,0,0]
             audio:
                 need_update: True
                 is_static: True

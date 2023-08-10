@@ -2,6 +2,7 @@ import sys
 import time
 
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from omegaconf import OmegaConf
 
 Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
 
@@ -74,13 +75,13 @@ class Application(mainclass):
         Performing basic checks. Remainder functionality to be written by child class
         """
 
-        subject = self.main_gui.subject.toPlainText().upper()
+        subject_name = self.main_gui.subject.toPlainText().upper()
         subject_weight = self.main_gui.subject_weight.toPlainText()
         task_module = self.main_gui.task_module.currentText()
         task_phase = self.main_gui.task_phase.currentText()
         experiment_rig = self.main_gui.experiment_rig.currentText()
 
-        if subject == "":
+        if subject_name == "":
             msg = QtWidgets.QMessageBox()
             msg.setText("Enter Subject ID")
             msg.setWindowTitle("Error")
@@ -88,7 +89,7 @@ class Application(mainclass):
             return None
 
         # for testing purposes allowing to proceed if subject name is 'XXX'
-        elif subject == "XXX":
+        elif subject_name == "XXX":
             subject_weight = "0"
 
         if subject_weight == "":
@@ -106,16 +107,17 @@ class Application(mainclass):
             msg.setWindowTitle("Error")
             msg.exec_()
             return None
-
-        task_params = {
-            "subject": subject,
+        
+        session_info = OmegaConf.create()
+        session_info = {
+            "subject_name": subject_name,
             "subject_weight": float(subject_weight),
             "task_module": self.str_to_code(task_module),
             "task_phase": self.str_to_code(task_phase),
             "experiment_rig": self.str_to_code(experiment_rig),
         }
 
-        return task_params
+        return session_info
 
     def clear_variables(self):
         self.main_gui.subject.clear()

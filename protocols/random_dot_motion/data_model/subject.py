@@ -5,9 +5,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from omegaconf import OmegaConf
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
-
 
 class Subject(BaseSubject):
     """
@@ -15,11 +15,11 @@ class Subject(BaseSubject):
     """
 
     def __init__(
-        self, name=None, task_module=None, task_phase=None, config=None
+        self, name=None, task_module=None, task_phase=None, session_config=None
     ) -> None:
         super().__init__(name=name, task_module=task_module, task_phase=task_phase)
         # Initializing subject specific configuration
-        self.config = config
+        self.session_config = session_config
         self.rolling_perf = {}
 
         # Initializing all directory and files. Currently, hardcoded file names. In future, will take input form external config to determine files
@@ -77,7 +77,7 @@ class Subject(BaseSubject):
         """
         # If coherences not provided, using default values
         if full_coherences is None:
-            full_coherences = self.config.TASK.coherence.full
+            full_coherences = self.session_config.TASK.coherence.full
 
         subject_config = {
             # Subject and task identification
