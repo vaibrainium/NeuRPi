@@ -42,7 +42,7 @@ class DisplayManager:
         self.display_updated = threading.Event()
         self.display_ready = threading.Event()
 
-        self.buffer_count = 1  # Number of buffers
+        self.buffer_count = 3  # Number of buffers
         self.buffers = None
         self.display_queue = Queue(maxsize=self.buffer_count)
         self.buffer_index = 0
@@ -73,7 +73,7 @@ class DisplayManager:
             self.display_surf = self.pygame.Surface(self.display_config["window_size"])
             self.buffer_surf = self.pygame.Surface(self.display_config["window_size"])
 
-            self.buffers = [self.pygame.Surface(self.display_config["window_size"]).convert() for _ in range(self.buffer_count)]
+            self.buffers = [self.pygame.Surface(self.display_config["window_size"]) for _ in range(self.buffer_count)]
             
             
         except Exception as e:
@@ -97,7 +97,7 @@ class DisplayManager:
             raise Exception(f"Cannot load media to display device.")
         
     def start(self):
-        # threading.Thread(target=self.run_display, daemon=True).start()
+        threading.Thread(target=self.run_display, daemon=True).start()
         self.update_display()
 
 
@@ -131,14 +131,11 @@ class DisplayManager:
                     init_method, update_method = None, None
                     (epoch, args) = self.in_queue.get_nowait()
                     self.epoch_update_event.clear() # received message so clear the event
-                    
+
                     epoch_value = getattr(self.stimulus_config.task_epochs.value, epoch)
                     init_method = epoch_value.init_func
                     update_method = epoch_value.update_func
                     method = getattr(self, init_method)
-                    # init_method = getattr(self.stimulus_config.task_epochs.value, epoch).init_func
-                    # update_method = getattr(self.stimulus_config.task_epochs.value, epoch).update_func
-                    # method = getattr(self, init_method)
 
                     self.clear_queue(self.display_queue)
                     self.buffer_index = 0
@@ -149,16 +146,10 @@ class DisplayManager:
                         self.state = "update_epoch"
                     else:
                         self.state = "idle"
-
             elif self.state == "update_epoch": 
                 method = getattr(self, update_method)
                 while not self.epoch_update_event.is_set():
                     self.update_surfaces(method, args)
-
-                # # anytime we receive init epoch event, we set the state to init_epoch
-                # self.state="init_epoch"
-                # self.epoch_update_event.clear()
-                
             
             if self.epoch_update_event.is_set():
                 self.state="init_epoch"
@@ -167,24 +158,15 @@ class DisplayManager:
 
 
     def update_display(self):
-        current_surface = self.pygame.Surface(self.display_config["window_size"]).convert()
         while True:
-            # if not self.display_queue.empty():
-            #     # start = time.time()
-            #     current_surface = self.display_queue.get()
-            #     self.screen.blit(current_surface, (0,0))
-            #     print(f"FPS: {self.clock.get_fps()}")
-            # else:
-            #     print('Skipped frame')
-
-
-            self.screen.fill((255, 255, 255))
-            self.screen.blit(current_surface, (0,0))
-            print(self.clock.get_fps())
-            # Update the display
-            self.pygame.display.update()
-            self.pygame.event.pump()
-            self.clock.tick(self.display_config["max_fps"])
+            if not self.display_queue.empty():
+                current_surface = self.display_queue.get()
+                self.screen.blit(current_surface, (0,0))
+                self.display_updated.set()
+                self.pygame.display.flip()
+                self.pygame.event.pump()
+                self.clock.tick(self.display_config["max_fps"])
+                print(f"FPS: {self.clock.get_fps()}")
 
 
 

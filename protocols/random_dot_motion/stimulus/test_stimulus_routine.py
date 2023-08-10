@@ -77,13 +77,13 @@ class StimulusManager(DisplayManager):
         surface.fill(self.initiate_stimulus_config.background_color)
         #TODO: Modify code to draw stimulus faster or make frame queue as as queue of surfaces
         
-        # for idx in range(self.stimulus_manager.nDots):
-        #     self.pygame.draw.circle(
-        #         surface,
-        #         self.stimulus_manager.color,
-        #         (self.stimulus_manager.x[idx], self.stimulus_manager.y[idx]),
-        #         self.stimulus_manager.radius,
-        #     )
+        for idx in range(self.stimulus_manager.nDots):
+            self.pygame.draw.circle(
+                surface,
+                self.stimulus_manager.color,
+                (self.stimulus_manager.x[idx], self.stimulus_manager.y[idx]),
+                self.stimulus_manager.radius,
+            )
         return surface
 
 def separate_process_test_function(stimulus_config, in_queue, out_queue, epoch_update_event, stop_event):
@@ -107,7 +107,7 @@ if __name__ == "__main__":
     epoch_update_event = mp.Event()
     stop_event = mp.Event()
 
-    stim_process = mp.Process(target=separate_process_test_function, args=(stimulus_config, in_queue, out_queue, epoch_update_event, stop_event), daemon=True)
+    stim_process = mp.Process(target=separate_process_test_function, args=(stimulus_config, in_queue, out_queue, epoch_update_event, stop_event), daemon=False)
     stim_process.start()
 
     while True:
