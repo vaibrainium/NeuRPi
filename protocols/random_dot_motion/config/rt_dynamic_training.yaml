@@ -1,8 +1,10 @@
 HARDWARE:
     Arduino:
+        tag: 'List and properties of all arduinos required for session'
+        num_arduinos: 1
         Primary:
             connection:
-                port    : '/dev/ttyACM0' #"COM7"
+                port    : '/dev/ttyACM0'
                 baudrate: None
                 timeout : None
             tag: "[Lick, Reward]"
@@ -15,6 +17,18 @@ HARDWARE:
         Video_Monitor:
             pin: None
             tag: 'Frame Time'
+
+    Display:
+        tag: 'List and properties of all displays needed for session'
+        num_screens: 1
+        Primary:
+            connection:
+                port  : 0 
+                window_size: (1920, 1080)
+                refresh_rate : 30
+                flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
+                vsync      : True
+                show_fps   : True
 
 
 TASK:
@@ -47,7 +61,7 @@ TASK:
         fixation:
             tag             : 'Mean fixation time in secs'
             type            : 'int'
-            value           : 0.500
+            value           : 1.00
         stimulus:
             tag             : 'Minimum and Maximum stimulus time in secs'
             type            : 'int'
@@ -76,25 +90,25 @@ TASK:
                 power: 0
         incorrect:
             visual:
-                tag  : 'Visual feedback for correct trial'
+                tag  : 'Visual feedback for incorrect trial'
                 type : 'tuple'
             audio :
-                tag  : 'Audio feedback for correct trial'
+                tag  : 'Audio feedback for incorrect trial'
                 type : 'tuple'
             time  :
                 tag  : 'Temporal delay feedback in secs'
                 type : 'int'
-                value: 1.000
+                value: 1.500
             intertrial:
                 tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
                 base : 25
                 power: -4
         invalid:
             visual:
-                tag  : 'Visual feedback for correct trial'
+                tag  : 'Visual feedback for invalid trial'
                 type : 'tuple'
             audio :
-                tag  : 'Audio feedback for correct trial'
+                tag  : 'Audio feedback for invalid trial'
                 type : 'tuple'
             time  :
                 tag  : 'Temporal delay feedback in secs'
@@ -102,8 +116,8 @@ TASK:
                 value: 0
             intertrial:
                 tag  : 'Reaction Time dependent exponentially decaying intertrial_duration'
-                base : 25
-                power: -4
+                base : 0
+                power: 0
 
     training_type:
         value: 1
@@ -125,11 +139,77 @@ STIMULUS:
     display:
         num_screens: 1
         screen     : 0 #0 
-        window_size: (1920, 1080)
-        frame_rate : 100
-        flags      : pygame.DOUBLEBUF | pygame.constants.SCALED | pygame.FULLSCREEN
-        vsync      : False
+        window_size: [1920, 1080]
+        frame_rate : 30
+        flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
+        vsync      : True
         show_fps   : True
+
+    load_media:
+        tag: 'Load media for visual and audio stimuli if any (relative to root directory)'
+        value:
+            images:
+            videos:
+            audios:
+                fixation_tone:  'protocols/random_dot_motion/stimulus/audio/fixation_tone.wav'
+                correct_tone :  'protocols/random_dot_motion/stimulus/audio/correct_tone.wav'
+                incorrect_tone: 'protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav'
+                stimulus_tone:  'protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav'
+                
+    required_functions:
+        tag: 'List of all functions required for this phase'
+        value:
+            initiate_fixation:
+                stimulus_size  : [1920, 1080]
+                background_color: [0,0,0]
+                audio: fixation_tone       
+            initiate_stimulus:
+                stimulus_size  : [1920, 1080]
+                background_color: [0,0,0]
+                dots:
+                    radius    : 17
+                    color     : [255, 255, 255]
+                    fill_prct : 15
+                    velocity  : 30 #420
+                    lifetime  : 30
+                audio: stimulus_tone
+            update_stimulus:
+            initiate_reinforcement:
+                audio: 
+                    correct: correct_tone
+                    incorrect: incorrect_tone
+                    invalid: incorrect_tone
+            update_reinforcement:
+            initiate_must_respond:
+            update_must_respond:
+            initiate_intertrial:
+                background_color: [255,255,255] # [160,160,160]
+            
+
+    task_epochs:
+        tag: 'List of all epochs and their respective functions
+              Format:
+                epoch_name:
+                    init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
+                    update_func: function to update epoch. This will be executed continuously until epoch is over.'
+        value:
+            fixation_epoch:
+                init_func: initiate_fixation
+                update_func:
+            stimulus_epoch:
+                init_func: initiate_stimulus
+                update_func: update_stimulus
+            reinforcement_epoch:
+                init_func: initiate_reinforcement
+                update_func: update_reinforcement
+            must_respond_epoch:
+                init_func: initiate_must_respond
+                update_func: update_must_respond
+            intertrial_epoch:
+                init_func: initiate_intertrial
+                update_func:
+
+
 
     courier_handle:
         tag:    'Instruction on how to handle few basic and other custom messages.
@@ -158,7 +238,7 @@ STIMULUS:
                     generate:
                         background : (0,0,0)
             audio:
-                need_update: True
+                need_update: False
                 is_static: True
                 update_function: 
                 properties: 
@@ -178,10 +258,10 @@ STIMULUS:
                         stimulus_size  : (1920, 1080)
                         background : (0,0,0)
                         dots:
-                            radius    : 15
+                            radius    : 17
                             color     : (255, 255, 255)
                             fill_prct : 15
-                            velocity  : 125
+                            velocity  : 15 #420
                             lifetime  : 30
             audio:
                 need_update: False
@@ -195,8 +275,8 @@ STIMULUS:
             tag: 'Execution type for response window'
             function: initiate_response
             visual: 
-                need_update: False
-                is_static: False
+                need_update: True
+                is_static: True
                 update_function: next_frame_response
                 properties:
                     load: 
@@ -226,9 +306,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : ['protocols/random_dot_motion/stimulus/audio/correctTone.wav']
-                        incorrect       : [] #['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : [] #'protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
+                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
                     generate:
 
         initiate_must_respond: 
@@ -259,7 +339,7 @@ STIMULUS:
                 properties: 
                     load: 
                     generate:
-                        background : (100,100,100)
+                        background : (160,160,160)
             audio:
                 need_update: False
                 is_static: True
@@ -268,7 +348,6 @@ STIMULUS:
                     load: 
                     generate:
 
-SUBJECT:
+
 
 EVENT_FILES:
-    events: 'event_all.txt'

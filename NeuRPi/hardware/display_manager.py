@@ -1,281 +1,205 @@
 import time
 import multiprocessing
-import pygame
-import serial
 import os
-from NeuRPi.hardware.display import Display
+import numpy as np
+from queue import Queue, Empty
+import threading
+from NeuRPi.prefs import prefs
+
 
 
 class DisplayManager:
-    def __init__(self):
-        # Create a list to store instances of Display
-        self.displays = []
 
-    def add_display(self, display):
-        # Add a new instance of Display to the list
-        self.displays.append(display)
-
-    def update_all_displays(self, frames):
-        # Update the frames for all displays
-        for i, display in enumerate(self.displays):
-            frame = frames[i] if i < len(frames) else None
-            display.update_screen(frame)
-
-    def run_all_displays(self, frame_queues, stop_event):
-        # Run the displays in separate processes
-        display_processes = []
-        for i, display in enumerate(self.displays):
-            frame_queue = frame_queues[i]
-            display_process = multiprocessing.Process(target=display.run_display, args=(frame_queue, stop_event))
-            display_processes.append(display_process)
-            display_process.start()
-
-        try:
-            # Main loop for other tasks
-            while True:
-                pass
-
-        except KeyboardInterrupt:
-            # Terminate the display processes gracefully
-            stop_event.set()
-            for display_process in display_processes:
-                display_process.join()
+    def __init__(self, stimulus_config, in_queue=None, out_queue=None, epoch_update_event=None, stop_event=None):
+        
+        # initialize pygame
+        import pygame
+        
+        self.pygame = pygame
+        # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
+        os.putenv('DISPLAY', ':0.0')
 
 
-if __name__ == "__main__":
-    os.environ["DISPLAY"] = ":0.0"
+        self.display_config = prefs.get('HARDWARE')["Display"]
+        self.stimulus_config = stimulus_config
+        self.in_queue = in_queue
+        self.out_queue = self.out_queue = out_queue or multiprocessing.Queue()
+        self.epoch_update_event = epoch_update_event
+        self.stop_event = stop_event
 
-    # Create a DisplayManager instance
-    display_manager = DisplayManager()
-
-    # Create multiple instances of Display
-    displays = [
-        Display(name="Display1", port=0, window_size=[1920, 1080]),
-        Display(name="Display2", port=1, window_size=[1280, 720])
-        # Add more instances as needed
-    ]
-
-    # Add the displays to the DisplayManager
-    for display in displays:
-        display_manager.add_display(display)
-
-    # Create a multiprocessing Queue for each display to pass frames between processes
-    frame_queues = [multiprocessing.Queue() for _ in range(len(displays))]
-
-    # Create a stop event to signal when to stop all display processes
-    stop_event = multiprocessing.Event()
-
-    try:
-        # Start all the display processes
-        display_manager.run_all_displays(frame_queues, stop_event)
-
-    except KeyboardInterrupt:
-        # Terminate all display processes gracefully
-        for queue in frame_queues:
-            queue.put(None)  # Signal to stop the display process
-        display_manager.run_all_displays(frame_queues, stop_event)  # Wait for processes to finish
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-######################################
-import time
-import multiprocessing
-import pygame
-import serial
-import os
-from NeuRPi.hardware.hardware import Hardware
-
-
-class Display(Hardware):
-    """
-    A class representing a display hardware.
-
-    This class handles the initialization, connection, rendering, and release of the display hardware.
-
-    Attributes:
-        name (str): The name of the display.
-        group (str): The group of the display hardware.
-        port (int): The connection port of the display.
-        window_size (list): The size of the display window.
-        max_refresh_rate (int): The maximum refresh rate of the display.
-        vsync (bool): The vertical synchronization of the display.
-        font (pygame.font.Font): The font used for rendering text on the display.
-        flags (int): The flags used for initializing the display.
-        clock (pygame.time.Clock): The pygame clock used for timing the display refresh rate.
-        connection: The connection object for the display hardware.
-        is_connected (bool): A boolean indicating whether the display is connected or not.
-    """
-    pygame = pygame
-    pygame.display.init()
-    pygame.mixer.init()
-    pygame.font.init()
-    pygame.mouse.set_visible(False)
-    
-    @classmethod
-    def load_media(cls):
-        """
-        Load media from session_config file
-        """
-        pass
-
-    @classmethod
-    def update_display(cls):
-        """
-        Updates the display.
-        """
-        cls.pygame.event.pump()
-        cls.pygame.display.update()
-
-    def __init__(
-        self, name=None, port=0, max_refresh_rate=100, window_size=[1920,1080], flags=['FULLSCREEN', 'DOUBLEBUF', 'HWSURFACE', 'SCALED', 'HWACCEL'], vsync=True, font=['Arial',20], group="Display"
-    ):
-        """
-        Initializes a Display object.
-
-        Args:
-            name (str, optional): The name of the display. Defaults to None.
-            port (int, optional): The connection port of the display. Defaults to 0.
-            max_refresh_rate (int, optional): The maximum refresh rate of the display. Defaults to 100.
-            window_size (list, optional): The size of the display window. Defaults to [1920, 1080].
-            flags (list, optional): The flags used for initializing the display. Defaults to ['FULLSCREEN', 'DOUBLEBUF', 'HWSURFACE', 'SCALED', 'HWACCEL'].
-            vsync (bool, optional): The vertical synchronization of the display. Defaults to True.
-            font (str, optional): The font used for rendering text on the display. Defaults to 'Arial'.
-            group (str, optional): The group of the display hardware. Defaults to "Display".
-        """
-        super(Display, self).__init__()
-
-        self.name = name if name else port
-        self.group = group
-        self.port = port
-        self.window_size = window_size
-        self.max_refresh_rate = max_refresh_rate
-        self.vsync = vsync
-        self.font = Display.pygame.font.SysFont(font[0], font[1])
         self.flags = 0
-        for flag in flags:
-            self.flags |= getattr(Display.pygame, flag)
-        self.clock = Display.pygame.time.Clock()
-        self.connection = None
+        for flag in self.display_config["flags"]:
+            self.flags |= getattr(self.pygame, flag)
+        self.clock = None
+        self.font = None
+        self.screen = {}
+        self.images = {}
+        self.videos = {}
+        self.audios = {}
+
+        self.buffer_surf = None
+        self.display_surf = None
+        self.display_updated = threading.Event()
+        self.display_ready = threading.Event()
+
+        self.buffer_count = 1  # Number of buffers
+        self.buffers = None
+        self.display_queue = Queue(maxsize=self.buffer_count)
+        self.buffer_index = 0
+
+        self.lock = threading.Lock()
+        self.frame_queue = Queue(maxsize=100)
         self.is_connected = False
+        self.state = None
 
     def connect(self):
-        """
-        Connects to the display hardware.
-
-        Raises:
-            Exception: If the connection to the display hardware fails.
-        """
         try:
-            self.screen = Display.pygame.display.set_mode(
-                self.window_size, flags=self.flags, display=self.port, vsync=self.vsync
-            ).convert()
-            # wait for screen to be initialized
+            self.pygame.init()  
+            self.pygame.display.init()
+            # wait for display to be initialized
             while not self.pygame.display.get_init():
-                pass
-            # initialize screen with black background
-            self.screen.fill((0, 0, 0))
+                pass  
+            # initialize other pygame modules
+            self.pygame.mixer.init()
+            self.pygame.font.init()
+            self.pygame.mouse.set_visible(self.display_config["mouse_visible"])
+            self.font = self.pygame.font.SysFont(self.display_config["font"][0],self.display_config["font"][1])
+            self.clock = self.pygame.time.Clock()
+            # Starting displays
+            self.screen = self.pygame.display.set_mode(self.display_config["window_size"], flags=self.flags, display=self.display_config["port"], vsync=self.display_config["vsync"])
+            self.screen.fill((0, 255, 255))
+            self.pygame.display.update()
+
+            self.display_surf = self.pygame.Surface(self.display_config["window_size"])
+            self.buffer_surf = self.pygame.Surface(self.display_config["window_size"])
+
+            self.buffers = [self.pygame.Surface(self.display_config["window_size"]).convert() for _ in range(self.buffer_count)]
+            
+            
+        except Exception as e:
+            raise Exception(f"Cannot connect to provided display device. {e}")
+        finally:
             self.is_connected = True
-        except Exception:
-            raise Exception(
-                f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')"
-            )
+            self.out_queue.put(("display_connected", None))
 
-    def run_display(self, frame_queue, stop_event):
-        
-        while self.is_connected and not stop_event.is_set():
-            if not frame_queue.empty():
-                frame = frame_queue.get()
-                self.update_screen(frame)
-            else:
-                # Render a black screen if no frame is available
-                self.update_screen()
-        
-        self.release()
-
-
-    def update_screen(self, frame=None):
-        """ 
-        Shows a frame on the display.
-
-        Args:
-            frame (numpy.ndarray): The frame to be shown on the display.
-        """
-        if frame:
-            # Convert the frame (e.g., a NumPy array) to a Pygame surface
-            frame_surface = pygame.surfarray.make_surface(frame)
-            self.screen.blit(frame_surface, (0, 0))
-        else:
-            self.screen.fill((0, 0, 0))
-
-        fps = self.font.render(
-            str(int(self.clock.get_fps())), 1, Display.pygame.Color("coral")
-        )
-        print(self.clock.get_fps())
-        self.screen.blit(fps, (1000, 1000))
-
-        # Print time between two frames
-        # print(self.clock.get_fps())
-        # Update the display
-        Display.pygame.display.update()
-        Display.pygame.event.pump()
-        self.clock.tick(self.max_refresh_rate)
-
-    def release(self):
-        """
-        Releases the connection to the display hardware.
-
-        Raises:
-            Warning: If the connection with the display hardware cannot be closed.
-        """
+    def load_media(self):
         try:
-            if self.is_connected:
-                pygame.quit()
-            self.is_connected = False
-        except:
-            raise Warning(
-                f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')"
-            )
-
-if __name__ == "__main__":
-    os.environ["DISPLAY"] = ":0"
-    a = Display()    
-    a.connect()
-
-    # Create a multiprocessing Queue to pass frames between processes
-    frame_queue = multiprocessing.Queue()
-    # Create a stop event to signal when to stop the display process
-    stop_event = multiprocessing.Event()
-    # Create a separate process for the Pygame display
-    display_process = multiprocessing.Process(target=a.run_display, args=(frame_queue, stop_event))
+            media = self.stimulus_config.load_media.value
+            if media.images:
+                for key, val in media.images.items():
+                    self.images[key] = self.pygame.image.load(val)
+            if media.audios:
+                for key, val in media.audios.items():
+                    self.audios[key] = self.pygame.mixer.Sound(val)
+            if media.videos:
+                raise TypeError("Video loading not supported yet")
+        except Exception:
+            raise Exception(f"Cannot load media to display device.")
+        
+    def start(self):
+        # threading.Thread(target=self.run_display, daemon=True).start()
+        self.update_display()
 
 
-    try:
-        # Start the Pygame display process
-        display_process.start()
+    def update_surfaces(self, method, args):
+        if not self.display_queue.full():
+            self.buffer_index = (self.buffer_index + 1) % self.buffer_count       
+            method(args=args, surface=self.buffers[self.buffer_index])
+            self.display_queue.put(self.buffers[self.buffer_index])
 
-        # Main loop for other tasks
+    def run_display(self):
+        """
+        Obeserve incoming queue for either of below three states:
+        idle: System is idle and display is blank
+        init_epoch: New epoch has been initialized
+        update_epoch: Epoch is being updated
+        """
+        self.state = "idle"
+        init_method, update_method = None, None
+        epoch, args = None, None
+        self.epoch_update_event.clear()
+        self.display_updated.set()
+        
+        while self.is_connected:
+            print(f"observed in {self.state} state")
+            if self.state == "idle":
+                self.epoch_update_event.wait()
+                self.state = "init_epoch"
+
+            elif self.state == "init_epoch":
+                if not self.in_queue.empty():
+                    init_method, update_method = None, None
+                    (epoch, args) = self.in_queue.get_nowait()
+                    self.epoch_update_event.clear() # received message so clear the event
+                    
+                    epoch_value = getattr(self.stimulus_config.task_epochs.value, epoch)
+                    init_method = epoch_value.init_func
+                    update_method = epoch_value.update_func
+                    method = getattr(self, init_method)
+                    # init_method = getattr(self.stimulus_config.task_epochs.value, epoch).init_func
+                    # update_method = getattr(self.stimulus_config.task_epochs.value, epoch).update_func
+                    # method = getattr(self, init_method)
+
+                    self.clear_queue(self.display_queue)
+                    self.buffer_index = 0
+                    method(args=args, surface=self.buffers[self.buffer_index])
+                    self.display_queue.put(self.buffers[self.buffer_index])
+
+                    if update_method:
+                        self.state = "update_epoch"
+                    else:
+                        self.state = "idle"
+
+            elif self.state == "update_epoch": 
+                method = getattr(self, update_method)
+                while not self.epoch_update_event.is_set():
+                    self.update_surfaces(method, args)
+
+                # # anytime we receive init epoch event, we set the state to init_epoch
+                # self.state="init_epoch"
+                # self.epoch_update_event.clear()
+                
+            
+            if self.epoch_update_event.is_set():
+                self.state="init_epoch"
+                self.clear_queue(self.frame_queue)
+                self.epoch_update_event.clear()
+
+
+    def update_display(self):
+        current_surface = self.pygame.Surface(self.display_config["window_size"]).convert()
         while True:
+            # if not self.display_queue.empty():
+            #     # start = time.time()
+            #     current_surface = self.display_queue.get()
+            #     self.screen.blit(current_surface, (0,0))
+            #     print(f"FPS: {self.clock.get_fps()}")
+            # else:
+            #     print('Skipped frame')
+
+
+            self.screen.fill((255, 255, 255))
+            self.screen.blit(current_surface, (0,0))
+            print(self.clock.get_fps())
+            # Update the display
+            self.pygame.display.update()
+            self.pygame.event.pump()
+            self.clock.tick(self.display_config["max_fps"])
+
+
+
+    def clear_queue(self, q):
+        try:
+            while True:
+                q.get_nowait()
+        except Empty:
             pass
 
-    except KeyboardInterrupt:
-        # Terminate the Pygame display process gracefully
-        a.release()
-        display_process.join()
+    def release(self):
+        try:
+            if self.is_connected:
+                self.pygame.quit()
+            self.is_connected = False
+        except:
+            raise Warning(f"Could not close connection with display device")
+        

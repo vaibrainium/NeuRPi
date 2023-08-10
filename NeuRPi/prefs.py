@@ -146,4 +146,3 @@ class Prefs:
 global prefs
 directory, filename = Path("./config"), "config_pilot.yaml"
 prefs = Prefs(directory=directory, filename=filename)
-a = 0

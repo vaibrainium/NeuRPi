@@ -2,14 +2,16 @@ import numpy as np
 
 
 class RandomDotMotion(object):
-    def __init__(self):
-        self.stimulus_size = (None, None)
-        self.radius = 10
-        self.color = (255, 255, 255)
-        self.vel = 300
-        self.lifetime = 60
+    def __init__(self, **kwargs):
+
+        self.radius = kwargs["radius"] if "radius" in kwargs else 10
+        self.color = kwargs["color"] if "color" in kwargs else (255, 255, 255)
+        self.fill = kwargs["fill_prct"] if "fill_prct" in kwargs else 15
+        self.vel = kwargs["vel"] if "vel" in kwargs else 300
+        self.lifetime = kwargs["lifetime"] if "lifetime" in kwargs else 60
+        self.stimulus_size = kwargs["stimulus_size"] if "stimulus_size" in kwargs else (1920, 1080)
+
         self.nDots = []
-        self.fill = 15
         self.x = []
         self.y = []
         self.age = []
@@ -28,17 +30,33 @@ class RandomDotMotion(object):
     def update_lifetime(self, pars):
         self.lifetime = pars["lifetime"]
 
-    def new_stimulus(self, pars):
-        if "seed" in pars:
-            self.rdk_generator.seed(pars["seed"])
-        self.coherence = pars["coherence"]
-        self.stimulus_size = pars["stimulus_size"]
+    def new_stimulus(self, coherence, **kwargs):
+        self.coherence = coherence
+        if "seed" in kwargs:
+            self.rdk_generator.seed(kwargs["seed"])
+        if "stimulus_size" in kwargs:      
+            self.stimulus_size = kwargs["stimulus_size"]
+        if "radius" in kwargs:
+            self.radius = kwargs["radius"]
+        if "color" in kwargs:
+            self.color = kwargs["color"]
+        if "fill_prct" in kwargs:
+            self.fill = kwargs["fill_prct"]
+        if "vel" in kwargs:
+            self.vel = kwargs["vel"]
+        if "lifetime" in kwargs:
+            self.lifetime = kwargs["lifetime"]
 
-        self.radius = pars["dot_radius"]
-        self.color = pars["dot_color"]
-        self.fill = pars["dot_fill"]
-        self.vel = pars["dot_vel"]
-        self.lifetime = pars["dot_lifetime"]
+        # if "seed" in pars:
+        #     self.rdk_generator.seed(pars["seed"])
+        # self.coherence = pars["coherence"]
+        # self.stimulus_size = pars["stimulus_size"]
+
+        # self.radius = pars["dot_radius"]
+        # self.color = pars["dot_color"]
+        # self.fill = pars["dot_fill"]
+        # self.vel = pars["dot_vel"]
+        # self.lifetime = pars["dot_lifetime"]
 
         self.nDots = round(
             (self.fill / 100)
@@ -60,7 +78,7 @@ class RandomDotMotion(object):
             )  # If cohDots are empty all dots are non-coherent
         else:
             self.noncohDots = list(range(self.cohDots[-1] + 1, self.nDots))
-        self.theta[self.cohDots] = np.sign(pars["coherence"]) * 90
+        self.theta[self.cohDots] = np.sign(self.coherence) * 90
 
     def move_dots(self, frame_rate):
         self.x[self.age == self.lifetime] = self.rdk_generator.randint(
