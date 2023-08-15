@@ -40,7 +40,7 @@ STIMULUS:
                 is_static: True
                 update_function: 
                 properties: 
-                    load: ['protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
+                    load: ['protocols/random_dot_motion/stimulus/audio/fixation_tone.wav']
                     generate:
 
         initiate_stimulus: 
@@ -56,11 +56,11 @@ STIMULUS:
                         stimulus_size  : (1920, 1080)
                         background : (0,0,0)
                         dots:
-                            radius    : 150
+                            radius    : 17
                             color     : (255, 255, 255)
                             fill_prct : 15
-                            velocity  : 125
-                            lifetime  : 30
+                            velocity  : 420 #125
+                            lifetime  : 15
             audio:
                 need_update: False
                 is_static: False
@@ -104,9 +104,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
-                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : [] #'protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correct_tone.wav']
+                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav']
+                        invalid         : [] #'protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav']
                     generate:
 
         initiate_must_respond: 

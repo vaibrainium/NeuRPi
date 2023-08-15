@@ -44,10 +44,10 @@ class DisplayManager:
 
         self.buffer_count = 3  # Number of buffers
         self.buffers = None
-        self.display_queue = Queue(maxsize=self.buffer_count)
+        self.frame_queue = Queue(maxsize=self.buffer_count)
         self.buffer_index = 0
 
-        self.lock = threading.Lock()
+        self.lock = multiprocessing.Lock() #threading.Lock()
         self.frame_queue = Queue(maxsize=100)
         self.is_connected = False
         self.state = None
@@ -73,7 +73,7 @@ class DisplayManager:
             self.display_surf = self.pygame.Surface(self.display_config["window_size"])
             self.buffer_surf = self.pygame.Surface(self.display_config["window_size"])
 
-            self.buffers = [self.pygame.Surface(self.display_config["window_size"]) for _ in range(self.buffer_count)]
+            self.buffers = [self.pygame.Surface(self.display_config["window_size"]).convert() for _ in range(self.buffer_count)]
             
             
         except Exception as e:
@@ -97,18 +97,23 @@ class DisplayManager:
             raise Exception(f"Cannot load media to display device.")
         
     def start(self):
-        threading.Thread(target=self.run_display, daemon=False).start()
-        threading.Thread(target=self.update_display, daemon=False).start()
+        # threading.Thread(target=self.run_display, daemon=True).start()
         # self.update_display()
 
+        # multiprocessing.Process(target=self.update_display,  args=(self.pygame.display, self.screen, self.frame_queue,), daemon=False).start()
+        # self.run_display()
+
+        multiprocessing.Process(target=self.run_display, args=(self.frame_queue, self.stop_event,), daemon=False).start()
+        self.update_display()#self.pygame.display, self.screen, self.frame_queue)
 
     def update_surfaces(self, method, args):
-        if not self.display_queue.full():
+        if not self.frame_queue.full():
             self.buffer_index = (self.buffer_index + 1) % self.buffer_count       
-            method(args=args, surface=self.buffers[self.buffer_index])
-            self.display_queue.put(self.buffers[self.buffer_index])
+            surface = method(args=args, surface=self.buffers[self.buffer_index])
+            # self.frame_queue.put(self.buffers[self.buffer_index])
+            return surface
 
-    def run_display(self):
+    def run_display(self, frame_queue=None, stop_event=None):
         """
         Obeserve incoming queue for either of below three states:
         idle: System is idle and display is blank
@@ -119,7 +124,6 @@ class DisplayManager:
         init_method, update_method = None, None
         epoch, args = None, None
         self.epoch_update_event.clear()
-        self.display_updated.set()
         
         while self.is_connected:
             print(f"observed in {self.state} state")
@@ -138,19 +142,23 @@ class DisplayManager:
                     update_method = epoch_value.update_func
                     method = getattr(self, init_method)
 
-                    self.clear_queue(self.display_queue)
+                    self.clear_queue(frame_queue)
                     self.buffer_index = 0
-                    method(args=args, surface=self.buffers[self.buffer_index])
-                    self.display_queue.put(self.buffers[self.buffer_index])
+                    frame = method(args=args, surface=self.buffers[self.buffer_index])
+                    with self.lock:
+                        frame_queue.put(frame)
 
                     if update_method:
                         self.state = "update_epoch"
                     else:
                         self.state = "idle"
+
             elif self.state == "update_epoch": 
                 method = getattr(self, update_method)
                 while not self.epoch_update_event.is_set():
-                    self.update_surfaces(method, args)
+                    frame=self.update_surfaces(method, args)
+                    with self.lock:
+                        frame_queue.put(frame)
             
             if self.epoch_update_event.is_set():
                 self.state="init_epoch"
@@ -158,15 +166,31 @@ class DisplayManager:
                 self.epoch_update_event.clear()
 
 
-    def update_display(self):
-        while True:
-            if not self.display_queue.empty():
-                current_surface = self.display_queue.get()
-                self.screen.blit(current_surface, (0,0))
-                self.display_updated.set()
+    def update_display(self):#, display=None, screen=None, frame_queue=None):
+ 
+         while True:
+            # if not self.frame_queue.empty():
+            #     current_surface = self.frame_queue.get()
+            #     self.screen.blit(current_surface, (0,0))
+            #     self.screen.blit(self.font.render(str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")), (1000, 1000))
+            #     self.display_updated.set()
+            #     self.pygame.display.flip()
+            #     self.pygame.event.pump()
+            #     self.clock.tick(self.display_config["max_fps"])
+            #     print(f"FPS: {self.clock.get_fps()}")
+
+            # with self.lock:
+            #     print(not self.frame_queue.empty())
+                # if not self.frame_queue.empty():
+                #     print("Entered")
+                # current_surface = self.frame_queue.get()
+                # self.screen.blit(current_surface, (0,0))
+                color = [np.random.randint(0, 255) for _ in range(3)]
+                self.screen.fill(color)
+                self.screen.blit(self.font.render(str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")), (1000, 1000))
                 self.pygame.display.flip()
                 self.pygame.event.pump()
-                self.clock.tick(self.display_config["max_fps"])
+                self.clock.tick_busy_loop(self.display_config["max_fps"])
                 print(f"FPS: {self.clock.get_fps()}")
 
 

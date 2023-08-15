@@ -92,8 +92,6 @@ def separate_process_test_function(stimulus_config, in_queue, out_queue, epoch_u
     stim.load_media()
     stim.start()
 
-    # stim.screen['Primary'].fill((255, 255, 255))
-    # stim.pygame.display.update()
 
 if __name__ == "__main__":
     from omegaconf import OmegaConf
