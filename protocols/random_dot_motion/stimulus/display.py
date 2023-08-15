@@ -36,7 +36,7 @@ class Display:
 
         self.display_config = prefs.get('HARDWARE')["Display"]
         self.stimulus_config = stimulus_configuration
-        self.courier_map = self.stimulus_config.courier_handle
+        # self.courier_map = self.stimulus_config.courier_handle
 
         self.pygame = pygame
 
@@ -148,12 +148,12 @@ class Display:
                         self.frame_queue.put([draw_func, args])
                         self.lock.release()
                     except:
-                        raise Warning(f"Failed to update visual for {message}")
+                        raise Warning(f"Failed to update visual for {epoch}")
 
     def render_visual(self):
         self.render_block.set()
         while True:
-            self.epoch_update_event.wait()
+            self.epoch_update_event.wait() # without this event geting Segmentation fault error
             if not self.frame_queue.empty():
                 try:
                     self.render_block.clear()

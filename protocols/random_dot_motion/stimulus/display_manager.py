@@ -33,8 +33,7 @@ class DisplayManager(Display):
             stimulus_configuration = omegaconf.OmegaConf.to_container(stimulus_configuration, resolve=True)
 
         self.stimulus_config = stimulus_configuration
-        self.courier_map = stimulus_configuration["courier_handle"]
-        self.RDK = stimulus_manager()
+        self.RDK = stimulus_manager(stimulus_size=tuple(self.stimulus_config["required_functions"]["value"]["initiate_stimulus"]["stimulus_size"]))
 
         # making sure all required functions are defined and store the arguments as instance variables for each function as f"{func}_config" example "initiate_fixation_config"
         for func, args in self.stimulus_config["required_functions"]["value"].items():
