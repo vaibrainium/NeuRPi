@@ -231,7 +231,7 @@ STIMULUS:
                         properties (dict): Optional parameters for update
                 '
 
-        initiate_fixation: 
+        fixation_epoch: 
             tag: 'Execution type for fixation window'
             function: initiate_fixation
             visual: 
@@ -250,7 +250,7 @@ STIMULUS:
                     load: ['protocols/random_dot_motion/stimulus/audio/fixation_tone.wav']
                     generate:
 
-        initiate_stimulus: 
+        stimulus_epoch: 
             tag: 'Execution type for stimulus window'
             function: initiate_stimulus
             visual: 
@@ -276,7 +276,7 @@ STIMULUS:
                     load: 
                     generate:
 
-        initiate_response: 
+        response_epoch: 
             tag: 'Execution type for response window'
             function: initiate_response
             visual: 
@@ -295,7 +295,7 @@ STIMULUS:
                     load: 
                     generate:
 
-        initiate_reinforcement: 
+        reinforcement_epoch: 
             tag: 'Execution type for reinforcement window'
             function: initiate_reinforcement
             visual: 
@@ -316,7 +316,7 @@ STIMULUS:
                         invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav']
                     generate:
 
-        initiate_must_respond: 
+        must_respond_epoch: 
             tag: 'Execution type for must respond window'
             function: initiate_must_respond
             visual: 
@@ -334,7 +334,7 @@ STIMULUS:
                     load: 
                     generate:
 
-        initiate_intertrial:
+        intertrial_epoch:
             tag: 'Execution type for intertrial window'
             function: initiate_intertrial
             visual: 

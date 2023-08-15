@@ -2,7 +2,7 @@ import time
 from multiprocessing import Process
 import omegaconf
 from protocols.random_dot_motion.stimulus.display import Display
-
+import logging
 
 class DisplayManager(Display):
     """
@@ -51,8 +51,9 @@ class DisplayManager(Display):
         self.initiate_intertrial_config["background_color"] = tuple(self.initiate_intertrial_config["background_color"])
         
     def play_audio(self, audio_name):
-        self.pygame.mixer.stop()
-        self.audios[audio_name].play()
+        pass
+        # self.pygame.mixer.stop()
+        # self.audios[audio_name].play()
 
     def initiate_fixation(self, args=None):
         self.screen.fill(self.initiate_fixation_config["background_color"])
@@ -140,8 +141,12 @@ def main():
     )
     a.start()
 
-    time.sleep(1)
+    # print("Starting Stimulus")
+    # message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
+    # courier.put(eval(message))
+    
     while True:
+
         print("Starting Fixation")
         message = "('fixation_epoch', {})"
         courier.put(eval(message))
@@ -163,5 +168,6 @@ def main():
 
 if __name__ == "__main__":
     import multiprocessing
-
-    multiprocessing.Process(target=main()).start()
+    
+    game = multiprocessing.Process(target=main())
+    game.start()

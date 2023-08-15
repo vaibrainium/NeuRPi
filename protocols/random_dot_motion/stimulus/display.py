@@ -1,12 +1,10 @@
 import os
 import threading
 import time
-from queue import Queue as thread_queue
-import asyncio
-
+from queue import Queue
+from NeuRPi.prefs import prefs
 import hydra
 from omegaconf import DictConfig, OmegaConf
-from NeuRPi.prefs import prefs
 import logging
 
 
@@ -33,8 +31,8 @@ class Display:
         self.render_block.clear()
         self.epoch_update_event = threading.Event()
         self.epoch_update_event.clear()
-        self.frame_queue_size = 1000
-        self.frame_queue = thread_queue(maxsize=self.frame_queue_size)
+        self.frame_queue_size = 100
+        self.frame_queue = Queue(maxsize=self.frame_queue_size)
 
         self.display_config = prefs.get('HARDWARE')["Display"]
         self.stimulus_config = stimulus_configuration
@@ -42,22 +40,23 @@ class Display:
 
         self.pygame = pygame
 
-        self.frame_rate = self.display_config["max_fps"] #self.stimulus_config.display.frame_rate
+        self.frame_rate = self.display_config["max_fps"]
         self.flags = 0
         for flag in self.display_config["flags"]:
             self.flags |= getattr(self.pygame, flag)
+        self.clock = self.pygame.time.Clock()
 
-        self.font = None
+
         self.screen = None #{}
         self.images = {}
         self.videos = {}
         self.audios = {}
-        self.clock = self.pygame.time.Clock()
-        self.state = None
-        
+        self.audio = {}
+        self.video = {}
+
     def connect(self):
         try:
-            # self.pygame.init()
+            self.pygame.init()
             self.pygame.display.init()
             # wait for display to be initialized
             while self.pygame.display.get_init() == 0:
@@ -101,27 +100,25 @@ class Display:
         try:
             self.connect()
             self.load_media()
-
             threading.Thread(target=self.render_visual, args=[], daemon=False).start()
             threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
         except Exception as e:
             logging.error(f"An error occurred in the 'start' method: {e}")
 
-
     def in_queue_manager(self):
-        self.state = "idle"
         init_method, update_method = None, None
-        epoch, args = None, None
-
         while True:
             if not self.in_queue.empty():
                 (epoch, args) = self.in_queue.get()
+
+                init_method, update_method = None, None
                 epoch_value = self.stimulus_config["task_epochs"]["value"][epoch]
                 self.epoch_update_event.clear()
                 self.render_block.wait()
                 if epoch_value["clear_queue"]:
                     self.frame_queue.queue.clear()
-
+                    # Re-defining clock here removes runaway effect
+                    self.clock = self.pygame.time.Clock()
                 init_method = getattr(self, epoch_value["init_func"])
                 try:
                     init_method(args)
@@ -129,33 +126,29 @@ class Display:
                     raise Warning(f"Unable to process {init_method}")
                 if epoch_value["update_func"]:
                     update_method = getattr(self, epoch_value["update_func"])
-        
-
-                    # filling the queue before rendering starts
-                    self.lock.acquire()
-                    if epoch_value["clear_queue"]==False:
-                        while not self.frame_queue.full():
-                            try:
-                                draw_func, args = update_method(args)
-                                self.frame_queue.put([draw_func, args])
-                            except:
-                                raise Warning(f"Unable to process {update_method}")
-                    self.lock.release()
-
+                    
+                    # # filling the queue before rendering starts
+                    # self.lock.acquire()
+                    # if epoch_value["clear_queue"]==False:
+                    #     while not self.frame_queue.full():
+                    #         try:
+                    #             draw_func, args = update_method(args)
+                    #             self.frame_queue.put([draw_func, args])
+                    #         except:
+                    #             raise Warning(f"Unable to process {update_method}")
+                    # self.lock.release()
                     self.epoch_update_event.set()
-                else:
-                    update_method = None
 
             if update_method:
                 if not self.frame_queue.full():
                     try:
+                        # Adding lock here improves FPS from ~30 Hz to ~50 Hz
                         self.lock.acquire()
                         draw_func, args = update_method(args)
                         self.frame_queue.put([draw_func, args])
                         self.lock.release()
                     except:
-                        raise Warning(f"Unable to process {update_method}")
-
+                        raise Warning(f"Failed to update visual for {message}")
 
     def render_visual(self):
         self.render_block.set()
@@ -164,36 +157,25 @@ class Display:
             if not self.frame_queue.empty():
                 try:
                     self.render_block.clear()
-                    (func, args) = self.frame_queue.get()
+                    (func, pars) = self.frame_queue.get()
                     self.lock.acquire()
-                    # start = time.time()
-                    self.draw(func, args)
-                    # end = time.time()
+                    self.draw(func, pars)
                     self.lock.release()
                     self.render_block.set()
                     self.clock.tick_busy_loop(self.frame_rate)
-                    # print(f"Render Time: {end-start}")
                 except Exception as e:
-                    raise Warning(f"Unable to process {func} {e}")
+                    raise Warning(f"Unable to render visual: {e}")
 
-    def draw(self, func, args):
+    def draw(self, func, args=None):
         try:
             func(args=args)
         except:
-            logging.warning(f"Rendering error: Unable to process {func}")
-
-        if self.stimulus_config["display"]["show_fps"]:
-            fps = self.font.render(
-                str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")
-            )
-            self.screen.blit(fps, (1900, 1000))
-        # logging.info(f"FPS: {self.clock.get_fps()}")
+            raise Warning(f"Rendering error: Unable to process {func}")
         print(f"FPS: {self.clock.get_fps()}")
         self.update()
 
     def update(self):
-        self.pygame.display.flip()
-        # self.pygame.display.update()
+        self.pygame.display.update()
         self.pygame.event.pump()
 
 
