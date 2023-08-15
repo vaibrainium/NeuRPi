@@ -7,6 +7,7 @@ import asyncio
 import hydra
 from omegaconf import DictConfig, OmegaConf
 from NeuRPi.prefs import prefs
+import logging
 
 
 class Display:
@@ -47,7 +48,7 @@ class Display:
             self.flags |= getattr(self.pygame, flag)
 
         self.font = None
-        self.screen = {}
+        self.screen = None #{}
         self.images = {}
         self.videos = {}
         self.audios = {}
@@ -66,17 +67,19 @@ class Display:
             self.pygame.font.init()
             self.pygame.mouse.set_visible(False)
             self.font = self.pygame.font.SysFont("Arial", 20)
-            self.screen[0] = self.pygame.display.set_mode(
+            self.screen = self.pygame.display.set_mode(
                 tuple(self.display_config["window_size"]),
                 flags=self.flags,
                 display=self.display_config["port"], 
                 vsync=self.display_config["vsync"]
             )
-            self.screen[0].fill((0, 0, 0))
+            self.screen.fill((0, 0, 0))
             self.pygame.display.update()
 
-        except Exception as e:
+        except self.pygame.error as e:
             raise Warning(f"Could not connect to display device: {e}")
+        except Exception as e:
+            raise Warning(f"An unexpected error occurred: {e}")
         finally:
             pass
 
@@ -95,14 +98,15 @@ class Display:
             raise Exception(f"Cannot load media to display device. {e}")
 
     def start(self):
-        self.connect()
-        self.load_media()
+        try:
+            self.connect()
+            self.load_media()
 
-        threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-        threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
+            threading.Thread(target=self.render_visual, args=[], daemon=False).start()
+            threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
+        except Exception as e:
+            logging.error(f"An error occurred in the 'start' method: {e}")
 
-        # asyncio.create_task(self.render_visual())
-        # asyncio.create_task(self.in_queue_manager())
 
     def in_queue_manager(self):
         self.state = "idle"
@@ -125,16 +129,19 @@ class Display:
                     raise Warning(f"Unable to process {init_method}")
                 if epoch_value["update_func"]:
                     update_method = getattr(self, epoch_value["update_func"])
+        
+
                     # filling the queue before rendering starts
                     self.lock.acquire()
                     if epoch_value["clear_queue"]==False:
                         while not self.frame_queue.full():
                             try:
-                                draw_func, args, screen = update_method(args)
-                                self.frame_queue.put([draw_func, args, screen])
+                                draw_func, args = update_method(args)
+                                self.frame_queue.put([draw_func, args])
                             except:
                                 raise Warning(f"Unable to process {update_method}")
                     self.lock.release()
+
                     self.epoch_update_event.set()
                 else:
                     update_method = None
@@ -143,8 +150,8 @@ class Display:
                 if not self.frame_queue.full():
                     try:
                         self.lock.acquire()
-                        draw_func, args, screen = update_method(args)
-                        self.frame_queue.put([draw_func, args, screen])
+                        draw_func, args = update_method(args)
+                        self.frame_queue.put([draw_func, args])
                         self.lock.release()
                     except:
                         raise Warning(f"Unable to process {update_method}")
@@ -157,10 +164,10 @@ class Display:
             if not self.frame_queue.empty():
                 try:
                     self.render_block.clear()
-                    (func, args, screen) = self.frame_queue.get()
+                    (func, args) = self.frame_queue.get()
                     self.lock.acquire()
                     # start = time.time()
-                    self.draw(func, args, screen)
+                    self.draw(func, args)
                     # end = time.time()
                     self.lock.release()
                     self.render_block.set()
@@ -169,23 +176,24 @@ class Display:
                 except Exception as e:
                     raise Warning(f"Unable to process {func} {e}")
 
-    def draw(self, func, args, screen):
+    def draw(self, func, args):
         try:
-            func(args=args, screen=screen)
+            func(args=args)
         except:
-            raise Warning(f"Rendering error: Unable to process {func}")
+            logging.warning(f"Rendering error: Unable to process {func}")
 
         if self.stimulus_config["display"]["show_fps"]:
             fps = self.font.render(
                 str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")
             )
-            self.screen[screen].blit(fps, (1900, 1000))
+            self.screen.blit(fps, (1900, 1000))
+        # logging.info(f"FPS: {self.clock.get_fps()}")
         print(f"FPS: {self.clock.get_fps()}")
         self.update()
 
     def update(self):
-        # TODO: display.update is slow. Need to find a way to update only the changed pixels
-        self.pygame.display.update()
+        self.pygame.display.flip()
+        # self.pygame.display.update()
         self.pygame.event.pump()
 
 

@@ -50,20 +50,21 @@ class DisplayManager(Display):
         self.initiate_stimulus_config["dots"]["dot_color"] = tuple(self.initiate_stimulus_config["dots"]["dot_color"])
         self.initiate_intertrial_config["background_color"] = tuple(self.initiate_intertrial_config["background_color"])
         
+    def play_audio(self, audio_name):
+        self.pygame.mixer.stop()
+        self.audios[audio_name].play()
 
     def initiate_fixation(self, args=None):
-        self.screen[0].fill(self.initiate_fixation_config["background_color"])
+        self.screen.fill(self.initiate_fixation_config["background_color"])
         self.update()
         if self.initiate_fixation_config["audio"]:
-            self.pygame.mixer.stop()
-            self.audios[self.initiate_fixation_config["audio"]].play()
+            self.play_audio(self.initiate_fixation_config["audio"])
 
     def initiate_stimulus(self, args):
         args.update(self.initiate_stimulus_config["dots"])
         self.RDK.new_stimulus(args)
         if self.initiate_stimulus_config["audio"]:
-            self.pygame.mixer.stop()
-            self.audios[self.initiate_stimulus_config["audio"]].play()
+            self.play_audio(self.initiate_stimulus_config["audio"])
 
     def update_stimulus(self, args=None):
         if self.clock.get_fps():
@@ -79,14 +80,13 @@ class DisplayManager(Display):
             "radius": [self.RDK.radius] * self.RDK.nDots,
             "color": [self.RDK.color] * self.RDK.nDots,
         }
-        screen = 0
-        return func, args, screen
+        return func, args
 
-    def draw_stimulus(self, args, screen=0):
-        self.screen[screen].fill(self.initiate_stimulus_config["background_color"])
+    def draw_stimulus(self, args):
+        self.screen.fill(self.initiate_stimulus_config["background_color"])
         for ind in range(len(args["xpos"])):
             self.pygame.draw.circle(
-                self.screen[screen],
+                self.screen,
                 args["color"][ind],
                 (args["xpos"][ind], args["ypos"][ind]),
                 args["radius"][ind],
@@ -94,10 +94,8 @@ class DisplayManager(Display):
 
     def initiate_reinforcement(self, args):
         if self.initiate_reinforcement_config["audio"]:
-            self.pygame.mixer.stop()
             audio_name = self.initiate_reinforcement_config["audio"][args['outcome']]
-            self.audios[audio_name].play()
-
+            self.play_audio(audio_name)
 
     def update_reinforcement(self, args=None):
         return self.update_stimulus()
@@ -109,7 +107,7 @@ class DisplayManager(Display):
         return self.update_stimulus()
 
     def initiate_intertrial(self, args=None):
-        self.screen[0].fill(self.initiate_intertrial_config["background_color"])
+        self.screen.fill(self.initiate_intertrial_config["background_color"])
         self.update()
 
     def update_intertrial(self, args=None):
