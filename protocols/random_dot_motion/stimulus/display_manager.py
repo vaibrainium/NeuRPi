@@ -1,6 +1,6 @@
 import time
 from multiprocessing import Process
-
+import omegaconf
 from protocols.random_dot_motion.stimulus.display import Display
 
 
@@ -28,54 +28,51 @@ class DisplayManager(Display):
             stimulus_configuration,
             stimulus_courier,
         )
+  
+        if isinstance(stimulus_configuration, omegaconf.dictconfig.DictConfig):
+            stimulus_configuration = omegaconf.OmegaConf.to_container(stimulus_configuration, resolve=True)
 
-        self.courier_map = stimulus_configuration.courier_handle
-        self.RDK = stimulus_manager()  # RandomDotKinematogram()
+        self.stimulus_config = stimulus_configuration
+        self.courier_map = stimulus_configuration["courier_handle"]
+        self.RDK = stimulus_manager()
 
-    def initiate_fixation(self):
-        if self.courier_map.initiate_fixation.visual.need_update:
-            self.screen[0].fill(
-                eval(
-                    self.courier_map.initiate_fixation.visual.properties.generate.background
-                )
-            )
-            self.update()
-        if self.courier_map.initiate_fixation.audio.need_update:
+        # making sure all required functions are defined and store the arguments as instance variables for each function as f"{func}_config" example "initiate_fixation_config"
+        for func, args in self.stimulus_config["required_functions"]["value"].items():
+            if not hasattr(self, func):
+                raise AttributeError(f"DisplayManager does not have function {func}")
+            else:
+                setattr(self, f"{func}_config", args)  # Store the arguments as an instance variable
+        self.conversion_to_tuple()
+
+    def conversion_to_tuple(self):
+        self.initiate_fixation_config["background_color"] = tuple(self.initiate_fixation_config["background_color"])
+        self.initiate_stimulus_config["background_color"] = tuple(self.initiate_stimulus_config["background_color"])
+        self.initiate_stimulus_config["dots"]["dot_color"] = tuple(self.initiate_stimulus_config["dots"]["dot_color"])
+        self.initiate_intertrial_config["background_color"] = tuple(self.initiate_intertrial_config["background_color"])
+        
+
+    def initiate_fixation(self, args=None):
+        self.screen[0].fill(self.initiate_fixation_config["background_color"])
+        self.update()
+        if self.initiate_fixation_config["audio"]:
             self.pygame.mixer.stop()
-            if self.courier_map.initiate_fixation.audio.is_static:
-                self.audio["initiate_fixation"][0].play(
-                    self.courier_map.initiate_fixation.audio.is_static - 1
-                )
+            self.audios[self.initiate_fixation_config["audio"]].play()
 
-    def initiate_stimulus(self, pars):
-        pars["stimulus_size"] = eval(
-            self.courier_map.initiate_stimulus.visual.properties.generate.stimulus_size
-        )
-        pars[
-            "dot_radius"
-        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.radius
-        pars["dot_color"] = eval(
-            self.courier_map.initiate_stimulus.visual.properties.generate.dots.color
-        )
-        pars[
-            "dot_fill"
-        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.fill_prct
-        pars[
-            "dot_vel"
-        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.velocity
-        pars[
-            "dot_lifetime"
-        ] = self.courier_map.initiate_stimulus.visual.properties.generate.dots.lifetime
-        self.RDK.new_stimulus(pars)
+    def initiate_stimulus(self, args):
+        args.update(self.initiate_stimulus_config["dots"])
+        self.RDK.new_stimulus(args)
+        if self.initiate_stimulus_config["audio"]:
+            self.pygame.mixer.stop()
+            self.audios[self.initiate_stimulus_config["audio"]].play()
 
-    def next_frame_stimulus(self):
+    def update_stimulus(self, args=None):
         if self.clock.get_fps():
             self.RDK.move_dots(frame_rate=self.clock.get_fps())
         else:
             self.RDK.move_dots(frame_rate=self.frame_rate)
 
         func = self.draw_stimulus
-        pars = {
+        args = {
             "ndots": self.RDK.nDots,
             "xpos": self.RDK.x,
             "ypos": self.RDK.y,
@@ -83,98 +80,59 @@ class DisplayManager(Display):
             "color": [self.RDK.color] * self.RDK.nDots,
         }
         screen = 0
-        return func, pars, screen
+        return func, args, screen
 
-    def draw_stimulus(self, pars, screen):
-        self.screen[screen].fill(
-            eval(
-                self.courier_map.initiate_stimulus.visual.properties.generate.background
-            )
-        )
-
-        for ind in range(len(pars["xpos"])):
+    def draw_stimulus(self, args, screen=0):
+        self.screen[screen].fill(self.initiate_stimulus_config["background_color"])
+        for ind in range(len(args["xpos"])):
             self.pygame.draw.circle(
                 self.screen[screen],
-                pars["color"][ind],
-                (pars["xpos"][ind], pars["ypos"][ind]),
-                pars["radius"][ind],
+                args["color"][ind],
+                (args["xpos"][ind], args["ypos"][ind]),
+                args["radius"][ind],
             )
 
-    def initiate_reinforcement(self, pars):
-        if self.courier_map.initiate_reinforcement.audio.need_update:
+    def initiate_reinforcement(self, args):
+        if self.initiate_reinforcement_config["audio"]:
             self.pygame.mixer.stop()
-            if (
-                pars["outcome"] == "correct"
-                and self.courier_map.initiate_reinforcement.audio.properties.load.correct
-            ):
-                try:
-                    self.audio["initiate_reinforcement"]["correct"][0].play()
-                except:
-                    raise Warning("correct audio path not set")
-            if (
-                pars["outcome"] == "incorrect"
-                and self.courier_map.initiate_reinforcement.audio.properties.load.incorrect
-            ):
-                try:
-                    self.audio["initiate_reinforcement"]["incorrect"][0].play()
-                except:
-                    raise Warning("incorrect audio path not set")
+            audio_name = self.initiate_reinforcement_config["audio"][args['outcome']]
+            self.audios[audio_name].play()
 
-            if (
-                pars["outcome"] == "invalid"
-                and self.courier_map.initiate_reinforcement.audio.properties.load.invalid
-            ):
-                try:
-                    self.audio["initiate_reinforcement"]["invalid"][0].play()
-                except:
-                    raise Warning("invalid audio path not set")
 
-    def next_frame_reinforcement(self):
-        return self.next_frame_stimulus()
+    def update_reinforcement(self, args=None):
+        return self.update_stimulus()
 
-    def initiate_must_respond(self):
+    def initiate_must_respond(self, args=None):
         pass
 
-    def next_frame_must_respond(self):
-        return self.next_frame_stimulus()
+    def update_must_respond(self, args=None):
+        return self.update_stimulus()
 
-    def initiate_intertrial(self):
-        if self.courier_map.initiate_intertrial.visual.need_update:
-            self.screen[0].fill(
-                eval(
-                    self.courier_map.initiate_intertrial.visual.properties.generate.background
-                )
-            )
-            self.update()
-        if self.courier_map.initiate_intertrial.audio.need_update:
-            self.pygame.mixer.stop()
-            if self.courier_map.initiate_intertrial.audio.is_static:
-                self.audio["initiate_intertrial"][0].play()
+    def initiate_intertrial(self, args=None):
+        self.screen[0].fill(self.initiate_intertrial_config["background_color"])
+        self.update()
 
-    def next_frame_intertrial(self, pars):
-        raise Warning("next_frame_intertrial Function Not Implemented")
+    def update_intertrial(self, args=None):
+        raise Warning("update_intertrial Function Not Implemented")
 
-    def next_frame_fixation(self, pars):
-        raise Warning("next_frame_fixation Function Not Implemented")
+    def update_fixation(self, args=None):
+        raise Warning("update_fixation Function Not Implemented")
 
-    def initiate_response(self, pars):
+    def initiate_response(self, args=None):
         raise Warning("initiate_response Function Not Implemented")
 
-    def next_frame_response(self, pars):
-        raise Warning("next_frame_response Function Not Implemented")
+    def update_response(self, args=None):
+        raise Warning("update_response Function Not Implemented")
 
 
 def main():
     import queue
-
-    import hydra
+    from omegaconf import OmegaConf
 
     from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
 
-    path = "../../../protocols/random_dot_motion/config"
-    filename = "stimulus"
-    hydra.initialize(version_base=None, config_path=path)
-    config = hydra.compose(filename, overrides=[])
+
+    config = OmegaConf.load("protocols/random_dot_motion/config/rt_dynamic_training.yaml")
 
     courier = queue.Queue()
     a = DisplayManager(
@@ -182,25 +140,30 @@ def main():
         stimulus_configuration=config.STIMULUS,
         stimulus_courier=courier,
     )
-
     a.start()
+
+    time.sleep(1)
     while True:
         print("Starting Fixation")
-        message = "('initiate_fixation', {})"
+        message = "('fixation_epoch', {})"
         courier.put(eval(message))
         time.sleep(2)
         print("Starting Stimulus")
-        message = "('initiate_stimulus', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
+        message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
         courier.put(eval(message))
-        time.sleep(2)
-        # print("Starting Intertrial")
-        # message = "('initiate_intertrial')"
+        time.sleep(4)
+        # print("Starting Reinforcement")
+        # message = "('reinforcement_epoch', {'outcome': 'correct'})"
         # courier.put(eval(message))
         # time.sleep(2)
-        print("Loop complete")
+        # print("Starting Intertrial")
+        # message = "('intertrial_epoch', {})"
+        # courier.put(eval(message))
+        # time.sleep(2)
+        # print("Loop complete")
 
 
 if __name__ == "__main__":
     import multiprocessing
 
-    multiprocessing.Process(targer=main()).start()
+    multiprocessing.Process(target=main()).start()

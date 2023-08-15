@@ -2,9 +2,11 @@ import os
 import threading
 import time
 from queue import Queue as thread_queue
+import asyncio
 
 import hydra
 from omegaconf import DictConfig, OmegaConf
+from NeuRPi.prefs import prefs
 
 
 class Display:
@@ -22,176 +24,163 @@ class Display:
         os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
         os.environ["ENABLE_ARM_NEON"] = "1"
 
-        self.courier = stimulus_courier
+        self.in_queue = stimulus_courier
         self.message = {}
 
         self.lock = threading.Lock()
         self.render_block = threading.Event()
         self.render_block.clear()
-        self.frame_queue_size = 100
+        self.epoch_update_event = threading.Event()
+        self.epoch_update_event.clear()
+        self.frame_queue_size = 1000
         self.frame_queue = thread_queue(maxsize=self.frame_queue_size)
 
-        self.stim_config = stimulus_configuration
-        self.courier_map = self.stim_config.courier_handle
-        self.window_size = eval(self.stim_config.display.window_size)
+        self.display_config = prefs.get('HARDWARE')["Display"]
+        self.stimulus_config = stimulus_configuration
+        self.courier_map = self.stimulus_config.courier_handle
 
         self.pygame = pygame
 
-        self.frame_rate = self.stim_config.display.frame_rate
-        self.flags = eval(
-            self.stim_config.display.flags
-        )  # Converting flags from string to method name
-        self.vsync = self.stim_config.display.vsync
-        self.clock = self.pygame.time.Clock()
+        self.frame_rate = self.display_config["max_fps"] #self.stimulus_config.display.frame_rate
+        self.flags = 0
+        for flag in self.display_config["flags"]:
+            self.flags |= getattr(self.pygame, flag)
+
+        self.font = None
         self.screen = {}
+        self.images = {}
+        self.videos = {}
+        self.audios = {}
+        self.clock = self.pygame.time.Clock()
+        self.state = None
+        
+    def connect(self):
+        try:
+            # self.pygame.init()
+            self.pygame.display.init()
+            # wait for display to be initialized
+            while self.pygame.display.get_init() == 0:
+                pass
 
-        self.audio = {}
-        self.video = {}
-
-    def start(self):
-        # Initialize all screens with black background
-        self.pygame.init()
-        self.pygame.mixer.init()
-        self.pygame.font.init()
-        self.pygame.mouse.set_visible(False)
-        self.font = self.pygame.font.SysFont("Arial", 20)
-
-        if self.stim_config.display.num_screens == 1:
+            self.pygame.mixer.init()
+            self.pygame.font.init()
+            self.pygame.mouse.set_visible(False)
+            self.font = self.pygame.font.SysFont("Arial", 20)
             self.screen[0] = self.pygame.display.set_mode(
-                self.window_size,
+                tuple(self.display_config["window_size"]),
                 flags=self.flags,
-                display=self.stim_config.display.screen,
-                vsync=self.vsync,
+                display=self.display_config["port"], 
+                vsync=self.display_config["vsync"]
             )
             self.screen[0].fill((0, 0, 0))
-        else:
-            for screen in range(self.stim_config.display.num_screens):
-                exec(
-                    f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)"""
-                )
-                exec(f"""self.screen[{screen}].fill((0,0,0))""")
-        self.update()
+            self.pygame.display.update()
 
-        self.gather_media()
+        except Exception as e:
+            raise Warning(f"Could not connect to display device: {e}")
+        finally:
+            pass
+
+    def load_media(self):
+        try:
+            media = self.stimulus_config["load_media"]["value"]
+            if media["images"]:
+                for key, val in media["images"].items():
+                    self.images[key] = self.pygame.image.load(val)
+            if media["audios"]:
+                for key, val in media["audios"].items():
+                    self.audios[key] = self.pygame.mixer.Sound(val)
+            if media["videos"]:
+                raise TypeError("Video loading not supported yet")
+        except Exception as e:
+            raise Exception(f"Cannot load media to display device. {e}")
+
+    def start(self):
+        self.connect()
+        self.load_media()
 
         threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-        threading.Thread(target=self.courier_manager, args=[], daemon=False).start()
+        threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
 
-    def gather_media(self):
-        for key, val in self.stim_config.courier_handle.items():
-            if key not in ["tag", "type"]:
-                # exec(f"self.{key} = dict()")
-                if val.visual.properties.load:
-                    self.load_videos(key, val.audio.properties.load)
-                if val.audio.properties.load:
-                    self.load_audios(key, val.audio.properties.load)
+        # asyncio.create_task(self.render_visual())
+        # asyncio.create_task(self.in_queue_manager())
 
-    def load_videos(self, key, val):
-        if isinstance(val, DictConfig):
-            self.audio[key] = {}
-            for key2, paths in val.items():
-                for ind, file in enumerate(paths):
-                    temp_list = []
-                    try:
-                        pass
-                        # temp_list.append(pygame.mixer.Sound(file))
-                    except:
-                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
-                    finally:
-                        self.audio[key][key2] = temp_list
-        else:
-            for ind, file in enumerate(val):
-                temp_list = []
-                try:
-                    pass
-                    # temp_list.append(pygame.mixer.Sound(file))
-                except:
-                    raise Warning(f"Could not initialize {file} in {key}")
-                finally:
-                    self.audio[key] = temp_list
+    def in_queue_manager(self):
+        self.state = "idle"
+        init_method, update_method = None, None
+        epoch, args = None, None
 
-    def load_audios(self, key, val):
-        if isinstance(val, DictConfig):
-            self.audio[key] = {}
-            for key2, paths in val.items():
-                for ind, file in enumerate(paths):
-                    temp_list = []
-                    try:
-                        temp_list.append(self.pygame.mixer.Sound(file))
-                    except:
-                        print(f"Could not initialize {file} in {key2} in {key}")
-                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
-                    finally:
-                        self.audio[key][key2] = temp_list
-        else:
-            for ind, file in enumerate(val):
-                temp_list = []
-                try:
-                    temp_list.append(self.pygame.mixer.Sound(file))
-                except:
-                    raise Warning(f"Could not initialize {file} in {key}")
-                finally:
-                    self.audio[key] = temp_list
-
-    def courier_manager(self):
-        properties = OmegaConf.create(
-            {"visual": {"is_static": True, "need_update": True}}
-        )
-        while 1:
-            if not self.courier.empty():
-                (message, arguments) = self.courier.get()
-                properties = self.courier_map.get(message)
-                if properties.visual.need_update:
-                    self.clock = self.pygame.time.Clock()
-                    self.frame_queue.queue.clear()
-                function = eval("self." + properties.function)
+        while True:
+            if not self.in_queue.empty():
+                (epoch, args) = self.in_queue.get()
+                epoch_value = self.stimulus_config["task_epochs"]["value"][epoch]
+                self.epoch_update_event.clear()
                 self.render_block.wait()
-                try:
-                    if arguments:
-                        function(arguments)
-                    else:
-                        function()
-                except:
-                    raise Warning(f"Unable to process {function}")
+                if epoch_value["clear_queue"]:
+                    self.frame_queue.queue.clear()
 
-            if properties.visual.is_static:
-                self.frame_queue.queue.clear()
-            else:
+                init_method = getattr(self, epoch_value["init_func"])
+                try:
+                    init_method(args)
+                except:
+                    raise Warning(f"Unable to process {init_method}")
+                if epoch_value["update_func"]:
+                    update_method = getattr(self, epoch_value["update_func"])
+                    # filling the queue before rendering starts
+                    self.lock.acquire()
+                    if epoch_value["clear_queue"]==False:
+                        while not self.frame_queue.full():
+                            try:
+                                draw_func, args, screen = update_method(args)
+                                self.frame_queue.put([draw_func, args, screen])
+                            except:
+                                raise Warning(f"Unable to process {update_method}")
+                    self.lock.release()
+                    self.epoch_update_event.set()
+                else:
+                    update_method = None
+
+            if update_method:
                 if not self.frame_queue.full():
                     try:
-                        (func, pars, screen) = eval(
-                            "self." + properties.visual.update_function
-                        )()
-                        self.frame_queue.put([func, pars, screen])
+                        self.lock.acquire()
+                        draw_func, args, screen = update_method(args)
+                        self.frame_queue.put([draw_func, args, screen])
+                        self.lock.release()
                     except:
-                        raise Warning(f"Failed to update visual for {message}")
+                        raise Warning(f"Unable to process {update_method}")
+
 
     def render_visual(self):
         self.render_block.set()
-        while 1:
+        while True:
+            self.epoch_update_event.wait()
             if not self.frame_queue.empty():
-                self.render_block.clear()
-                (func, pars, screen) = self.frame_queue.get()
-                self.lock.acquire()
-                # start = time.time()
-                self.draw(func, pars, screen)
-                # end = time.time()
-                self.lock.release()
-                self.render_block.set()
-                self.clock.tick_busy_loop(self.frame_rate)
-                # print(f"Render Time: {end-start}")
+                try:
+                    self.render_block.clear()
+                    (func, args, screen) = self.frame_queue.get()
+                    self.lock.acquire()
+                    # start = time.time()
+                    self.draw(func, args, screen)
+                    # end = time.time()
+                    self.lock.release()
+                    self.render_block.set()
+                    self.clock.tick_busy_loop(self.frame_rate)
+                    # print(f"Render Time: {end-start}")
+                except Exception as e:
+                    raise Warning(f"Unable to process {func} {e}")
 
-    def draw(self, func, pars, screen):
+    def draw(self, func, args, screen):
         try:
-            func(pars=pars, screen=screen)
+            func(args=args, screen=screen)
         except:
             raise Warning(f"Rendering error: Unable to process {func}")
 
-        if self.stim_config.display.show_fps:
+        if self.stimulus_config["display"]["show_fps"]:
             fps = self.font.render(
                 str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")
             )
             self.screen[screen].blit(fps, (1900, 1000))
+        print(f"FPS: {self.clock.get_fps()}")
         self.update()
 
     def update(self):

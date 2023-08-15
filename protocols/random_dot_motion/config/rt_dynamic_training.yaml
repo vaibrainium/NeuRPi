@@ -140,7 +140,7 @@ STIMULUS:
         num_screens: 1
         screen     : 0 #0 
         window_size: [1920, 1080]
-        frame_rate : 30
+        frame_rate : 60
         flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
         vsync      : True
         show_fps   : True
@@ -157,7 +157,7 @@ STIMULUS:
                 stimulus_tone:  'protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav'
                 
     required_functions:
-        tag: 'List of all functions required for this phase'
+        tag: 'List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.'
         value:
             initiate_fixation:
                 stimulus_size  : [1920, 1080]
@@ -167,11 +167,11 @@ STIMULUS:
                 stimulus_size  : [1920, 1080]
                 background_color: [0,0,0]
                 dots:
-                    radius    : 17
-                    color     : [255, 255, 255]
-                    fill_prct : 15
-                    velocity  : 30 #420
-                    lifetime  : 30
+                    dot_radius      : 17
+                    dot_color       : [255, 255, 255]
+                    dot_fill        : 15
+                    dot_vel         : 420
+                    dot_lifetime    : 30
                 audio: stimulus_tone
             update_stimulus:
             initiate_reinforcement:
@@ -194,18 +194,23 @@ STIMULUS:
                     update_func: function to update epoch. This will be executed continuously until epoch is over.'
         value:
             fixation_epoch:
+                clear_queue: True
                 init_func: initiate_fixation
                 update_func:
             stimulus_epoch:
+                clear_queue: True
                 init_func: initiate_stimulus
                 update_func: update_stimulus
             reinforcement_epoch:
+                clear_queue: False
                 init_func: initiate_reinforcement
                 update_func: update_reinforcement
             must_respond_epoch:
+                clear_queue: False
                 init_func: initiate_must_respond
                 update_func: update_must_respond
             intertrial_epoch:
+                clear_queue: True
                 init_func: initiate_intertrial
                 update_func:
 
@@ -232,17 +237,17 @@ STIMULUS:
             visual: 
                 need_update: True
                 is_static: True
-                update_function: next_frame_fixation
+                update_function: update_fixation
                 properties:
                     load: 
                     generate:
                         background : (0,0,0)
             audio:
-                need_update: False
+                need_update: True
                 is_static: True
                 update_function: 
                 properties: 
-                    load: ['protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
+                    load: ['protocols/random_dot_motion/stimulus/audio/fixation_tone.wav']
                     generate:
 
         initiate_stimulus: 
@@ -251,7 +256,7 @@ STIMULUS:
             visual: 
                 need_update: True
                 is_static: False
-                update_function: next_frame_stimulus
+                update_function: update_stimulus
                 properties:
                     load: 
                     generate:
@@ -261,7 +266,7 @@ STIMULUS:
                             radius    : 17
                             color     : (255, 255, 255)
                             fill_prct : 15
-                            velocity  : 15 #420
+                            velocity  : 420
                             lifetime  : 30
             audio:
                 need_update: False
@@ -277,7 +282,7 @@ STIMULUS:
             visual: 
                 need_update: True
                 is_static: True
-                update_function: next_frame_response
+                update_function: update_response
                 properties:
                     load: 
                     generate: 
@@ -296,7 +301,7 @@ STIMULUS:
             visual: 
                 need_update: False
                 is_static: False
-                update_function: next_frame_reinforcement
+                update_function: update_reinforcement
                 properties: 
                     load:
                     generate:
@@ -306,9 +311,9 @@ STIMULUS:
                 update_function: 
                 properties:
                     load: 
-                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
-                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
+                        correct         : ['protocols/random_dot_motion/stimulus/audio/correct_tone.wav']
+                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav']
+                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav']
                     generate:
 
         initiate_must_respond: 
@@ -317,7 +322,7 @@ STIMULUS:
             visual: 
                 need_update: False
                 is_static: False
-                update_function: next_frame_must_respond
+                update_function: update_must_respond
                 properties: 
                     load: 
                     generate:
@@ -335,7 +340,7 @@ STIMULUS:
             visual: 
                 need_update: True
                 is_static: True
-                update_function: next_frame_intertrial
+                update_function: update_intertrial
                 properties: 
                     load: 
                     generate:
