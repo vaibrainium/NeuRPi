@@ -14,7 +14,7 @@ class Display:
 
     """
 
-    def __init__(self, stimulus_configuration=None, stimulus_courier=None):
+    def __init__(self, stimulus_configuration=None, in_queue=None, out_queue=None):
         super(Display, self).__init__()
         import pygame
 
@@ -22,8 +22,11 @@ class Display:
         os.environ["DISPLAY"] = ":0.0"
         os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"
         os.environ["ENABLE_ARM_NEON"] = "1"
+        os.environ["PYGAME_HWACCEL"] = "1"
 
-        self.in_queue = stimulus_courier
+        self.stimulus_config = stimulus_configuration
+        self.in_queue = in_queue
+        self.out_queue = out_queue
         self.message = {}
 
         self.lock = threading.Lock()
@@ -35,19 +38,20 @@ class Display:
         self.frame_queue = Queue(maxsize=self.frame_queue_size)
 
         self.display_config = prefs.get('HARDWARE')["Display"]
-        self.stimulus_config = stimulus_configuration
         # self.courier_map = self.stimulus_config.courier_handle
 
         self.pygame = pygame
 
         self.frame_rate = self.display_config["max_fps"]
-        self.flags = 0
-        for flag in self.display_config["flags"]:
-            self.flags |= getattr(self.pygame, flag)
+        try:
+            self.flags = 0
+            for flag in self.display_config["flags"]:
+                self.flags |= getattr(self.pygame, flag)
+        except:
+            self.flags = self.pygame.FULLSCREEN | self.pygame.SCALED | self.pygame.DOUBLEBUF | self.pygame.HWSURFACE | self.pygame.NOFRAME #| self.pygame.HWACCEL
+        
         self.clock = self.pygame.time.Clock()
-
-
-        self.screen = None #{}
+        self.screen = None
         self.images = {}
         self.videos = {}
         self.audios = {}
@@ -100,8 +104,8 @@ class Display:
         try:
             self.connect()
             self.load_media()
-            threading.Thread(target=self.render_visual, args=[], daemon=False).start()
             threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
+            threading.Thread(target=self.render_visual, args=[], daemon=False).start()
         except Exception as e:
             logging.error(f"An error occurred in the 'start' method: {e}")
 
@@ -127,16 +131,16 @@ class Display:
                 if epoch_value["update_func"]:
                     update_method = getattr(self, epoch_value["update_func"])
                     
-                    # # filling the queue before rendering starts
-                    # self.lock.acquire()
-                    # if epoch_value["clear_queue"]==False:
-                    #     while not self.frame_queue.full():
-                    #         try:
-                    #             draw_func, args = update_method(args)
-                    #             self.frame_queue.put([draw_func, args])
-                    #         except:
-                    #             raise Warning(f"Unable to process {update_method}")
-                    # self.lock.release()
+                    # filling the queue before rendering starts
+                    self.lock.acquire()
+                    if epoch_value["clear_queue"]==False:
+                        while not self.frame_queue.full():
+                            try:
+                                draw_func, args = update_method(args)
+                                self.frame_queue.put([draw_func, args])
+                            except:
+                                raise Warning(f"Unable to process {update_method}")
+                    self.lock.release()
                     self.epoch_update_event.set()
 
             if update_method:
@@ -168,7 +172,9 @@ class Display:
 
     def draw(self, func, args=None):
         try:
+            # start = time.time()
             func(args=args)
+            # print(f"Render time: {time.time()-start}")
         except:
             raise Warning(f"Rendering error: Unable to process {func}")
         print(f"FPS: {self.clock.get_fps()}")

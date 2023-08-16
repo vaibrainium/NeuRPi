@@ -22,18 +22,18 @@ class DisplayManager(Display):
     """
 
     def __init__(
-        self, stimulus_manager=None, stimulus_configuration=None, stimulus_courier=None
-    ):
+        self, stimulus_manager=None, stimulus_configuration=None, in_queue=None, out_queue=None):
         super(DisplayManager, self).__init__(
-            stimulus_configuration,
-            stimulus_courier,
+            stimulus_configuration=stimulus_configuration,
+            in_queue=in_queue,
+            out_queue=out_queue,
         )
   
         if isinstance(stimulus_configuration, omegaconf.dictconfig.DictConfig):
             stimulus_configuration = omegaconf.OmegaConf.to_container(stimulus_configuration, resolve=True)
 
         self.stimulus_config = stimulus_configuration
-        self.RDK = stimulus_manager(stimulus_size=tuple(self.stimulus_config["required_functions"]["value"]["initiate_stimulus"]["stimulus_size"]))
+        self.stimulus_manager = stimulus_manager(stimulus_size=tuple(self.stimulus_config["required_functions"]["value"]["initiate_stimulus"]["stimulus_size"]))
 
         # making sure all required functions are defined and store the arguments as instance variables for each function as f"{func}_config" example "initiate_fixation_config"
         for func, args in self.stimulus_config["required_functions"]["value"].items():
@@ -62,23 +62,23 @@ class DisplayManager(Display):
 
     def initiate_stimulus(self, args):
         args.update(self.initiate_stimulus_config["dots"])
-        self.RDK.new_stimulus(args)
+        self.stimulus_manager.new_stimulus(args)
         if self.initiate_stimulus_config["audio"]:
             self.play_audio(self.initiate_stimulus_config["audio"])
 
     def update_stimulus(self, args=None):
         if self.clock.get_fps():
-            self.RDK.move_dots(frame_rate=self.clock.get_fps())
+            self.stimulus_manager.move_dots(frame_rate=self.clock.get_fps())
         else:
-            self.RDK.move_dots(frame_rate=self.frame_rate)
+            self.stimulus_manager.move_dots(frame_rate=self.frame_rate)
 
         func = self.draw_stimulus
         args = {
-            "ndots": self.RDK.nDots,
-            "xpos": self.RDK.x,
-            "ypos": self.RDK.y,
-            "radius": [self.RDK.radius] * self.RDK.nDots,
-            "color": [self.RDK.color] * self.RDK.nDots,
+            "ndots": self.stimulus_manager.nDots,
+            "xpos": self.stimulus_manager.x,
+            "ypos": self.stimulus_manager.y,
+            "radius": [self.stimulus_manager.radius] * self.stimulus_manager.nDots,
+            "color": [self.stimulus_manager.color] * self.stimulus_manager.nDots,
         }
         return func, args
 
@@ -125,6 +125,7 @@ class DisplayManager(Display):
 
 def main():
     import queue
+    import multiprocessing
     from omegaconf import OmegaConf
 
     from protocols.random_dot_motion.stimulus.random_dot_motion import RandomDotMotion
@@ -132,11 +133,11 @@ def main():
 
     config = OmegaConf.load("protocols/random_dot_motion/config/rt_dynamic_training.yaml")
 
-    courier = queue.Queue()
+    courier = multiprocessing.Queue()
     a = DisplayManager(
         stimulus_manager=RandomDotMotion,
         stimulus_configuration=config.STIMULUS,
-        stimulus_courier=courier,
+        in_queue=courier,
     )
     a.start()
 
