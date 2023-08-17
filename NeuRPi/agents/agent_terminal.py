@@ -6,6 +6,7 @@ import typing
 from collections import OrderedDict as odict
 from pathlib import Path
 
+from omegaconf import OmegaConf
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from NeuRPi.gui.main_gui import Application
@@ -13,7 +14,6 @@ from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
-from omegaconf import OmegaConf
 
 
 class Terminal(Application):
@@ -251,21 +251,22 @@ class Terminal(Application):
 
         module_directory = "protocols/" + session_info["task_module"]
         session_config = get_configuration(
-            directory=str(module_directory + "/config"), filename=session_info["task_phase"]
+            directory=str(module_directory + "/config"),
+            filename=session_info["task_phase"],
         )
         # session_config["phase"] = phase_config
         return session_config
-    
+
     def initiate_subject(self, session_info, session_config):
         """
         Initiating subject object and creating file structure for data collection
-        
+
         Args:
             session_info (dict): Takes user defined information from GUI and prepares a configuration dictionary to pass to rig
-        
+
         Returns:
             subject (Subject): Subject object
-        
+
         """
         subject_module = importlib.import_module(
             f"protocols.{session_info['task_module']}.data_model.subject"
@@ -278,7 +279,7 @@ class Terminal(Application):
         )
         subject_config = self.subjects[session_info.subject_name].initiate_config()
         return subject_config
-    
+
     def verify_hardware_requirements(self, session_config):
         """
         Before starting the task, verify that all the hardware requirements to run the task as met
@@ -298,13 +299,13 @@ class Terminal(Application):
 
                 # Send message to rig to start
                 self.node.send(
-                    to=session_info.experiment_rig, 
-                    key="START", 
+                    to=session_info.experiment_rig,
+                    key="START",
                     value={
-                        'session_info': session_info,
-                        'session_config': session_config,
-                        'subject_config': subject_config
-                        }
+                        "session_info": session_info,
+                        "session_config": session_config,
+                        "subject_config": subject_config,
+                    },
                 )
 
                 # Start Task GUI and updating parameters from rig preferences
@@ -312,9 +313,11 @@ class Terminal(Application):
                     f"protocols.{session_info.task_module}.gui.task_gui"
                 )
                 self.add_new_rig(
-                    id=session_info["experiment_rig"], task_gui=gui_module.TaskGUI, 
-                    subject_id=session_info["subject"], task_module=session_info["task_module"],
-                    task_phase=session_info["task_phase"]
+                    id=session_info["experiment_rig"],
+                    task_gui=gui_module.TaskGUI,
+                    subject_id=session_info["subject"],
+                    task_module=session_info["task_module"],
+                    task_phase=session_info["task_phase"],
                 )
                 self.rigs_gui[session_info["experiment_rig"]].set_rig_configuration(
                     self.pilots[session_config["experiment_rig"]]["prefs"]
@@ -322,11 +325,10 @@ class Terminal(Application):
 
                 # Waiting for rig to initiate hardware and start session
                 while (
-                    not self.pilots[session_config["experiment_rig"]]["state"] == "RUNNING"
+                    not self.pilots[session_config["experiment_rig"]]["state"]
+                    == "RUNNING"
                 ):
                     pass
-                
-                # TODO: Start new rig on new QT thread
 
                 # self.clear_variables()
                 self.rigs_gui[session_info.experiment_rig].start_experiment()

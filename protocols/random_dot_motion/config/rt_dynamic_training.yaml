@@ -1,35 +1,14 @@
-HARDWARE:
-    Arduino:
-        tag: 'List and properties of all arduinos required for session'
-        num_arduinos: 1
-        Primary:
-            connection:
-                port    : '/dev/ttyACM0'
-                baudrate: None
-                timeout : None
-            tag: "[Lick, Reward]"
+REQUIRED_HARDWARE:
+    - Arduino
+    - Display
 
-    GPIO:
-        Stim_Onset:
-            pin: None
-            tag: 'TTL'
+REQUIRED_MODULES:
+    - Task
+    - Stimulus
+    - Behavior
 
-        Video_Monitor:
-            pin: None
-            tag: 'Frame Time'
-
-    Display:
-        tag: 'List and properties of all displays needed for session'
-        num_screens: 1
-        Primary:
-            connection:
-                port  : 0 
-                window_size: (1920, 1080)
-                refresh_rate : 30
-                flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
-                vsync      : True
-                show_fps   : True
-
+GRADUATION: None
+      
 
 TASK:
     stimulus:
@@ -136,15 +115,6 @@ TASK:
 
 
 STIMULUS:
-    display:
-        num_screens: 1
-        screen     : 0 #0 
-        window_size: (1920, 1080)
-        frame_rate : 30
-        flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
-        vsync      : True
-        show_fps   : True
-
     load_media:
         tag: 'Load media for visual and audio stimuli if any (relative to root directory)'
         value:
@@ -155,23 +125,22 @@ STIMULUS:
                 correct_tone :  'protocols/random_dot_motion/stimulus/audio/correct_tone.wav'
                 incorrect_tone: 'protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav'
                 stimulus_tone:  'protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav'
-
+                
     required_functions:
-        tag: 'List of all functions required for this phase'
+        tag: 'List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.'
         value:
             initiate_fixation:
-                stimulus_size  : (1920, 1080)
-                background_color: (0,0,0)
+                background_color: [0,0,0]
                 audio: fixation_tone       
             initiate_stimulus:
-                stimulus_size  : (1920, 1080)
-                background_color: (0,0,0)
+                stimulus_size  : [1280, 720]
+                background_color: [0,0,0]
                 dots:
-                    radius    : 17
-                    color     : (255, 255, 255)
-                    fill_prct : 15
-                    velocity  : 420
-                    lifetime  : 30
+                    dot_radius      : 17
+                    dot_color       : [255, 255, 255]
+                    dot_fill        : 15
+                    dot_vel         : 420
+                    dot_lifetime    : 30
                 audio: stimulus_tone
             update_stimulus:
             initiate_reinforcement:
@@ -183,7 +152,7 @@ STIMULUS:
             initiate_must_respond:
             update_must_respond:
             initiate_intertrial:
-                background_color: (160,160,160)
+                background_color: [255,255,255] # [160,160,160]
             
 
     task_epochs:
@@ -194,159 +163,25 @@ STIMULUS:
                     update_func: function to update epoch. This will be executed continuously until epoch is over.'
         value:
             fixation_epoch:
+                clear_queue: True
                 init_func: initiate_fixation
                 update_func:
             stimulus_epoch:
+                clear_queue: True
                 init_func: initiate_stimulus
                 update_func: update_stimulus
             reinforcement_epoch:
+                clear_queue: False
                 init_func: initiate_reinforcement
                 update_func: update_reinforcement
             must_respond_epoch:
+                clear_queue: False
                 init_func: initiate_must_respond
                 update_func: update_must_respond
             intertrial_epoch:
+                clear_queue: True
                 init_func: initiate_intertrial
                 update_func:
-
-
-
-    courier_handle:
-        tag:    'Instruction on how to handle few basic and other custom messages.
-                Format: 
-                    tag (str):  what each message mean, 
-                    function (obj): which function to execute, 
-                    visual:
-                        need_update (bool): Need to update visual?
-                        is_static (bool): Is update static or in loop with provided frame rate?
-                        properties (dict): Optional parameters for update
-                    audio:
-                        need_update (bool): Need to update audio?
-                        is_static (bool): Is update static or in loop?  
-                        properties (dict): Optional parameters for update
-                '
-
-        initiate_fixation: 
-            tag: 'Execution type for fixation window'
-            function: initiate_fixation
-            visual: 
-                need_update: True
-                is_static: True
-                update_function: next_frame_fixation
-                properties:
-                    load: 
-                    generate:
-                        background : (0,0,0)
-            audio:
-                need_update: False
-                is_static: True
-                update_function: 
-                properties: 
-                    load: ['protocols/random_dot_motion/stimulus/audio/fixationTone.wav']
-                    generate:
-
-        initiate_stimulus: 
-            tag: 'Execution type for stimulus window'
-            function: initiate_stimulus
-            visual: 
-                need_update: True
-                is_static: False
-                update_function: next_frame_stimulus
-                properties:
-                    load: 
-                    generate:
-                        stimulus_size  : (1920, 1080)
-                        background : (0,0,0)
-                        dots:
-                            radius    : 17
-                            color     : (255, 255, 255)
-                            fill_prct : 15
-                            velocity  : 420
-                            lifetime  : 30
-            audio:
-                need_update: False
-                is_static: False
-                update_function: 
-                properties: 
-                    load: 
-                    generate:
-
-        initiate_response: 
-            tag: 'Execution type for response window'
-            function: initiate_response
-            visual: 
-                need_update: True
-                is_static: True
-                update_function: next_frame_response
-                properties:
-                    load: 
-                    generate: 
-                        background : (0,0,0)
-            audio:
-                need_update: True
-                is_static: True
-                update_function: 
-                properties:
-                    load: 
-                    generate:
-
-        initiate_reinforcement: 
-            tag: 'Execution type for reinforcement window'
-            function: initiate_reinforcement
-            visual: 
-                need_update: False
-                is_static: False
-                update_function: next_frame_reinforcement
-                properties: 
-                    load:
-                    generate:
-            audio:
-                need_update: True
-                is_static: True
-                update_function: 
-                properties:
-                    load: 
-                        correct         : [] #'protocols/random_dot_motion/stimulus/audio/correctTone.wav']
-                        incorrect       : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                        invalid         : ['protocols/random_dot_motion/stimulus/audio/incorrectTone.wav']
-                    generate:
-
-        initiate_must_respond: 
-            tag: 'Execution type for must respond window'
-            function: initiate_must_respond
-            visual: 
-                need_update: False
-                is_static: False
-                update_function: next_frame_must_respond
-                properties: 
-                    load: 
-                    generate:
-            audio:
-                need_update: False
-                is_static: True
-                update_function: 
-                properties:
-                    load: 
-                    generate:
-
-        initiate_intertrial:
-            tag: 'Execution type for intertrial window'
-            function: initiate_intertrial
-            visual: 
-                need_update: True
-                is_static: True
-                update_function: next_frame_intertrial
-                properties: 
-                    load: 
-                    generate:
-                        background : (160,160,160)
-            audio:
-                need_update: False
-                is_static: True
-                update_function: 
-                properties: 
-                    load: 
-                    generate:
 
 
 
