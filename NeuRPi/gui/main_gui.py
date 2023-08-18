@@ -1,8 +1,8 @@
 import sys
 import time
 
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from omegaconf import OmegaConf
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
 
@@ -108,14 +108,13 @@ class Application(mainclass):
             msg.exec_()
             return None
         
-        session_info = OmegaConf.create()
-        session_info = {
+        session_info = OmegaConf.create({
             "subject_name": subject_name,
             "subject_weight": float(subject_weight),
             "task_module": self.str_to_code(task_module),
             "task_phase": self.str_to_code(task_phase),
             "experiment_rig": self.str_to_code(experiment_rig),
-        }
+        })
 
         return session_info
 

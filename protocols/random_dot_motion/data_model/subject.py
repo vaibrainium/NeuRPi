@@ -9,6 +9,7 @@ from omegaconf import OmegaConf
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
+
 class Subject(BaseSubject):
     """
     Class for tracking subject parameters and data logging
@@ -19,6 +20,8 @@ class Subject(BaseSubject):
     ) -> None:
         super().__init__(name=name, task_module=task_module, task_phase=task_phase)
         # Initializing subject specific configuration
+        self.task_module = task_module
+        self.task_phase = task_phase
         self.session_config = session_config
         self.rolling_perf = {}
 
@@ -38,7 +41,7 @@ class Subject(BaseSubject):
 
         # If coherences not provided, using default values
         if full_coherences is None:
-            full_coherences = self.config.TASK.coherence.full
+            full_coherences = self.session_config.TASK.stimulus._coherences.value
 
         # If this is a new subject
         if not os.path.exists(self.dir):
@@ -65,6 +68,7 @@ class Subject(BaseSubject):
                 )
 
         else:
+            # TODO: Add try error otherwise program is crashing due to system import
             with open(self.files["rolling_perf"], "rb") as reader:
                 self.rolling_perf = pickle.load(reader)
 
@@ -77,7 +81,7 @@ class Subject(BaseSubject):
         """
         # If coherences not provided, using default values
         if full_coherences is None:
-            full_coherences = self.session_config.TASK.coherence.full
+            full_coherences = self.session_config.TASK.stimulus._coherences.value
 
         subject_config = {
             # Subject and task identification
@@ -109,10 +113,10 @@ class Subject(BaseSubject):
                 np.zeros(len(full_coherences)) * np.NaN
             ).tolist(),
             # Within session tracking
-            "rolling_bias_window": self.config.TASK.bias.passive_correction.rolling_window,
+            "rolling_bias_window": self.session_config.TASK.bias.passive_correction.rolling_window,
             "rolling_bias_index": 0,
             "rolling_bias": np.zeros(
-                self.config.TASK.bias.passive_correction.rolling_window
+                self.session_config.TASK.bias.passive_correction.rolling_window
             ).tolist(),  # initiating at no bias
             # Between session tracking
             "rolling_perf": self.rolling_perf,

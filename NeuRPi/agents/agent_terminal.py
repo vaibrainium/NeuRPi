@@ -249,10 +249,10 @@ class Terminal(Application):
         # TODO: In future, get rid of hydra and use OmegaConf to load config files
         # session_config = OmegaConf.create()
 
-        module_directory = "protocols/" + session_info["task_module"]
+        module_directory = "protocols/" + session_info.task_module
         session_config = get_configuration(
             directory=str(module_directory + "/config"),
-            filename=session_info["task_phase"],
+            filename=session_info.task_phase,
         )
         # session_config["phase"] = phase_config
         return session_config
@@ -269,7 +269,7 @@ class Terminal(Application):
 
         """
         subject_module = importlib.import_module(
-            f"protocols.{session_info['task_module']}.data_model.subject"
+            f"protocols.{session_info.task_module}.data_model.subject"
         )
         self.subjects[session_info.subject_name] = subject_module.Subject(
             name=session_info.subject_name,
@@ -313,19 +313,19 @@ class Terminal(Application):
                     f"protocols.{session_info.task_module}.gui.task_gui"
                 )
                 self.add_new_rig(
-                    id=session_info["experiment_rig"],
+                    id=session_info.experiment_rig,
                     task_gui=gui_module.TaskGUI,
-                    subject_id=session_info["subject"],
-                    task_module=session_info["task_module"],
-                    task_phase=session_info["task_phase"],
+                    subject_id=session_info.subject_name,
+                    task_module=session_info.task_module,
+                    task_phase=session_info.task_phase,
                 )
-                self.rigs_gui[session_info["experiment_rig"]].set_rig_configuration(
-                    self.pilots[session_config["experiment_rig"]]["prefs"]
+                self.rigs_gui[session_info.experiment_rig].set_rig_configuration(
+                    self.pilots[session_info.experiment_rig]["prefs"]
                 )
 
                 # Waiting for rig to initiate hardware and start session
                 while (
-                    not self.pilots[session_config["experiment_rig"]]["state"]
+                    not self.pilots[session_info.experiment_rig]["state"]
                     == "RUNNING"
                 ):
                     pass
