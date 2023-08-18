@@ -214,7 +214,8 @@ class RTTask(TrialConstruct):
             if not self.correction_trial:
                 self.config.SUBJECT.counters["noresponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
-            self.valid, self.correct = [0, 0]
+            self.valid = 0
+            self.correct = 0
             # If active training
             if self.config.TASK.training_type.value == 2:
                 self.reinforcement_duration = (
@@ -230,7 +231,7 @@ class RTTask(TrialConstruct):
 
             # If passive training
             else:
-                self.valid, self.correct = [0, 1]
+                self.correct = 1
                 self.reinforcement_duration = (
                     self.config.TASK.feedback.correct.time.value
                 )
@@ -258,9 +259,12 @@ class RTTask(TrialConstruct):
         elif self.stimulus_pars["target"] != self.choice:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["incorrect"] += 1
+                self.valid = 1
+            else:
+                self.valid = 0
             stimulus_arguments["outcome"] = "incorrect"
             self.reinforcement_duration = self.config.TASK.feedback.incorrect.time.value
-            self.valid, self.correct = [1, 0]
+            self.correct = 0
             iti_decay = self.config.TASK.feedback.incorrect.intertrial
             self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
                 iti_decay.base * np.exp(float(iti_decay.power) * self.response_time)
@@ -270,6 +274,9 @@ class RTTask(TrialConstruct):
         elif self.stimulus_pars["target"] == self.choice:
             if not self.correction_trial:
                 self.config.SUBJECT.counters["correct"] += 1
+                self.valid = 1
+            else: 
+                self.valid = 0
             stimulus_arguments["outcome"] = "correct"
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
