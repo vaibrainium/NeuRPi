@@ -18,7 +18,7 @@ class RandomDotMotion(BaseRDK):
         pass
 
 
-class Stimulus_Display(BaseDisplayManager):
+class StimulusDisplay(BaseDisplayManager):
     """
     Class for diplaying stimulus
 
