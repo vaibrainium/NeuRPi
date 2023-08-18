@@ -133,35 +133,38 @@ def main():
 
     config = OmegaConf.load("protocols/random_dot_motion/config/rt_dynamic_training.yaml")
 
-    courier = multiprocessing.Queue()
+    in_queue = multiprocessing.Queue()
+    out_queue = multiprocessing.Queue()
+
     a = DisplayManager(
         stimulus_manager=RandomDotMotion,
         stimulus_configuration=config.STIMULUS,
-        in_queue=courier,
+        in_queue=in_queue,
+        out_queue=out_queue,
     )
     a.start()
 
     # print("Starting Stimulus")
     # message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-    # courier.put(eval(message))
+    # in_queue.put(eval(message))
     
     while True:
 
         print("Starting Fixation")
         message = "('fixation_epoch', {})"
-        courier.put(eval(message))
+        in_queue.put(eval(message))
         time.sleep(2)
         print("Starting Stimulus")
         message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
-        courier.put(eval(message))
+        in_queue.put(eval(message))
         time.sleep(4)
         # print("Starting Reinforcement")
         # message = "('reinforcement_epoch', {'outcome': 'correct'})"
-        # courier.put(eval(message))
+        # in_queue.put(eval(message))
         # time.sleep(2)
         # print("Starting Intertrial")
         # message = "('intertrial_epoch', {})"
-        # courier.put(eval(message))
+        # in_queue.put(eval(message))
         # time.sleep(2)
         # print("Loop complete")
 

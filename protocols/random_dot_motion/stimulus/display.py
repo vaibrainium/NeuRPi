@@ -38,7 +38,6 @@ class Display:
         self.frame_queue = Queue(maxsize=self.frame_queue_size)
 
         self.display_config = prefs.get('HARDWARE')["Display"]
-        # self.courier_map = self.stimulus_config.courier_handle
 
         self.pygame = pygame
 
@@ -84,7 +83,7 @@ class Display:
         except Exception as e:
             raise Warning(f"An unexpected error occurred: {e}")
         finally:
-            pass
+            self.out_queue.put("display_connected")
 
     def load_media(self):
         try:
