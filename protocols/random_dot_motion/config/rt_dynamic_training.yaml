@@ -1,35 +1,14 @@
-HARDWARE:
-    Arduino:
-        tag: 'List and properties of all arduinos required for session'
-        num_arduinos: 1
-        Primary:
-            connection:
-                port    : '/dev/ttyACM0'
-                baudrate: None
-                timeout : None
-            tag: "[Lick, Reward]"
+REQUIRED_HARDWARE:
+    - Arduino
+    - Display
 
-    GPIO:
-        Stim_Onset:
-            pin: None
-            tag: 'TTL'
+REQUIRED_MODULES:
+    - Task
+    - Stimulus
+    - Behavior
 
-        Video_Monitor:
-            pin: None
-            tag: 'Frame Time'
-
-    Display:
-        tag: 'List and properties of all displays needed for session'
-        num_screens: 1
-        Primary:
-            connection:
-                port  : 0 
-                window_size: (1920, 1080)
-                refresh_rate : 30
-                flags      : pygame.DOUBLEBUF | pygame.FULLSCREEN #| pygame.constants.SCALED 
-                vsync      : True
-                show_fps   : True
-
+GRADUATION: None
+      
 
 TASK:
     stimulus:
@@ -136,7 +115,6 @@ TASK:
 
 
 STIMULUS:
-
     load_media:
         tag: 'Load media for visual and audio stimuli if any (relative to root directory)'
         value:

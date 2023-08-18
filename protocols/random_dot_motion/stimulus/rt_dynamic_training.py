@@ -18,7 +18,7 @@ class RandomDotMotion(BaseRDK):
         pass
 
 
-class Stimulus_Display(BaseDisplayManager):
+class StimulusDisplay(BaseDisplayManager):
     """
     Class for diplaying stimulus
 
@@ -29,7 +29,8 @@ class Stimulus_Display(BaseDisplayManager):
         self,
         stimulus_manager=RandomDotMotion,
         stimulus_configuration=None,
-        stimulus_courier=None,
+        in_queue=None,
+        out_queue=None,
     ):
-        super().__init__(stimulus_manager, stimulus_configuration, stimulus_courier)
+        super().__init__(stimulus_manager, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
         pass

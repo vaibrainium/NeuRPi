@@ -25,7 +25,8 @@ class Pilot:
     node = None
     networking = None
 
-    def __init__(self):
+    def __init__(self): 
+
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
             self.child = True
@@ -69,8 +70,11 @@ class Pilot:
 
         # handshake on initialization
         self.ip = self.networking.get_ip()
-        self.handshake()
-        self.logger.debug("handshake sent")
+        if self.varify_hardware_connectivity():
+            self.handshake()
+            self.logger.debug("handshake sent")
+        else: 
+            raise TimeoutError("Hardware is not connected. Please check hardware connectivity and try again.")
 
         self.task = None
         self.stimulus_display = None
@@ -82,7 +86,19 @@ class Pilot:
         self.handware_manager = None
         self.task_manager = None
         self.stimulus_manager = None
-        
+        self.display_process = None
+
+        self.modules = None
+
+    ############################### HANDSHAKE FUNCTIONS ########################################        
+
+    def varify_hardware_connectivity(self):
+        """
+        Check if all required hardwares mentioned in prefs is connected to the rig 
+        """
+        # TODO: start implementing pre-emptive check on hardware connectivity before sending handshake so that terminal has better idea whether the rig is ready to run the specific task or not
+        return True
+
     def handshake(self):
         hello = {
             "pilot": self.name,
@@ -121,57 +137,40 @@ class Pilot:
             self.logger.exception(f"Missing required parameter: {e}")
             return
 
-        # Initialize task modules
-        if not self.init_task_modules():
-            self.logger.exception("Could not initialize task modules")
-            return
-        
-        # Initialize all required hardwares
-        
-        
-        self.logger.info(f"Starting task: {self.session_info.task_module}")
+        self.import_session_modules()
 
-        self.state = "RUNNING"
-        self.running.set()
         try:
-            # self.subject_name = self.session_info.subject_name
-            # self.task_module = self.session_info.task_module
-            # self.task_phase = self.session_info.task_phase
+            if "Display" in self.session_config.HARDWARE_REQUIREMENTS.keys():
+                stimulus_config = self.session_config.STIMULUS.copy()
+                value["queue_to_stimulus"] = mp.Queue()
+                value["queue_from_stimulus"] = mp.Queue()
 
-            self.stage_block.clear()
-
-            # # verify that the task module exists with Path module
-            # task_module_path = Path(
-            #     f"protocols/{self.task_module}/tasks/{self.task_phase}.py"
-            # )
-            # if not task_module_path.exists():
-
-            # Start Display process if display hardware is required
-            if "Display" in self.session_config.HARDWARE.keys():
-                self.logger.debug("Starting display")
-                # # Start display on separate process and wait for three secs for display initiation
-                # # additing stimulus display queue
-                value["stimulus_queue"] = mp.Manager().Queue()
-                self.stimulus_display = mp.Process(
-                    target=self.start_display, args=(value,)
+                self.display_process = mp.Process(
+                    target=self.start_display,
+                    kwargs={
+                        'module': self.modules['stimulus'],
+                        'config': stimulus_config,
+                        'queue_to_stimulus': value["queue_to_stimulus"],
+                        'queue_from_stimulus': value["queue_from_stimulus"],
+                    }
                 )
-                self.stimulus_display.start()
-
-                # Wait for display to initialize before starting task
-                while True:
-                    # Check for stimulus queue for display ready signal
-                    if not value["stimulus_queue"].empty():
-                        if value["stimulus_queue"].get() == "display_ready":
-                            value["stimulus_queue"].put("start")
-                            break
-
-            # Start the task on separate thread and update terminal
+                self.display_process.start()
+                # wait for the display to start before starting the task process
+                message = value["queue_from_stimulus"].get(timeout=5)
+                if message != "display_ready":
+                    raise TimeoutError("Display did not start in time")
+                else:
+                    self.logger.info("Display started")
+                
             threading.Thread(target=self.run_task, args=(value,)).start()
+            self.state = "RUNNING"
+            self.running.set()
             self.update_state()
 
+
         except Exception as e:
-            self.state = "IDLE"
-            self.logger.exception(f"Could not start the task: {e}")
+           self.logger.exception(f"Could not start Task: {e}")
+           return
 
     def l_stop(self, value):
         """
@@ -214,103 +213,77 @@ class Pilot:
 
     ############################### SECONDARY FUNCTIONS ########################################
 
-    def init_task_modules(self):
+    def import_session_modules(self):
         """
         Import task module and initialize hardware, stimulus and task managers.
         Required for any task to run on the rig and should be called before starting the task.
         """
 
-        task_module_path = Path(f"protocols/{self.session_info.task_module}")
-        hardware_manager_path = Path(f"{task_module_path}/hardware/hardware_manager.py")
-        task_manager_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
-        stimulus_manager_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
+        # TODO: In future version, separate the move task phase one level up and keep all required modules inside for easier readability
 
-        # Try to import task module
-        try:
-            task_manager_module = importlib.import_module(task_manager_path)
-            self.task_manager = task_manager_module.Task(self.session_info, self.session_config, self.subject_config)
-        except Exception as e:
-            self.logger.exception(f"Could not import task module: {e}")
-            return False
-
-        # Import and initialize hardware manager
-        try:
-            hardware_manager_module = importlib.import_module(hardware_manager_path)
-            self.hardware_manager = hardware_manager_module.Hardware_Manager(self.session_info, self.session_config, self.subject_config)
-        except Exception as e:
-            self.logger.exception(f"Could not import hardware manager: {e}")
-            return False
+        # import all required modules
+        try:        
+            task_module_path = Path(f"protocols/{self.session_info.task_module}")
+            hardware_manager_path = Path(f"{task_module_path}/hardware/hardware_manager.py")
+            task_manager_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
+            stimulus_manager_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
+            
+            self.modules = {}
+            self.modules["task"] = importlib.import_module(task_manager_path)
+            self.modules["hardware"] = importlib.import_module(hardware_manager_path)
+            self.modules["stimulus"] = importlib.import_module(stimulus_manager_path)
+        except ImportError as e:
+            self.logger.exception(f"Could not import module: {e}")
+                        
+    def start_display(self, module, config, in_queue, out_queue):
+        """
+        Current task requires display hardware. Import display module and start display process.
         
-        # Import and initialize stimulus manager
-        try:
-            stimulus_manager_module = importlib.import_module(stimulus_manager_path)
-            self.stimulus_manager = stimulus_manager_module.Stimulus_Manager(self.session_info, self.session_config, self.subject_config)
-        except Exception as e:
-            self.logger.exception(f"Could not import stimulus manager: {e}")
-            return False
-       
-        return True
-    
-    def start_display(self, task_params):
         """
-        Import relevant stimulus configuration
-        Import and start stimulus_display class relevant for requested task
-        """
-        display_module = importlib.import_module(
-            f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}"
-        )
-        # display_module = (
-        #     "protocols."
-        #     + task_params["task_module"]
-        #     + ".stimulus."
-        #     + task_params["task_phase"]
+        # display_module = importlib.import_module(
+        #     f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}"
         # )
-        # display_module = importlib.import_module(display_module)
-        try:
-            stimulus_configuration = self.session_config.STIMULUS.copy()
-        except KeyError:
-            self.logger.exception(
-                f"Could not find stimulus configuration for task {self.session_info.task_module}. Using default stimulus configuration."
-            )
-            directory = f"protocols/{self.session_info.task_module}/config"
-            stimulus_configuration = get_configuration(
-                directory=directory, filename="stimulus"
-            )
+
         # try:
-        #     stimulus_configuration = task_params["phase_config"].STIMULUS.copy()
-        # except:
-        #     directory = "protocols/" + task_params["task_module"] + "/config"
+        #     stimulus_configuration = self.session_config.STIMULUS.copy()
+        # except KeyError:
+        #     self.logger.exception(
+        #         f"Could not find stimulus configuration for task {self.session_info.task_module}. Using default stimulus configuration."
+        #     )
+        #     directory = f"protocols/{self.session_info.task_module}/config"
         #     stimulus_configuration = get_configuration(
         #         directory=directory, filename="stimulus"
         #     )
 
-        display = display_module.Stimulus_Display(
-            stimulus_configuration=stimulus_configuration,
-            stimulus_courier=task_params["stimulus_queue"],
+        display = module.StimulusDisplay(
+            stimulus_configuration=config,
+            stimulus_courier=in_queue,
+            display_ready=out_queue,
         )
+
         display.start()
+
+        # display = display_module.StimulusDisplay(
+        #     stimulus_configuration=stimulus_configuration,
+        #     stimulus_courier=task_params["stimulus_queue"],
+        # )
+        # display.start()
 
     def run_task(self, task_params):
         """
-        Start running task under new thread
-
-        Initiate the task, and progress through each stage of task with `task.stages.next`
-
-        Send data to terminal after every stage
-
-        Waits for the task to clear `stage_block` between stages
+        start running task under new thread
+        initiate the task, and progress through each stage of task with `task.stages.next`
+        send data to terminal after every stage
+        waits for the task to clear `stage_block` between stages
 
         """
         self.logger.debug("initialing task")
+        self.stage_block.clear()
 
-        self.config = task_params["phase_config"]
-        self.config.SUBJECT = task_params["subject_config"]
+        self.config = self.session_config
+        self.config.SUBJECT = self.subject_config 
 
-        # Importing protocol function/class object using importlib
-        task_module = importlib.import_module(
-            "protocols." + self.task_module + ".tasks." + self.task_phase
-        )
-        self.task = task_module.Task(
+        self.task = self.modules['task']( #task_module.Task(
             stage_block=self.stage_block, config=self.config, **task_params
         )
         self.logger.debug("task initialized")
@@ -369,7 +342,7 @@ def main():
         pi.handshake()
 
         msg = {
-            "subjectID": "PSUIM4",
+            "subjectID": "XXX",
             "task_module": "rt_dynamic_training",
             "task_phase": "4",
         }
