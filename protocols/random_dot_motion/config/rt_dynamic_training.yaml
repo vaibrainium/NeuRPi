@@ -185,4 +185,7 @@ STIMULUS:
 
 
 
-EVENT_FILES:
+DATAFILES:
+    lick:  "_lick.csv"
+    trial: "_trial.csv"
+    event: "_event.csv"
