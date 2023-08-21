@@ -55,6 +55,7 @@ class Terminal(Application):
             "CONTINUOUS": self.l_data,  # handle continuous data same way as other data
             "STREAM": self.l_data,
             "HANDSHAKE": self.l_handshake,  # a pi is making first contact, telling us its IP
+            "SESSION_FILES": self.l_session_files,
         }
 
         # Start external communications in own process
@@ -219,6 +220,20 @@ class Terminal(Application):
         #     self.message_to_taskgui(value)
         # except:
         #     print("Cound not update GUI")
+
+
+    def l_session_files(self, value):
+        """
+        Incoming session files from pilot.
+
+        `value` should have `subject` and `pilot` field added to dictionary for identifiation.
+
+        """
+        pass
+        try:
+            self.message_to_taskgui(value)
+        except:
+            print("Cound not update GUI")
 
     ########################
     # GUI and other functions

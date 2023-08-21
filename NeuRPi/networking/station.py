@@ -696,6 +696,7 @@ class Terminal_Station(Station):
                 "STATE": self.l_state,  # The Pi is confirming/notifying us that it has changed state
                 "HANDSHAKE": self.l_handshake,  # initial connection with some initial info
                 "FILE": self.l_file,  # The pi needs some file from us
+                "SESSION_FILES": self.l_session_files,  # The pi needs some file from us
             }
         )
 
@@ -886,6 +887,13 @@ class Terminal_Station(Station):
         file_message = {"path": msg.value, "file": file_contents}
 
         self.send(msg.sender, "FILE", file_message)
+
+    def l_session_files(self, msg: Message):
+        """
+        Pilot sent end of session files to be saved
+        """
+        # only rly useful for our terminal object
+        self.send("_T", "SESSION_FILES", value=msg.value)
 
 
 class Pilot_Station(Station):
