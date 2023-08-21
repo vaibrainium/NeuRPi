@@ -7,12 +7,52 @@ REQUIRED_MODULES:
     - Stimulus
     - Behavior
 
-GRADUATION: None
-      
+GRADUATION: 
+    coherence_levels:
+        tag: 'List of all coherence levels used in this phase'
+        value:
+            1: [-100, 100]
+            2: [-100, -72, 72, 100]
+            3: [-100, -72, -36, 36, 72, 100]
+            4: [-100, -72, -36, -18, 18, 36, 72, 100]
+            5: [-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]
+            6: [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]
+    
+    accuracy_threadholds:
+        tag: 'List of all accuracy conditions for each coherence level to move forward (or backward)'
+        value:
+            1: [0.7, 0.7]
+            2: [0.7, 0.7, 0.7, 0.7]
+            3: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+            4: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+            5: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+            6: [0.7, 0.7, 0.7, 0.7, 0.7, 0.7]
+            
+    trial_thresholds:
+        tag: 'Number of trials required to move forward (or backward) for each coherence level'
+        value:
+            1: 200
+            2: 200
+            3: 200
+            4: 200
+            5: 200
+            6: 200
+
+
 
 TASK:
+    coherence:
+        levels:
+            1: [-100, 100]
+            2: [-100, -72, 72, 100]
+            3: [-100, -72, -36, 36, 72, 100]
+            4: [-100, -72, -36, -18, 18, 36, 72, 100]
+            5: [-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]
+            6: [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]
+        
+
     stimulus:
-        _coherences:
+        coherences:
             tag  : 'List of all coherences used in study'
             type : 'list'
             value: [100, 72, 36, 18, 9, 0]
