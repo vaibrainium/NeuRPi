@@ -295,6 +295,7 @@ STIMULUS = {
     },
 }
 
+SUBJECT = {}
 
 DATAFILES = {
     "lick": "_lick.csv",

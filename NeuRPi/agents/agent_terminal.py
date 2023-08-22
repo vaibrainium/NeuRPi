@@ -261,16 +261,11 @@ class Terminal(Application):
         Returns:
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
         """
-        # TODO: In future, get rid of hydra and use OmegaConf to load config files
-        # session_config = OmegaConf.create()
-
-        module_directory = "protocols/" + session_info.task_module
-        session_config = get_configuration(
-            directory=str(module_directory + "/config"),
-            filename=session_info.task_phase,
-        )
-        # session_config["phase"] = phase_config
-        return session_config
+        session_config = importlib.import_module(f"protocols.{session_info.task_module}.{session_info.task_phase}.config")
+        file_path = Path(Path.cwd(), Path(f"protocols/{session_info.task_module}/{session_info.task_phase}/config.py"))
+        with open(file_path, "r") as f:
+            string_session_config = f.read()
+        return session_config, string_session_config
 
     def initiate_subject(self, session_info, session_config):
         """
@@ -306,7 +301,7 @@ class Terminal(Application):
         if session_info:
             if self.pilots[session_info.experiment_rig]["state"] == "IDLE":
                 # Gathering session configuration
-                session_config = self.prepare_session_config(session_info)
+                session_config, string_session_config = self.prepare_session_config(session_info)
                 # Initializing subject
                 subject_config = self.initiate_subject(session_info, session_config)
 
@@ -318,7 +313,8 @@ class Terminal(Application):
                     key="START",
                     value={
                         "session_info": session_info,
-                        "session_config": session_config,
+                        # python object cannot be sent over network, so converting to string and will convert back to module on rig
+                        "session_config": string_session_config,
                         "subject_config": subject_config,
                     },
                 )

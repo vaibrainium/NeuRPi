@@ -36,12 +36,27 @@ class Subject(BaseSubject):
 
         self.prepare_run()
 
-    def prepare_run(self, full_coherences=None):
+    def get_full_coherences(self):
+        """
+        Generates full direction-wise coherence array from input coherences list.
+        Returns:
+            full_coherences (list): List of all direction-wise coherences with adjustment for zero coherence (remove duplicates).
+            coh_to_xrange (dict): Mapping dictionary from coherence level to corresponding x values for plotting of psychometric function
+        """
+        coherences = np.array(self.session_config.TASK["stimulus"]["coherences"]["value"])
+        full_coherences = sorted(np.concatenate([coherences, -coherences]))
+        if (
+            0 in coherences
+        ):  # If current full coherence contains zero, then remove one copy to avoid 2x 0 coh trials
+            full_coherences.remove(0)
+
+        return full_coherences
+
+    def prepare_run(self):
         "Creating file structure and essential folders"
 
-        # If coherences not provided, using default values
-        if full_coherences is None:
-            full_coherences = self.session_config.TASK.stimulus._coherences.value
+
+        full_coherences = self.get_full_coherences() #self.session_config.TASK["stimulus"]["coherences"]["value"]
 
         # If this is a new subject
         if not os.path.exists(self.dir):
@@ -81,7 +96,7 @@ class Subject(BaseSubject):
         """
         # If coherences not provided, using default values
         if full_coherences is None:
-            full_coherences = self.session_config.TASK.stimulus._coherences.value
+            full_coherences = self.get_full_coherences() #self.session_config.TASK["stimulus"]["coherences"]["value"]
 
         subject_config = {
             # Subject and task identification
@@ -113,10 +128,10 @@ class Subject(BaseSubject):
                 np.zeros(len(full_coherences)) * np.NaN
             ).tolist(),
             # Within session tracking
-            "rolling_bias_window": self.session_config.TASK.bias.passive_correction.rolling_window,
+            "rolling_bias_window": self.session_config.TASK["bias"]["passive_correction"]["rolling_window"],
             "rolling_bias_index": 0,
             "rolling_bias": np.zeros(
-                self.session_config.TASK.bias.passive_correction.rolling_window
+                self.session_config.TASK["bias"]["passive_correction"]["rolling_window"]
             ).tolist(),  # initiating at no bias
             # Between session tracking
             "rolling_perf": self.rolling_perf,
