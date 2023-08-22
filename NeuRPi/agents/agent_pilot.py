@@ -149,7 +149,7 @@ class Pilot:
                 self.display_process = mp.Process(
                     target=self.start_display,
                     kwargs={
-                        'StimulusModule': self.modules['stimulus'],
+                        'StimulusDisplay': self.modules['stimulus'],
                         'config': stimulus_config,
                         'in_queue': value["msg_to_stimulus"],
                         'out_queue': value["queue_from_stimulus"],
@@ -245,12 +245,14 @@ class Pilot:
         except ImportError as e:
             self.logger.exception(f"Could not import module: {e}")
                         
-    def start_display(self, StimulusModule, config, in_queue, out_queue):
+    def start_display(self, StimulusDisplay, config, in_queue, out_queue):
         """
         Current task requires display hardware. Import display module and start display process.
         
         """
-        display = StimulusModule(
+        # stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}")
+        # display = stimulus_manager_file.StimulusDisplay(
+        display = StimulusDisplay(
             stimulus_configuration=config,
             in_queue=in_queue,
             out_queue=out_queue,
@@ -299,10 +301,18 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        self.stimulus_display.kill()         
-                        #TODO: send all data files to terminal
-                        # sending files to terminal only when successfully finished the task
-                        self.node.send("T", "SESSION_FILES", self.config.FIlES)             
+                        self.display_process.kill()       
+                        self.task.end_session()  
+                        #TODO: Make better arrangement of the code so that files will be sent only on termination of program. Not on crashing
+                        try:
+                            # sending files to terminal only when successfully finished the task
+                            files = {}
+                            for file_name, file_path in self.config.FILES.items():
+                                with open(file_path, "rb") as reader:
+                                    files[file_name] = reader.read()
+                            self.node.send("T", "SESSION_FILES", files)         
+                        except:
+                            self.logger.exception("Could not send files to terminal")    
                         break
 
                     # if paused, wait for running event set?
@@ -317,7 +327,8 @@ class Pilot:
         finally:
             self.logger.debug("stopping task")
             try:
-                self.task.end_session()
+                pass
+                # self.task.end_session()  
             except Exception as e:
                 self.logger.exception(f"got exception while stopping task: {e}")
             del self.task

@@ -2,7 +2,7 @@ import omegaconf
 
 from NeuRPi.hardware.arduino import Arduino
 from NeuRPi.hardware.gpio import GPIO
-from NeuRPi.hardware.display import Display
+# from NeuRPi.hardware.display import Display
 from NeuRPi.prefs import prefs
 
 

@@ -11,10 +11,8 @@ from scipy.stats import pearson3
 import pickle
 
 from NeuRPi.prefs import prefs
-from NeuRPi.utils.get_config import get_configuration
-from protocols.random_dot_motion.data_model.subject import Subject
-from protocols.random_dot_motion.hardware.behavior import Behavior
-from protocols.random_dot_motion.hardware.hardware_manager import \
+from protocols.random_dot_motion.core.hardware.behavior import Behavior
+from protocols.random_dot_motion.core.hardware.hardware_manager import \
     HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
@@ -237,13 +235,16 @@ class SessionManager:
                     if self.subject_config["rolling_perf"]["trial_counter_after_4th"] > 600:
                         pass
 
-    ####################### Epoch related methods #######################
+    ####################### epoch related methods #######################
     def get_fixation_duration(self):
         return self.config.TASK["epochs"]["fixation"]["duration"]
 
     def get_stimulus_duration(self):
         min_viewing = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
-        duration = self.config.TASK["epochs"]["stimulus"]["duration"]
+        if self.config.TASK["training_type"]["value"] < 2:
+            duration = self.config.TASK["epochs"]["stimulus"]["passive_viewing"](self.subject_config["current_coherence_level"])
+        else:
+            duration = self.config.TASK["epochs"]["stimulus"]["max_duration"]
         return min_viewing, duration
 
     def get_reinforcement_duration(self, outcome):
@@ -255,6 +256,8 @@ class SessionManager:
         else:
             return self.config.TASK["epochs"]["intertrial"]["duration"][outcome](response_time)
             
+
+    ####################### trial-related methods #######################
     def update_EOT(self, choice, response_time, outcome):
         """
         End of trial updates: Updating end of trial parameters such as psychometric function, chronometric function, total trials, rolling_perf
@@ -365,18 +368,17 @@ class Task:
     def __init__(
         self,
         stage_block=None,
-        subject=None,
         task_module=None,
         task_phase=None,
         config=None,
         **kwargs,
     ):
-        self.subject = subject
         self.task_module = task_module
         self.task_phase = task_phase
         self.config = config
-        self.subject_config = self.config.SUBJECT
         self.__dict__.update(kwargs)
+
+        self.subject_config = self.config.SUBJECT
 
         # Preparing storage files
         self.config.FILES = {}
@@ -388,6 +390,9 @@ class Task:
         for file_id, file in self.config.DATAFILES.items():
             self.config.FILES[file_id] = Path(data_path, self.subject_config["name"] + file)
         self.config.FILES["rolling_perforamance_before"] = Path(data_path, "rolling_performance_before.pkl")
+        self.config.FILES["rolling_perforamance_before"].write_bytes(
+            pickle.dumps(self.subject_config["rolling_perf"])
+        )
         self.config.FILES["rolling_perforamance_after"] = Path(data_path, "rolling_performance_after.pkl")
 
         # Event locks, triggers
@@ -407,7 +412,7 @@ class Task:
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
-            response_log=self.config.FILES[file_id],
+            response_log=self.config.FILES["lick"],
             response_queue=self.response_queue,
             timers=self.timers,
         )
@@ -438,21 +443,21 @@ class Task:
         # Reward related changes
         if message["key"] == "reward_left":
             self.managers["hardware"].reward_left(message["value"])
-            self.subject_config.total_reward += message["value"]
+            self.subject_config["total_reward"] += message["value"]
             print(f'REWARDED LEFT with {message["value"]}')
         elif message["key"] == "reward_right":
             self.managers["hardware"].reward_right(message["value"])
-            self.subject_config.total_reward += message["value"]
+            self.subject_config["total_reward"] += message["value"]
             print(f'REWARDED RIGHT with {message["value"]}')
         elif message["key"] == "toggle_left_reward":
             self.managers["hardware"].toggle_reward("Left")
         elif message["key"] == "toggle_right_reward":
             self.managers["hardware"].toggle_reward("Right")
         elif message["key"] == "update_reward":
-            self.subject_config.reward_volume = message["value"]
-            print(f"NEW REWARD VALUE IS {self.subject_config.reward_volume}")
+            self.subject_config["reward_volume"] = message["value"]
+            print(f"NEW REWARD VALUE IS {self.subject_config['reward_volume']}")
         elif message["key"] == "calibrate_reward":
-            if self.subject_config.name in ["XXX", "xxx"]:
+            if self.subject_config["name"] in ["XXX", "xxx"]:
                 self.managers["hardware"].start_calibration_sequence()
 
         # Lick related changes
