@@ -31,7 +31,7 @@ class TrialConstruct:
     def __init__(
         self,
         stage_block,
-        stimulus_queue,
+        msg_to_stimulus,
         response_block,
         response_queue,
         *args,
@@ -45,7 +45,7 @@ class TrialConstruct:
         """
 
         # Task Variables
-        self.stimulus_queue = stimulus_queue
+        self.msg_to_stimulus = msg_to_stimulus
         self.response_queue = response_queue
         self.stages = (
             "fixation",
@@ -177,7 +177,7 @@ if __name__ == "__main__":
     response_queue = mp.Queue()
     a = TrialConstruct(
         stage_block=stage_block,
-        stimulus_queue=stim_handler,
+        msg_to_stimulus=stim_handler,
         response_queue=response_queue,
         response_block=response_block,
     )
