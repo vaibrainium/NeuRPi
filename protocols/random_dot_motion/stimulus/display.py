@@ -78,12 +78,12 @@ class Display:
             self.screen.fill((0, 0, 0))
             self.pygame.display.update()
 
+            self.out_queue.put("display_connected")
+
         except self.pygame.error as e:
             raise Warning(f"Could not connect to display device: {e}")
         except Exception as e:
             raise Warning(f"An unexpected error occurred: {e}")
-        finally:
-            self.out_queue.put("display_connected")
 
     def load_media(self):
         try:
