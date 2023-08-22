@@ -167,7 +167,7 @@ class DisplayManager:
                 self.pygame.display.flip()
                 self.pygame.event.pump()
                 self.clock.tick(self.display_config["max_fps"])
-                print(f"FPS: {self.clock.get_fps()}")
+                # print(f"FPS: {self.clock.get_fps()}")
 
 
 

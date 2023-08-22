@@ -113,7 +113,7 @@ while running:
 
     # Cap the frame rate
     clock.tick(FPS)
-    print(f"FPS: {clock.get_fps()}")
+    # print(f"FPS: {clock.get_fps()}")
 
 # Clean up
 glDeleteBuffers(1, [vbo])

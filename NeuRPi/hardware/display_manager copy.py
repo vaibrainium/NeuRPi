@@ -84,7 +84,7 @@ class DisplayManager:
 
     def load_media(self):
         try:
-            media = self.stimulus_config.load_media.value
+            media = self.stimulus_config["load_media"]["value"]
             if media.images:
                 for key, val in media.images.items():
                     self.images[key] = self.pygame.image.load(val)
@@ -137,7 +137,7 @@ class DisplayManager:
                     (epoch, args) = self.in_queue.get_nowait()
                     self.epoch_update_event.clear() # received message so clear the event
 
-                    epoch_value = getattr(self.stimulus_config.task_epochs.value, epoch)
+                    epoch_value = getattr(self.stimulus_config["task_epochs"]["value"], epoch)
                     init_method = epoch_value.init_func
                     update_method = epoch_value.update_func
                     method = getattr(self, init_method)
@@ -191,7 +191,7 @@ class DisplayManager:
                 self.pygame.display.flip()
                 self.pygame.event.pump()
                 self.clock.tick_busy_loop(self.display_config["max_fps"])
-                print(f"FPS: {self.clock.get_fps()}")
+                # print(f"FPS: {self.clock.get_fps()}")
 
 
 

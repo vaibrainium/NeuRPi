@@ -176,7 +176,7 @@ class Display:
             # print(f"Render time: {time.time()-start}")
         except:
             raise Warning(f"Rendering error: Unable to process {func}")
-        print(f"FPS: {self.clock.get_fps()}")
+        # print(f"FPS: {self.clock.get_fps()}")
         self.update()
 
     def update(self):

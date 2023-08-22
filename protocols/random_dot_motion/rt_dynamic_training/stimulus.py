@@ -1,7 +1,7 @@
-from protocols.random_dot_motion.stimulus.display_manager import (
+from protocols.random_dot_motion.core.stimulus.display_manager import (
     DisplayManager as BaseDisplayManager,
 )
-from protocols.random_dot_motion.stimulus.random_dot_motion import (
+from protocols.random_dot_motion.core.stimulus.random_dot_motion import (
     RandomDotMotion as BaseRDK,
 )
 

@@ -1,7 +1,7 @@
 import time
 from multiprocessing import Process
 import omegaconf
-from protocols.random_dot_motion.stimulus.display import Display
+from protocols.random_dot_motion.core.stimulus.display import Display
 import logging
 
 class DisplayManager(Display):

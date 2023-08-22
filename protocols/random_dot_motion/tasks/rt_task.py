@@ -73,6 +73,7 @@ class RTTask(TrialConstruct):
         )
 
         self.config = config
+        self.subject_config = self.config.SUBJECT
         self.timers = timers
         self.msg_to_stimulus = msg_to_stimulus
 
@@ -121,7 +122,7 @@ class RTTask(TrialConstruct):
 
         # Determine stage parameters
         targets = [np.NaN]
-        self.fixation_duration = self.config.TASK.timings.fixation.value
+        self.fixation_duration = self.managers["session"].get_fixation_duration() #self.config.TASK["timings"]["fixation"]["value"]
         self.trigger = {
             "type": "FIXATE_ON",
             "targets": targets,
@@ -134,15 +135,15 @@ class RTTask(TrialConstruct):
         self.response_block.set()
 
         # Get current trial properties
-        self.subject_config.counters["attempt"] += 1
+        self.subject_config["counters"]["attempt"] += 1
         if not self.correction_trial:
-            self.subject_config.counters["valid"] += 1
+            self.subject_config["counters"]["valid"] += 1
 
         self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
-            "subject": self.subject_config.name,
+            "subject": self.subject_config["name"],
             "stimulus_pars": self.stimulus_pars,
         }
         return data
@@ -157,19 +158,18 @@ class RTTask(TrialConstruct):
         # Clear stage block
         self.stage_block.clear()
         # Determine stage parameters
-        self.min_viewing_duration = self.config.TASK.timings.stimulus.min_viewing
+        self.min_viewing_duration, self.duration = self.managers["session"].get_stimulus_duration() #self.config.TASK["timings"]["stimulus"]["min_viewing"]
         stimulus_arguments = self.stimulus_pars
         targets = [-1, 1]
-        if self.config.TASK.training_type.value < 2:
+        if self.config.TASK["training_type"]["value"] < 2:
             duration = pearson3.rvs(
-                loc=self.config.TASK.training_type.active_passive.passive_rt_mu,
-                skew=self.config.TASK.training_type.active_passive.passive_rt_skew,
-                scale=self.config.TASK.training_type.active_passive.passive_rt_sigma,
+                loc=self.config.TASK["training_type"]["active_passive"]["passive_rt_mu"],
+                skew=self.config.TASK["training_type"]["active_passive"]["passive_rt_skew"],
+                scale=self.config.TASK["training_type"]["active_passive"]["passive_rt_sigma"],
             )
-
             print(f"Passive Trial Duration is {duration}")
-        else:
-            duration = self.config.TASK.timings.stimulus.max_viewing
+        # else:
+        #     duration = self.managers["session"].get_stimulus_duration() #self.config.TASK["timings"]["stimulus"]["max_viewing"]
         # implement minimum stimulus viewing time by not validating responses during this period
         self.trigger = {
             "type": "GO",
@@ -185,7 +185,7 @@ class RTTask(TrialConstruct):
         self.stage_block.wait()
         self.choice = self.response
         self.response_time = (
-            self.response_time + self.config.TASK.timings.stimulus.min_viewing
+            self.response_time + self.min_viewing_duration
         )
         print(
             f"Responded with {self.choice} in {self.response_time} secs for target: {self.stimulus_pars['target']}"
@@ -212,41 +212,42 @@ class RTTask(TrialConstruct):
 
         if np.isnan(self.choice):
             if not self.correction_trial:
-                self.subject_config.counters["noresponse"] += 1
+                self.subject_config["counters"]["noresponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
             self.valid = 0
             self.correct = 0
             # If active training
-            if self.config.TASK.training_type.value == 2:
-                self.reinforcement_duration = (
-                    self.config.TASK.feedback.invalid.time.value
-                )
-                iti_decay = self.config.TASK.feedback.invalid.intertrial
-                self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
-                    iti_decay.base
-                    * np.exp(
-                        iti_decay.power * self.config.TASK.timings.stimulus.min_viewing
-                    )
-                )
+            if self.config.TASK["training_type"]["value"] == 2:
+                self.reinforcement_duration = self.managers["session"].get_reinforcement_duration(outcome="invalid") #self.config.TASK["feedback"]["invalid"]["time"]["value"]
+                self.intertrial_duration = self.managers["session"].get_intertrial_duration(outcome="invalid", self.min_viewing_duration)
+                # iti_decay = self.config.TASK["feedback"]["invalid"]["intertrial"]
+                # self.intertrial_duration = self.config.TASK["timings"]["intertrial"]["value"] + (
+                #     iti_decay.base
+                #     * np.exp(
+                #         iti_decay.power * self.config.TASK["timings"]["stimulus"]["min_viewing"]
+                #     )
+                # )
 
             # If passive training
             else:
                 self.correct = 1
-                self.reinforcement_duration = (
-                    self.config.TASK.feedback.correct.time.value
-                )
+
                 if self.stimulus_pars["target"] == -1:  # Left Correct
                     self.managers["hardware"].reward_left(
-                        self.subject_config.reward_volume * 0.5
+                        self.subject_config["reward_volume"] * 0.5
                     )
                 elif self.stimulus_pars["target"] == 1:  # Right Correct
                     self.managers["hardware"].reward_right(
-                        self.subject_config.reward_volume * 0.5
+                        self.subject_config["reward_volume"] * 0.5
                     )
-                self.subject_config.total_reward += (
-                    self.subject_config.reward_volume * 0.5
+                self.subject_config["total_reward"] += (
+                    self.subject_config["reward_volume"] * 0.5
                 )
-                self.intertrial_duration = self.config.TASK.timings.intertrial.value
+
+                self.reinforcement_duration = self.managers["session"].get_reinforcement_duration(outcome="correct")
+                self.intertrial_duration = self.managers["session"].get_intertrial_duration(outcome="correct")
+
+                # self.config.TASK["timings"]["intertrial"]["value"]
                 # Entering must respond phase
                 self.trigger = {
                     "type": "MUST_GO",
@@ -258,38 +259,43 @@ class RTTask(TrialConstruct):
         # If incorrect trial
         elif self.stimulus_pars["target"] != self.choice:
             if not self.correction_trial:
-                self.subject_config.counters["incorrect"] += 1
+                self.subject_config["counters"]["incorrect"] += 1
                 self.valid = 1
             else:
                 self.valid = 0
             stimulus_arguments["outcome"] = "incorrect"
-            self.reinforcement_duration = self.config.TASK.feedback.incorrect.time.value
             self.correct = 0
-            iti_decay = self.config.TASK.feedback.incorrect.intertrial
-            self.intertrial_duration = self.config.TASK.timings.intertrial.value + (
-                iti_decay.base * np.exp(float(iti_decay.power) * self.response_time)
-            )
+
+            self.reinforcement_duration = self.managers["session"].get_reinforcement_duration(outcome="incorrect")
+            self.intertrial_duration = self.managers["session"].get_intertrial_duration(
+                outcome="incorrect", response_time=self.response_time)
+
+            # iti_decay = self.config.TASK["feedback"]["incorrect"]["intertrial"]
+            # self.intertrial_duration = self.config.TASK["timings"]["intertrial"]["value"] + (
+            #     iti_decay.base * np.exp(float(iti_decay.power) * self.response_time)
+            # )
 
         # If correct trial
         elif self.stimulus_pars["target"] == self.choice:
             if not self.correction_trial:
-                self.subject_config.counters["correct"] += 1
+                self.subject_config["counters"]["correct"] += 1
                 self.valid = 1
             else: 
                 self.valid = 0
+            self.correct = 1
             stimulus_arguments["outcome"] = "correct"
-            self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
-
             if self.stimulus_pars["target"] == -1:  # Left Correct
-                self.managers["hardware"].reward_left(self.subject_config.reward_volume)
+                self.managers["hardware"].reward_left(self.subject_config["reward_volume"])
             elif self.stimulus_pars["target"] == 1:  # Right Correct
                 self.managers["hardware"].reward_right(
-                    self.subject_config.reward_volume
+                    self.subject_config["reward_volume"]
                 )
-
-            self.subject_config.total_reward += self.subject_config.reward_volume
-            self.valid, self.correct = [1, 1]
-            self.intertrial_duration = self.config.TASK.timings.intertrial.value
+            self.subject_config["total_reward"] += self.subject_config["reward_volume"]
+            
+            self.reinforcement_duration = self.managers["session"].get_reinforcement_duration(outcome="correct") #self.config.TASK["feedback"]["correct"]["time"]["value"]
+            self.intertrial_duration = self.managers["session"].get_intertrial_duration(outcome="correct")
+            
+            # self.intertrial_duration = self.config.TASK["timings"]["intertrial"]["value"]
             # Entering must respond phase
             self.trigger = {
                 "type": "MUST_GO",
@@ -306,7 +312,7 @@ class RTTask(TrialConstruct):
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
-            "reward_volume": self.subject_config.reward_volume,
+            "reward_volume": self.subject_config["reward_volume"],
             "reinfocement_duration": self.reinforcement_duration,
             "intertrial_duration": self.intertrial_duration,
         }
@@ -335,11 +341,11 @@ class RTTask(TrialConstruct):
         # log EOT
         self.end_of_trial()
         plots = {
-            "running_accuracy": list(self.subject_config.running_accuracy),
-            "psychometric_function": list(self.subject_config.psych),
-            "total_trial_distribution": list(self.subject_config.trial_distribution),
+            "running_accuracy": list(self.subject_config["running_accuracy"]),
+            "psychometric_function": list(self.subject_config["psych"]),
+            "total_trial_distribution": list(self.subject_config["trial_distribution"]),
             "reaction_time_distribution": list(
-                self.subject_config.response_time_distribution
+                self.subject_config["response_time_distribution"]
             ),
         }
         # If incorrect or no response, set correction to be true
@@ -356,8 +362,8 @@ class RTTask(TrialConstruct):
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "intertrial_stage",
-            "trial_counters": self.subject_config.counters,
-            "total_reward": self.subject_config.total_reward,
+            "trial_counters": self.subject_config["counters"],
+            "total_reward": self.subject_config["total_reward"],
             "plots": plots,
             "TRIAL_END": True,
         }
@@ -369,14 +375,14 @@ class RTTask(TrialConstruct):
             writer = csv.writer(file)
             writer.writerow(
                 [
-                    self.subject_config.counters["attempt"],
-                    self.subject_config.counters["valid"],
+                    self.subject_config["counters"]["attempt"],
+                    self.subject_config["counters"]["valid"],
                     self.correction_trial,
                     self.stimulus_pars["coherence"],
                     self.choice,
                     self.valid,
                     self.correct,
-                    round(self.subject_config.reward_volume, 2),
+                    round(self.subject_config["reward_volume"], 2),
                     self.fixation_duration,
                     self.min_viewing_duration,
                     self.response_time,

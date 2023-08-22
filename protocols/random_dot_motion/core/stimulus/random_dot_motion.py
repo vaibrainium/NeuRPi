@@ -32,7 +32,7 @@ class RandomDotMotion(object):
         if "seed" in pars:
             self.rdk_generator.seed(pars["seed"])
         self.coherence = pars["coherence"]
-        self.stimulus_size = pars["stimulus_size"]
+        # self.stimulus_size = pars["stimulus_size"]
 
         self.radius = pars["dot_radius"]
         self.color = pars["dot_color"]

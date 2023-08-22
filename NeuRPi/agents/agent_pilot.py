@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+import types
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Net_Node, Pilot_Station
@@ -131,8 +132,8 @@ class Pilot:
         # Required parameteres from terminal to start task
         try:
             self.session_info = value["session_info"]
-            self.session_config = value["session_config"]
             self.subject_config = value["subject_config"]
+            self.session_config = self.convert_str_to_module(value["session_config"])
         except KeyError as e:
             self.logger.exception(f"Missing required parameter: {e}")
             return
@@ -212,6 +213,16 @@ class Pilot:
                 self.task.manage_hardware(value["value"])
 
     ############################### SECONDARY FUNCTIONS ########################################
+    def convert_str_to_module(self, module_string):
+
+        """
+        Convert string to module
+        """
+        module_name = "session_config"
+        session_config = types.ModuleType(module_name)
+        exec(module_string, session_config.__dict__)
+        return session_config
+
 
     def import_session_modules(self):
         """
