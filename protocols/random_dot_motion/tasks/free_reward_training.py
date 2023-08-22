@@ -381,7 +381,7 @@ class RTTask(base_RTTask):
         }
 
         # initiate stimulus and start monitoring responses
-        self.stimulus_queue.put(("initiate_stimulus", stimulus_arguments))
+        self.msg_to_stimulus.put(("initiate_stimulus", stimulus_arguments))
         # set respons_block after minimum viewing time
         threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
@@ -468,7 +468,7 @@ class Task:
             stage_block=self.stage_block,
             response_block=self.response_block,
             response_queue=self.response_queue,
-            stimulus_queue=self.stimulus_queue,
+            msg_to_stimulus=self.msg_to_stimulus,
             managers=self.managers,
             subject=self.subject,
             config=self.config,
