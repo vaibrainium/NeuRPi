@@ -13,8 +13,8 @@ class RandomDotMotion(BaseRDK):
     Inhereting from base random dot kinematogram class and builds upon it with all new required methods
     """
 
-    def __init__(self):
-        super(RandomDotMotion, self).__init__()
+    def __init__(self, stimulus_size=None):
+        super(RandomDotMotion, self).__init__(stimulus_size=stimulus_size)
         pass
 
 

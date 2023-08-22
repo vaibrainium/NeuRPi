@@ -2,7 +2,7 @@ import numpy as np
 
 
 class RandomDotMotion(object):
-    def __init__(self, stimulus_size=(None, None)):
+    def __init__(self, stimulus_size=None):
         self.stimulus_size = stimulus_size
         self.radius = 10
         self.color = (255, 255, 255)
