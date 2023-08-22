@@ -5,9 +5,10 @@ import multiprocessing as mp
 import queue
 import threading
 import time
-
+from pathlib import Path
 import numpy as np
 from scipy.stats import pearson3
+import pickle
 
 from NeuRPi.prefs import prefs
 from NeuRPi.utils.get_config import get_configuration
@@ -31,9 +32,9 @@ class SessionManager:
         self.trial_schedule = []
         self.schedule_counter = 0
         self.full_coherences, self.coh_to_xrange = self.get_full_coherences()
-        self.subject.prepare_run(self.full_coherences)
-        self.subject_pars = self.subject.initiate_parameters(self.full_coherences)
-        self.next_coherence_level = self.subject_pars["current_coherence_level"]
+        # self.subject.prepare_run(self.full_coherences)
+        # self.subject_pars = self.subject.initiate_parameters(self.full_coherences)
+        self.next_coherence_level = self.subject_config["current_coherence_level"]
         self.stimulus_pars = {}
 
     def get_full_coherences(self):
@@ -56,38 +57,39 @@ class SessionManager:
 
     def set_coherence_level(self):
         # Setting reward per pulse
-        if 1.5 < self.subject_pars["reward_volume"] < 3:
-            if self.subject_pars["current_coherence_level"] < self.next_coherence_level:
-                self.subject_pars["reward_volume"] += 0.25
-            if self.subject_pars["current_coherence_level"] > self.next_coherence_level:
-                self.subject_pars["reward_volume"] -= 0.25
-            self.subject_pars["reward_volume"] = np.maximum(
-                self.subject_pars["reward_volume"], 1.5
+        if 1.5 < self.subject_config["reward_volume"] < 3:
+            if self.subject_config["current_coherence_level"] < self.next_coherence_level:
+                self.subject_config["reward_volume"] += 0.25
+            if self.subject_config["current_coherence_level"] > self.next_coherence_level:
+                self.subject_config["reward_volume"] -= 0.25
+            self.subject_config["reward_volume"] = np.maximum(
+                self.subject_config["reward_volume"], 1.5
             )
-            self.subject_pars["reward_volume"] = np.minimum(
-                self.subject_pars["reward_volume"], 3
+            self.subject_config["reward_volume"] = np.minimum(
+                self.subject_config["reward_volume"], 3
             )
-            self.subject_pars["reward_volume"] = float(
-                self.subject_pars["reward_volume"]
+            self.subject_config["reward_volume"] = float(
+                self.subject_config["reward_volume"]
             )
         # Setting coherence level
-        self.subject_pars["current_coherence_level"] = self.next_coherence_level
+        self.subject_config["current_coherence_level"] = self.next_coherence_level
         # Setting mean reaction time for passive trials
-        self.subject_pars["passive_rt_mu"] = 10 * (
-            self.subject_pars["current_coherence_level"] - 1
+        self.subject_config["passive_rt_mu"] = 10 * (
+            self.subject_config["current_coherence_level"] - 1
         )
         # Setting active coherence indices
-        self.subject_pars["active_coherences_indices"] = np.unique(
+        self.subject_config["active_coherences_indices"] = list(np.unique(
             np.concatenate(
                 [
-                    np.arange(0, self.subject_pars["current_coherence_level"]),
+                    np.arange(0, self.subject_config["current_coherence_level"]),
                     np.arange(
                         len(self.full_coherences)
-                        - self.subject_pars["current_coherence_level"],
+                        - self.subject_config["current_coherence_level"],
                         len(self.full_coherences),
                     ),
                 ]
             )
+        ).astype(int)
         )  # Taking indices of currently active coherences to plot psychometric functions
 
     def generate_trials_schedule(self, *args, **kwargs):
@@ -108,8 +110,8 @@ class SessionManager:
         active_coherences = sorted(
             np.concatenate(
                 [
-                    coherences[: self.subject_pars["current_coherence_level"]],
-                    -coherences[: self.subject_pars["current_coherence_level"]],
+                    coherences[: self.subject_config["current_coherence_level"]],
+                    -coherences[: self.subject_config["current_coherence_level"]],
                 ]
             )
         )  # Signed coherence
@@ -124,14 +126,14 @@ class SessionManager:
 
         # Active bias correction block by having unbiased side appear more
         for _, coh in enumerate(
-            coherences[: self.subject_pars["current_coherence_level"]]
+            coherences[: self.subject_config["current_coherence_level"]]
         ):
             if np.abs(coh) > self.config.TASK.bias.active_correction.threshold:
                 self.trial_schedule.remove(
-                    coh * self.subject_pars["rolling_bias"]
+                    coh * self.subject_config["rolling_bias"]
                 )  # Removing high coherence from biased direction (-1:left; 1:right)
                 self.trial_schedule.append(
-                    -coh * self.subject_pars["rolling_bias"]
+                    -coh * self.subject_config["rolling_bias"]
                 )  # Adding high coherence from unbiased direction.
 
         np.random.shuffle(self.trial_schedule)
@@ -156,15 +158,15 @@ class SessionManager:
             ):
                 # Drawing incorrect trial from normal distribution with high prob to direction
                 temp_bias = np.sign(
-                    np.random.normal(np.mean(self.subject_pars["rolling_bias"]), 0.5)
+                    np.random.normal(np.mean(self.subject_config["rolling_bias"]), 0.5)
                 )
                 # Repeat probability to opposite side of bias
                 coherence = int(-temp_bias) * np.abs(self.stimulus_pars["coherence"])
                 print(
-                    f"ROLLING BIAS IS {self.subject_pars['rolling_bias']} with bias {np.mean(self.subject_pars['rolling_bias'])}"
+                    f"ROLLING BIAS IS {self.subject_config['rolling_bias']} with bias {np.mean(self.subject_config['rolling_bias'])}"
                 )
                 print(
-                    f"CORRECTING BIAS ({np.random.normal(np.mean(self.subject_pars['rolling_bias']), 0.5)}) with {coherence}"
+                    f"CORRECTING BIAS ({np.random.normal(np.mean(self.subject_config['rolling_bias']), 0.5)}) with {coherence}"
                 )
 
         else:
@@ -186,7 +188,7 @@ class SessionManager:
 
     def graduation_check(self):
         # Deciding Coherence level based on rolling performance (50 trials of each coherence)
-        accuracy = self.subject.rolling_perf["accuracy"]
+        accuracy = self.subject_config.rolling_perf["accuracy"]
         # Bi-directional shift in coherence level
         if self.config.TASK.training_type.graduation_direction.value == 0:
             # If 100% and 70% coherence have accuracy above 70%
@@ -197,42 +199,42 @@ class SessionManager:
                 if accuracy[2] > 0.7 and accuracy[-3] > 0.7:
                     # Increase coherence level to 3 i.e., introduce 36% coherence
                     self.next_coherence_level = 4
-                    self.subject.rolling_perf["trial_counter_after_4th"] += 1
+                    self.subject_config.rolling_perf["trial_counter_after_4th"] += 1
 
                     # 200 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 200:
                         self.next_coherence_level = 5
                     # 400 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 400:
                         self.next_coherence_level = 6
                     # 600 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
                 else:
-                    self.subject.rolling_perf["trial_counter_after_4th"] = 0
+                    self.subject_config.rolling_perf["trial_counter_after_4th"] = 0
 
         elif self.config.TASK.training_type.graduation_direction.value == 1:
             # If 100% and 70% coherence have accuracy above 70%
-            if self.subject_pars["current_coherence_level"] > 3 or (
+            if self.subject_config["current_coherence_level"] > 3 or (
                 all(np.array(accuracy[:2] > 0.7)) and all(np.array(accuracy[-2:] > 0.7))
             ):
                 # Increase coherence level to 3 i.e., introduce 36% coherence
                 self.next_coherence_level = 3
                 # If 100%, 70% and 36% coherence have accuracy above 70%
-                if self.subject_pars["current_coherence_level"] > 4 or (
+                if self.subject_config["current_coherence_level"] > 4 or (
                     accuracy[2] > 0.7 and accuracy[-3] > 0.7
                 ):
                     # Increase coherence level to 3 i.e., introduce 36% coherence
                     self.next_coherence_level = 4
-                    self.subject.rolling_perf["trial_counter_after_4th"] += 1
+                    self.subject_config.rolling_perf["trial_counter_after_4th"] += 1
                     # 200 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 200:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 200:
                         self.next_coherence_level = 5
                     # 400 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 400:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 400:
                         self.next_coherence_level = 6
                     # 600 trials after 4th level
-                    if self.subject.rolling_perf["trial_counter_after_4th"] > 600:
+                    if self.subject_config.rolling_perf["trial_counter_after_4th"] > 600:
                         pass
 
     def update_EOT(self, choice, response_time, outcome):
@@ -246,74 +248,74 @@ class SessionManager:
         )
 
         # updating rolling bias
-        self.subject_pars["rolling_bias"][
-            self.subject_pars["rolling_bias_index"]
+        self.subject_config["rolling_bias"][
+            self.subject_config["rolling_bias_index"]
         ] = choice
-        self.subject_pars["rolling_bias_index"] = (
-            self.subject_pars["rolling_bias_index"] + 1
-        ) % self.subject_pars["rolling_bias_window"]
+        self.subject_config["rolling_bias_index"] = (
+            self.subject_config["rolling_bias_index"] + 1
+        ) % self.subject_config["rolling_bias_window"]
 
         # uptading rolling performance
         ## update history block
-        self.subject.rolling_perf["hist_" + str(coh)][
-            self.subject.rolling_perf["index"][coh_index]
+        self.subject_config.rolling_perf["hist_" + str(coh)][
+            self.subject_config.rolling_perf["index"][coh_index]
         ] = outcome
         ## calculate accuracy
-        self.subject.rolling_perf["accuracy"][coh_index] = np.mean(
-            self.subject.rolling_perf["hist_" + str(coh)]
+        self.subject_config.rolling_perf["accuracy"][coh_index] = np.mean(
+            self.subject_config.rolling_perf["hist_" + str(coh)]
         )
         ## update index
-        self.subject.rolling_perf["index"][coh_index] = (
-            self.subject.rolling_perf["index"][coh_index] + 1
-        ) % self.subject.rolling_perf["window"]
+        self.subject_config.rolling_perf["index"][coh_index] = (
+            self.subject_config.rolling_perf["index"][coh_index] + 1
+        ) % self.subject_config.rolling_perf["window"]
 
         # Updating plot parameters
         if choice == -1:
             # computing left choices coherence-wise
-            self.config.SUBJECT.psych_left[coh_index] += 1
+            self.subject_config.psych_left[coh_index] += 1
         elif choice == 1:
             # computing right choices coherence-wise
-            self.config.SUBJECT.psych_right[coh_index] += 1
+            self.subject_config.psych_right[coh_index] += 1
         tot_trials_in_coh = (
-            self.config.SUBJECT.psych_left[coh_index]
-            + self.config.SUBJECT.psych_right[coh_index]
+            self.subject_config.psych_left[coh_index]
+            + self.subject_config.psych_right[coh_index]
         )
 
         # update running accuracy
         if (
-            self.config.SUBJECT.counters["correct"]
-            + self.config.SUBJECT.counters["incorrect"]
+            self.subject_config.counters["correct"]
+            + self.subject_config.counters["incorrect"]
             > 0
         ):
-            self.config.SUBJECT.running_accuracy.append(
+            self.subject_config.running_accuracy.append(
                 [
-                    self.config.SUBJECT.counters["valid"],
-                    self.config.SUBJECT.counters["correct"]
+                    self.subject_config.counters["valid"],
+                    self.subject_config.counters["correct"]
                     / (
-                        self.config.SUBJECT.counters["correct"]
-                        + self.config.SUBJECT.counters["incorrect"]
+                        self.subject_config.counters["correct"]
+                        + self.subject_config.counters["incorrect"]
                     ),
                     outcome,
                 ]
             )
 
         # update psychometric array
-        self.config.SUBJECT.psych[coh_index] = (
-            self.config.SUBJECT.psych_right[coh_index] / tot_trials_in_coh
+        self.subject_config.psych[coh_index] = (
+            self.subject_config.psych_right[coh_index] / tot_trials_in_coh
         )
 
         # update total trial array
-        self.config.SUBJECT.trial_distribution[coh_index] += 1
+        self.subject_config.trial_distribution[coh_index] += 1
 
         # update reaction time array
-        if np.isnan(self.config.SUBJECT.response_time_distribution[coh_index]):
-            self.config.SUBJECT.response_time_distribution[coh_index] = response_time
+        if np.isnan(self.subject_config.response_time_distribution[coh_index]):
+            self.subject_config.response_time_distribution[coh_index] = response_time
         else:
             if True:  # self.coh_to_xrange, self.coh_to_xactive
-                self.config.SUBJECT.response_time_distribution[coh_index] = (
+                self.subject_config.response_time_distribution[coh_index] = (
                     (
                         (tot_trials_in_coh - 1)
-                        * self.config.SUBJECT.response_time_distribution[coh_index]
+                        * self.subject_config.response_time_distribution[coh_index]
                     )
                     + response_time
                 ) / tot_trials_in_coh
@@ -323,15 +325,17 @@ class SessionManager:
         End of session updates: Updating all files and session parameters such as rolling performance
         """
         # Rolling performance
-        self.subject.rolling_perf[
+        self.subject_config.rolling_perf[
             "current_coherence_level"
-        ] = self.config.SUBJECT.current_coherence_level
-        self.subject.rolling_perf["reward_volume"] = self.config.SUBJECT.reward_volume
-        self.subject.rolling_perf[
+        ] = self.subject_config.current_coherence_level
+        self.subject_config.rolling_perf["reward_volume"] = self.subject_config.reward_volume
+        self.subject_config.rolling_perf[
             "total_attempts"
-        ] = self.config.SUBJECT.counters.attempt
-        self.subject.rolling_perf["total_reward"] = self.config.SUBJECT.total_reward
-        self.subject.save()
+        ] = self.subject_config.counters.attempt
+        self.subject_config.rolling_perf["total_reward"] = self.subject_config.total_reward
+        self.config.FILES["rolling_perforamance_after"].write_bytes(
+            pickle.dumps(self.subject_config.rolling_perf)
+        )
         print("SAVING EOS FILES")
 
 
@@ -353,20 +357,20 @@ class Task:
         self.task_module = task_module
         self.task_phase = task_phase
         self.config = config
+        self.subject_config = self.config.SUBJECT
         self.__dict__.update(kwargs)
 
-        # # Preparing parameters parameters
-        # directory = "protocols/RDK/config"
-        # filename = "dynamic_coherences_rt.yaml"
-        # self.config = get_configuration(directory=directory, filename=filename)
-
-        # # Preparing subject
-        # self.subject = Subject(
-        #     name=self.subject,
-        #     task_module=self.task_module,
-        #     task_phase=self.task_phase,
-        #     config=self.config,
-        # )
+        # Preparing storage files
+        self.config.FILES = {}
+        data_path = Path(prefs.get("DATADIR"), self.subject_config.name, self.subject_config.task_module, self.subject_config.task_phase, self.subject_config.session)
+        # Check if the directory exists
+        if not data_path.exists():
+            # If it doesn't exist, create it
+            data_path.mkdir(parents=True, exist_ok=True)
+        for file_id, file in self.config.DATAFILES.items():
+            self.config.FILES[file_id] = Path(data_path, self.subject_config.name + file)
+        self.config.FILES["rolling_perforamance_before"] = Path(data_path, "rolling_performance_before.pkl")
+        self.config.FILES["rolling_perforamance_after"] = Path(data_path, "rolling_performance_after.pkl")
 
         # Event locks, triggers
         self.stage_block = stage_block
@@ -385,7 +389,7 @@ class Task:
         self.managers["behavior"] = Behavior(
             hardware_manager=self.managers["hardware"],
             response_block=self.response_block,
-            response_log=self.subject.lick,
+            response_log=self.config.FILES[file_id],
             response_queue=self.response_queue,
             timers=self.timers,
         )
@@ -399,9 +403,8 @@ class Task:
             stage_block=self.stage_block,
             response_block=self.response_block,
             response_queue=self.response_queue,
-            stimulus_queue=self.stimulus_queue,
+            msg_to_stimulus=self.msg_to_stimulus,
             managers=self.managers,
-            subject=self.subject,
             config=self.config,
             timers=self.timers,
         )
@@ -417,21 +420,21 @@ class Task:
         # Reward related changes
         if message["key"] == "reward_left":
             self.managers["hardware"].reward_left(message["value"])
-            self.config.SUBJECT.total_reward += message["value"]
+            self.subject_config.total_reward += message["value"]
             print(f'REWARDED LEFT with {message["value"]}')
         elif message["key"] == "reward_right":
             self.managers["hardware"].reward_right(message["value"])
-            self.config.SUBJECT.total_reward += message["value"]
+            self.subject_config.total_reward += message["value"]
             print(f'REWARDED RIGHT with {message["value"]}')
         elif message["key"] == "toggle_left_reward":
             self.managers["hardware"].toggle_reward("Left")
         elif message["key"] == "toggle_right_reward":
             self.managers["hardware"].toggle_reward("Right")
         elif message["key"] == "update_reward":
-            self.config.SUBJECT.reward_volume = message["value"]
-            print(f"NEW REWARD VALUE IS {self.config.SUBJECT.reward_volume}")
+            self.subject_config.reward_volume = message["value"]
+            print(f"NEW REWARD VALUE IS {self.subject_config.reward_volume}")
         elif message["key"] == "calibrate_reward":
-            if self.config.SUBJECT.name in ["XXX", "xxx"]:
+            if self.subject_config.name in ["XXX", "xxx"]:
                 self.managers["hardware"].start_calibration_sequence()
 
         # Lick related changes

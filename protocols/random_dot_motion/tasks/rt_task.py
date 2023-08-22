@@ -39,9 +39,8 @@ class RTTask(TrialConstruct):
         stage_block,
         response_block,
         response_queue,
-        stimulus_queue,
+        msg_to_stimulus,
         managers,
-        subject,
         config,
         timers,
         **kwargs,
@@ -70,12 +69,12 @@ class RTTask(TrialConstruct):
             stage_block=stage_block,
             response_block=response_block,
             response_queue=response_queue,
-            stimulus_queue=stimulus_queue,
+            msg_to_stimulus=msg_to_stimulus,
         )
 
-        self.subject = subject
         self.config = config
         self.timers = timers
+        self.msg_to_stimulus = msg_to_stimulus
 
         # Event locks, triggers
         self.stage_block = stage_block
@@ -83,6 +82,7 @@ class RTTask(TrialConstruct):
 
         # Initializing managers
         self.managers = managers
+        
 
         # Variable parameters
         # Trial variables
@@ -129,20 +129,20 @@ class RTTask(TrialConstruct):
         }
         stimulus_arguments = {}
         # initiate fixation and start monitoring responses
-        self.stimulus_queue.put(("initiate_fixation", stimulus_arguments))
+        self.msg_to_stimulus.put(("fixation_epoch", stimulus_arguments))
         self.timers["trial"] = datetime.datetime.now()
         self.response_block.set()
 
         # Get current trial properties
-        self.config.SUBJECT.counters["attempt"] += 1
+        self.subject_config.counters["attempt"] += 1
         if not self.correction_trial:
-            self.config.SUBJECT.counters["valid"] += 1
+            self.subject_config.counters["valid"] += 1
 
         self.stimulus_pars = self.managers["session"].next_trial(self.correction_trial)
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
-            "subject": self.subject.name,
+            "subject": self.subject_config.name,
             "stimulus_pars": self.stimulus_pars,
         }
         return data
@@ -178,7 +178,7 @@ class RTTask(TrialConstruct):
         }
 
         # initiate stimulus and start monitoring responses
-        self.stimulus_queue.put(("initiate_stimulus", stimulus_arguments))
+        self.msg_to_stimulus.put(("stimulus_epoch", stimulus_arguments))
         # set respons_block after minimum viewing time
         threading.Timer(self.min_viewing_duration, self.response_block.set).start()
 
@@ -212,7 +212,7 @@ class RTTask(TrialConstruct):
 
         if np.isnan(self.choice):
             if not self.correction_trial:
-                self.config.SUBJECT.counters["noresponse"] += 1
+                self.subject_config.counters["noresponse"] += 1
             stimulus_arguments["outcome"] = "invalid"
             self.valid = 0
             self.correct = 0
@@ -237,14 +237,14 @@ class RTTask(TrialConstruct):
                 )
                 if self.stimulus_pars["target"] == -1:  # Left Correct
                     self.managers["hardware"].reward_left(
-                        self.config.SUBJECT.reward_volume * 0.5
+                        self.subject_config.reward_volume * 0.5
                     )
                 elif self.stimulus_pars["target"] == 1:  # Right Correct
                     self.managers["hardware"].reward_right(
-                        self.config.SUBJECT.reward_volume * 0.5
+                        self.subject_config.reward_volume * 0.5
                     )
-                self.config.SUBJECT.total_reward += (
-                    self.config.SUBJECT.reward_volume * 0.5
+                self.subject_config.total_reward += (
+                    self.subject_config.reward_volume * 0.5
                 )
                 self.intertrial_duration = self.config.TASK.timings.intertrial.value
                 # Entering must respond phase
@@ -258,7 +258,7 @@ class RTTask(TrialConstruct):
         # If incorrect trial
         elif self.stimulus_pars["target"] != self.choice:
             if not self.correction_trial:
-                self.config.SUBJECT.counters["incorrect"] += 1
+                self.subject_config.counters["incorrect"] += 1
                 self.valid = 1
             else:
                 self.valid = 0
@@ -273,7 +273,7 @@ class RTTask(TrialConstruct):
         # If correct trial
         elif self.stimulus_pars["target"] == self.choice:
             if not self.correction_trial:
-                self.config.SUBJECT.counters["correct"] += 1
+                self.subject_config.counters["correct"] += 1
                 self.valid = 1
             else: 
                 self.valid = 0
@@ -281,13 +281,13 @@ class RTTask(TrialConstruct):
             self.reinforcement_duration = self.config.TASK.feedback.correct.time.value
 
             if self.stimulus_pars["target"] == -1:  # Left Correct
-                self.managers["hardware"].reward_left(self.config.SUBJECT.reward_volume)
+                self.managers["hardware"].reward_left(self.subject_config.reward_volume)
             elif self.stimulus_pars["target"] == 1:  # Right Correct
                 self.managers["hardware"].reward_right(
-                    self.config.SUBJECT.reward_volume
+                    self.subject_config.reward_volume
                 )
 
-            self.config.SUBJECT.total_reward += self.config.SUBJECT.reward_volume
+            self.subject_config.total_reward += self.subject_config.reward_volume
             self.valid, self.correct = [1, 1]
             self.intertrial_duration = self.config.TASK.timings.intertrial.value
             # Entering must respond phase
@@ -299,14 +299,14 @@ class RTTask(TrialConstruct):
             self.response_block.set()
 
         # Starting reinforcement
-        self.stimulus_queue.put(("initiate_reinforcement", stimulus_arguments))
+        self.msg_to_stimulus.put(("reinforcement_epoch", stimulus_arguments))
         threading.Timer(self.reinforcement_duration, self.stage_block.set).start()
 
         self.stage_block.wait()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
-            "reward_volume": self.config.SUBJECT.reward_volume,
+            "reward_volume": self.subject_config.reward_volume,
             "reinfocement_duration": self.reinforcement_duration,
             "intertrial_duration": self.intertrial_duration,
         }
@@ -323,7 +323,7 @@ class RTTask(TrialConstruct):
         arguments = {}
         duration = self.intertrial_duration
         # Starting intertrial interval
-        self.stimulus_queue.put(("initiate_intertrial", arguments))
+        self.msg_to_stimulus.put(("intertrial_epoch", arguments))
         threading.Timer(duration, self.stage_block.set).start()
 
         # if not correction trial -> perform end of trial analysis
@@ -335,11 +335,11 @@ class RTTask(TrialConstruct):
         # log EOT
         self.end_of_trial()
         plots = {
-            "running_accuracy": list(self.config.SUBJECT.running_accuracy),
-            "psychometric_function": list(self.config.SUBJECT.psych),
-            "total_trial_distribution": list(self.config.SUBJECT.trial_distribution),
+            "running_accuracy": list(self.subject_config.running_accuracy),
+            "psychometric_function": list(self.subject_config.psych),
+            "total_trial_distribution": list(self.subject_config.trial_distribution),
             "reaction_time_distribution": list(
-                self.config.SUBJECT.response_time_distribution
+                self.subject_config.response_time_distribution
             ),
         }
         # If incorrect or no response, set correction to be true
@@ -356,8 +356,8 @@ class RTTask(TrialConstruct):
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "intertrial_stage",
-            "trial_counters": self.config.SUBJECT.counters,
-            "total_reward": self.config.SUBJECT.total_reward,
+            "trial_counters": self.subject_config.counters,
+            "total_reward": self.subject_config.total_reward,
             "plots": plots,
             "TRIAL_END": True,
         }
@@ -365,18 +365,18 @@ class RTTask(TrialConstruct):
 
     def end_of_trial(self):
         # Write trial parameters
-        with open(self.subject.trial, "a+", newline="") as file:
+        with open(self.config.FILES["trial"], "a+", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(
                 [
-                    self.config.SUBJECT.counters["attempt"],
-                    self.config.SUBJECT.counters["valid"],
+                    self.subject_config.counters["attempt"],
+                    self.subject_config.counters["valid"],
                     self.correction_trial,
                     self.stimulus_pars["coherence"],
                     self.choice,
                     self.valid,
                     self.correct,
-                    round(self.config.SUBJECT.reward_volume, 2),
+                    round(self.subject_config.reward_volume, 2),
                     self.fixation_duration,
                     self.min_viewing_duration,
                     self.response_time,
