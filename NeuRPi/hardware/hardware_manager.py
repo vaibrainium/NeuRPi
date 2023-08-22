@@ -31,10 +31,11 @@ class HardwareManager(Arduino, GPIO):
                     self.hardware[name].connect()
             elif group == "GPIO":
                 pass
-            elif group == "Display":
-                for name, properties in container.items():
-                    self.hardware[f"{group}_{name}"] = Display(**properties.connection)
-                    self.hardware[f"{group}_{name}"].connect()
+            # TODO: eventually add Display initialization here
+            # elif group == "Display":
+            #     for name, properties in container.items():
+            #         self.hardware[f"{group}_{name}"] = Display(**properties.connection)
+            #         self.hardware[f"{group}_{name}"].connect()
 
 
     def update_config(self):
