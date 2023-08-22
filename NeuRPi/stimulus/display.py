@@ -88,7 +88,7 @@ class Display:
         # Letting terminal agent know that display is ready
         while True:
             if self.pygame.display.get_init():
-                self.courier.put(("display_ready", None))
+                self.courier.put(("info", "display_ready"))
                 break
 
         # Waiting for terminal agent to send start signal
