@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import numpy as np
+from scipy.stats import pearson3
 
 REQUIRED_HARDWARE = ["Arduino", "Display"]
 
@@ -52,8 +53,11 @@ TASK = {
         },
         "stimulus": {
             "tag": "Stimulus epoch",
-            "duration": 60,
+            "max_viewing": 60,
             "min_viewing": 0.3,
+            "passive_viewing": lambda coh_level: pearson3.rvs(
+                skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1
+            )[0],
         },
         "reinforcement": {
             "tag": "Reinforcement epoch",
@@ -302,3 +306,8 @@ DATAFILES = {
     "trial": "_trial.csv",
     "event": "_event.csv",
 }
+
+
+# if __name__ == "__main__":
+#     print("This is a configuration file. Please run main.py to execute the protocol.")
+#     a = input("Press any key to exit.")
