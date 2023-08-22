@@ -304,10 +304,6 @@ SUBJECT = {}
 DATAFILES = {
     "lick": "_lick.csv",
     "trial": "_trial.csv",
-    "event": "_event.csv",
+    # "event": "_event.csv",
 }
 
-
-# if __name__ == "__main__":
-#     print("This is a configuration file. Please run main.py to execute the protocol.")
-#     a = input("Press any key to exit.")

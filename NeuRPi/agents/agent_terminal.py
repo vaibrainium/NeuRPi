@@ -230,6 +230,8 @@ class Terminal(Application):
 
         """
         pass
+        # with open("lick.csv", "wb") as writer:
+        #     writer.write(value["lick"])
         try:
             self.message_to_taskgui(value)
         except:
@@ -339,7 +341,7 @@ class Terminal(Application):
                     not self.pilots[session_info.experiment_rig]["state"]
                     == "RUNNING"
                 ):
-                    pass
+                    time.sleep(0.1)
 
                 # self.clear_variables()
                 self.rigs_gui[session_info.experiment_rig].start_experiment()
