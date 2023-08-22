@@ -140,24 +140,24 @@ class Pilot:
         self.import_session_modules()
 
         try:
-            if "Display" in self.session_config.HARDWARE_REQUIREMENTS.keys():
+            if "Display" in self.session_config.REQUIRED_HARDWARE:
                 stimulus_config = self.session_config.STIMULUS.copy()
-                value["queue_to_stimulus"] = mp.Queue()
+                value["msg_to_stimulus"] = mp.Queue()
                 value["queue_from_stimulus"] = mp.Queue()
 
                 self.display_process = mp.Process(
                     target=self.start_display,
                     kwargs={
-                        'module': self.modules['stimulus'],
+                        'StimulusModule': self.modules['stimulus'],
                         'config': stimulus_config,
-                        'queue_to_stimulus': value["queue_to_stimulus"],
-                        'queue_from_stimulus': value["queue_from_stimulus"],
+                        'in_queue': value["msg_to_stimulus"],
+                        'out_queue': value["queue_from_stimulus"],
                     }
                 )
                 self.display_process.start()
                 # wait for the display to start before starting the task process
                 message = value["queue_from_stimulus"].get(timeout=5)
-                if message != "display_ready":
+                if message != "display_connected":
                     raise TimeoutError("Display did not start in time")
                 else:
                     self.logger.info("Display started")
@@ -223,51 +223,28 @@ class Pilot:
 
         # import all required modules
         try:        
-            task_module_path = Path(f"protocols/{self.session_info.task_module}")
-            hardware_manager_path = Path(f"{task_module_path}/hardware/hardware_manager.py")
-            task_manager_path = Path(f"{task_module_path}/tasks/{self.session_info.task_phase}.py")
-            stimulus_manager_path = Path(f"{task_module_path}/stimulus/{self.session_info.task_phase}.py")
+            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.hardware.hardware_manager")
+            task_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.tasks.{self.session_info.task_phase}")
+            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}")
             
             self.modules = {}
-            self.modules["task"] = importlib.import_module(task_manager_path)
-            self.modules["hardware"] = importlib.import_module(hardware_manager_path)
-            self.modules["stimulus"] = importlib.import_module(stimulus_manager_path)
+            self.modules["task"] = task_manager_file.Task
+            self.modules["hardware"] = hardware_manager_file.HardwareManager
+            self.modules["stimulus"] = stimulus_manager_file.StimulusDisplay
         except ImportError as e:
             self.logger.exception(f"Could not import module: {e}")
                         
-    def start_display(self, module, config, in_queue, out_queue):
+    def start_display(self, StimulusModule, config, in_queue, out_queue):
         """
         Current task requires display hardware. Import display module and start display process.
         
         """
-        # display_module = importlib.import_module(
-        #     f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}"
-        # )
-
-        # try:
-        #     stimulus_configuration = self.session_config.STIMULUS.copy()
-        # except KeyError:
-        #     self.logger.exception(
-        #         f"Could not find stimulus configuration for task {self.session_info.task_module}. Using default stimulus configuration."
-        #     )
-        #     directory = f"protocols/{self.session_info.task_module}/config"
-        #     stimulus_configuration = get_configuration(
-        #         directory=directory, filename="stimulus"
-        #     )
-
-        display = module.StimulusDisplay(
+        display = StimulusModule(
             stimulus_configuration=config,
-            stimulus_courier=in_queue,
-            display_ready=out_queue,
+            in_queue=in_queue,
+            out_queue=out_queue,
         )
-
         display.start()
-
-        # display = display_module.StimulusDisplay(
-        #     stimulus_configuration=stimulus_configuration,
-        #     stimulus_courier=task_params["stimulus_queue"],
-        # )
-        # display.start()
 
     def run_task(self, task_params):
         """
@@ -281,9 +258,9 @@ class Pilot:
         self.stage_block.clear()
 
         self.config = self.session_config
-        self.config.SUBJECT = self.subject_config 
+        self.config.SUBJECT = self.subject_config
 
-        self.task = self.modules['task']( #task_module.Task(
+        self.task = self.modules['task'](
             stage_block=self.stage_block, config=self.config, **task_params
         )
         self.logger.debug("task initialized")
@@ -311,7 +288,10 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        self.stimulus_display.kill()
+                        self.stimulus_display.kill()         
+                        #TODO: send all data files to terminal
+                        # sending files to terminal only when successfully finished the task
+                        self.node.send("T", "SESSION_FILES", self.config.FIlES)             
                         break
 
                     # if paused, wait for running event set?
