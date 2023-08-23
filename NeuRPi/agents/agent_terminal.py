@@ -205,7 +205,7 @@ class Terminal(Application):
         try:
             self.message_to_taskgui(value)
         except:
-            print("Cound not update GUI")
+            print("Could not update GUI")
 
     def l_change(self, value):
         """
@@ -218,7 +218,7 @@ class Terminal(Application):
         # try:
         #     self.message_to_taskgui(value)
         # except:
-        #     print("Cound not update GUI")
+        #     print("Could not update GUI")
 
     def l_session_files(self, value):
         """
@@ -227,13 +227,13 @@ class Terminal(Application):
         `value` should have `subject` and `pilot` field added to dictionary for identifiation.
 
         """
-        pass
         # with open("lick.csv", "wb") as writer:
         #     writer.write(value["lick"])
         try:
             self.message_to_taskgui(value)
-        except:
-            print("Cound not update GUI")
+        except Exception as e:
+            print("Could not update GUI")
+            print(e)
 
     ########################
     # GUI and other functions

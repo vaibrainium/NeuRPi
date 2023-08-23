@@ -5,10 +5,13 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from omegaconf import OmegaConf
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
+#TODO: 1. Add baseline weights
+#TODO: 2. Generate phase graphs
+#TODO: 3. Add comments and save them
+#TODO: 4. Add bias calculation
 
 class Subject(BaseSubject):
     """
@@ -39,10 +42,10 @@ class Subject(BaseSubject):
             "event": str(Path(self.dir, self.session, self.name + "_event.csv")),
             "lick": str(Path(self.dir, self.session, self.name + "_lick.csv")),
             "rolling_perf_before": str(
-                Path(self.dir, self.session, "rolling_performance_before.pkl")
+                Path(self.dir, self.session, "rolling_perf_before.pkl")
             ),
             "rolling_perf_after": str(
-                Path(self.dir, self.session, "rolling_performance_after.pkl")
+                Path(self.dir, self.session, "rolling_perf_after.pkl")
             ),
         }
 
@@ -127,6 +130,7 @@ class Subject(BaseSubject):
             "task_module": self.task_module,
             "task_phase": self.task_phase,
             "session": self.session,
+            "session_uuid": self.session_uuid,
             # Counters
             "counters": {
                 "attempt": 0,
@@ -188,22 +192,24 @@ class Subject(BaseSubject):
         """
         Save files in a pickle file
         """
-        # creating directory if not present
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)
+        # look if session path directory exists, if not create it
+        session_path = Path(self.dir, self.session)
+        session_path.mkdir(parents=True, exist_ok=True)
+
 
         try:
             for file_name, file_content in file_dict.items():
-                if file_name in ["lick", "event", "trial", "rolling_perf_before", "rolling_perf_after"]:
+                if file_name in ["lick", "event", "trial"]:
                     with open(self.files[file_name], "wb") as file:
                         file.write(file_content)
                 elif file_name in ["summary", "accu_vs_training", "attmpt_vs_training", "attmpt_vs_weight"]:
-                    with open(self.files[file_name], "a") as file:
+                    with open(self.files[file_name], "a", newline="") as file:
                         writer = csv.DictWriter(file, fieldnames=file_content.keys())
                         if file.tell() == 0:
                             writer.writeheader()
                         writer.writerow(file_content)
-                elif file_name == "rolling_perf":
+                elif file_name in ["rolling_perf", "rolling_perf_before", "rolling_perf_after"]:
+                    file_content = pickle.loads(file_content)
                     with open(self.files[file_name], "wb") as file:
                         pickle.dump(file_content, file)
 

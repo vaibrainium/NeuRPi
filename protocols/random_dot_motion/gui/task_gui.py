@@ -4,6 +4,7 @@ import time
 # import cv2
 import numpy as np
 import pyqtgraph as pg
+import pyqtgraph.exporters
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/gui/rdk_rig.ui")
@@ -243,27 +244,29 @@ class TaskGUI(rigclass):
         self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
         self.state = "STOPPED"
         self.stop_session_clock()
-
-    def show_summary_window(self, value):
-        """Show summary window with summarized data"""
-
+    
+    def create_summary_data(self, value):
         self.summary_data = {
-            "date": time.strftime("%b-%d-%Y", self.session_clock["start"]),
+            "date": time.strftime("%b-%d-%Y", time.localtime(self.session_clock["start"])),
             "phase": self.task_phase,
             "session": self.subject.session,
-            "start_time": time.strftime("%H:%M:%S", self.session_clock["start"]),
-            "end_time": time.strftime("%H:%M:%S", self.session_clock["end"]),
+            "start_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["start"])),
+            "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
             "total_attempt": value["trial_counters"]["attempt"],
             "total_valid": value["trial_counters"]["valid"],
             "total_correct": value["trial_counters"]["correct"],
             "total_incorrect": value["trial_counters"]["incorrect"],
+            "total_noresponse": value["trial_counters"]["noresponse"],
             "total_accuracy": round(value["plots"]["running_accuracy"][-1][1] * 100, 2),
             "trial_distribution": value["plots"]["total_trial_distribution"],
             "psychometric_function": value["plots"]["psychometric_function"],
             "reaction_time_distribution": value["plots"]["reaction_time_distribution"],
         }
+
+    def show_summary_window(self, value=None):
+        """Show summary window with summarized data"""
 
         summary_string = (
             time.ctime(self.session_clock["start"])
@@ -273,14 +276,14 @@ class TaskGUI(rigclass):
             + str(self.summary_data["total_valid"])
             + " (" + ", ".join(str(int(i)) for i in self.summary_data["trial_distribution"] if i != 0.0) + ")"
             + "\n\n"
-            + str(round(value["plots"]["running_accuracy"][-1][1] * 100))
+            + str(self.summary_data["total_accuracy"])
             + "% (" + ", ".join(str(round(i, 2)) for i in self.summary_data["psychometric_function"] if np.isnan(i) == False) + ")"
             + "\n\n"
             + " (" + ", ".join(str(round(i, 2)) for i in self.summary_data["reaction_time_distribution"] if np.isnan(i) == False) + ")"
             + "\n\n"
-            + str(self.summary_datae["trial_counters"]["incorrect"]) + "/" + str(self.summary_data["trial_counters"]["attempt"])
+            + str(self.summary_data["total_incorrect"]) + "/" + str(self.summary_data["total_attempt"])
             + ";    "
-            + str(self.summary_data["trial_counters"]["noresponse"]) + "/" + str(self.summary_data["trial_counters"]["attempt"])
+            + str(self.summary_data["total_noresponse"]) + "/" + str(self.summary_data["total_attempt"])
             + "\n\n"
             + str(self.summary_data["total_reward"]) + " ul @ " + str(self.summary_data["reward_rate"]) + " ul"
         )
@@ -352,19 +355,39 @@ class TaskGUI(rigclass):
         if "TRIAL_END" in value.keys() and self.state == "STOPPED":
             self.session_clock["end"] = time.time()
             self.session_clock["timer"].stop()
+            self.create_summary_data(value)
+
+        if "session_files" in value.keys():
             self.show_summary_window(value)
             while self.summary_window.isVisible():
                 QtWidgets.QApplication.processEvents()
-
-        if "SESSION_FILES" in value.keys():
-            value["SESSION_FILES"]["summary"] = self.summary_data
-            self.save_files(value["SESSION_FILES"])
+            value["session_files"]["summary"] = self.summary_data
+            self.subject.save_files(value["session_files"])
+            self.save_plots()
     
     def save_plots(self):
-        self.rig.accuracy_plot.save(self.subject.files["accuracy_plot"])
-        self.rig.psychometric_plot.save(self.subject.files["psychometric_plot"])
-        self.rig.trial_distribution.save(self.subject.files["trial_distribution"])
-        self.rig.rt_distribution.save(self.subject.files["rt_distribution"])
+        # accuracy plot
+        self.rig.TaskMonitor.setCurrentIndex(0)
+        exporter = pg.exporters.ImageExporter(self.rig.accuracy_plot.scene())
+        exporter.parameters()["width"]=800
+        exporter.export(self.subject.plots["accuracy"])
+        # psychometric plot
+        self.rig.TaskMonitor.setCurrentIndex(1)
+        exporter = pg.exporters.ImageExporter(self.rig.psychometric_plot.scene())
+        exporter.parameters()["width"]=800
+        exporter.export(self.subject.plots["psychometric"])
+        # trial distribution plot
+        self.rig.TaskMonitor.setCurrentIndex(2)
+        exporter = pg.exporters.ImageExporter(self.rig.trial_distribution.scene())
+        exporter.parameters()["width"]=800
+        exporter.export(self.subject.plots["trials_distribution"])
+        # reaction time distribution plot
+        self.rig.TaskMonitor.setCurrentIndex(3)
+        exporter = pg.exporters.ImageExporter(self.rig.rt_distribution.scene())
+        exporter.parameters()["width"]=800
+        exporter.export(self.subject.plots["rt_distribution"])
+        # resetting plot index
+        self.rig.TaskMonitor.setCurrentIndex(0)
         
 
     def update_trials(self, value):
