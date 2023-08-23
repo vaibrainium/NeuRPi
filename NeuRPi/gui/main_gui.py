@@ -45,17 +45,15 @@ class Application(mainclass):
         self,
         id: str = "rig_",
         task_gui=None,
-        subject_id=None,
-        task_module=None,
-        task_phase=None,
+        session_info=None,
+        subject=None,
     ):
         try:
             display_name = self.code_to_str(id)
             self.rigs_gui[id] = task_gui(
                 id,
-                subject_id,
-                self.code_to_str(task_module),
-                self.code_to_str(task_phase),
+                session_info=session_info,
+                subject=subject,
             )
             tab_index = self.main_gui.tabs.addTab(self.rigs_gui[id], display_name)
             self.main_gui.tabs.setCurrentIndex(tab_index)
@@ -107,14 +105,16 @@ class Application(mainclass):
             msg.setWindowTitle("Error")
             msg.exec_()
             return None
-        
-        session_info = OmegaConf.create({
-            "subject_name": subject_name,
-            "subject_weight": float(subject_weight),
-            "task_module": self.str_to_code(task_module),
-            "task_phase": self.str_to_code(task_phase),
-            "experiment_rig": self.str_to_code(experiment_rig),
-        })
+
+        session_info = OmegaConf.create(
+            {
+                "subject_name": subject_name,
+                "subject_weight": float(subject_weight),
+                "task_module": self.str_to_code(task_module),
+                "task_phase": self.str_to_code(task_phase),
+                "experiment_rig": self.str_to_code(experiment_rig),
+            }
+        )
 
         return session_info
 

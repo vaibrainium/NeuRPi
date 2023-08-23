@@ -1,7 +1,7 @@
 import sys
 import time
 
-import cv2
+# import cv2
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
@@ -11,25 +11,39 @@ Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/gui/summa
 camera_index = 0
 
 
+def code_to_str(var: str):
+    display_var = var.replace("_", " ")
+    display_var = str.title(display_var)
+    return display_var
+
+
+def str_to_code(var: str):
+    code_var = var.replace(" ", "_")
+    code_var = code_var.lower()
+    return code_var
+
+
 class TaskGUI(rigclass):
     comm_to_taskgui = QtCore.pyqtSignal(dict)
     comm_from_taskgui = QtCore.pyqtSignal(dict)
 
-    def __init__(self, rig_id=None, subject_id=None, task_module=None, task_phase=None):
+    def __init__(self, rig_id=None, session_info=None, subject=None):
         super().__init__()
         # Load GUIs
         self.rig_id = rig_id
-        self.subject_id = subject_id
-        self.task_module = task_module
-        self.task_phase = task_phase
+        self.subject = subject
+        self.task_module = session_info.task_module
+        self.task_phase = session_info.task_phase
+
+        self.summary_data = None
 
         # main rig window
         self.rig = Ui_rig()
         self.rig.setupUi(self)
         self.rig.close_experiment.hide()
-        self.rig.subject_id.setText(self.subject_id)
-        self.rig.task_module.setText(self.task_module)
-        self.rig.task_phase.setText(self.task_phase)
+        self.rig.subject_id.setText(self.subject.name)
+        self.rig.task_module.setText(code_to_str(self.task_module))
+        self.rig.task_phase.setText(code_to_str(self.task_phase))
 
         # summary dialogue
         self.summary_window = QtWidgets.QDialog()
@@ -37,7 +51,7 @@ class TaskGUI(rigclass):
         self.summary.setupUi(self.summary_window)
         self.summary_window.raise_()
         # Camera
-        self.video_device = cv2.VideoCapture(camera_index)
+        # self.video_device = cv2.VideoCapture(camera_index)
         # Rig parameter variables
         self.session_clock = {}
         self.pause_time = None
@@ -80,7 +94,7 @@ class TaskGUI(rigclass):
         self.rig.pause_experiment.clicked.connect(lambda: self.pause_experiment())
         self.rig.stop_experiment.clicked.connect(lambda: self.stop_experiment())
         self.rig.close_experiment.clicked.connect(lambda: self.close_experiment())
-        self.summary.okay.clicked.connect(lambda: self.save_summary())
+        self.summary.okay.clicked.connect(lambda: self.hide_summary())
 
     ###################################################################################################
     # GUI Functions
@@ -170,35 +184,7 @@ class TaskGUI(rigclass):
         self.session_timer.stop()
 
     def update_video_image(self):
-        try:
-            # Read a frame from the camera
-            ret, frame = self.video_device.read()
-            if ret:
-                # Convert the frame to RGB format
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                # Convert the frame to a QImage
-                image = QtGui.QImage(
-                    frame.data,
-                    frame.shape[1],
-                    frame.shape[0],
-                    QtGui.QImage.Format_RGB888,
-                )
-
-                # Display the image on the label
-                self.rig.video_stream.setPixmap(QtGui.QPixmap.fromImage(image))
-        except:
-            self.session_timer.stop()
-
-    # def start_trial_clock(self, trial_start_time=time.time()):
-    #     self.session_timer.timeout.connect(lambda: self.update_trial_clock(trial_start_time))
-    #     self.trial_timer.start(10)
-
-    # def stop_trial_clock(self):
-    #     self.trial_timer.stop()
-
-    # def update_trial_timer(self, trial_start_time):
-    #     self.session_display_clock = time.time() - trial_start_time
-    #     self.rig.session_timer.display(int(self.session_display_clock))
+        pass
 
     def reward(self, message: str):
         self.forward_signal(
@@ -213,11 +199,6 @@ class TaskGUI(rigclass):
         )
 
     def lick_sensor(self, message: str):
-        """Function to modify lick sensor properties
-
-        Args:
-            message (str): _description_
-        """
         temp_val = None
         if message == "update_lick_threshold_left":
             temp_val = round(self.rig.lick_threshold_left.value(), 3)
@@ -264,58 +245,50 @@ class TaskGUI(rigclass):
         self.stop_session_clock()
 
     def show_summary_window(self, value):
-        # TODO: implement function to show on summery window
         """Show summary window with summarized data"""
-        summary_data = (
+
+        self.summary_data = {
+            "date": time.strftime("%b-%d-%Y", self.session_clock["start"]),
+            "phase": self.task_phase,
+            "session": self.subject.session,
+            "start_time": time.strftime("%H:%M:%S", self.session_clock["start"]),
+            "end_time": time.strftime("%H:%M:%S", self.session_clock["end"]),
+            "total_reward": int(float(self.rig.total_reward.text())),
+            "reward_rate": self.rig.reward_volume.value(),
+            "total_attempt": value["trial_counters"]["attempt"],
+            "total_valid": value["trial_counters"]["valid"],
+            "total_correct": value["trial_counters"]["correct"],
+            "total_incorrect": value["trial_counters"]["incorrect"],
+            "total_accuracy": round(value["plots"]["running_accuracy"][-1][1] * 100, 2),
+            "trial_distribution": value["plots"]["total_trial_distribution"],
+            "psychometric_function": value["plots"]["psychometric_function"],
+            "reaction_time_distribution": value["plots"]["reaction_time_distribution"],
+        }
+
+        summary_string = (
             time.ctime(self.session_clock["start"])
             + "\n\n"
             + time.ctime(self.session_clock["end"])
             + "\n\n"
-            + str(value["trial_counters"]["valid"])
-            + " ("
-            + ", ".join(
-                str(int(i))
-                for i in value["plots"]["total_trial_distribution"]
-                if i != 0.0
-            )
-            + ")"
+            + str(self.summary_data["total_valid"])
+            + " (" + ", ".join(str(int(i)) for i in self.summary_data["trial_distribution"] if i != 0.0) + ")"
             + "\n\n"
             + str(round(value["plots"]["running_accuracy"][-1][1] * 100))
-            + "% ("
-            + ", ".join(
-                str(round(i, 2))
-                for i in value["plots"]["psychometric_function"]
-                if np.isnan(i) == False
-            )
-            + ")"
+            + "% (" + ", ".join(str(round(i, 2)) for i in self.summary_data["psychometric_function"] if np.isnan(i) == False) + ")"
             + "\n\n"
-            + " ("
-            + ", ".join(
-                str(round(i, 2))
-                for i in value["plots"]["reaction_time_distribution"]
-                if np.isnan(i) == False
-            )
-            + ")"
+            + " (" + ", ".join(str(round(i, 2)) for i in self.summary_data["reaction_time_distribution"] if np.isnan(i) == False) + ")"
             + "\n\n"
-            + str(value["trial_counters"]["incorrect"])
-            + "/"
-            + str(value["trial_counters"]["attempt"])
-            + ";   "
-            + str(value["trial_counters"]["noresponse"])
-            + "/"
-            + str(value["trial_counters"]["attempt"])
+            + str(self.summary_datae["trial_counters"]["incorrect"]) + "/" + str(self.summary_data["trial_counters"]["attempt"])
+            + ";    "
+            + str(self.summary_data["trial_counters"]["noresponse"]) + "/" + str(self.summary_data["trial_counters"]["attempt"])
             + "\n\n"
-            + str(int(float(self.rig.total_reward.text())))
-            + " ul @ "
-            + str(self.rig.reward_volume.value())
-            + " ul"
+            + str(self.summary_data["total_reward"]) + " ul @ " + str(self.summary_data["reward_rate"]) + " ul"
         )
 
-        self.summary.summary_data.setText(summary_data)
+        self.summary.summary_data.setText(summary_string)
         self.summary_window.show()
 
-    def save_summary(self):
-        # TODO: implement method to save summary calculations to designated folders
+    def hide_summary(self):
         if (
             self.summary.baseline_weight.toPlainText() == ""
             or self.summary.start_weight.toPlainText() == ""
@@ -327,7 +300,11 @@ class TaskGUI(rigclass):
             msg.setWindowTitle("Error")
             msg.exec_()
         else:
-            # TODO: Save summary
+            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
+            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
+            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
+            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
             self.rig.close_experiment.show()
             self.summary_window.hide()
 
@@ -376,6 +353,19 @@ class TaskGUI(rigclass):
             self.session_clock["end"] = time.time()
             self.session_clock["timer"].stop()
             self.show_summary_window(value)
+            while self.summary_window.isVisible():
+                QtWidgets.QApplication.processEvents()
+
+        if "SESSION_FILES" in value.keys():
+            value["SESSION_FILES"]["summary"] = self.summary_data
+            self.save_files(value["SESSION_FILES"])
+    
+    def save_plots(self):
+        self.rig.accuracy_plot.save(self.subject.files["accuracy_plot"])
+        self.rig.psychometric_plot.save(self.subject.files["psychometric_plot"])
+        self.rig.trial_distribution.save(self.subject.files["trial_distribution"])
+        self.rig.rt_distribution.save(self.subject.files["rt_distribution"])
+        
 
     def update_trials(self, value):
         self.rig.attempt_trials.setText(str(value["attempt"]))

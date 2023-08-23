@@ -54,7 +54,6 @@ class Subject:
         task_phase: str,
         dir: Optional[Path] = None,
     ):
-
         self.name = name
 
         if dir:
@@ -67,9 +66,9 @@ class Subject:
         self.session = self.get_session()
         self._session_uuid = None
 
-        # if path doesn't exist, create it
-        if not os.path.exists(self.dir / self.session):
-            os.makedirs(self.dir / self.session)
+        # # if path doesn't exist, create it
+        # if not os.path.exists(self.dir / self.session):
+        #     os.makedirs(self.dir / self.session)
 
         # Is the subject currently running?
         # Used to keep the subject object alive, otherwise close files whenever we don't need it

@@ -28,7 +28,7 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QGroupBox" name="TrialStructureBox_2">
+   <widget class="QGroupBox" name="TrialStructureBox">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -511,7 +511,7 @@
      </property>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="RewardBox_2">
+   <widget class="QGroupBox" name="RewardBox">
     <property name="geometry">
      <rect>
       <x>730</x>
@@ -656,7 +656,7 @@
       <height>131</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="SessionControlBox_2">
+    <layout class="QVBoxLayout" name="SessionControlBox">
      <item>
       <widget class="QLCDNumber" name="session_timer">
        <property name="sizePolicy">
@@ -751,7 +751,7 @@ color: rgb(255, 255, 255);</string>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QTabWidget" name="BehaviorMonitor_2">
+      <widget class="QTabWidget" name="BehaviorMonitor">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>
@@ -762,7 +762,7 @@ color: rgb(255, 255, 255);</string>
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <property name="iconSize">
         <size>
@@ -809,7 +809,7 @@ color: rgb(255, 255, 255);</string>
       </widget>
      </item>
      <item>
-      <widget class="QTabWidget" name="TaskMonitor_2">
+      <widget class="QTabWidget" name="TaskMonitor">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>

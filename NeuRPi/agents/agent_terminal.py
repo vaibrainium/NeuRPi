@@ -13,7 +13,6 @@ from NeuRPi.gui.main_gui import Application
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Message, Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
-from NeuRPi.utils.get_config import get_configuration
 
 
 class Terminal(Application):
@@ -221,7 +220,6 @@ class Terminal(Application):
         # except:
         #     print("Cound not update GUI")
 
-
     def l_session_files(self, value):
         """
         Incoming session files from pilot.
@@ -263,8 +261,20 @@ class Terminal(Application):
         Returns:
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
         """
-        session_config = importlib.import_module(f"protocols.{session_info.task_module}.{session_info.task_phase}.config")
-        file_path = Path(Path.cwd(), Path(f"protocols/{session_info.task_module}/{session_info.task_phase}/config.py"))
+        module_path = (
+            f"protocols.{session_info.task_module}.{session_info.task_phase}.config"
+        )
+        session_config = importlib.import_module(module_path)
+
+        session_config = importlib.import_module(
+            f"protocols.{session_info.task_module}.{session_info.task_phase}.config"
+        )
+        file_path = Path(
+            Path.cwd(),
+            Path(
+                f"protocols/{session_info.task_module}/{session_info.task_phase}/config.py"
+            ),
+        )
         with open(file_path, "r") as f:
             string_session_config = f.read()
         return session_config, string_session_config
@@ -285,6 +295,7 @@ class Terminal(Application):
         )
         self.subjects[session_info.subject_name] = subject_module.Subject(
             name=session_info.subject_name,
+            weight=session_info.subject_weight,
             task_module=session_info.task_module,
             task_phase=session_info.task_phase,
             session_config=session_config,
@@ -303,7 +314,9 @@ class Terminal(Application):
         if session_info:
             if self.pilots[session_info.experiment_rig]["state"] == "IDLE":
                 # Gathering session configuration
-                session_config, string_session_config = self.prepare_session_config(session_info)
+                session_config, string_session_config = self.prepare_session_config(
+                    session_info
+                )
                 # Initializing subject
                 subject_config = self.initiate_subject(session_info, session_config)
 
@@ -328,9 +341,8 @@ class Terminal(Application):
                 self.add_new_rig(
                     id=session_info.experiment_rig,
                     task_gui=gui_module.TaskGUI,
-                    subject_id=session_info.subject_name,
-                    task_module=session_info.task_module,
-                    task_phase=session_info.task_phase,
+                    session_info=session_info,
+                    subject=self.subjects[session_info.subject_name],
                 )
                 self.rigs_gui[session_info.experiment_rig].set_rig_configuration(
                     self.pilots[session_info.experiment_rig]["prefs"]
@@ -338,8 +350,7 @@ class Terminal(Application):
 
                 # Waiting for rig to initiate hardware and start session
                 while (
-                    not self.pilots[session_info.experiment_rig]["state"]
-                    == "RUNNING"
+                    not self.pilots[session_info.experiment_rig]["state"] == "RUNNING"
                 ):
                     time.sleep(0.1)
 
