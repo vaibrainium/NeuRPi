@@ -16,6 +16,13 @@ from protocols.random_dot_motion.core.hardware.hardware_manager import \
     HardwareManager
 from protocols.random_dot_motion.tasks.rt_task import RTTask
 
+#TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
+#TODO: 2. Make reward adjustment for all invalid trials including repeat trials
+#TODO: 3. Implement graduation
+#TODO: 4. Increase rolling window to 200 for performance monitoring
+#TODO: 5. Make sure graduation is working properly
+#TODO: 6. Activate sound on display
+
 
 class SessionManager:
     """
@@ -354,9 +361,12 @@ class SessionManager:
             "total_attempts"
         ] = self.subject_config["counters"]["attempt"]
         self.subject_config["rolling_perf"]["total_reward"] = self.subject_config["total_reward"]
-        self.config.FILES["rolling_perforamance_after"].write_bytes(
-            pickle.dumps(self.subject_config["rolling_perf"])
-        )
+
+        with open(self.config.FILES["rolling_perf_after"], "wb") as file:
+            pickle.dump(self.subject_config["rolling_perf"], file)
+        with open(self.config.FILES["rolling_perf"], "wb") as file:
+            pickle.dump(self.subject_config["rolling_perf"], file)
+
         print("SAVING EOS FILES")
 
 
@@ -383,17 +393,28 @@ class Task:
         # Preparing storage files
         self.config.FILES = {}
         data_path = Path(prefs.get("DATADIR"), self.subject_config["name"], self.subject_config["task_module"], self.subject_config["task_phase"], self.subject_config["session"])
-        # Check if the directory exists
-        if not data_path.exists():
-            # If it doesn't exist, create it
-            data_path.mkdir(parents=True, exist_ok=True)
+        
+        # since main storage is on server, we will rewrite the directory if already exists assuming that data is already on the server.
+        if data_path.exists() and data_path.is_dir():
+            # If it exists, delete it and its contents
+            for item in data_path.iterdir():
+                if item.is_file():
+                    item.unlink()  # Delete files
+                elif item.is_dir():
+                    item.rmdir()   # Delete subdirectories
+        data_path.mkdir(parents=True, exist_ok=True) # Recreate the directory
+
+
+
+
         for file_id, file in self.config.DATAFILES.items():
             self.config.FILES[file_id] = Path(data_path, self.subject_config["name"] + file)
-        self.config.FILES["rolling_perforamance_before"] = Path(data_path, "rolling_performance_before.pkl")
-        self.config.FILES["rolling_perforamance_before"].write_bytes(
+        self.config.FILES["rolling_perf_before"] = Path(data_path, "rolling_perf_before.pkl")
+        self.config.FILES["rolling_perf_before"].write_bytes(
             pickle.dumps(self.subject_config["rolling_perf"])
         )
-        self.config.FILES["rolling_perforamance_after"] = Path(data_path, "rolling_performance_after.pkl")
+        self.config.FILES["rolling_perf_after"] = Path(data_path, "rolling_perf_after.pkl")
+        self.config.FILES["rolling_perf"] = Path(data_path.parent, "rolling_perf.pkl")
 
         # Event locks, triggers
         self.stage_block = stage_block

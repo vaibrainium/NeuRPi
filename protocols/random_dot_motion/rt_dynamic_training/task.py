@@ -369,8 +369,8 @@ class Task:
             data_path.mkdir(parents=True, exist_ok=True)
         for file_id, file in self.config.DATAFILES.items():
             self.config.FILES[file_id] = Path(data_path, self.subject_config.name + file)
-        self.config.FILES["rolling_perforamance_before"] = Path(data_path, "rolling_performance_before.pkl")
-        self.config.FILES["rolling_perforamance_after"] = Path(data_path, "rolling_performance_after.pkl")
+        self.config.FILES["rolling_perf_before"] = Path(data_path, "rolling_perf_before.pkl")
+        self.config.FILES["rolling_perf_after"] = Path(data_path, "rolling_perf_after.pkl")
 
         # Event locks, triggers
         self.stage_block = stage_block

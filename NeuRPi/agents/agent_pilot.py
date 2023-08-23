@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+import pickle
 import types
 
 from NeuRPi.loggers.logger import init_logger
@@ -306,11 +307,19 @@ class Pilot:
                         #TODO: Make better arrangement of the code so that files will be sent only on termination of program. Not on crashing
                         try:
                             # sending files to terminal only when successfully finished the task
-                            files = {}
+                            value = {
+                                "pilot": self.name,
+                                "subject": self.session_info.subject_name,
+                                "session_files": {}
+                            }
                             for file_name, file_path in self.config.FILES.items():
+                                    # if False: #"rolling_perf" in file_name:
+                                    #     with open(file_path, "rb") as reader:
+                                    #         value["session_files"][file_name] = pickle.load(reader)
+                                    # else:
                                 with open(file_path, "rb") as reader:
-                                    files[file_name] = reader.read()
-                            self.node.send("T", "SESSION_FILES", files)         
+                                    value["session_files"][file_name] = reader.read()
+                            self.node.send("T", "SESSION_FILES", value)         
                         except:
                             self.logger.exception("Could not send files to terminal")    
                         break
