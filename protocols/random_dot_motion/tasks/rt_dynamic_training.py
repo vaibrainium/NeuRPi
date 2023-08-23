@@ -212,7 +212,7 @@ class SessionManager:
 
         elif self.config.TASK.training_type.graduation_direction.value == 1:
             # If 100% and 70% coherence have accuracy above 70%
-            if self.subject_pars["current_coherence_level"] > 3 or (
+            if self.subject_pars["current_coherence_level"] > 2 or (
                 all(np.array(accuracy[:2]) > 0.7) and all(np.array(accuracy[-2:]) > 0.7)
             ):
                 #### ERROR -> > not supported between instances of list and int
@@ -220,7 +220,7 @@ class SessionManager:
                 # Increase coherence level to 3 i.e., introduce 36% coherence
                 self.next_coherence_level = 3
                 # If 100%, 70% and 36% coherence have accuracy above 70%
-                if self.subject_pars["current_coherence_level"] > 4 or (
+                if self.subject_pars["current_coherence_level"] > 3 or (
                     accuracy[2] > 0.7 and accuracy[-3] > 0.7
                 ):
                     # Increase coherence level to 3 i.e., introduce 36% coherence
