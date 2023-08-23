@@ -244,14 +244,20 @@ class TaskGUI(rigclass):
         self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
         self.state = "STOPPED"
         self.stop_session_clock()
-    
+
     def create_summary_data(self, value):
         self.summary_data = {
-            "date": time.strftime("%b-%d-%Y", time.localtime(self.session_clock["start"])),
+            "date": time.strftime(
+                "%b-%d-%Y", time.localtime(self.session_clock["start"])
+            ),
             "phase": self.task_phase,
             "session": self.subject.session,
-            "start_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["start"])),
-            "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
+            "start_time": time.strftime(
+                "%H:%M:%S", time.localtime(self.session_clock["start"])
+            ),
+            "end_time": time.strftime(
+                "%H:%M:%S", time.localtime(self.session_clock["end"])
+            ),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
             "total_attempt": value["trial_counters"]["attempt"],
@@ -274,20 +280,46 @@ class TaskGUI(rigclass):
             + time.ctime(self.session_clock["end"])
             + "\n\n"
             + str(self.summary_data["total_valid"])
-            + " (" + ", ".join(str(int(i)) for i in self.summary_data["trial_distribution"] if i != 0.0) + ")"
+            + " ("
+            + ", ".join(
+                str(int(i)) for i in self.summary_data["trial_distribution"] if i != 0.0
+            )
+            + ")"
             + "\n\n"
             + str(self.summary_data["total_accuracy"])
-            + "% (" + ", ".join(str(round(i, 2)) for i in self.summary_data["psychometric_function"] if np.isnan(i) == False) + ")"
+            + "% ("
+            + ", ".join(
+                str(round(i, 2))
+                for i in self.summary_data["psychometric_function"]
+                if np.isnan(i) == False
+            )
+            + ")"
             + "\n\n"
-            + " (" + ", ".join(str(round(i, 2)) for i in self.summary_data["reaction_time_distribution"] if np.isnan(i) == False) + ")"
+            + " ("
+            + ", ".join(
+                str(round(i, 2))
+                for i in self.summary_data["reaction_time_distribution"]
+                if np.isnan(i) == False
+            )
+            + ")"
             + "\n\n"
-            + str(self.summary_data["total_incorrect"]) + "/" + str(self.summary_data["total_attempt"])
+            + str(self.summary_data["total_incorrect"])
+            + "/"
+            + str(self.summary_data["total_attempt"])
             + ";    "
-            + str(self.summary_data["total_noresponse"]) + "/" + str(self.summary_data["total_attempt"])
+            + str(self.summary_data["total_noresponse"])
+            + "/"
+            + str(self.summary_data["total_attempt"])
             + "\n\n"
-            + str(self.summary_data["total_reward"]) + " ul @ " + str(self.summary_data["reward_rate"]) + " ul"
+            + str(self.summary_data["total_reward"])
+            + " ul @ "
+            + str(self.summary_data["reward_rate"])
+            + " ul"
         )
 
+        if subject.baseline_weight:
+            
+        self.summary.start_weight.setText(str(self.subject.weight))
         self.summary.summary_data.setText(summary_string)
         self.summary_window.show()
 
@@ -303,11 +335,27 @@ class TaskGUI(rigclass):
             msg.setWindowTitle("Error")
             msg.exec_()
         else:
-            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
-            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
-            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
-            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
-            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["baseline_weight"] = float(
+                self.summary.baseline_weight.toPlainText()
+            )
+            self.summary_data["start_weight"] = float(
+                self.summary.start_weight.toPlainText()
+            )
+            self.summary_data["end_weight"] = float(
+                self.summary.end_weight.toPlainText()
+            )
+            self.summary_data["start_weight_prct"] = round(
+                100
+                * self.summary_data["start_weight"]
+                / self.summary_data["baseline_weight"],
+                2,
+            )
+            self.summary_data["end_weight_prct"] = round(
+                100
+                * self.summary_data["end_weight"]
+                / self.summary_data["baseline_weight"],
+                2,
+            )
             self.rig.close_experiment.show()
             self.summary_window.hide()
 
@@ -364,31 +412,30 @@ class TaskGUI(rigclass):
             value["session_files"]["summary"] = self.summary_data
             self.subject.save_files(value["session_files"])
             self.save_plots()
-    
+
     def save_plots(self):
         # accuracy plot
         self.rig.TaskMonitor.setCurrentIndex(0)
         exporter = pg.exporters.ImageExporter(self.rig.accuracy_plot.scene())
-        exporter.parameters()["width"]=800
+        exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["accuracy"])
         # psychometric plot
         self.rig.TaskMonitor.setCurrentIndex(1)
         exporter = pg.exporters.ImageExporter(self.rig.psychometric_plot.scene())
-        exporter.parameters()["width"]=800
+        exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["psychometric"])
         # trial distribution plot
         self.rig.TaskMonitor.setCurrentIndex(2)
         exporter = pg.exporters.ImageExporter(self.rig.trial_distribution.scene())
-        exporter.parameters()["width"]=800
+        exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["trials_distribution"])
         # reaction time distribution plot
         self.rig.TaskMonitor.setCurrentIndex(3)
         exporter = pg.exporters.ImageExporter(self.rig.rt_distribution.scene())
-        exporter.parameters()["width"]=800
+        exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["rt_distribution"])
         # resetting plot index
         self.rig.TaskMonitor.setCurrentIndex(0)
-        
 
     def update_trials(self, value):
         self.rig.attempt_trials.setText(str(value["attempt"]))

@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional, Union
 
 import pandas as pd
-import tables
+import yaml
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.prefs import prefs
@@ -50,94 +50,58 @@ class Subject:
     def __init__(
         self,
         name: str,
-        task_module: str,
-        task_phase: str,
         dir: Optional[Path] = None,
     ):
         self.name = name
 
         if dir:
-            self.dir = Path(dir)
+            self.dir = Path(dir, self.name)
         else:
-            self.dir = Path(prefs.get("DATADIR"), self.name, task_module, task_phase)
+            self.dir = Path(prefs.get("DATADIR"), self.name)
 
         self.logger = init_logger(self)
 
-        self.session = self.get_session()
         self._session_uuid = None
+        self._info = None
+        self._history = None
 
-        # # if path doesn't exist, create it
-        # if not os.path.exists(self.dir / self.session):
-        #     os.makedirs(self.dir / self.session)
-
-        # Is the subject currently running?
-        # Used to keep the subject object alive, otherwise close files whenever we don't need it
-        self.running = False
-
-        # Using threading queut to dump data into a open data files
-        self.data_queue = None
-        self._thread = None
-        self._lock = threading.Lock()
-
-    ############################
-    # # Basic preparation functions!
-    # def init_files(self):
-    #     """
-    #     Initializing all directory and files. Currently, hardcoded file names. In future, will take input form external config to determine files
-
-    #     """
-
-    #     # files
-    #     self.summary = str(Path(self.dir, self.name + "_summary.csv"))
-    #     self.trial = str(Path(self.dir, self.session, self.name + "_trial.csv"))
-    #     self.event = str(Path(self.dir, self.session, self.name + "_event.csv"))
-    #     self.lick = str(Path(self.dir, self.session, self.name + "_lick.csv"))
-
-    def get_session(self) -> str:
+    ############################ context manager for files ############################
+    @contextmanager
+    def open_file(self, file_name: str, mode: str = "r"):
         """
-        Method for automated session naming.
+        Context manager for opening files in subject directory.
 
-        Return:
-            str: Session is named as '{day}_{session_no}'
+        Args:
+            file_name (str): Name of file to open
+            mode (str): File mode
 
+        Returns:
+            file: Open file
         """
-        # Checking for last day session number
-        # Finding all folders with current session
-        sub_dirs = glob.glob(str(self.dir) + "/*")
-        day, session_no = 0, 0
-        # Finding max number of current sessions recorded
-        for file in sub_dirs:
-            try:
-                num1, num2 = [
-                    int(i) for i in re.search("(\d+)_" + "(\d+)", file).group(1, 2)
-                ]
-                if num1 > day:
-                    day = num1
-                    session_no = num2
-                elif num1 == day:
-                    if num2 > session_no:
-                        session_no = num2
-            except:
-                pass
+        with open(Path(self.dir, file_name), mode) as f:
+            yield f
 
-        # Creating folder
-        # If first session under this task_module and task_phase
-        if day == 0:
-            session = str(day + 1) + "_1"  # Increasing Day
-        else:
-            # checking if multiple entry on same day
+    ######################## initial checks ########################
+    def initialize_subject_info(self):
+        # read from yaml files
+        try:
+            with self.open_file("info.yaml", "r") as f:
+                self._info = yaml.safe_load(f)
+            with self.open_file("history.csv", "r") as f:
+                self._history = yaml.safe_load(f)
+        except FileNotFoundError:
+            self.logger.info("No subject info found")
 
-            file_time = os.stat(
-                Path(self.dir, str(day) + "_" + str(session_no))
-            ).st_ctime
-            if (
-                time.time() - file_time
-            ) / 3600 < 12:  # Was file created today (less than 12 hours ago)?
-                session = str(day) + "_" + str(session_no + 1)  # Increasing Version
-            else:
-                session = str(day + 1) + "_1"  # Increasing Day
-        return session
+    ############################ subject properties ############################
+    @property
+    def info(self):
+        return self._info
 
+    @property
+    def history(self):
+        return self._history
+
+    ########################## subject properties ##########################
     @property
     def session_uuid(self) -> str:
         """
@@ -155,91 +119,7 @@ class Subject:
     # def update_weight(self, weight):
     #     pass
 
-    # def prepare_run(self):
-    #     """
-    #     Prepare the Subject object to receive data while running the task.
 
-    #     spawns :attr:`~.Subject.data_queue` and calls :meth:`~.Subject._data_thread`.
-
-    #     Returns:
-    #         Dict: the parameters for the current session, with subject id, current trial, and session number included.
-    #     """
-
-    #     task_params = {}
-    #     self._session_uuid = None
-
-    #     # spawn thread to accept data
-    #     self.data_queue = queue.Queue()
-    #     self._thread = threading.Thread(
-    #         target=self._data_thread,
-    #         args=(self.data_queue, trial_table_path, continuous_group_path),
-    #     )
-    #     self._thread.start()
-    #     self.running = True
-
-    # def stop_run(self):
-    #     pass
-
-    # #######################
-    # # Data acquisition methods
-
-    # def _data_thread(self, que: queue.Queue, trial_file: str, continuous_file: str):
-    #     """
-    #     Thread to keep file open and receive data while task is running.
-
-    #     Receives data through ~.Subject.queue as dictionary.
-
-    #     Args:
-    #         queue (:class:`queue.Queue`): passed by :meth:`~.Subject.prepare_run` and used by other
-    #             objects to pass data to be stored.
-    #     """
-    #     # start getting data
-    #     # stop when 'END' gets put in the queue
-    #     for data in iter(queue.get, "END"):
-    #         # wrap everything in try because this thread shouldn't carash
-    #         try:
-    #             if "continuous" in data.keys():
-    #                 # cont_tables, cont_rows = self._save_continuous_data(
-    #                 #     h5f, data, continuous_group_path, cont_tables, cont_rows
-    #                 # )
-    #                 # # continue, the rest is for handling trial data
-    #                 continue
-
-    #             # if we get trial data, try to sync it
-    #             if "trial_num" in data.keys() and "trial_num" in trial_row:
-    #                 trial_row = self._sync_trial_row(
-    #                     data["trial_num"], trial_row, trial_table
-    #                 )
-    #                 del data["trial_num"]
-
-    #             self._save_trial_data(data, trial_row, trial_table)
-
-    #         except Exception as e:
-    #             # we shouldn't throw any exception in this thread, just log it and move on
-    #             self.logger.exception(f"exception in data thread: {e}")
-
-    # def _save_continuous_data(
-    #     self,
-    #     h5f: tables.File,
-    #     data: dict,
-    #     continuous_group_path: str,
-    #     cont_tables: typing.Dict[str, tables.table.Table],
-    #     cont_rows: typing.Dict[str, Row],
-    # ) -> typing.Tuple[typing.Dict[str, tables.table.Table], typing.Dict[str, Row]]:
-    #     for k, v in data.items():
-
-    #         # if we haven't made a table yet, do it
-    #         if k not in cont_tables.keys():
-    #             new_cont_table = self._make_continuous_table(
-    #                 h5f, continuous_group_path, k, v
-    #             )
-    #             cont_tables[k] = new_cont_table
-    #             cont_rows[k] = new_cont_table.row
-
-    #         cont_rows[k][k] = v
-    #         cont_rows[k]["timestamp"] = data.get(
-    #             "timestamp", datetime.datetime.now().isoformat()
-    #         )
-    #         cont_rows[k].append()
-
-    #     return cont_tables, cont_rows
+if __name__ == "__main__":
+    a = Subject("test")
+    print(a.dir)

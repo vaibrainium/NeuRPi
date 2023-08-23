@@ -8,10 +8,11 @@ import pandas as pd
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
-#TODO: 1. Add baseline weights
-#TODO: 2. Generate phase graphs
-#TODO: 3. Add comments and save them
-#TODO: 4. Add bias calculation
+# TODO: 1. Add baseline weights
+# TODO: 2. Generate phase graphs
+# TODO: 3. Add comments and save them
+# TODO: 4. Add bias calculation
+
 
 class Subject(BaseSubject):
     """
@@ -19,7 +20,12 @@ class Subject(BaseSubject):
     """
 
     def __init__(
-        self, name=None, weight=None, task_module=None, task_phase=None, session_config=None
+        self,
+        name=None,
+        weight=None,
+        task_module=None,
+        task_phase=None,
+        session_config=None,
     ) -> None:
         super().__init__(name=name, task_module=task_module, task_phase=task_phase)
         # Initializing subject specific configuration
@@ -52,7 +58,9 @@ class Subject(BaseSubject):
         self.plots = {
             "accuracy": str(Path(self.dir, self.session, "accuracy.png")),
             "psychometric": str(Path(self.dir, self.session, "psychometric.png")),
-            "trials_distribution": str(Path(self.dir, self.session, "trials_distribution.png")),
+            "trials_distribution": str(
+                Path(self.dir, self.session, "trials_distribution.png")
+            ),
             "rt_distribution": str(Path(self.dir, self.session, "rt_distribution.png")),
         }
 
@@ -196,19 +204,27 @@ class Subject(BaseSubject):
         session_path = Path(self.dir, self.session)
         session_path.mkdir(parents=True, exist_ok=True)
 
-
         try:
             for file_name, file_content in file_dict.items():
                 if file_name in ["lick", "event", "trial"]:
                     with open(self.files[file_name], "wb") as file:
                         file.write(file_content)
-                elif file_name in ["summary", "accu_vs_training", "attmpt_vs_training", "attmpt_vs_weight"]:
+                elif file_name in [
+                    "summary",
+                    "accu_vs_training",
+                    "attmpt_vs_training",
+                    "attmpt_vs_weight",
+                ]:
                     with open(self.files[file_name], "a", newline="") as file:
                         writer = csv.DictWriter(file, fieldnames=file_content.keys())
                         if file.tell() == 0:
                             writer.writeheader()
                         writer.writerow(file_content)
-                elif file_name in ["rolling_perf", "rolling_perf_before", "rolling_perf_after"]:
+                elif file_name in [
+                    "rolling_perf",
+                    "rolling_perf_before",
+                    "rolling_perf_after",
+                ]:
                     file_content = pickle.loads(file_content)
                     with open(self.files[file_name], "wb") as file:
                         pickle.dump(file_content, file)
