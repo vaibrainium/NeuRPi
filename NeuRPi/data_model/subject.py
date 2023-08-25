@@ -57,7 +57,6 @@ class Subject:
         self.data_dir = Path(self.dir, "data")
 
         try:
-            self.existing_subject = self.dir.exists()
             self.import_subject_biography()
         except FileNotFoundError:
             raise FileNotFoundError("Subject or root files not found")
@@ -132,10 +131,8 @@ class Subject:
 
 
 if __name__ == "__main__":
-    name = "tes0t"
+    name = "XXX"
     a = Subject(name)
-    if not a.existing_subject:
-        a.create_subject({"name": name})
 
     new_line = {
         "baseling_weight": 0,

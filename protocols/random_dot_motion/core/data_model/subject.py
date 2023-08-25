@@ -8,9 +8,7 @@ import pandas as pd
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
-# TODO: 1. Add baseline weights
 # TODO: 2. Generate phase graphs
-# TODO: 3. Add comments and save them
 # TODO: 4. Add bias calculation
 
 
@@ -48,6 +46,13 @@ class Subject(BaseSubject):
         self.experiment = session_info.experiment
         self.session_config = session_config
         self.rolling_perf = {}
+
+        # if baselineweight in history, use it, otherwise use start_weight
+        self.base_weight = (
+            self.start_weight
+            if self.history.baseline_weight.empty
+            else self.history.baseline_weight.iloc[-1]
+        )
 
         # Initializing all directory and files. Currently, hardcoded file names. In future, will take input form external config to determine files
         self.files = {
