@@ -158,9 +158,10 @@ TASK = {
             """,
         "active_passive": {
             "tag": "Parameters for Active-Passive Training (time in secs)",
-            "passive_rt_mu": 4.5,
-            "passive_rt_skew": 0.6,
-            "passive_rt_sigma": 1.5,
+            # changing the values below to increase the number of trials in the active-passive training
+            "passive_rt_mu": 0.75,  # 4.5,
+            "passive_rt_skew": 0.75,  # 0.6,
+            "passive_rt_sigma": 0.25,  # 1.5,
         },
         "graduation_direction": {
             "tag": "Whether graduate is unidirectional i.e., only increasing difficulty (1) or bidirectional (0)",
