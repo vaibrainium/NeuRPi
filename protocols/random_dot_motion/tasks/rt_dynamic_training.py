@@ -378,13 +378,13 @@ class Task:
     def __init__(
         self,
         stage_block=None,
-        task_module=None,
-        task_phase=None,
+        protocol=None,
+        experiment=None,
         config=None,
         **kwargs,
     ):
-        self.task_module = task_module
-        self.task_phase = task_phase
+        self.protocol = protocol
+        self.experiment = experiment
         self.config = config
         self.__dict__.update(kwargs)
 
@@ -392,7 +392,7 @@ class Task:
 
         # Preparing storage files
         self.config.FILES = {}
-        data_path = Path(prefs.get("DATADIR"), self.subject_config["name"], self.subject_config["task_module"], self.subject_config["task_phase"], self.subject_config["session"])
+        data_path = Path(prefs.get("DATADIR"), self.subject_config["name"], self.subject_config["protocol"], self.subject_config["experiment"], self.subject_config["session"])
         
         # since main storage is on server, we will rewrite the directory if already exists assuming that data is already on the server.
         if data_path.exists() and data_path.is_dir():
@@ -504,8 +504,8 @@ class Task:
 
 if __name__ == "__main__":
     value = {
-        "task_module": "RDK",
-        "task_phase": "rt_dynamic_training",
+        "protocol": "RDK",
+        "experiment": "rt_dynamic_training",
         "subject": "PSUIM4",
     }
 

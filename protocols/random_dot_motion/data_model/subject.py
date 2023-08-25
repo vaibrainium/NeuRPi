@@ -15,9 +15,9 @@ class Subject(BaseSubject):
     """
 
     def __init__(
-        self, name=None, task_module=None, task_phase=None, config=None
+        self, name=None, protocol=None, experiment=None, config=None
     ) -> None:
-        super().__init__(name=name, task_module=task_module, task_phase=task_phase)
+        super().__init__(name=name, protocol=protocol, experiment=experiment)
         # Initializing subject specific configuration
         self.config = config
         self.rolling_perf = {}

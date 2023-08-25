@@ -28,8 +28,8 @@ class Subject:
         |--- info - Subjects Biographical information
         |--- history
         |--- data
-        |    |--- task_module
-        |         |--- task_phase
+        |    |--- protocol
+        |         |--- experiment
         |             |--- summary
         |                |--- weight
         |                |--- performance
@@ -50,8 +50,8 @@ class Subject:
     def __init__(
         self,
         name: str,
-        task_module: str,
-        task_phase: str,
+        protocol: str,
+        experiment: str,
         dir: Optional[Path] = None,
     ):
 
@@ -60,7 +60,7 @@ class Subject:
         if dir:
             self.dir = Path(dir)
         else:
-            self.dir = Path(prefs.get("DATADIR"), self.name, task_module, task_phase)
+            self.dir = Path(prefs.get("DATADIR"), self.name, protocol, experiment)
 
         self.logger = init_logger(self)
 
@@ -122,7 +122,7 @@ class Subject:
                 pass
 
         # Creating folder
-        # If first session under this task_module and task_phase
+        # If first session under this protocol and experiment
         if day == 0:
             session = str(day + 1) + "_1"  # Increasing Day
         else:

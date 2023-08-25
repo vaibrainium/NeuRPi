@@ -235,9 +235,9 @@ class Pilot:
 
         # import all required modules
         try:        
-            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.hardware.hardware_manager")
-            task_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.tasks.{self.session_info.task_phase}")
-            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}")
+            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.hardware.hardware_manager")
+            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.tasks.{self.session_info.experiment}")
+            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.stimulus.{self.session_info.experiment}")
             
             self.modules = {}
             self.modules["task"] = task_manager_file.Task
@@ -251,7 +251,7 @@ class Pilot:
         Current task requires display hardware. Import display module and start display process.
         
         """
-        # stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.task_module}.stimulus.{self.session_info.task_phase}")
+        # stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.stimulus.{self.session_info.experiment}")
         # display = stimulus_manager_file.StimulusDisplay(
         display = StimulusDisplay(
             stimulus_configuration=config,
@@ -354,8 +354,8 @@ def main():
 
         msg = {
             "subjectID": "XXX",
-            "task_module": "rt_dynamic_training",
-            "task_phase": "4",
+            "protocol": "rt_dynamic_training",
+            "experiment": "4",
         }
         quitting.wait()
 

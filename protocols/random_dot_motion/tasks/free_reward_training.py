@@ -413,14 +413,14 @@ class Task:
         self,
         stage_block=None,
         subject=None,
-        task_module=None,
-        task_phase=None,
+        protocol=None,
+        experiment=None,
         config=None,
         **kwargs,
     ):
         self.subject = subject
-        self.task_module = task_module
-        self.task_phase = task_phase
+        self.protocol = protocol
+        self.experiment = experiment
         self.config = config
         self.__dict__.update(kwargs)
 
@@ -432,8 +432,8 @@ class Task:
         # # Preparing subject
         # self.subject = Subject(
         #     name=self.subject,
-        #     task_module=self.task_module,
-        #     task_phase=self.task_phase,
+        #     protocol=self.protocol,
+        #     experiment=self.experiment,
         #     config=self.config,
         # )
 
@@ -526,8 +526,8 @@ class Task:
 
 if __name__ == "__main__":
     value = {
-        "task_module": "RDK",
-        "task_phase": "rt_dynamic_training",
+        "protocol": "RDK",
+        "experiment": "rt_dynamic_training",
         "subject": "PSUIM4",
     }
 

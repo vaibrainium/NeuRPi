@@ -348,21 +348,21 @@ class Task:
         self,
         stage_block=None,
         subject=None,
-        task_module=None,
-        task_phase=None,
+        protocol=None,
+        experiment=None,
         config=None,
         **kwargs,
     ):
         self.subject = subject
-        self.task_module = task_module
-        self.task_phase = task_phase
+        self.protocol = protocol
+        self.experiment = experiment
         self.config = config
         self.subject_config = self.config.SUBJECT
         self.__dict__.update(kwargs)
 
         # Preparing storage files
         self.config.FILES = {}
-        data_path = Path(prefs.get("DATADIR"), self.subject_config.name, self.subject_config.task_module, self.subject_config.task_phase, self.subject_config.session)
+        data_path = Path(prefs.get("DATADIR"), self.subject_config.name, self.subject_config.protocol, self.subject_config.experiment, self.subject_config.session)
         # Check if the directory exists
         if not data_path.exists():
             # If it doesn't exist, create it
@@ -460,8 +460,8 @@ class Task:
 
 if __name__ == "__main__":
     value = {
-        "task_module": "RDK",
-        "task_phase": "rt_dynamic_training",
+        "protocol": "RDK",
+        "experiment": "rt_dynamic_training",
         "subject": "PSUIM4",
     }
 
