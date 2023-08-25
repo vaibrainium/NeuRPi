@@ -14,7 +14,6 @@ from NeuRPi.utils.get_config import get_configuration
 
 
 class Pilot:
-
     logger = None
 
     # Events for thread handling
@@ -27,7 +26,6 @@ class Pilot:
     networking = None
 
     def __init__(self):
-
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
             self.child = True
@@ -104,18 +102,18 @@ class Pilot:
         if self.state == "RUNNING" or self.running.is_set():
             self.logger.warning("Task already running. Cannot start new task")
             return
-        self.logger.info(f"Starting task: {value['task_module']}")
+        self.logger.info(f"Starting task: {value['protocol']}")
 
         self.state = "RUNNING"
         self.running.set()
         try:
-            self.task_module = value["task_module"]
-            self.task_phase = value["task_phase"]
+            self.protocol = value["protocol"]
+            self.experiment = value["experiment"]
             self.subject_id = value["subject_id"]
 
             # Importing protocol function/class object using importlib
             task = importlib.import_module(
-                "protocols." + self.task_module + ".tasks." + self.task_phase
+                "protocols." + self.protocol + ".tasks." + self.experiment
             )
 
             self.stage_block.clear()
@@ -171,13 +169,13 @@ class Pilot:
         """
         display_module = (
             "protocols."
-            + task_params["task_phase"]
+            + task_params["experiment"]
             + ".stimulus."
-            + task_params["task_phase"]
+            + task_params["experiment"]
         )
         display_module = importlib.import_module(display_module)
         Stimulus_Display = display_module.Stimulus_Display
-        directory = "protocols/" + task_params["task_module"] + "/config"
+        directory = "protocols/" + task_params["protocol"] + "/config"
         stim_config = get_configuration(directory=directory, filename="stimulus")
         display = Stimulus_Display(
             stimulus_configuration=stim_config.STIMULUS,
@@ -256,8 +254,8 @@ def main():
 
         msg = {
             "subjectID": "PSUIM4",
-            "task_module": "dynamic_coherence_rt",
-            "task_phase": "4",
+            "protocol": "dynamic_coherence_rt",
+            "experiment": "4",
         }
         quitting.wait()
 

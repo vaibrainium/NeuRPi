@@ -28,18 +28,9 @@ class Subject:
         |--- info - Subjects Biographical information
         |--- history
         |--- data
-        |    |--- task_module
-        |         |--- task_phase
-        |             |--- summary
-        |                |--- weight
-        |                |--- performance
-        |                |--- parameters
-        |             |--- session_#1
-        |             |       |--- trial_data
-        |             |       |--- continuous_data
-        |             |--- session_#2
-        |             |--- ...
-        |
+        |    |--- protocol
+        |         |--- experiment
+        |             |---
 
     Attributes:
         name (str): Subject ID
@@ -53,21 +44,27 @@ class Subject:
         dir: Optional[Path] = None,
     ):
         self.name = name
+        self._info = None
+        self._history = None
+
+        self.session = None
+        self._session_uuid = str(uuid.uuid4())  # generate uniquely addressable uuid
 
         if dir:
             self.dir = Path(dir, self.name)
         else:
             self.dir = Path(prefs.get("DATADIR"), self.name)
+        self.data_dir = Path(self.dir, "data")
 
-        self.logger = init_logger(self)
-
-        self._session_uuid = None
-        self._info = None
-        self._history = None
+        try:
+            self.existing_subject = self.dir.exists()
+            self.import_subject_biography()
+        except FileNotFoundError:
+            raise FileNotFoundError("Subject or root files not found")
 
     ############################ context manager for files ############################
     @contextmanager
-    def open_file(self, file_name: str, mode: str = "r"):
+    def file_context(self, file_name: str, mode: str = "r"):
         """
         Context manager for opening files in subject directory.
 
@@ -78,19 +75,52 @@ class Subject:
         Returns:
             file: Open file
         """
-        with open(Path(self.dir, file_name), mode) as f:
-            yield f
+        with open(Path(self.dir, file_name), mode) as file:
+            yield file
 
-    ######################## initial checks ########################
-    def initialize_subject_info(self):
+    ############################ subject functions ############################
+    # def create_new_subject(self, info_dict: dict) -> None:
+    #     # create subject directory
+    #     self.dir.mkdir(parents=True, exist_ok=True)
+    #     self.data_dir.mkdir(parents=True, exist_ok=True)
+    #     # create subject info file
+    #     info_dict = {
+    #         "Name": info_dict.subject_name,
+    #         "Identification": "N/A"
+    #         if info_dict.subject_identification == ""
+    #         else info_dict.subject_identification,
+    #         "subject_dob": info_dict.subject_dob,
+    #         "subject_housing": "N/A"
+    #         if info_dict.subject_housing == ""
+    #         else info_dict.subject_housing,
+    #     }
+    #     with open(Path(self.dir, "info.yaml"), "w") as file:
+    #         yaml.dump(info_dict, file, default_flow_style=False)
+    #     # create subject history file
+    #     header = [
+    #         "date",
+    #         "baseling_weight",
+    #         "start_weight",
+    #         "end_weight",
+    #         "rig_id",
+    #         "protocol",
+    #         "experiment",
+    #         "session",
+    #         "session_uuid",
+    #     ]
+    #     with open(Path(self.dir, "history.csv"), "w") as file:
+    #         writer = csv.writer(file)
+    #         writer.writerow(header)
+
+    def import_subject_biography(self):
         # read from yaml files
         try:
-            with self.open_file("info.yaml", "r") as f:
-                self._info = yaml.safe_load(f)
-            with self.open_file("history.csv", "r") as f:
-                self._history = yaml.safe_load(f)
+            with self.file_context("info.yaml", "r") as file:
+                self._info = yaml.safe_load(file)
+            with self.file_context("history.csv", "r") as file:
+                self._history = pd.read_csv(file)
         except FileNotFoundError:
-            self.logger.info("No subject info found")
+            print("No subject info found")
 
     ############################ subject properties ############################
     @property
@@ -104,22 +134,51 @@ class Subject:
     ########################## subject properties ##########################
     @property
     def session_uuid(self) -> str:
-        """
-        Automatically generated UUID given to each session, regardless of the session number.
-        Ensures each session is uniquely addressable in the case of ambiguous session numbers
-        (eg. subject was manually promoted or demoted and session number was unable to be recovered,
-        so there are multiple sessions with the same number)
-        """
-        if self._session_uuid is None:
-            self._session_uuid = str(uuid.uuid4())
         return self._session_uuid
 
     ########################
 
-    # def update_weight(self, weight):
-    #     pass
+    def update_history(self, hist_dict: dict) -> None:
+        """
+        Updates subject history file with new session information.
+
+        Args:
+            hist_dict (dict): Dictionary containing session information.
+                must contain keys: baseling_weight, start_weight, end_weight, protocol, experiment, session
+        """
+        try:
+            hist_dict["date"] = hist_dict.get(
+                "date", time.strftime("%Y-%m-%d %H:%M:%S")
+            )
+            hist_dict["session_uuid"] = hist_dict.get("session_uuid", self.session_uuid)
+
+            new_row = pd.DataFrame([hist_dict]).reindex(columns=self.history.columns)
+            if self.history.columns.equals(new_row.columns):
+                self._history = pd.concat([a.history, new_row], ignore_index=True)
+                with open(Path(self.dir, "history.csv"), "w", newline="") as file:
+                    self._history.to_csv(file, index=False, lineterminator=None)
+            else:
+                raise ValueError(
+                    "History dict does not contain all required keys from history file"
+                )
+        except AttributeError:
+            raise AttributeError("Subject history could not be updated")
 
 
 if __name__ == "__main__":
-    a = Subject("test")
+    name = "tes0t"
+    a = Subject(name)
+    if not a.existing_subject:
+        a.create_subject({"name": name})
+
+    new_line = {
+        "baseling_weight": 0,
+        "start_weight": 0,
+        "end_weight": 0,
+        "protocol": 0,
+        "experiment": 0,
+        "session": 0,
+    }
+
+    a.update_history(new_line)
     print(a.dir)

@@ -16,36 +16,50 @@ from NeuRPi.data_model.subject import Subject as BaseSubject
 
 class Subject(BaseSubject):
     """
-    Class for tracking subject parameters and data logging
+
+    /root
+    |--- info - Subjects Biographical information
+    |--- history
+    |--- data
+    |    |--- protocol
+    |         |--- experiment
+    |             |--- summary
+    |                |--- weight
+    |                |--- performance
+    |                |--- parameters
+    |                |--- session_#1
+    |                |       |--- trial_data
+    |                |       |--- continuous_data
+    |                |--- session_#2
+    |                |--- ...
+    |
     """
 
     def __init__(
         self,
-        name=None,
-        weight=None,
-        task_module=None,
-        task_phase=None,
+        session_info=None,
         session_config=None,
     ) -> None:
-        super().__init__(name=name, task_module=task_module, task_phase=task_phase)
+        super().__init__(name=session_info.name)
+
         # Initializing subject specific configuration
-        self.start_weight = weight
-        self.task_module = task_module
-        self.task_phase = task_phase
+        self.start_weight = session_info.weight
+        self.protocol = session_info.protocol
+        self.experiment = session_info.experiment
         self.session_config = session_config
         self.rolling_perf = {}
 
         # Initializing all directory and files. Currently, hardcoded file names. In future, will take input form external config to determine files
         self.files = {
             # across session
-            "summary": str(Path(self.dir, self.name + "_summary.csv")),
-            "rolling_perf": str(Path(self.dir, "rolling_performance.pkl")),
-            "accu_vs_training": str(Path(self.dir, "accu_vs_training.csv")),
-            "attmpt_vs_training": str(Path(self.dir, "attmpt_vs_training.csv")),
-            "attmpt_vs_weight": str(Path(self.dir, "attmpt_vs_weight.csv")),
+            "summary": str(Path(self.data_dir, self.name + "_summary.csv")),
+            "rolling_perf": str(Path(self.data_dir, "rolling_performance.pkl")),
+            "accu_vs_training": str(Path(self.data_dir, "accu_vs_training.csv")),
+            "attmpt_vs_training": str(Path(self.data_dir, "attmpt_vs_training.csv")),
+            "attmpt_vs_weight": str(Path(self.data_dir, "attmpt_vs_weight.csv")),
             # within session
-            "trial": str(Path(self.dir, self.session, self.name + "_trial.csv")),
-            "event": str(Path(self.dir, self.session, self.name + "_event.csv")),
+            "trial": str(Path(self.data_dir, self.session, self.name + "_trial.csv")),
+            "event": str(Path(self.data_dir, self.session, self.name + "_event.csv")),
             "lick": str(Path(self.dir, self.session, self.name + "_lick.csv")),
             "rolling_perf_before": str(
                 Path(self.dir, self.session, "rolling_perf_before.pkl")
@@ -135,8 +149,8 @@ class Subject(BaseSubject):
             # Subject and task identification
             "name": self.name,
             "weight": self.start_weight,
-            "task_module": self.task_module,
-            "task_phase": self.task_phase,
+            "protocol": self.protocol,
+            "experiment": self.experiment,
             "session": self.session,
             "session_uuid": self.session_uuid,
             # Counters
@@ -232,15 +246,3 @@ class Subject(BaseSubject):
         except Exception as e:
             print(e)
             pass
-
-    # def save(self):
-    #     """
-    #     Save rolling performance in a  pickle file
-    #     """
-    #     try:
-    #         reader = open(self.files["rolling_perf"], "wb")
-    #         pickle.dump(self.rolling_perf, reader)
-    #         reader.close()
-    #     except Exception as e:
-    #         print(e)
-    #         pass

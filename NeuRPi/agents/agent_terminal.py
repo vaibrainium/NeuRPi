@@ -82,10 +82,7 @@ class Terminal(Application):
             # TODO: Implement communication with GUI to add new pilot
             pass
 
-        ##########################
-
-    ################
-    # Properties
+    ###################### Properties ######################
 
     @property
     def pilots(self) -> odict:
@@ -120,8 +117,7 @@ class Terminal(Application):
             "prefs": pilot_prefs,
         }
 
-    ###############################
-    # Listens & inter-object methods
+    ################################ inter-object methods ################################
     def ping_pilot(self, pilot):
         self.node.send(pilot, "PING")
 
@@ -142,8 +138,7 @@ class Terminal(Application):
             self.heartbeat_timer.daemon = True
             self.heartbeat_timer.start()
 
-    ################################
-    # MESSAGE HANDLING METHOD
+    ################################ message handling ################################
 
     def l_ping(self, value):
         # Only our Station object should ever ping us, because
@@ -235,8 +230,7 @@ class Terminal(Application):
             print("Could not update GUI")
             print(e)
 
-    ########################
-    # GUI and other functions
+    ######################## GUI related functions ########################
 
     def message_from_taskgui(self, message):
         if message["to"] == "main_gui":
@@ -248,10 +242,11 @@ class Terminal(Application):
     def update_rig_availability(self):
         for i, key in enumerate(self.pilots.keys()):
             display_name = self.code_to_str(key)
-            if self.main_gui.experiment_rig.findText(display_name) == -1:
+            if self.main_gui.rig_id.findText(display_name) == -1:
                 # Add Rig option to the GUI
-                self.main_gui.experiment_rig.addItem(display_name)
+                self.main_gui.rig_id.addItem(display_name)
 
+    ############################ start experiment functions ############################
     def prepare_session_config(self, session_info):
         """_summary_
 
@@ -262,17 +257,17 @@ class Terminal(Application):
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
         """
         module_path = (
-            f"protocols.{session_info.task_module}.{session_info.task_phase}.config"
+            f"protocols.{session_info.protocol}.{session_info.experiment}.config"
         )
         session_config = importlib.import_module(module_path)
 
         session_config = importlib.import_module(
-            f"protocols.{session_info.task_module}.{session_info.task_phase}.config"
+            f"protocols.{session_info.protocol}.{session_info.experiment}.config"
         )
         file_path = Path(
             Path.cwd(),
             Path(
-                f"protocols/{session_info.task_module}/{session_info.task_phase}/config.py"
+                f"protocols/{session_info.protocol}/{session_info.experiment}/config.py"
             ),
         )
         with open(file_path, "r") as f:
@@ -291,13 +286,10 @@ class Terminal(Application):
 
         """
         subject_module = importlib.import_module(
-            f"protocols.{session_info.task_module}.data_model.subject"
+            f"protocols.{session_info.protocol}.data_model.subject"
         )
         self.subjects[session_info.subject_name] = subject_module.Subject(
-            name=session_info.subject_name,
-            weight=session_info.subject_weight,
-            task_module=session_info.task_module,
-            task_phase=session_info.task_phase,
+            session_info=session_info,
             session_config=session_config,
         )
         subject_config = self.subjects[session_info.subject_name].initiate_config()
@@ -310,9 +302,9 @@ class Terminal(Application):
         pass
 
     def start_experiment(self):
-        session_info = super().start_experiment()
+        session_info = self.verify_session_info()
         if session_info:
-            if self.pilots[session_info.experiment_rig]["state"] == "IDLE":
+            if self.pilots[session_info.rig_id]["state"] == "IDLE":
                 # Gathering session configuration
                 session_config, string_session_config = self.prepare_session_config(
                     session_info
@@ -324,7 +316,7 @@ class Terminal(Application):
 
                 # Send message to rig to start
                 self.node.send(
-                    to=session_info.experiment_rig,
+                    to=session_info.rig_id,
                     key="START",
                     value={
                         "session_info": session_info,
@@ -336,45 +328,27 @@ class Terminal(Application):
 
                 # Start Task GUI and updating parameters from rig preferences
                 gui_module = importlib.import_module(
-                    f"protocols.{session_info.task_module}.gui.task_gui"
+                    f"protocols.{session_info.protocol}.gui.task_gui"
                 )
                 self.add_new_rig(
-                    id=session_info.experiment_rig,
+                    id=session_info.rig_id,
                     task_gui=gui_module.TaskGUI,
                     session_info=session_info,
                     subject=self.subjects[session_info.subject_name],
                 )
-                self.rigs_gui[session_info.experiment_rig].set_rig_configuration(
-                    self.pilots[session_info.experiment_rig]["prefs"]
+                self.rigs_gui[session_info.rig_id].set_rig_configuration(
+                    self.pilots[session_info.rig_id]["prefs"]
                 )
 
                 # Waiting for rig to initiate hardware and start session
-                while (
-                    not self.pilots[session_info.experiment_rig]["state"] == "RUNNING"
-                ):
+                while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
                     time.sleep(0.1)
 
                 # self.clear_variables()
-                self.rigs_gui[session_info.experiment_rig].start_experiment()
+                self.rigs_gui[session_info.rig_id].start_experiment()
 
             else:
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Critical)
-                msg.setText("Rig already engaged!")
-                msg.setWindowTitle("Error")
-                msg.exec_()
-                return None
-
-    def calibrate_reward(self):
-        pilot = super().calibrate_reward()
-        print(f" Initiate reward calibration for {pilot}")
-        if pilot:
-            # Send message to rig to caliberate reward
-            self.node.send(
-                to=pilot,
-                key="EVENT",
-                value={"key": "REWARD", "value": "calibrate_reward"},
-            )
+                self.critical_message("Rig is not available to start experiment")
 
     def closeEvent(self, event):
         """
