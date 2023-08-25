@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1072</width>
+    <width>1065</width>
     <height>900</height>
    </rect>
   </property>
@@ -45,7 +45,7 @@
       </property>
       <property name="geometry">
        <rect>
-        <x>348</x>
+        <x>410</x>
         <y>660</y>
         <width>231</width>
         <height>61</height>
@@ -63,7 +63,7 @@
      <widget class="QLabel" name="label_5">
       <property name="geometry">
        <rect>
-        <x>578</x>
+        <x>650</x>
         <y>125</y>
         <width>123</width>
         <height>47</height>
@@ -85,8 +85,8 @@
      <widget class="QWidget" name="layoutWidget_2">
       <property name="geometry">
        <rect>
-        <x>178</x>
-        <y>515</y>
+        <x>240</x>
+        <y>300</y>
         <width>541</width>
         <height>31</height>
        </rect>
@@ -100,16 +100,19 @@
           </font>
          </property>
          <property name="text">
-          <string>Experiment Rig</string>
+          <string>Rig ID</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="experiment_rig">
+        <widget class="QComboBox" name="rig_id">
          <property name="font">
           <font>
            <pointsize>14</pointsize>
           </font>
+         </property>
+         <property name="accessibleName">
+          <string>0</string>
          </property>
          <property name="currentIndex">
           <number>0</number>
@@ -119,7 +122,7 @@
          </property>
          <item>
           <property name="text">
-           <string>None</string>
+           <string>SELECT</string>
           </property>
          </item>
         </widget>
@@ -129,8 +132,8 @@
      <widget class="QWidget" name="layoutWidget_3">
       <property name="geometry">
        <rect>
-        <x>178</x>
-        <y>445</y>
+        <x>240</x>
+        <y>510</y>
         <width>541</width>
         <height>31</height>
        </rect>
@@ -178,7 +181,7 @@
      <widget class="QWidget" name="layoutWidget_4">
       <property name="geometry">
        <rect>
-        <x>178</x>
+        <x>240</x>
         <y>580</y>
         <width>541</width>
         <height>33</height>
@@ -193,7 +196,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Prior (Rightward Probability)</string>
+          <string>Prior (Rightward Prob.)</string>
          </property>
         </widget>
        </item>
@@ -220,8 +223,8 @@
      <widget class="QWidget" name="layoutWidget_5">
       <property name="geometry">
        <rect>
-        <x>178</x>
-        <y>380</y>
+        <x>240</x>
+        <y>440</y>
         <width>541</width>
         <height>31</height>
        </rect>
@@ -235,23 +238,25 @@
           </font>
          </property>
          <property name="text">
-          <string>Task Phase</string>
+          <string>Experiment</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="task_phase">
+        <widget class="QComboBox" name="experiment">
          <property name="font">
           <font>
            <pointsize>14</pointsize>
           </font>
          </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
          <property name="maxVisibleItems">
           <number>15</number>
          </property>
+         <item>
+          <property name="text">
+           <string>SELECT</string>
+          </property>
+         </item>
          <item>
           <property name="text">
            <string>Free Reward Training</string>
@@ -284,7 +289,7 @@
      <widget class="QTextEdit" name="subject_weight">
       <property name="geometry">
        <rect>
-        <x>578</x>
+        <x>640</x>
         <y>180</y>
         <width>141</width>
         <height>71</height>
@@ -327,9 +332,9 @@ p, li { white-space: pre-wrap; }
      <widget class="QLabel" name="label">
       <property name="geometry">
        <rect>
-        <x>308</x>
-        <y>127</y>
-        <width>123</width>
+        <x>350</x>
+        <y>125</y>
+        <width>201</width>
         <height>47</height>
        </rect>
       </property>
@@ -340,16 +345,16 @@ p, li { white-space: pre-wrap; }
        </font>
       </property>
       <property name="text">
-       <string>Mouse ID</string>
+       <string>Subject Name</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QTextEdit" name="subject">
+     <widget class="QTextEdit" name="subject_name">
       <property name="geometry">
        <rect>
-        <x>180</x>
+        <x>242</x>
         <y>180</y>
         <width>381</width>
         <height>71</height>
@@ -383,8 +388,8 @@ p, li { white-space: pre-wrap; }
      <widget class="QWidget" name="layoutWidget_6">
       <property name="geometry">
        <rect>
-        <x>180</x>
-        <y>310</y>
+        <x>242</x>
+        <y>375</y>
         <width>541</width>
         <height>31</height>
        </rect>
@@ -398,23 +403,25 @@ p, li { white-space: pre-wrap; }
           </font>
          </property>
          <property name="text">
-          <string>Task Module</string>
+          <string>Protocol</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="task_module">
+        <widget class="QComboBox" name="protocol">
          <property name="font">
           <font>
            <pointsize>14</pointsize>
           </font>
          </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
          <property name="maxVisibleItems">
           <number>15</number>
          </property>
+         <item>
+          <property name="text">
+           <string>SELECT</string>
+          </property>
+         </item>
          <item>
           <property name="text">
            <string>Random Dot Motion</string>
@@ -427,8 +434,8 @@ p, li { white-space: pre-wrap; }
      <widget class="QPushButton" name="calibrate_reward">
       <property name="geometry">
        <rect>
-        <x>750</x>
-        <y>510</y>
+        <x>870</x>
+        <y>60</y>
         <width>161</width>
         <height>41</height>
        </rect>
@@ -440,6 +447,24 @@ p, li { white-space: pre-wrap; }
       </property>
       <property name="text">
        <string>Calibrate Reward</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="create_new_subject">
+      <property name="geometry">
+       <rect>
+        <x>870</x>
+        <y>10</y>
+        <width>161</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Create New Subject</string>
       </property>
      </widget>
     </widget>

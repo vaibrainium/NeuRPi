@@ -1,40 +1,68 @@
+import csv
 import sys
 import time
+from pathlib import Path
 
+import yaml
 from omegaconf import OmegaConf
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
+from NeuRPi.prefs import prefs
+
 Ui_Main, mainclass = uic.loadUiType("NeuRPi/gui/main_gui.ui")
+Ui_NewSubject, newsubjectclass = uic.loadUiType("NeuRPi/gui/new_subject_form.ui")
 
 
+def code_to_str(var: str):
+    str_var = var.replace("_", " ")
+    str_var = str.title(str_var)
+    return str_var
+
+
+def str_to_code(var: str):
+    code_var = var.replace(" ", "_")
+    code_var = code_var.lower()
+    return code_var
+
+
+################# main gui #################
 class Application(mainclass):
     def __init__(self):
         super().__init__()
         self.thread = QtCore.QThread()
 
+        # new subject dialog
+        self.new_subject_window = QtWidgets.QDialog()
+        self.new_subject_form = Ui_NewSubject()
+        self.new_subject_form.setupUi(self.new_subject_window)
+        self.new_subject_window.raise_()
+        self.new_subject_window.hide()
+        # main gui
         self.main_gui = Ui_Main()
         self.main_gui.setupUi(self)
         self.show()
-        # Rigs
+        # rigs
         self.rigs_gui = {}
 
-        self.main_gui.start_experiment.clicked.connect(lambda: self.start_experiment())
-        self.main_gui.calibrate_reward.clicked.connect(lambda: self.calibrate_reward())
+        # all connect signals
+        self.main_gui.start_experiment.clicked.connect(self.start_experiment)
+        self.main_gui.create_new_subject.clicked.connect(self.show_subject_form)
+        self.new_subject_form.create_button.clicked.connect(self.create_new_subject)
 
-    def code_to_str(self, var: str):
-        display_var = var.replace("_", " ")
-        display_var = str.title(display_var)
-        return display_var
+    ################ main gui helper functions ################
+    def critical_message(self, message):
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Critical)
+        msg.setText(message)
+        msg.setWindowTitle("Error")
+        msg.exec_()
+        return None
 
-    def str_to_code(self, var: str):
-        code_var = var.replace(" ", "_")
-        code_var = code_var.lower()
-        return code_var
-
+    ##################### rig functions #####################
     def get_tab_index(self, tab_name, tab_widget=None):
         if not tab_widget:
             tab_widget = self.main_gui.tabs
-        tab_name = self.code_to_str(tab_name)
+        tab_name = code_to_str(tab_name)
         tab_index = None
         for index in range(tab_widget.count()):
             if tab_name == tab_widget.tabText(index):
@@ -49,7 +77,7 @@ class Application(mainclass):
         subject=None,
     ):
         try:
-            display_name = self.code_to_str(id)
+            display_name = code_to_str(id)
             self.rigs_gui[id] = task_gui(
                 id,
                 session_info=session_info,
@@ -68,79 +96,144 @@ class Application(mainclass):
             self.main_gui.tabs.setCurrentIndex(0)
             del self.rigs_gui[id]
 
-    def start_experiment(self):
-        """
-        Performing basic checks. Remainder functionality to be written by child class
-        """
-
-        subject_name = self.main_gui.subject.toPlainText().upper()
-        subject_weight = self.main_gui.subject_weight.toPlainText()
-        task_module = self.main_gui.task_module.currentText()
-        task_phase = self.main_gui.task_phase.currentText()
-        experiment_rig = self.main_gui.experiment_rig.currentText()
-
-        if subject_name == "":
-            msg = QtWidgets.QMessageBox()
-            msg.setText("Enter Subject ID")
-            msg.setWindowTitle("Error")
-            msg.exec_()
-            return None
-
-        # for testing purposes allowing to proceed if subject name is 'XXX'
-        elif subject_name == "XXX":
-            subject_weight = "0"
-
-        if subject_weight == "":
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
-            msg.setText("Enter Subject Weight")
-            msg.setWindowTitle("Error")
-            msg.exec_()
-            return None
-
-        if experiment_rig == "None":
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
-            msg.setText("Select Experiment Rig")
-            msg.setWindowTitle("Error")
-            msg.exec_()
-            return None
-
-        session_info = OmegaConf.create(
-            {
-                "subject_name": subject_name,
-                "subject_weight": float(subject_weight),
-                "task_module": self.str_to_code(task_module),
-                "task_phase": self.str_to_code(task_phase),
-                "experiment_rig": self.str_to_code(experiment_rig),
-            }
-        )
-
-        return session_info
-
-    def clear_variables(self):
-        self.main_gui.subject.clear()
-        self.main_gui.subject_weight.clear()
-        self.main_gui.task_module.setCurrentIndex(0)
-        self.main_gui.task_phase.setCurrentIndex(0)
-        self.main_gui.experiment_rig.setCurrentIndex(0)
-
-    def calibrate_reward(self):
-        experiment_rig = self.main_gui.experiment_rig.currentText()
-        if experiment_rig in ["None"]:  # , "Rig Test"]:
-            return
-        else:
-            return self.str_to_code(experiment_rig)
-
     def message_from_taskgui(self, message):
         pass
 
     def message_to_taskgui(self, value):
         self.rigs_gui[value["pilot"]].comm_to_taskgui.emit(value)
 
+    ##################### start experiment functions #####################
+    def clear_variables(self):
+        self.main_gui.subject_name.clear()
+        self.main_gui.subject_weight.clear()
+        self.main_gui.protocol.setCurrentIndex(0)
+        self.main_gui.experiment.setCurrentIndex(0)
+        self.main_gui.rig_id.setCurrentIndex(0)
+        self.main_gui.response_mode.setCurrentIndex(0)
+        self.main_gui.right_prior.setValue(50)
+
+    def start_experiment(self):
+        self.verify_session_info()
+
+    def verify_session_info(self):
+        """
+        Performing basic checks. Remainder functionality to be written by child class
+        """
+        subject_name = self.main_gui.subject_name.toPlainText().upper()
+        subject_weight = self.main_gui.subject_weight.toPlainText()
+        protocol = self.main_gui.protocol.currentText()
+        experiment = self.main_gui.experiment.currentText()
+        rig_id = self.main_gui.rig_id.currentText()
+
+        if subject_name == "":
+            self.critical_message("Enter Subject ID")
+            return None
+
+        elif not Path(Path(prefs.get("DATADIR"), subject_name)).exists():
+            self.critical_message(
+                f"'{subject_name}' does not exist. Please create new subject."
+            )
+            self.clear_variables()
+            return None
+
+        if subject_weight == "":
+            self.critical_message("Enter Subject Weight")
+            return None
+
+        if protocol == "SELECT":
+            self.critical_message("Select Protocol")
+            return None
+
+        if experiment == "SELECT":
+            self.critical_message("Select Experiment")
+            return None
+
+        if rig_id == "SELECT":
+            self.critical_message("Select Rig")
+            return None
+
+        session_info = OmegaConf.create(
+            {
+                "subject_name": subject_name,
+                "subject_weight": float(subject_weight),
+                "rig_id": str_to_code(rig_id),
+                "protocol": str_to_code(protocol),
+                "experiment": str_to_code(experiment),
+            }
+        )
+        return session_info
+
+    ##################### new subject functions #####################
+    def show_subject_form(self):
+        self.clear_variables()
+        self.new_subject_window.show()
+        self.new_subject_window.raise_()
+
+    def create_new_subject(self):
+        subject_name = self.new_subject_form.name.toPlainText().upper()
+        subject_identification = self.new_subject_form.identification.toPlainText()
+        subject_housing = self.new_subject_form.housing.toPlainText()
+        subject_dob = self.new_subject_form.dob.selectedDate().toString("yyyy-MM-dd")
+
+        if subject_name.strip() == "":
+            self.critical_message("Please Enter Subject ID")
+            return None
+
+        # check if subject already exists
+        if Path(Path(prefs.get("DATADIR"), subject_name)).exists():
+            self.critical_message(f"{subject_name} already exists")
+            return None
+
+        # create subject directory
+        subject_dir = Path(prefs.get("DATADIR"), subject_name)
+        subject_dir.mkdir(parents=True, exist_ok=True)
+        data_dir = Path(subject_dir, "data")
+        data_dir.mkdir(parents=True, exist_ok=True)
+        # create subject info file
+        info_dict = {
+            "Name": subject_name,
+            "Identification": "N/A"
+            if subject_identification == ""
+            else subject_identification,
+            "subject_dob": subject_dob,
+            "subject_housing": "N/A" if subject_housing == "" else subject_housing,
+        }
+        with open(Path(subject_dir, "info.yaml"), "w") as file:
+            yaml.dump(info_dict, file, default_flow_style=False)
+        # create subject history file
+        header = [
+            "date",
+            "baseling_weight",
+            "start_weight",
+            "end_weight",
+            "rig_id",
+            "protocol",
+            "experiment",
+            "session",
+            "session_uuid",
+        ]
+        with open(Path(subject_dir, "history.csv"), "w") as file:
+            writer = csv.writer(file)
+            writer.writerow(header)
+
+        # let user know subject was created
+        msg = QtWidgets.QMessageBox()
+        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setText(f"{subject_name} created!")
+        msg.setWindowTitle("Success")
+        msg.exec_()
+
+        # clear subject window
+        self.new_subject_form.name.clear()
+        self.new_subject_form.identification.clear()
+        self.new_subject_form.housing.clear()
+        self.new_subject_form.dob.setSelectedDate(QtCore.QDate())
+        self.new_subject_window.hide()
+        self.main_gui.subject_name.setText(subject_name)
+
 
 if __name__ == "__main__":
-    from protocols.random_dot_motion.gui.task_gui import TaskGUI
+    from protocols.random_dot_motion.core.gui.task_gui import TaskGUI
 
     app = QtWidgets.QApplication(sys.argv)
     window = Application()
