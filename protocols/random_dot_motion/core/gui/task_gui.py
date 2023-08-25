@@ -8,7 +8,9 @@ import pyqtgraph.exporters
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
-Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")
+Ui_summary, summaryclass = uic.loadUiType(
+    "protocols/random_dot_motion/core/gui/summary.ui"
+)
 camera_index = 0
 
 
@@ -356,6 +358,8 @@ class TaskGUI(rigclass):
                 / self.summary_data["baseline_weight"],
                 2,
             )
+            self.summary_data["comments"] = self.summary.comments.toPlainText()
+
             self.rig.close_experiment.show()
             self.summary_window.hide()
 
