@@ -78,40 +78,6 @@ class Subject:
         with open(Path(self.dir, file_name), mode) as file:
             yield file
 
-    ############################ subject functions ############################
-    # def create_new_subject(self, info_dict: dict) -> None:
-    #     # create subject directory
-    #     self.dir.mkdir(parents=True, exist_ok=True)
-    #     self.data_dir.mkdir(parents=True, exist_ok=True)
-    #     # create subject info file
-    #     info_dict = {
-    #         "Name": info_dict.subject_name,
-    #         "Identification": "N/A"
-    #         if info_dict.subject_identification == ""
-    #         else info_dict.subject_identification,
-    #         "subject_dob": info_dict.subject_dob,
-    #         "subject_housing": "N/A"
-    #         if info_dict.subject_housing == ""
-    #         else info_dict.subject_housing,
-    #     }
-    #     with open(Path(self.dir, "info.yaml"), "w") as file:
-    #         yaml.dump(info_dict, file, default_flow_style=False)
-    #     # create subject history file
-    #     header = [
-    #         "date",
-    #         "baseling_weight",
-    #         "start_weight",
-    #         "end_weight",
-    #         "rig_id",
-    #         "protocol",
-    #         "experiment",
-    #         "session",
-    #         "session_uuid",
-    #     ]
-    #     with open(Path(self.dir, "history.csv"), "w") as file:
-    #         writer = csv.writer(file)
-    #         writer.writerow(header)
-
     def import_subject_biography(self):
         # read from yaml files
         try:
