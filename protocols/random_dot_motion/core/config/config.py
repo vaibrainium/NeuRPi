@@ -33,9 +33,11 @@ TASK = {
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": 0.500,
-                "incorrect": lambda dur: 0.5 + (25 * (np.exp(-4 * dur))),
-                "invalid": lambda dur: 0.5 + (25 * (np.exp(-4 * dur))),
+                "correct": lambda response_time: 0.500,
+                "incorrect": lambda response_time: 0.5
+                + (25 * (np.exp(-4 * response_time))),
+                "invalid": lambda response_time: 0.5
+                + (25 * (np.exp(-4 * response_time))),
             },
         },
     },
@@ -43,17 +45,17 @@ TASK = {
         "coherences": {
             "tag": "List of all coherences used in study",
             "type": "list",
-            "value": [100, 72, 36, 18, 9, 0],
+            "value": np.array([100, 72, 36, 18, 9, 0]),
         },
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "list",
-            "value": [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100],
+            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
         },
-        "coherence_level": {
-            "tag": "Level of difficulty for current block",
+        "active_coherences": {
+            "tag": "Signed coherences to be used withough graduation",
             "type": "int",
-            "value": 2,
+            "value": np.array([-100, -72, 72, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
@@ -63,10 +65,10 @@ TASK = {
     },
     "bias_correction": {
         "repeat_threshold": {
-            "active_correction": 100,
-            "passive_correction": 100,
-            "rolling_window": 10,
+            "active": 100,
+            "passive": 35,
         },
+        "rolling_window": 10,
     },
 }
 

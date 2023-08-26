@@ -388,8 +388,8 @@ class TaskGUI(rigclass):
         if "trial_counters" in value.keys():
             self.update_trials(value["trial_counters"])
 
-        if "stimulus_pars" in value.keys():
-            self.update_stimulus(value["stimulus_pars"])
+        if "coherence" in value.keys():
+            self.update_stimulus(value["coherence"])
 
         if "plots" in value.keys():
             self.update_plots(value["plots"])
@@ -448,8 +448,8 @@ class TaskGUI(rigclass):
         self.rig.incorrect_trials.setText(str(value["incorrect"]))
         self.rig.noresponse_trials.setText(str(value["noresponse"]))
 
-    def update_stimulus(self, value):
-        self.rig.current_stimulus.setText(str(value["coherence"]))
+    def update_stimulus(self, coherence):
+        self.rig.current_stimulus.setText(str(coherence))
 
     def update_plots(self, value):
         # updating running accuracy
