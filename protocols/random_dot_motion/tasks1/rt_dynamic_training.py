@@ -14,7 +14,7 @@ from NeuRPi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
 from protocols.random_dot_motion.core.hardware.hardware_manager import \
     HardwareManager
-from protocols.random_dot_motion.tasks.rt_task import RTTask
+from protocols.random_dot_motion.tasks.core.rt_task import RTTask
 
 #TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 #TODO: 2. Make reward adjustment for all invalid trials including repeat trials

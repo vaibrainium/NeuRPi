@@ -235,14 +235,18 @@ class Pilot:
 
         # import all required modules
         try:        
-            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.hardware.hardware_manager")
-            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.tasks.{self.session_info.experiment}")
-            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.stimulus.{self.session_info.experiment}")
             
             self.modules = {}
-            self.modules["task"] = task_manager_file.Task
+
+            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.core.hardware.hardware_manager")
             self.modules["hardware"] = hardware_manager_file.HardwareManager
+
+            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.tasks.")
+            self.modules["task"] = task_manager_file.Task
+
+            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.stimulus_display")
             self.modules["stimulus"] = stimulus_manager_file.StimulusDisplay
+            
         except ImportError as e:
             self.logger.exception(f"Could not import module: {e}")
                         
@@ -251,14 +255,33 @@ class Pilot:
         Current task requires display hardware. Import display module and start display process.
         
         """
-        # stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.stimulus.{self.session_info.experiment}")
-        # display = stimulus_manager_file.StimulusDisplay(
+        # TODO: In future version, change mulitprocessing queue to zmq queue for better performance.
+        # # Create a ZeroMQ context
+        # context = zmq.Context()
+
+        # # Create a PUSH socket for sending data to the display process
+        # out_socket = context.socket(zmq.PUSH)
+        # out_socket.bind("tcp://localhost:5555")  # Replace with your desired endpoint
+
+        # # Create a PULL socket for receiving data from the display process
+        # in_socket = context.socket(zmq.PULL)
+        # in_socket.connect("tcp://localhost:5555")  # Connect to the same endpoint
+
+        
+        # display = StimulusDisplay(stimulus_configuration=config, in_socket=in_socket, out_socket=out_socket)
+
         display = StimulusDisplay(
             stimulus_configuration=config,
             in_queue=in_queue,
             out_queue=out_queue,
         )
         display.start()
+
+        
+        # # Don't forget to close and destroy sockets when done
+        # in_socket.close()
+        # out_socket.close()
+        # context.term()
 
     def run_task(self, task_params):
         """

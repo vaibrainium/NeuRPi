@@ -296,8 +296,6 @@ if __name__ == "__main__":
     #    lick = a.read_licks()
     ## print(2)
 
-    # Reward Calibration
-    import time
 
     num_pulses = 10
     num_pulses = input()
