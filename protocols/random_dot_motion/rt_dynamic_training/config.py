@@ -42,6 +42,26 @@ TASK["epochs"]["stimulus"]["passive_viewing"] = lambda coh_level: pearson3.rvs(
     skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1
 )[0]
 
+TASK["epochs"]["reinforcement"] = (
+    {
+        "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
+        "durations": {
+            "correct": lambda response_time: {
+                "duration": 0.300,
+                "delay": 0.000,
+            },
+            "incorrect": lambda response_time: {
+                "duration": 1.000,
+                "delay": 25 * (np.exp(-4 * response_time)),
+            },
+            "invalid": lambda response_time: {
+                "duration": 1.000,
+                "delay": 25 * (np.exp(-4 * response_time)),
+            },
+        },
+    },
+)
+
 GRADUATION = {
     "direction": {
         "tag": "Direction of graduation. 0: 'forward' or 1:'forward and backward'",

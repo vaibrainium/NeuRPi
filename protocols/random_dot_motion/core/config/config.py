@@ -18,27 +18,18 @@ TASK = {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
             "min_viewing": 0.3,
+            # TODO: move passive_viewing to free reward and rt dynamic training as this is not generic to all stages
             "passive_viewing": lambda coh_level: pearson3.rvs(
                 skew=0.6, loc=4.5, scale=1.5, size=1
             )[0],
         },
         "reinforcement": {
             "tag": "Reinforcement epoch",
-            "duration": {
-                "correct": 0.500,
-                "incorrect": 1.500,
-                "invalid": 1.500,
-            },
+            "duration": 0,
         },
         "intertrial": {
             "tag": "Intertrial epoch",
-            "duration": {
-                "correct": lambda response_time: 0.500,
-                "incorrect": lambda response_time: 0.5
-                + (25 * (np.exp(-4 * response_time))),
-                "invalid": lambda response_time: 0.5
-                + (25 * (np.exp(-4 * response_time))),
-            },
+            "duration": 0.500,
         },
     },
     "stimulus": {
@@ -79,18 +70,10 @@ STIMULUS = {
             "images": None,
             "videos": None,
             "audios": {
-                "fixation_tone": Path(
-                    "protocols/random_dot_motion/stimulus/audio/fixation_tone.wav"
-                ),
-                "correct_tone": Path(
-                    "protocols/random_dot_motion/stimulus/audio/correct_tone.wav"
-                ),
-                "incorrect_tone": Path(
-                    "protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav"
-                ),
-                "stimulus_tone": Path(
-                    "protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav"
-                ),
+                "fixation_tone": "protocols/random_dot_motion/stimulus/audio/fixation_tone.wav",
+                "correct_tone": "protocols/random_dot_motion/stimulus/audio/correct_tone.wav",
+                "incorrect_tone": "protocols/random_dot_motion/stimulus/audio/incorrect_tone.wav",
+                "stimulus_tone": "protocols/random_dot_motion/stimulus/audio/stimulus_tone.wav",
             },
         },
     },
@@ -108,13 +91,14 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 420,
+                    "dot_vel": 350,  # 50 degrees/sec
                     "dot_lifetime": 30,
                 },
                 "audio": "stimulus_tone",
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
+                "background_color": (255, 255, 255),
                 "audio": {
                     "correct": "correct_tone",
                     "incorrect": "incorrect_tone",
@@ -124,9 +108,7 @@ STIMULUS = {
             "update_reinforcement": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
-            "initiate_intertrial": {
-                "background_color": (255, 255, 255),  # (160,160,160)
-            },
+            "initiate_intertrial": {"background_color": (100, 100, 100)},
         },
     },
     "task_epochs": {
@@ -149,7 +131,7 @@ STIMULUS = {
             "reinforcement_epoch": {
                 "clear_queue": False,
                 "init_func": "initiate_reinforcement",
-                "update_func": "update_reinforcement",
+                "update_func": None,  # "update_reinforcement",
             },
             "must_respond_epoch": {
                 "clear_queue": False,
