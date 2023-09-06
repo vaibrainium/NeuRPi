@@ -471,6 +471,19 @@ p, li { white-space: pre-wrap; }
    </widget>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>subject_name</tabstop>
+  <tabstop>subject_weight</tabstop>
+  <tabstop>rig_id</tabstop>
+  <tabstop>protocol</tabstop>
+  <tabstop>experiment</tabstop>
+  <tabstop>response_mode</tabstop>
+  <tabstop>right_prior</tabstop>
+  <tabstop>start_experiment</tabstop>
+  <tabstop>create_new_subject</tabstop>
+  <tabstop>calibrate_reward</tabstop>
+  <tabstop>tabs</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
