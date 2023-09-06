@@ -38,10 +38,10 @@ class Subject(BaseSubject):
         session_info=None,
         session_config=None,
     ) -> None:
-        super().__init__(name=session_info.name)
+        super().__init__(session_info.subject_name)
 
         # Initializing subject specific configuration
-        self.start_weight = session_info.weight
+        self.start_weight = session_info.subject_weight
         self.protocol = session_info.protocol
         self.experiment = session_info.experiment
         self.session_config = session_config
@@ -251,3 +251,23 @@ class Subject(BaseSubject):
         except Exception as e:
             print(e)
             pass
+
+
+
+if __name__ == "__main__":
+    import sys
+
+    from omegaconf import OmegaConf
+
+    session_info = {
+        "subject_name": "test",
+        "subject_weight": 0,
+        "protocol": 0,
+        "experiment": 0,
+    }
+
+    # convert session_info dict to omegaconf
+    session_info = OmegaConf.create(session_info)
+    
+    a = Subject(session_info=session_info)
+    b = 0

@@ -203,7 +203,7 @@ class Application(mainclass):
         # create subject history file
         header = [
             "date",
-            "baseling_weight",
+            "baseline_weight",
             "start_weight",
             "end_weight",
             "rig_id",

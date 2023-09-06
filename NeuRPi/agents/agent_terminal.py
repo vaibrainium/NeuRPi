@@ -231,6 +231,15 @@ class Terminal(Application):
             print(e)
 
     ######################## GUI related functions ########################
+    def code_to_str(self, var: str):
+        str_var = var.replace("_", " ")
+        str_var = str.title(str_var)
+        return str_var
+
+    def str_to_code(self, var: str):
+        code_var = var.replace(" ", "_")
+        code_var = code_var.lower()
+        return code_var
 
     def message_from_taskgui(self, message):
         if message["to"] == "main_gui":
@@ -286,7 +295,7 @@ class Terminal(Application):
 
         """
         subject_module = importlib.import_module(
-            f"protocols.{session_info.protocol}.data_model.subject"
+            f"protocols.{session_info.protocol}.core.data_model.subject"
         )
         self.subjects[session_info.subject_name] = subject_module.Subject(
             session_info=session_info,
@@ -328,7 +337,7 @@ class Terminal(Application):
 
                 # Start Task GUI and updating parameters from rig preferences
                 gui_module = importlib.import_module(
-                    f"protocols.{session_info.protocol}.gui.task_gui"
+                    f"protocols.{session_info.protocol}.core.gui.task_gui"
                 )
                 self.add_new_rig(
                     id=session_info.rig_id,
