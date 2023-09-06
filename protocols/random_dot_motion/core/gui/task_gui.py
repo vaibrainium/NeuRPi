@@ -469,13 +469,11 @@ class TaskGUI(rigclass):
 
         # updating psychometric function
         try:
-            coh, psych = [], []
-            for i, y in enumerate(value["psychometric_function"]):
-                if str(y) != "nan":
-                    coh.append(self.coherences[i])
-                    psych.append(y)
+            coherences = (value["psychometric_function"].keys(),)
+            psych = value["psychometric_function"].values()
+            self.rig.psychometric_plot.clear()
             self.rig.psychometric_plot.plot(
-                x=coh,
+                x=coherences,
                 y=psych,
                 pen="g",
                 symbol="o",
@@ -489,10 +487,12 @@ class TaskGUI(rigclass):
 
         # updating total distribution
         try:
+            coherences = value["total_trial_distribution"].keys()
+            trials = value["total_trial_distribution"].values()
             self.rig.trial_distribution.clear()
             bargraph = pg.BarGraphItem(
-                x=np.arange(len(self.coherences)),
-                height=value["total_trial_distribution"],
+                x=coherences,
+                height=trials,
                 width=0.6,
                 brush="w",
             )
@@ -502,13 +502,11 @@ class TaskGUI(rigclass):
 
         # updating reaction time distribution
         try:
-            coh, rt_dist = [], []
-            for i, y in enumerate(value["reaction_time_distribution"]):
-                if str(y) != "nan":
-                    coh.append(self.coherences[i])
-                    rt_dist.append(y)
+            coherences = value["reaction_time_distribution"].keys()
+            rt_dist = value["reaction_time_distribution"].values()
+            self.rig.rt_distribution.clear()
             self.rig.rt_distribution.plot(
-                x=coh,
+                x=coherences,
                 y=rt_dist,
                 pen="w",
                 symbol="o",
