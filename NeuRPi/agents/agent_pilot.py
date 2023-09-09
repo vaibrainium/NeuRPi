@@ -145,7 +145,7 @@ class Pilot:
             if "Display" in self.session_config.REQUIRED_HARDWARE:
                 stimulus_config = self.session_config.STIMULUS.copy()
                 value["msg_to_stimulus"] = mp.Queue()
-                value["queue_from_stimulus"] = mp.Queue()
+                value["msg_from_stimulus"] = mp.Queue()
 
                 self.display_process = mp.Process(
                     target=self.start_display,
@@ -153,12 +153,12 @@ class Pilot:
                         'StimulusDisplay': self.modules['stimulus'],
                         'config': stimulus_config,
                         'in_queue': value["msg_to_stimulus"],
-                        'out_queue': value["queue_from_stimulus"],
+                        'out_queue': value["msg_from_stimulus"],
                     }
                 )
                 self.display_process.start()
                 # wait for the display to start before starting the task process
-                message = value["queue_from_stimulus"].get(timeout=5)
+                message = value["msg_from_stimulus"].get(timeout=5)
                 if message != "display_connected":
                     raise TimeoutError("Display did not start in time")
                 else:
@@ -211,7 +211,7 @@ class Pilot:
 
         elif value["key"] == "HARDWARE":
             if self.task:
-                self.task.manage_hardware(value["value"])
+                self.task.handle_termianl_request(value["value"])
 
     ############################### SECONDARY FUNCTIONS ########################################
     def convert_str_to_module(self, module_string):
@@ -241,16 +241,16 @@ class Pilot:
             hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.core.hardware.hardware_manager")
             self.modules["hardware"] = hardware_manager_file.HardwareManager
 
-            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.tasks.")
+            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
             self.modules["task"] = task_manager_file.Task
 
-            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.stimulus_display")
-            self.modules["stimulus"] = stimulus_manager_file.StimulusDisplay
+            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.stimulus")
+            self.modules["stimulus"] = stimulus_manager_file.StimulusManager
             
         except ImportError as e:
             self.logger.exception(f"Could not import module: {e}")
                         
-    def start_display(self, StimulusDisplay, config, in_queue, out_queue):
+    def start_display(self, StimulusManager, config, in_queue, out_queue):
         """
         Current task requires display hardware. Import display module and start display process.
         
@@ -270,7 +270,7 @@ class Pilot:
         
         # display = StimulusDisplay(stimulus_configuration=config, in_socket=in_socket, out_socket=out_socket)
 
-        display = StimulusDisplay(
+        display = StimulusManager(
             stimulus_configuration=config,
             in_queue=in_queue,
             out_queue=out_queue,
@@ -342,7 +342,7 @@ class Pilot:
                                     # else:
                                 with open(file_path, "rb") as reader:
                                     value["session_files"][file_name] = reader.read()
-                            self.node.send("T", "SESSION_FILES", value)         
+                            self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})         
                         except:
                             self.logger.exception("Could not send files to terminal")    
                         break

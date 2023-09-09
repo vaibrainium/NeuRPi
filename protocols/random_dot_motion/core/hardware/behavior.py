@@ -35,25 +35,9 @@ class Behavior:
         # self.session_timer = session_timer
         # Starting acquisition process on different thread
         if not self.response_queue:
-            raise Warning(
-                "Starting behavior acquisition without monitoring for response"
-            )
+            raise Warning("Starting behavior acquisition without monitoring for response")
 
-        # self.thread = threading.Thread(
-        #     target=self._acquire,
-        #     args=(self.hardware_manager.hw_update_event,),
-        #     daemon=True,
-        # )
-        # self.thread.start()
-
-        self.process = mp.Process(
-            target=self._acquire,
-            args=(
-                self.response_block,
-                self.response_queue,
-            ),
-            daemon=True,
-        )
+        self.process = mp.Process(target=self._acquire, args=(self.response_block, self.response_queue,), daemon=True,)
         self.process.start()
 
     def _acquire(self, response_block=None, response_queue=None):

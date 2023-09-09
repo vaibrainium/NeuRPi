@@ -199,8 +199,7 @@ class HardwareManager(BaseHWManager):
         """
         duration = self.vol_to_dur(volume, "Left")
         self.hardware["Primary"].write(str(duration) + "reward_left")
-        print("Rewarded Left")
-        # raise Warning("Reward delivery needs to be implemented")
+        print(f"Rewarded Left with {volume} ul")
 
     def reward_right(self, volume):
         """
@@ -208,7 +207,7 @@ class HardwareManager(BaseHWManager):
         """
         duration = self.vol_to_dur(volume, "Right")
         self.hardware["Primary"].write(str(duration) + "reward_right")
-        print("Rewarded Right")
+        print(f"Rewarded Right with {volume} ul")
 
     def toggle_reward(self, spout):
         """

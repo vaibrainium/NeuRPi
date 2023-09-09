@@ -15,7 +15,7 @@ class Display:
     """
 
     def __init__(self, stimulus_configuration=None, in_queue=None, out_queue=None):
-        super(Display, self).__init__()
+        
         import pygame
 
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
@@ -47,8 +47,8 @@ class Display:
             for flag in self.display_config["flags"]:
                 self.flags |= getattr(self.pygame, flag)
         except:
-            self.flags = self.pygame.FULLSCREEN | self.pygame.SCALED | self.pygame.DOUBLEBUF | self.pygame.HWSURFACE | self.pygame.NOFRAME #| self.pygame.HWACCEL
-        
+            self.flags = self.pygame.FULLSCREEN | self.pygame.SCALED | self.pygame.DOUBLEBUF | self.pygame.HWSURFACE | self.pygame.NOFRAME
+
         self.clock = self.pygame.time.Clock()
         self.screen = None
         self.images = {}
@@ -99,7 +99,11 @@ class Display:
         except Exception as e:
             raise Exception(f"Cannot load media to display device. {e}")
 
-    def start(self):
+    def play_audio(self, audio_name):
+        self.pygame.mixer.stop()
+        self.audios[audio_name].play()
+
+    def _run(self):
         try:
             self.connect()
             self.load_media()

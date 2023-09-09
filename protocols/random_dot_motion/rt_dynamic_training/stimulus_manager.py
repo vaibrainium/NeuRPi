@@ -1,12 +1,7 @@
-from protocols.random_dot_motion.stimulus.display_manager import (
-    DisplayManager as BaseDisplayManager,
-)
-from protocols.random_dot_motion.stimulus.random_dot_motion import (
-    RandomDotMotion as BaseRDK,
-)
-
-
-class RandomDotMotion(BaseRDK):
+from protocols.random_dot_motion.core.stimulus.stimulus_manager import StimulusManager as core_StimulusManager
+from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion as core_RDK
+import multiprocessing as mp
+class RandomDotMotion(core_RDK):
     """
     Class for managing stimulus structure i.e., shape, size and location of the stimuli
 
@@ -18,7 +13,7 @@ class RandomDotMotion(BaseRDK):
         pass
 
 
-class StimulusDisplay(BaseDisplayManager):
+class StimulusManager(core_StimulusManager):
     """
     Class for diplaying stimulus
 
@@ -27,10 +22,10 @@ class StimulusDisplay(BaseDisplayManager):
 
     def __init__(
         self,
-        stimulus_manager=RandomDotMotion,
+        stimulus=RandomDotMotion,
         stimulus_configuration=None,
         in_queue=None,
         out_queue=None,
     ):
-        super().__init__(stimulus_manager, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
-        pass
+        super().__init__(stimulus, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
+
