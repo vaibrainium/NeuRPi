@@ -45,12 +45,12 @@ class Task:
     def __init__(
         self,
         stage_block=None,
-        protocol=None,
-        experiment=None,
+        protocol="random_dot_motion",
+        experiment="rt_dynamic_training",
         config=None,
         **kwargs,
     ):
-        self.protocol = protocol
+        self.protocol = protocol 
         self.experiment = experiment
         self.config = config
         self.__dict__.update(kwargs)
@@ -103,9 +103,7 @@ class Task:
 
 
     def start(self):
-        """
-        Starting required processes
-        """
+        """Starting required processes"""
         try:
             self.processes["behavior"].start()
             self.processes["stimulus"].start()
@@ -119,8 +117,6 @@ class Task:
         except Exception as e:
             print(f"Error in starting processes: {e}")
             raise e
-
-
 
     # Reward management from GUI
     def handle_terminal_request(self, message: dict):
@@ -251,7 +247,6 @@ if __name__ == "__main__":
         # Waiting for stage block to clear
         value["stage_block"].wait()
         
-        print(f"completed {data['trial_stage']}")
+        # print(f"completed {data['trial_stage']}")
         # print("stage block passed")
-
 
