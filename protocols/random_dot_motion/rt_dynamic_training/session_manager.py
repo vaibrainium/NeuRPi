@@ -202,6 +202,8 @@ class SessionManager:
                 self.trial_reward = self.full_reward_volume
             else:
                 self.trial_reward = self.full_reward_volume / 2
+        else:
+            self.trial_reward = None
 
         # making changes to typical reinforcement durations and reward based on training type and trial validity
         # if no response on passive/active-passive training assume correct trial durations and give half reward_volume
@@ -250,13 +252,12 @@ class SessionManager:
             self.trials_in_current_level += 1 # incrementing within level counter
             self.trial_counters["correction"] = 0 # resetting correction counter
         else:
-            # is passive correction is needed?
-            if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
-                # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-                self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias), 0.5)))
-                # Repeat probability to opposite side of bias
-                self.signed_coherence = self.target * np.abs(self.signed_coherence)
-                print(f"Correcting {np.mean(self.rolling_bias)} bias with {self.signed_coherence}")
+            # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
+            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias), 0.5)))
+            # Repeat probability to opposite side of bias
+            self.signed_coherence = self.target * np.abs(self.signed_coherence)
+            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" 
+                    f"Passive bias correction with: {self.signed_coherence}")
             # increment correction trial counter
             self.trial_counters["correction"] += 1
 
@@ -318,6 +319,7 @@ class SessionManager:
     ####################### between-trial methods #######################
     
     def end_of_trial_updates(self):
+
         # function to finalize current trial and set parameters for next trial
         # codify trial outcome
         if self.outcome == "correct":
@@ -341,18 +343,26 @@ class SessionManager:
                 self.trial_counters["incorrect"] += 1
 
         # check if next trial is correction trial
-        if self.outcome != "correct":
+        self.is_correction_trial = False
+        # if incorrect and above passive correction threshold
+        if self.outcome == 0 and np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
             self.is_correction_trial = True
-        if self.training_type < 2 and self.outcome=="noresponse":
-            self.is_correction_trial = False
+        # if no response and no passive training
+        if np.isnan(self.choice) and self.training_type >= 2:
+            self.is_correction_trial = True
         
+        # if responded, update rolling bias
+        if not np.isnan(self.choice):
+            self.rolling_bias[self.rolling_bias_index] = self.choice
+            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+
         # write trial data to file
         self.write_trial_data_to_file()
         # if valid update trial variables and send data to terminal
         if self.valid:
-            # update rolling bias
-            self.rolling_bias[self.rolling_bias_index] = self.choice
-            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+        #     # update rolling bias
+        #     self.rolling_bias[self.rolling_bias_index] = self.choice
+        #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
             # update rolling choice history
             idx = self.rolling_history_indices[str(self.signed_coherence)]
             self.rolling_history[str(self.signed_coherence)][idx] = self.outcome

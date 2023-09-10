@@ -136,7 +136,6 @@ class RTTask(TrialConstruct):
             "subject": self.config.SUBJECT["name"],
             "coherence": task_args["signed_coherence"],
         }
-        print("WAITING FOR STAGE BLOCK")
         self.stage_block.wait()
         return data
 
@@ -169,7 +168,7 @@ class RTTask(TrialConstruct):
         self.choice = self.response
 
         print(
-            f"Responded with {self.choice} in {self.response_time} secs for {task_args['coherence']} with target: {task_args['target']}"
+            f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}"
         )
 
         self.stage_block.wait()
@@ -212,13 +211,14 @@ class RTTask(TrialConstruct):
                 "targets": [task_args["reward_side"]],
                 "duration": None,
             }
-            # self.response_block.set()
-            # # wait for reward consumption
-            # self.must_respond_block.wait()
+            # wait for reward consumption
+            self.response_block.set()
+            self.must_respond_block.wait()
+            # reset must_respond_block
+            self.must_respond_block.clear()
 
         # waiting for reinforcement durations to be over
         self.stage_block.wait()
-        print("STAGE BLOCK PASSED")
 
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
@@ -267,6 +267,7 @@ class RTTask(TrialConstruct):
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"
         data["TRIAL_END"] = True
+
         return data
 
 if __name__ == "__main__":
