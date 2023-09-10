@@ -135,45 +135,25 @@ class Pilot:
             self.session_info = value["session_info"]
             self.subject_config = value["subject_config"]
             self.session_config = self.convert_str_to_module(value["session_config"])
-        except KeyError as e:
-            self.logger.exception(f"Missing required parameter: {e}")
-            return
+            self.session_config.SUBJECT = self.subject_config
+            # import task module
+            task_module = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
+            self.stage_block.clear()
+            self.task = task_module.Task(stage_block=self.stage_block, config=self.session_config, **value)
+            self.logger.debug("task initialized")
 
-        self.import_session_modules()
-
-        try:
-            if "Display" in self.session_config.REQUIRED_HARDWARE:
-                stimulus_config = self.session_config.STIMULUS.copy()
-                value["msg_to_stimulus"] = mp.Queue()
-                value["msg_from_stimulus"] = mp.Queue()
-
-                self.display_process = mp.Process(
-                    target=self.start_display,
-                    kwargs={
-                        'StimulusDisplay': self.modules['stimulus'],
-                        'config': stimulus_config,
-                        'in_queue': value["msg_to_stimulus"],
-                        'out_queue': value["msg_from_stimulus"],
-                    }
-                )
-                self.display_process.start()
-                # wait for the display to start before starting the task process
-                message = value["msg_from_stimulus"].get(timeout=5)
-                if message != "display_connected":
-                    raise TimeoutError("Display did not start in time")
-                else:
-                    self.logger.info("Display started")
-                
             threading.Thread(target=self.run_task, args=(value,)).start()
             self.state = "RUNNING"
             self.running.set()
             self.update_state()
 
-
+        except KeyError as e:
+            self.logger.exception(f"Missing required parameter: {e}")
         except Exception as e:
-           self.logger.exception(f"Could not start Task: {e}")
-           return
-
+            self.logger.exception(f"Could not initialize task: {e}")
+        
+        return
+        
     def l_stop(self, value):
         """
         Terminal requested to stop the task
@@ -224,66 +204,7 @@ class Pilot:
         exec(module_string, session_config.__dict__)
         return session_config
 
-
-    def import_session_modules(self):
-        """
-        Import task module and initialize hardware, stimulus and task managers.
-        Required for any task to run on the rig and should be called before starting the task.
-        """
-
-        # TODO: In future version, separate the move task phase one level up and keep all required modules inside for easier readability
-
-        # import all required modules
-        try:        
-            
-            self.modules = {}
-
-            hardware_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.core.hardware.hardware_manager")
-            self.modules["hardware"] = hardware_manager_file.HardwareManager
-
-            task_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
-            self.modules["task"] = task_manager_file.Task
-
-            stimulus_manager_file = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.stimulus")
-            self.modules["stimulus"] = stimulus_manager_file.StimulusManager
-            
-        except ImportError as e:
-            self.logger.exception(f"Could not import module: {e}")
-                        
-    def start_display(self, StimulusManager, config, in_queue, out_queue):
-        """
-        Current task requires display hardware. Import display module and start display process.
-        
-        """
-        # TODO: In future version, change mulitprocessing queue to zmq queue for better performance.
-        # # Create a ZeroMQ context
-        # context = zmq.Context()
-
-        # # Create a PUSH socket for sending data to the display process
-        # out_socket = context.socket(zmq.PUSH)
-        # out_socket.bind("tcp://localhost:5555")  # Replace with your desired endpoint
-
-        # # Create a PULL socket for receiving data from the display process
-        # in_socket = context.socket(zmq.PULL)
-        # in_socket.connect("tcp://localhost:5555")  # Connect to the same endpoint
-
-        
-        # display = StimulusDisplay(stimulus_configuration=config, in_socket=in_socket, out_socket=out_socket)
-
-        display = StimulusManager(
-            stimulus_configuration=config,
-            in_queue=in_queue,
-            out_queue=out_queue,
-        )
-        display.start()
-
-        
-        # # Don't forget to close and destroy sockets when done
-        # in_socket.close()
-        # out_socket.close()
-        # context.term()
-
-    def run_task(self, task_params):
+    def run_task(self):
         """
         start running task under new thread
         initiate the task, and progress through each stage of task with `task.stages.next`
@@ -291,18 +212,6 @@ class Pilot:
         waits for the task to clear `stage_block` between stages
 
         """
-        self.logger.debug("initialing task")
-        self.stage_block.clear()
-
-        self.config = self.session_config
-        self.config.SUBJECT = self.subject_config
-
-        self.task = self.modules['task'](
-            stage_block=self.stage_block, config=self.config, **task_params
-        )
-        self.logger.debug("task initialized")
-
-        # TODO: Initialize sending continuous data here
         self.logger.debug("Starting task loop")
         try:
             while True:
@@ -336,10 +245,6 @@ class Pilot:
                                 "session_files": {}
                             }
                             for file_name, file_path in self.config.FILES.items():
-                                    # if False: #"rolling_perf" in file_name:
-                                    #     with open(file_path, "rb") as reader:
-                                    #         value["session_files"][file_name] = pickle.load(reader)
-                                    # else:
                                 with open(file_path, "rb") as reader:
                                     value["session_files"][file_name] = reader.read()
                             self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})         
@@ -360,7 +265,6 @@ class Pilot:
             self.logger.debug("stopping task")
             try:
                 pass
-                # self.task.end_session()  
             except Exception as e:
                 self.logger.exception(f"got exception while stopping task: {e}")
             del self.task
