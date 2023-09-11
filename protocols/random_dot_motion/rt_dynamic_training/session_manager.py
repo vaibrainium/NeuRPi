@@ -391,20 +391,19 @@ class SessionManager:
                 )
 
             # update psychometric array
-            self.plot_vars["psych"][self.signed_coherence] = (
-                self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh
-            )
+            self.plot_vars["psych"][self.signed_coherence] = round(self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh, 2)
 
             # update total trial array
             self.plot_vars["trial_distribution"][self.signed_coherence] += 1
 
             # update reaction time array
             if np.isnan(self.plot_vars["response_time_distribution"][self.signed_coherence]):
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = self.response_time
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
             else:
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = (
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round((
                     ((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time
-                ) / tot_trials_in_coh
+                ) / tot_trials_in_coh,
+                2)
 
         trial_data = {
             "trial_counters": self.trial_counters,
