@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 from scipy.stats import pearson3
 
@@ -18,14 +20,14 @@ TASK = {
             "min_viewing": 0.3,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5, size=1)[0], # old free reward
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1, size=1)[0], # new free reward
-            "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0] # new rt dynamic
+            "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0],  # new rt dynamic
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.300,
-                "incorrect": lambda response_time: 1.000,
-                "noresponse": lambda response_time: 1.000,
+                "incorrect": lambda response_time: 0.300, #1.000,
+                "noresponse": lambda response_time: 0.300, #1.000,
             },
         },
         "delay": {
@@ -73,11 +75,11 @@ TASK = {
             "active": 100,
             "passive": 35,
         },
-        "rolling_window": 10,
+        "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 1,
+        "value": 2,
     },
 }
 
@@ -88,10 +90,10 @@ STIMULUS = {
             "images": None,
             "videos": None,
             "audios": {
-                "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone.wav",
+                "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
-                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/stimulus_tone.wav",
+                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
             },
         },
     },
@@ -112,15 +114,16 @@ STIMULUS = {
                     "dot_vel": 350,  # 50 degrees/sec
                     "dot_lifetime": 30,
                 },
-                "audio": "stimulus_tone",
+                "audio": None,  # "stimulus_tone",
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (255, 255, 255),
                 "audio": {
                     "correct": "correct_tone",
-                    "incorrect": "incorrect_tone",
-                    "invalid": "incorrect_tone",
+                    "incorrect": None,  # "incorrect_tone",
+                    "noresponse": None,  # "incorrect_tone",
+                    "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
@@ -181,6 +184,7 @@ DATAFILES = {
     "trial": "_trial.csv",
 }
 
+TASK["epochs"]["stimulus"]["passive_viewing"] = lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0]
 
 GRADUATION = {
     "direction": {

@@ -63,15 +63,16 @@ class SessionManager:
         self.active_coherences = self.config.TASK["stimulus"]["active_coherences"]["value"]
         self.active_coherence_indices = [np.where(self.full_coherences == value)[0][0] for value in self.active_coherences]
         # rolling performance
-        self.rolling_bias_index = 0
-        self.rolling_bias = np.zeros(self.config.TASK["bias_correction"]["rolling_window"])
         self.rolling_history_indices = self.config.SUBJECT["rolling_perf"]["history_indices"]
         self.rolling_history = self.config.SUBJECT["rolling_perf"]["history"]
         self.rolling_accuracy = self.config.SUBJECT["rolling_perf"]["accuracy"]
+        self.rolling_window = self.config.TASK["rolling_performance"]["rolling_window"]
         # bias
+        self.rolling_bias_index = 0
+        self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
+        self.rolling_bias = np.zeros(self.bias_window)
         self.passive_bias_correction_threshold = self.config.TASK["bias_correction"]["repeat_threshold"]["passive"]
         self.active_bias_correction_threshold = self.config.TASK["bias_correction"]["repeat_threshold"]["active"]
-        self.bias_window = self.config.TASK["bias_correction"]["rolling_window"]
         # graduation parameters
         self.trials_in_current_level = self.config.SUBJECT["rolling_perf"]["trials_in_current_level"]
         self.next_coh_level = self.current_coh_level
@@ -369,6 +370,7 @@ class SessionManager:
             self.rolling_history[str(self.signed_coherence)][idx] = self.outcome
             self.rolling_accuracy[str(self.signed_coherence)] = np.mean(self.rolling_history[str(self.signed_coherence)])
             self.rolling_history_indices[str(self.signed_coherence)] += 1
+            self.rolling_history_indices[str(self.signed_coherence)] = (self.rolling_history_indices[str(self.signed_coherence)] + 1) % self.rolling_window
 
             # update plot parameters
             if self.choice == -1:
