@@ -34,8 +34,8 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.000,
-                "incorrect": lambda response_time: 8 * (np.exp(-2 * response_time)),
-                "noresponse": lambda response_time: 8 * (np.exp(-2 * response_time)),
+                "incorrect": lambda response_time: 5 * (np.exp(-2 * response_time)),
+                "noresponse": lambda response_time: 5 * (np.exp(-2 * response_time)),
             },
         },
         "intertrial": {
@@ -75,7 +75,7 @@ TASK = {
             "active": 100,
             "passive": 35,
         },
-        "rolling_window": 10,
+        "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
@@ -122,6 +122,7 @@ STIMULUS = {
                 "audio": {
                     "correct": "correct_tone",
                     "incorrect": None,  # "incorrect_tone",
+                    "noresponse": None,  # "incorrect_tone",
                     "invalid": None,  # "incorrect_tone",
                 },
             },

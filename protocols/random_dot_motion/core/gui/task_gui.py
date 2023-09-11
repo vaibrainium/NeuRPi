@@ -39,12 +39,18 @@ class TaskGUI(rigclass):
         self.summary_data = None
 
         # main rig window
-        self.rig = Ui_rig()
-        self.rig.setupUi(self)
-        self.rig.close_experiment.hide()
-        self.rig.subject_id.setText(self.subject.name)
-        self.rig.protocol.setText(code_to_str(self.protocol))
-        self.rig.experiment.setText(code_to_str(self.experiment))
+        try:
+            self.rig = Ui_rig()
+            self.rig.setupUi(self)
+            self.rig.close_experiment.hide()
+            self.rig.subject_id.setText(self.subject.name)
+            self.rig.baseline_weight.setText(str(self.subject.baseline_weight))
+            self.rig.protocol.setText(code_to_str(self.protocol))
+            self.rig.experiment.setText(code_to_str(self.experiment))
+        except Exception as e:
+            print(e)
+            print("Error: Could not load rig UI.")
+            sys.exit(1)
 
         # summary dialogue
         self.summary_window = QtWidgets.QDialog()
@@ -115,15 +121,14 @@ class TaskGUI(rigclass):
         self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         # Total Trial Plot
         self.rig.trial_distribution.setTitle("Total Trials", color="r", size="10pt")
-        # self.rig.trial_distribution.setXRange(0, len(self.coherences))
         self.rig.trial_distribution.setXRange(-100, 100)
         self.rig.trial_distribution.setInteractive(False)
         self.rig.trial_distribution.setLabel("left", "Trials")
         self.rig.trial_distribution.setLabel("bottom", "Coherence")
         self.rig.trial_distribution.showGrid(x=False, y=True, alpha=0.6)
-        ticks = [list(self.coherences), list(self.coherences)]
-        self.rig.trial_distribution.getAxis("bottom").setTicks(ticks)
+        self.rig.trial_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         # Reaction Time Plot
+        self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         self.rig.rt_distribution.setTitle("Reaction Times", color="r", size="10pt")
         self.rig.rt_distribution.setXRange(-100, 100)
         self.rig.rt_distribution.setInteractive(False)
@@ -403,7 +408,8 @@ class TaskGUI(rigclass):
         try:
             value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
             coherences, psych = zip(*sorted(value["psychometric_function"].items()))
-            self.rig.psychometric_plot.plot(x=coherences, y=psych, pen="g", symbol="o", symbolPen="g", symbolBrush=0.2, name="Psych", clear=True,)
+            if len(coherences) > 0:
+                self.rig.psychometric_plot.plot(x=coherences, y=psych, pen="g", symbol="o", symbolPen="g", symbolBrush=0.2, name="Psych", clear=True,)
         except:
             pass
         # updating total distribution
@@ -411,15 +417,17 @@ class TaskGUI(rigclass):
             value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
             coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
-            bargraph = pg.BarGraphItem(x=list(coherences), height=list(trials), width=5, brush="w",)
-            self.rig.trial_distribution.addItem(bargraph)
+            if len(coherences) > 0:
+                bargraph = pg.BarGraphItem(x=list(coherences), height=list(trials), width=5, brush="w",)
+                self.rig.trial_distribution.addItem(bargraph)
         except:
             pass
         # updating reaction time distribution
         try:
             value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
             coherences, rt_dist = zip(*sorted(value["response_time_distribution"].items()))
-            self.rig.rt_distribution.plot(x=coherences, y=rt_dist, pen="w", symbol="o", symbolPen="w", symbolBrush=0.2, name="RT", clear=True,)
+            if len(coherences) > 0:
+                self.rig.rt_distribution.plot(x=coherences, y=rt_dist, pen="w", symbol="o", symbolPen="w", symbolBrush=0.2, name="RT", clear=True,)
         except:
             pass
 
