@@ -265,20 +265,20 @@ class SessionManager:
         # deciding next_coherence level based on rolling accuracy. 
         # forward level change
         #TODO: swap the logic between "if" and "while" to make it more straightforward
-        #TODO: eventually move to direct key value comparison between two dictionaries
+        #TODO: implement direct key value comparison between two dictionaries
         while self.next_coh_level < len(self.accuracy_thresholds):
-            if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.current_coh_level]) and (
+            if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.next_coh_level]) and (
                 self.trials_in_current_level >= self.accuracy_thresholds[self.next_coh_level]
             ):
-                self.next_coh_level = self.current_coh_level + 1
+                self.next_coh_level = self.next_coh_level + 1
                 self.trials_in_current_level = 0
             else:
                 break
         # backward level change
         if self.graduation_direction == 0:
-            while self.next_coh_level > 1:
+            while self.next_coh_level > 2:
                 if any(list(self.rolling_accuracy.values()) < self.accuracy_thresholds[self.next_coh_level - 1]):
-                    self.next_coh_level = self.current_coh_level - 1
+                    self.next_coh_level = self.next_coh_level - 1
                     self.trials_in_current_level = 0
                 else:
                     break
