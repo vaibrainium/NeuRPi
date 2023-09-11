@@ -10,14 +10,14 @@ class Neurpi:
         super().__init__(*args, **kwargs)
         self.terminal = Terminal()
 
-        value = {
-            "pilot": "rig_test",
-            "ip": "pi1",
-            "state": "IDLE",
-            "prefs": None,  # prefs.get(),
-        }
-        self.terminal.l_handshake(value)
-        self.terminal.l_state(value)
+        # value = {
+        #     "pilot": "rig_test",
+        #     "ip": "pi1",
+        #     "state": "IDLE",
+        #     "prefs": None,  # prefs.get(),
+        # }
+        # self.terminal.l_handshake(value)
+        # self.terminal.l_state(value)
 
 
 if __name__ == "__main__":

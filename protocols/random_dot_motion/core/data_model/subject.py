@@ -48,7 +48,7 @@ class Subject(BaseSubject):
         self.start_weight = session_info.subject_weight
         self.end_weight = None
         self.baseline_weight = self.start_weight if self.history.baseline_weight.empty else self.history.baseline_weight.iloc[-1]
-        self.prct_weight = self.start_weight / self.baseline_weight * 100
+        self.prct_weight = round((self.start_weight / self.baseline_weight * 100),2)
         self.protocol = session_info.protocol
         self.experiment = session_info.experiment
         self.experiment_dir = Path(self.data_dir, self.protocol, self.experiment)

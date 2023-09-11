@@ -86,6 +86,8 @@ class Application(mainclass):
             tab_index = self.main_gui.tabs.addTab(self.rigs_gui[id], display_name)
             self.main_gui.tabs.setCurrentIndex(tab_index)
             self.rigs_gui[id].comm_from_taskgui.connect(self.message_from_taskgui)
+            # clearing variables from control panel
+            self.clear_variables()
         except:
             print("COULD NOT ADD RIG GUI")
 
