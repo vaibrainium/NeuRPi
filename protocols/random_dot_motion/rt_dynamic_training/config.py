@@ -26,8 +26,8 @@ TASK = {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.300,
-                "incorrect": lambda response_time: 1.000,
-                "noresponse": lambda response_time: 1.000,
+                "incorrect": lambda response_time: 0.300, #1.000,
+                "noresponse": lambda response_time: 0.300, #1.000,
             },
         },
         "delay": {
@@ -90,10 +90,10 @@ STIMULUS = {
             "images": None,
             "videos": None,
             "audios": {
-                "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone.wav",
+                "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
-                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/stimulus_tone.wav",
+                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
             },
         },
     },

@@ -115,12 +115,13 @@ class TaskGUI(rigclass):
         self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         # Total Trial Plot
         self.rig.trial_distribution.setTitle("Total Trials", color="r", size="10pt")
-        self.rig.trial_distribution.setXRange(0, len(self.coherences))
+        # self.rig.trial_distribution.setXRange(0, len(self.coherences))
+        self.rig.trial_distribution.setXRange(-100, 100)
         self.rig.trial_distribution.setInteractive(False)
         self.rig.trial_distribution.setLabel("left", "Trials")
         self.rig.trial_distribution.setLabel("bottom", "Coherence")
         self.rig.trial_distribution.showGrid(x=False, y=True, alpha=0.6)
-        ticks = [list(zip(range(len(self.coherences)), list(self.coherences)))]
+        ticks = [list(self.coherences), list(self.coherences)]
         self.rig.trial_distribution.getAxis("bottom").setTicks(ticks)
         # Reaction Time Plot
         self.rig.rt_distribution.setTitle("Reaction Times", color="r", size="10pt")
@@ -392,67 +393,33 @@ class TaskGUI(rigclass):
     def update_plots(self, value):
         # updating running accuracy
         try:
-            self.rig.accuracy_plot.plot(
-                x=list(list(zip(*value["running_accuracy"]))[0]),
-                y=list(list(zip(*value["running_accuracy"]))[1]),
-                pen=None,
-                symbol="o",
-                symbolPen="w",
-                symbolBrush=0.2,
-                name="Accuracy",
-                clear=True,
-            )
+            self.rig.accuracy_plot.plot(x=list(list(zip(*value["running_accuracy"]))[0]), y=list(list(zip(*value["running_accuracy"]))[1]),
+                                        pen=None, symbol="o", symbolPen="w", symbolBrush=0.2, name="Accuracy", clear=True,)
         except:
             pass
+            
 
         # updating psychometric function
         try:
-            coherences = (value["psychometric_function"].keys(),)
-            psych = value["psychometric_function"].values()
-            self.rig.psychometric_plot.clear()
-            self.rig.psychometric_plot.plot(
-                x=coherences,
-                y=psych,
-                pen="g",
-                symbol="o",
-                symbolPen="g",
-                symbolBrush=0.2,
-                name="Psych",
-                clear=True,
-            )
+            value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
+            coherences, psych = zip(*sorted(value["psychometric_function"].items()))
+            self.rig.psychometric_plot.plot(x=coherences, y=psych, pen="g", symbol="o", symbolPen="g", symbolBrush=0.2, name="Psych", clear=True,)
         except:
             pass
-
         # updating total distribution
-        try:
-            coherences = value["trial_distribution"].keys()
-            trials = value["trial_distribution"].values()
+        try:            
+            value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
+            coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
-            bargraph = pg.BarGraphItem(
-                x=coherences,
-                height=trials,
-                width=0.6,
-                brush="w",
-            )
+            bargraph = pg.BarGraphItem(x=list(coherences), height=list(trials), width=5, brush="w",)
             self.rig.trial_distribution.addItem(bargraph)
         except:
             pass
-
         # updating reaction time distribution
         try:
-            coherences = value["response_time_distribution"].keys()
-            rt_dist = value["response_time_distribution"].values()
-            self.rig.rt_distribution.clear()
-            self.rig.rt_distribution.plot(
-                x=coherences,
-                y=rt_dist,
-                pen="w",
-                symbol="o",
-                symbolPen="w",
-                symbolBrush=0.2,
-                name="RT",
-                clear=True,
-            )
+            value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
+            coherences, rt_dist = zip(*sorted(value["response_time_distribution"].items()))
+            self.rig.rt_distribution.plot(x=coherences, y=rt_dist, pen="w", symbol="o", symbolPen="w", symbolBrush=0.2, name="RT", clear=True,)
         except:
             pass
 
