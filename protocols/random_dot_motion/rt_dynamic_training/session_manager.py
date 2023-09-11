@@ -301,6 +301,7 @@ class SessionManager:
 
     def generate_block_schedule(self):
         self.block_schedule = (list(self.active_coherences) * self.repeats_per_block)
+        np.random.shuffle(self.block_schedule)
 
         # TODO: active bias correction needed?
         # swap coherence direction to unbiased side if coherence is above active threshold
