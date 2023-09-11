@@ -31,9 +31,7 @@ class Terminal(Application):
         # networking
         self.node = None
         self.networking = None
-        self.heartbeat_dur = (
-            10  # check every n seconds whether our pis are still around
-        )
+        self.heartbeat_dur = 10  # check every n seconds whether our pis are still around
 
         # data
         self.subjects = {}  # Dict of our open subject objects
@@ -265,19 +263,13 @@ class Terminal(Application):
         Returns:
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
         """
-        module_path = (
-            f"protocols.{session_info.protocol}.{session_info.experiment}.config"
-        )
+        module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.config"
         session_config = importlib.import_module(module_path)
 
-        session_config = importlib.import_module(
-            f"protocols.{session_info.protocol}.{session_info.experiment}.config"
-        )
+        session_config = importlib.import_module(f"protocols.{session_info.protocol}.{session_info.experiment}.config")
         file_path = Path(
             Path.cwd(),
-            Path(
-                f"protocols/{session_info.protocol}/{session_info.experiment}/config.py"
-            ),
+            Path(f"protocols/{session_info.protocol}/{session_info.experiment}/config.py"),
         )
         with open(file_path, "r") as f:
             string_session_config = f.read()
@@ -294,9 +286,7 @@ class Terminal(Application):
             subject (Subject): Subject object
 
         """
-        subject_module = importlib.import_module(
-            f"protocols.{session_info.protocol}.core.data_model.subject"
-        )
+        subject_module = importlib.import_module(f"protocols.{session_info.protocol}.core.data_model.subject")
         self.subjects[session_info.subject_name] = subject_module.Subject(
             session_info=session_info,
             session_config=session_config,
@@ -315,9 +305,7 @@ class Terminal(Application):
         if session_info:
             if self.pilots[session_info.rig_id]["state"] == "IDLE":
                 # Gathering session configuration
-                session_config, string_session_config = self.prepare_session_config(
-                    session_info
-                )
+                session_config, string_session_config = self.prepare_session_config(session_info)
                 # Initializing subject
                 subject_config = self.initiate_subject(session_info, session_config)
 
@@ -333,21 +321,18 @@ class Terminal(Application):
                         "session_config": string_session_config,
                         "subject_config": subject_config,
                     },
+                    flags={"NOLOG": True},
                 )
 
                 # Start Task GUI and updating parameters from rig preferences
-                gui_module = importlib.import_module(
-                    f"protocols.{session_info.protocol}.core.gui.task_gui"
-                )
+                gui_module = importlib.import_module(f"protocols.{session_info.protocol}.core.gui.task_gui")
                 self.add_new_rig(
                     id=session_info.rig_id,
                     task_gui=gui_module.TaskGUI,
                     session_info=session_info,
                     subject=self.subjects[session_info.subject_name],
                 )
-                self.rigs_gui[session_info.rig_id].set_rig_configuration(
-                    self.pilots[session_info.rig_id]["prefs"]
-                )
+                self.rigs_gui[session_info.rig_id].set_rig_configuration(self.pilots[session_info.rig_id]["prefs"])
 
                 # Waiting for rig to initiate hardware and start session
                 while not self.pilots[session_info.rig_id]["state"] == "RUNNING":

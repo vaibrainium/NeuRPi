@@ -2,8 +2,12 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
-    "python.formatting.provider": "none",
+    "python.formatting.provider": "black",
     "prettier.printWidth": 150,
-    "editor.wordWrapColumn": 150,
-    "html.format.wrapLineLength": 150
+    "editor.wordWrapColumn": 500,
+    "html.format.wrapLineLength": 500,
+    "black-formatter.args": [
+        "--line-length=150"
+    ],
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

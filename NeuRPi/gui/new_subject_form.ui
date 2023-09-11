@@ -208,6 +208,13 @@ color: rgb(255, 255, 255);</string>
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>name</tabstop>
+  <tabstop>dob</tabstop>
+  <tabstop>housing</tabstop>
+  <tabstop>identification</tabstop>
+  <tabstop>create_button</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

@@ -109,23 +109,20 @@ class Subject:
 
         Args:
             hist_dict (dict): Dictionary containing session information.
-                must contain keys: baseling_weight, start_weight, end_weight, protocol, experiment, session
+                must contain keys: baseline_weight, start_weight, end_weight, protocol, experiment, session, session_uuid (optional)
         """
         try:
-            hist_dict["date"] = hist_dict.get(
-                "date", time.strftime("%Y-%m-%d %H:%M:%S")
-            )
+            hist_dict["date"] = hist_dict.get("date", time.strftime("%Y-%m-%d %H:%M:%S"))
             hist_dict["session_uuid"] = hist_dict.get("session_uuid", self.session_uuid)
 
             new_row = pd.DataFrame([hist_dict]).reindex(columns=self.history.columns)
             if self.history.columns.equals(new_row.columns):
-                self._history = pd.concat([a.history, new_row], ignore_index=True)
+                self._history = pd.concat([self.history, new_row], ignore_index=True)
                 with open(Path(self.dir, "history.csv"), "w", newline="") as file:
-                    self._history.to_csv(file, index=False, lineterminator=None)
+                    # self._history.to_csv(file, index=False, lineterminator=None)
+                    self._history.to_csv(file, index=False)
             else:
-                raise ValueError(
-                    "History dict does not contain all required keys from history file"
-                )
+                raise ValueError("History dict does not contain all required keys from history file")
         except AttributeError:
             raise AttributeError("Subject history could not be updated")
 
@@ -135,7 +132,7 @@ if __name__ == "__main__":
     a = Subject(name)
 
     new_line = {
-        "baseling_weight": 0,
+        "baseline_weight": 0,
         "start_weight": 0,
         "end_weight": 0,
         "protocol": 0,

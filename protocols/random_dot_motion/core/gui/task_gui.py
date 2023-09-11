@@ -8,9 +8,7 @@ import pyqtgraph.exporters
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
-Ui_summary, summaryclass = uic.loadUiType(
-    "protocols/random_dot_motion/core/gui/summary.ui"
-)
+Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")
 camera_index = 0
 
 
@@ -76,24 +74,12 @@ class TaskGUI(rigclass):
         self.comm_to_taskgui.connect(self.update_gui)
         self.rig.reward_left.clicked.connect(lambda: self.reward("reward_left"))
         self.rig.reward_right.clicked.connect(lambda: self.reward("reward_right"))
-        self.rig.reward_volume.valueChanged.connect(
-            lambda: self.reward("update_reward")
-        )
-        self.rig.toggle_left_reward.clicked.connect(
-            lambda: self.reward("toggle_left_reward")
-        )
-        self.rig.toggle_right_reward.clicked.connect(
-            lambda: self.reward("toggle_right_reward")
-        )
-        self.rig.lick_threshold_left.valueChanged.connect(
-            lambda: self.lick_sensor("update_lick_threshold_left")
-        )
-        self.rig.lick_threshold_right.valueChanged.connect(
-            lambda: self.lick_sensor("update_lick_threshold_right")
-        )
-        self.rig.reset_lick_sensor.clicked.connect(
-            lambda: self.lick_sensor("reset_lick_sensor")
-        )
+        self.rig.reward_volume.valueChanged.connect(lambda: self.reward("update_reward"))
+        self.rig.toggle_left_reward.clicked.connect(lambda: self.reward("toggle_left_reward"))
+        self.rig.toggle_right_reward.clicked.connect(lambda: self.reward("toggle_right_reward"))
+        self.rig.lick_threshold_left.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_left"))
+        self.rig.lick_threshold_right.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_right"))
+        self.rig.reset_lick_sensor.clicked.connect(lambda: self.lick_sensor("reset_lick_sensor"))
         self.rig.pause_experiment.clicked.connect(self.pause_experiment)
         self.rig.stop_experiment.clicked.connect(self.stop_experiment)
         self.rig.close_experiment.clicked.connect(self.close_experiment)
@@ -104,12 +90,8 @@ class TaskGUI(rigclass):
     def set_rig_configuration(self, prefs={}):
         try:
             hardware = prefs.get("HARDWARE")
-            self.rig.lick_threshold_left.setValue(
-                hardware.Arduino.Primary.lick.threshold_left
-            )
-            self.rig.lick_threshold_right.setValue(
-                hardware.Arduino.Primary.lick.threshold_right
-            )
+            self.rig.lick_threshold_left.setValue(hardware.Arduino.Primary.lick.threshold_left)
+            self.rig.lick_threshold_right.setValue(hardware.Arduino.Primary.lick.threshold_right)
         except EOFError:
             pass
 
@@ -123,18 +105,14 @@ class TaskGUI(rigclass):
         self.rig.accuracy_plot.setLabel("left", "Accuracy")
         self.rig.accuracy_plot.setLabel("bottom", "Trial No")
         # Psychometric plots
-        self.rig.psychometric_plot.setTitle(
-            "Psychometric Function", color="r", size="10pt"
-        )
+        self.rig.psychometric_plot.setTitle("Psychometric Function", color="r", size="10pt")
         self.rig.psychometric_plot.setXRange(-100, 100)
         self.rig.psychometric_plot.setYRange(0, 1)
         self.rig.psychometric_plot.setInteractive(False)
         self.rig.psychometric_plot.setLabel("left", "Proportion of Right Choices")
         self.rig.psychometric_plot.setLabel("bottom", "Coherence")
         self.rig.psychometric_plot.showGrid(x=False, y=True, alpha=0.6)
-        self.rig.psychometric_plot.getAxis("bottom").setTicks(
-            [[(v, str(v)) for v in self.coherences]]
-        )
+        self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         # Total Trial Plot
         self.rig.trial_distribution.setTitle("Total Trials", color="r", size="10pt")
         self.rig.trial_distribution.setXRange(0, len(self.coherences))
@@ -151,9 +129,7 @@ class TaskGUI(rigclass):
         self.rig.rt_distribution.setLabel("left", "Reaction Time")
         self.rig.rt_distribution.setLabel("bottom", "Coherence")
         self.rig.rt_distribution.showGrid(x=False, y=True, alpha=0.6)
-        self.rig.rt_distribution.getAxis("bottom").setTicks(
-            [[(v, str(v)) for v in self.coherences]]
-        )
+        self.rig.rt_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
 
     def start_experiment(self):
         self.state = "RUNNING"
@@ -178,9 +154,7 @@ class TaskGUI(rigclass):
         self.session_timer.start(1000)
 
     def update_session_clock(self):
-        self.session_display_clock = (
-            time.time() - self.session_clock["start"] - self.session_clock["pause"]
-        )
+        self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
         self.rig.session_timer.display(int(self.session_display_clock))
 
     def stop_session_clock(self):
@@ -225,17 +199,13 @@ class TaskGUI(rigclass):
         If session is paused, resume it and send the corresponding singal to termianl.
         """
         if self.state == "RUNNING":
-            self.forward_signal(
-                {"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}}
-            )
+            self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}})
             self.rig.pause_experiment.setStyleSheet("background-color: green")
             self.rig.pause_experiment.setText("Resume")
             self.state = "PAUSED"
             self.pause_time = time.time()
         elif self.state == "PAUSED":
-            self.forward_signal(
-                {"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}}
-            )
+            self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}})
             self.rig.pause_experiment.setStyleSheet("background-color: rgb(255,170,0)")
             self.rig.pause_experiment.setText("Pause")
             self.state = "RUNNING"
@@ -249,17 +219,12 @@ class TaskGUI(rigclass):
 
     def create_summary_data(self, value):
         self.summary_data = {
-            "date": time.strftime(
-                "%b-%d-%Y", time.localtime(self.session_clock["start"])
-            ),
-            "phase": self.experiment,
+            "date": time.strftime("%b-%d-%Y", time.localtime(self.session_clock["start"])),
+            "experiment": self.experiment,
             "session": self.subject.session,
-            "start_time": time.strftime(
-                "%H:%M:%S", time.localtime(self.session_clock["start"])
-            ),
-            "end_time": time.strftime(
-                "%H:%M:%S", time.localtime(self.session_clock["end"])
-            ),
+            "session_uuid": self.subject.session_uuid,
+            "start_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["start"])),
+            "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
             "total_attempt": value["trial_counters"]["attempt"],
@@ -268,60 +233,36 @@ class TaskGUI(rigclass):
             "total_incorrect": value["trial_counters"]["incorrect"],
             "total_noresponse": value["trial_counters"]["noresponse"],
             "total_accuracy": round(value["plots"]["running_accuracy"][-1][1] * 100, 2),
-            "trial_distribution": value["plots"]["total_trial_distribution"],
+            "trial_distribution": value["plots"]["trial_distribution"],
             "psychometric_function": value["plots"]["psychometric_function"],
-            "reaction_time_distribution": value["plots"]["reaction_time_distribution"],
+            "response_time_distribution": value["plots"]["response_time_distribution"],
         }
 
     def show_summary_window(self, value=None):
         """Show summary window with summarized data"""
 
         summary_string = (
-            time.ctime(self.session_clock["start"])
-            + "\n\n"
-            + time.ctime(self.session_clock["end"])
-            + "\n\n"
-            + str(self.summary_data["total_valid"])
-            + " ("
-            + ", ".join(
-                str(int(i)) for i in self.summary_data["trial_distribution"] if i != 0.0
-            )
-            + ")"
-            + "\n\n"
-            + str(self.summary_data["total_accuracy"])
-            + "% ("
-            + ", ".join(
-                str(round(i, 2))
-                for i in self.summary_data["psychometric_function"]
-                if np.isnan(i) == False
-            )
-            + ")"
-            + "\n\n"
-            + " ("
-            + ", ".join(
-                str(round(i, 2))
-                for i in self.summary_data["reaction_time_distribution"]
-                if np.isnan(i) == False
-            )
-            + ")"
-            + "\n\n"
-            + str(self.summary_data["total_incorrect"])
-            + "/"
-            + str(self.summary_data["total_attempt"])
-            + ";    "
-            + str(self.summary_data["total_noresponse"])
-            + "/"
-            + str(self.summary_data["total_attempt"])
-            + "\n\n"
-            + str(self.summary_data["total_reward"])
-            + " ul @ "
-            + str(self.summary_data["reward_rate"])
-            + " ul"
+            f"{time.ctime(self.session_clock['start'])} \n\n"
+            f"{time.ctime(self.session_clock['end'])} \n\n"
+            f"{self.summary_data['total_valid']} {self.summary_data['trial_distribution']} \n\n"
+            f"{self.summary_data['total_accuracy']}% {self.summary_data['psychometric_function']} \n\n"
+            f"{self.summary_data['response_time_distribution']} \n\n"
+            f"{self.summary_data['total_incorrect']}/{self.summary_data['total_attempt']}; {self.summary_data['total_noresponse']}/{self.summary_data['total_attempt']} \n\n"
+            f"{self.summary_data['total_reward']} ul @ {self.summary_data['reward_rate']} ul"
         )
 
-        # if subject.baseline_weight:
+        # summary_string = (
+        #     f"Start Time: {time.ctime(self.session_clock['start'])} \n\n"
+        #     f"End Time: {time.ctime(self.session_clock['end'])} \n\n"
+        #     f"Total Trials: {self.summary_data['total_valid']} {self.summary_data['trial_distribution']} \n\n"
+        #     f"Accuracy (%): {self.summary_data['total_accuracy']}% {self.summary_data['psychometric_function']} \n\n"
+        #     f"Mean RT (in secs):{self.summary_data['response_time_distribution']} \n\n"
+        #     f"Inc/Attempts; NR/Attempts: {self.summary_data['total_incorrect']}/{self.summary_data['total_attempt']}; {self.summary_data['total_noresponse']}/{self.summary_data['total_attempt']} \n\n"
+        #     f"Total Reward @ Reward Rate: {self.summary_data['total_reward']} ul @ {self.summary_data['reward_rate']} ul"
+        # )
 
-        self.summary.start_weight.setText(str(self.subject.weight))
+        self.summary.baseline_weight.setText(str(self.subject.baseline_weight))
+        self.summary.start_weight.setText(str(self.subject.start_weight))
         self.summary.summary_data.setText(summary_string)
         self.summary_window.show()
 
@@ -337,25 +278,16 @@ class TaskGUI(rigclass):
             msg.setWindowTitle("Error")
             msg.exec_()
         else:
-            self.summary_data["baseline_weight"] = float(
-                self.summary.baseline_weight.toPlainText()
-            )
-            self.summary_data["start_weight"] = float(
-                self.summary.start_weight.toPlainText()
-            )
-            self.summary_data["end_weight"] = float(
-                self.summary.end_weight.toPlainText()
-            )
+            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
+            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
+            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
+            self.subject.end_weight = self.summary_data["end_weight"]
             self.summary_data["start_weight_prct"] = round(
-                100
-                * self.summary_data["start_weight"]
-                / self.summary_data["baseline_weight"],
+                100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"],
                 2,
             )
             self.summary_data["end_weight_prct"] = round(
-                100
-                * self.summary_data["end_weight"]
-                / self.summary_data["baseline_weight"],
+                100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"],
                 2,
             )
             self.summary_data["comments"] = self.summary.comments.toPlainText()
@@ -413,8 +345,14 @@ class TaskGUI(rigclass):
             self.show_summary_window(value)
             while self.summary_window.isVisible():
                 QtWidgets.QApplication.processEvents()
+
             value["session_files"]["summary"] = self.summary_data
             self.subject.save_files(value["session_files"])
+            self.subject.save_history(
+                start_weight=self.summary_data["start_weight"],
+                end_weight=self.summary_data["end_weight"],
+                baseline_weight=self.summary_data["baseline_weight"],
+            )
             self.save_plots()
 
     def save_plots(self):
@@ -487,8 +425,8 @@ class TaskGUI(rigclass):
 
         # updating total distribution
         try:
-            coherences = value["total_trial_distribution"].keys()
-            trials = value["total_trial_distribution"].values()
+            coherences = value["trial_distribution"].keys()
+            trials = value["trial_distribution"].values()
             self.rig.trial_distribution.clear()
             bargraph = pg.BarGraphItem(
                 x=coherences,
@@ -502,8 +440,8 @@ class TaskGUI(rigclass):
 
         # updating reaction time distribution
         try:
-            coherences = value["reaction_time_distribution"].keys()
-            rt_dist = value["reaction_time_distribution"].values()
+            coherences = value["response_time_distribution"].keys()
+            rt_dist = value["response_time_distribution"].values()
             self.rig.rt_distribution.clear()
             self.rig.rt_distribution.plot(
                 x=coherences,
