@@ -147,7 +147,7 @@
     <rect>
      <x>30</x>
      <y>50</y>
-     <width>171</width>
+     <width>131</width>
      <height>31</height>
     </rect>
    </property>
@@ -157,7 +157,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Input Baseline Weight</string>
+    <string>Baseline Weight</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_9">
@@ -197,7 +197,7 @@
   <widget class="QTextEdit" name="baseline_weight">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>180</x>
      <y>30</y>
      <width>104</width>
      <height>71</height>
@@ -214,11 +214,11 @@
    <property name="tabChangesFocus">
     <bool>true</bool>
    </property>
-   <property name="markdown">
-    <string/>
-   </property>
    <property name="placeholderText">
     <string>00.0</string>
+   </property>
+   <property name="markdown" stdset="0">
+    <string/>
    </property>
   </widget>
   <widget class="QTextEdit" name="summary_data">
@@ -276,7 +276,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>390</x>
+     <x>340</x>
      <y>50</y>
      <width>101</width>
      <height>31</height>
@@ -294,7 +294,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QTextEdit" name="start_weight">
    <property name="geometry">
     <rect>
-     <x>500</x>
+     <x>470</x>
      <y>30</y>
      <width>104</width>
      <height>71</height>
@@ -311,17 +311,17 @@ p, li { white-space: pre-wrap; }
    <property name="tabChangesFocus">
     <bool>true</bool>
    </property>
-   <property name="markdown">
-    <string/>
-   </property>
    <property name="placeholderText">
     <string>00.0</string>
+   </property>
+   <property name="markdown" stdset="0">
+    <string/>
    </property>
   </widget>
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>640</x>
+     <x>620</x>
      <y>50</y>
      <width>101</width>
      <height>31</height>
@@ -356,11 +356,11 @@ p, li { white-space: pre-wrap; }
    <property name="tabChangesFocus">
     <bool>true</bool>
    </property>
-   <property name="markdown">
-    <string/>
-   </property>
    <property name="placeholderText">
     <string>00.0</string>
+   </property>
+   <property name="markdown" stdset="0">
+    <string/>
    </property>
   </widget>
   <widget class="QLabel" name="label_12">
