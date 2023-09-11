@@ -26,8 +26,8 @@ TASK = {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.300,
-                "incorrect": lambda response_time: 0.300, #1.000,
-                "noresponse": lambda response_time: 0.300, #1.000,
+                "incorrect": lambda response_time: 0.300,  # 1.000,
+                "noresponse": lambda response_time: 0.300,  # 1.000,
             },
         },
         "delay": {
@@ -183,8 +183,6 @@ DATAFILES = {
     "lick": "_lick.csv",
     "trial": "_trial.csv",
 }
-
-TASK["epochs"]["stimulus"]["passive_viewing"] = lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0]
 
 GRADUATION = {
     "direction": {
