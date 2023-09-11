@@ -133,13 +133,13 @@ class Pilot:
         # Required parameteres from terminal to start task
         try:
             self.session_info = value["session_info"]
-            self.subject_config = value["subject_config"]
-            self.session_config = self.convert_str_to_module(value["session_config"])
-            self.session_config.SUBJECT = self.subject_config
+            self.config = self.convert_str_to_module(value["session_config"])
+            self.config.SUBJECT = value["subject_config"]
+
             # import task module
             task_module = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
             self.stage_block.clear()
-            self.task = task_module.Task(stage_block=self.stage_block, config=self.session_config, **value)
+            self.task = task_module.Task(stage_block=self.stage_block, config=self.config, **value)
             self.logger.debug("task initialized")
 
             threading.Thread(target=self.run_task, args=(value,)).start()
@@ -191,7 +191,7 @@ class Pilot:
 
         elif value["key"] == "HARDWARE":
             if self.task:
-                self.task.handle_termianl_request(value["value"])
+                self.task.handle_terminal_request(value["value"])
 
     ############################### SECONDARY FUNCTIONS ########################################
     def convert_str_to_module(self, module_string):
@@ -204,7 +204,7 @@ class Pilot:
         exec(module_string, session_config.__dict__)
         return session_config
 
-    def run_task(self):
+    def run_task(self, value):
         """
         start running task under new thread
         initiate the task, and progress through each stage of task with `task.stages.next`
@@ -234,9 +234,7 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        self.display_process.kill()       
-                        self.task.end_session()  
-                        #TODO: Make better arrangement of the code so that files will be sent only on termination of program. Not on crashing
+                        self.task.end()  
                         try:
                             # sending files to terminal only when successfully finished the task
                             value = {

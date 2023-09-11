@@ -134,7 +134,7 @@ class Task:
             self.managers["hardware"].toggle_reward("Right")
         elif message["key"] == "update_reward":
             self.managers["session"].reward_volume = message["value"]
-            print(f"NEW REWARD VALUE IS {self.config.SUBJECT['reward_volume']}")
+            print(f"NEW REWARD VALUE IS {self.managers['session'].reward_volume}")
         elif message["key"] == "calibrate_reward":
             if self.config.SUBJECT["name"] in ["XXX", "xxx"]:
                 self.managers["hardware"].start_calibration_sequence()
@@ -171,13 +171,13 @@ class Task:
         self.config.FILES["rolling_perf_after"] = Path(data_path, "rolling_perf_after.pkl")
         self.config.FILES["rolling_perf"] = Path(data_path.parent, "rolling_perf.pkl")
 
-    def pause_session(self):
+    def pause(self):
         pass
 
-    def end_session(self):
+    def end(self):
         self.managers["session"].end_of_session_updates()
-        self.managers["behavior_process"].stop()
-        self.managers["display_process"].stop()
+        self.processes["stimulus"].stop()
+        self.processes["behavior"].stop()
 
 
 
