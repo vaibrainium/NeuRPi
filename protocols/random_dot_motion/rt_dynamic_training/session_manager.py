@@ -270,7 +270,7 @@ class SessionManager:
         #TODO: implement direct key value comparison between two dictionaries
         while self.next_coh_level < len(self.accuracy_thresholds):
             if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.next_coh_level]) and (
-                self.trials_in_current_level >= self.accuracy_thresholds[self.next_coh_level]
+                self.trials_in_current_level >= self.trials_threshold[self.next_coh_level]
             ):
                 self.next_coh_level = self.next_coh_level + 1
                 self.trials_in_current_level = 0
