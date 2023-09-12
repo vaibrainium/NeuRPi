@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>921</width>
+    <width>981</width>
     <height>605</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>222</y>
      <width>67</width>
      <height>16</height>
@@ -37,7 +37,7 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>190</y>
      <width>65</width>
      <height>16</height>
@@ -55,7 +55,7 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>130</x>
      <y>157</y>
      <width>54</width>
      <height>16</height>
@@ -73,7 +73,7 @@
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>90</x>
      <y>255</y>
      <width>98</width>
      <height>16</height>
@@ -91,7 +91,7 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>130</x>
+     <x>120</x>
      <y>127</y>
      <width>71</width>
      <height>20</height>
@@ -109,7 +109,7 @@
   <widget class="QLabel" name="label_6">
    <property name="geometry">
     <rect>
-     <x>31</x>
+     <x>21</x>
      <y>318</y>
      <width>168</width>
      <height>16</height>
@@ -127,7 +127,7 @@
   <widget class="QLabel" name="label_5">
    <property name="geometry">
     <rect>
-     <x>50</x>
+     <x>40</x>
      <y>287</y>
      <width>149</width>
      <height>16</height>
@@ -145,7 +145,7 @@
   <widget class="QLabel" name="label_8">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>60</x>
      <y>50</y>
      <width>131</width>
      <height>31</height>
@@ -163,7 +163,7 @@
   <widget class="QLabel" name="label_9">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>100</x>
      <y>440</y>
      <width>81</width>
      <height>31</height>
@@ -181,9 +181,9 @@
   <widget class="QTextEdit" name="comments">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>210</x>
      <y>400</y>
-     <width>611</width>
+     <width>721</width>
      <height>131</height>
     </rect>
    </property>
@@ -197,9 +197,9 @@
   <widget class="QTextEdit" name="baseline_weight">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>210</x>
      <y>30</y>
-     <width>104</width>
+     <width>131</width>
      <height>71</height>
     </rect>
    </property>
@@ -224,9 +224,9 @@
   <widget class="QTextEdit" name="summary_data">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>210</x>
      <y>120</y>
-     <width>611</width>
+     <width>721</width>
      <height>261</height>
     </rect>
    </property>
@@ -276,7 +276,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="label_10">
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>380</x>
      <y>50</y>
      <width>101</width>
      <height>31</height>
@@ -294,9 +294,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QTextEdit" name="start_weight">
    <property name="geometry">
     <rect>
-     <x>470</x>
+     <x>510</x>
      <y>30</y>
-     <width>104</width>
+     <width>131</width>
      <height>71</height>
     </rect>
    </property>
@@ -321,7 +321,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>620</x>
+     <x>680</x>
      <y>50</y>
      <width>101</width>
      <height>31</height>
@@ -339,9 +339,9 @@ p, li { white-space: pre-wrap; }
   <widget class="QTextEdit" name="end_weight">
    <property name="geometry">
     <rect>
-     <x>740</x>
+     <x>800</x>
      <y>30</y>
-     <width>104</width>
+     <width>131</width>
      <height>71</height>
     </rect>
    </property>
@@ -366,7 +366,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QLabel" name="label_12">
    <property name="geometry">
     <rect>
-     <x>147</x>
+     <x>137</x>
      <y>350</y>
      <width>51</width>
      <height>20</height>
