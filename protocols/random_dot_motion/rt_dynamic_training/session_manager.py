@@ -2,6 +2,7 @@ import csv
 import multiprocessing as mp
 import numpy as np
 import pickle
+import pandas as pd
 
 #TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 #TODO: 5. Make sure graduation is working properly
@@ -369,7 +370,6 @@ class SessionManager:
             idx = self.rolling_history_indices[str(self.signed_coherence)]
             self.rolling_history[str(self.signed_coherence)][idx] = self.outcome
             self.rolling_accuracy[str(self.signed_coherence)] = np.mean(self.rolling_history[str(self.signed_coherence)])
-            self.rolling_history_indices[str(self.signed_coherence)] += 1
             self.rolling_history_indices[str(self.signed_coherence)] = (self.rolling_history_indices[str(self.signed_coherence)] + 1) % self.rolling_window
 
             # update plot parameters
@@ -421,28 +421,50 @@ class SessionManager:
 
 
     def write_trial_data_to_file(self):
-        with open(self.config.FILES["trial"], "a+", newline="") as file:
-            writer = csv.writer(file)
-            writer.writerow(
-                [
-                self.trial_counters["attempt"],
-                self.trial_counters["valid"],
-                self.trial_counters["correction"],
-                self.is_correction_trial,
-                self.signed_coherence,
-                self.target,
-                self.choice,
-                self.response_time,
-                self.valid,
-                self.outcome,
-                self.trial_reward,
-                self.fixation_duration,
-                self.stimulus_duration,
-                self.reinforcement_duration,
-                self.delay_duration,
-                self.intertrial_duration,
-            ]
-            )
+        data = {
+            "idx_attempt": [self.trial_counters["attempt"]],
+            "idx_valid": [self.trial_counters["valid"]],
+            "idx_correction": [self.trial_counters["correction"]],
+            "is correction trial": [self.is_correction_trial],
+            "signed coherence": [self.signed_coherence],
+            "target": [self.target],
+            "choice": [self.choice],
+            "response_time": [self.response_time],
+            "is_valid": [self.valid],
+            "outcome": [self.outcome],
+            "trial_reward": [self.trial_reward],
+            "fixation_duration": [self.fixation_duration],
+            "stimulus_duration": [self.stimulus_duration],
+            "reinforcement_duration": [self.reinforcement_duration],
+            "delay_duration": [self.delay_duration],
+            "intertrial_duration": [self.intertrial_duration]
+        }
+        df = pd.DataFrame(data)
+        # Write the DataFrame to a CSV file with a header
+        df.to_csv(self.config.FILES["trial"], mode='a+', index=False, header=True)
+
+        # with open(self.config.FILES["trial"], "a+", newline="") as file:
+        #     writer = csv.writer(file)
+        #     writer.writerow(
+        #         [
+        #         self.trial_counters["attempt"],
+        #         self.trial_counters["valid"],
+        #         self.trial_counters["correction"],
+        #         self.is_correction_trial,
+        #         self.signed_coherence,
+        #         self.target,
+        #         self.choice,
+        #         self.response_time,
+        #         self.valid,
+        #         self.outcome,
+        #         self.trial_reward,
+        #         self.fixation_duration,
+        #         self.stimulus_duration,
+        #         self.reinforcement_duration,
+        #         self.delay_duration,
+        #         self.intertrial_duration,
+        #     ]
+        #     )
 
     def end_of_session_updates(self):
         self.config.SUBJECT["rolling_perf"]["current_coherence_level"] = self.current_coh_level
