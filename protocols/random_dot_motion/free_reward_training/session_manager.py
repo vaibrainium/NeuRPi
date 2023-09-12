@@ -398,33 +398,9 @@ class SessionManager:
             "delay_duration": [self.delay_duration],
             "intertrial_duration": [self.intertrial_duration]
         }
-        df = pd.DataFrame(data)
-        # Write the DataFrame to a CSV file with a header
-        df.to_csv(self.config.FILES["trial"], mode='a+', index=False, header=True)
-
-
-        # with open(self.config.FILES["trial"], "a+", newline="") as file:
-        #     writer = csv.writer(file)
-        #     writer.writerow(
-        #         [
-        #         self.trial_counters["attempt"],
-        #         self.trial_counters["valid"],
-        #         self.trial_counters["correction"],
-        #         self.is_correction_trial,
-        #         self.signed_coherence,
-        #         self.target,
-        #         self.choice,
-        #         self.response_time,
-        #         self.valid,
-        #         self.outcome,
-        #         self.trial_reward,
-        #         self.fixation_duration,
-        #         self.stimulus_duration,
-        #         self.reinforcement_duration,
-        #         self.delay_duration,
-        #         self.intertrial_duration,
-        #     ]
-        #     )
+        with open(self.config.FILES["trial"], "a+", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=data.keys())
+            writer.writerow(data)        
 
     def end_of_session_updates(self):
         self.config.SUBJECT["rolling_perf"]["current_coherence_level"] = self.current_coh_level
