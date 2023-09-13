@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1065</width>
-    <height>900</height>
+    <height>901</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -257,31 +257,6 @@
            <string>SELECT</string>
           </property>
          </item>
-         <item>
-          <property name="text">
-           <string>Free Reward Training</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>RT Dynamic Training</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Burst Experiment</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Prior Experiment</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>+ Add Program</string>
-          </property>
-         </item>
         </widget>
        </item>
       </layout>
@@ -420,11 +395,6 @@ p, li { white-space: pre-wrap; }
          <item>
           <property name="text">
            <string>SELECT</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Random Dot Motion</string>
           </property>
          </item>
         </widget>

@@ -44,12 +44,35 @@ class Application(mainclass):
         # rigs
         self.rigs_gui = {}
 
+        # import protocols
+        # get list of protocols from protocols directory and add to protocol dropdown
+        list_protocols = [code_to_str(x.name) for x in Path(Path.cwd(), "protocols").iterdir() if x.is_dir() and x.name != "__pycache__"]
+        self.main_gui.protocol.addItems(list_protocols)
+        self.main_gui.protocol.setCurrentIndex(0)
+
         # all connect signals
+        self.main_gui.protocol.activated[str].connect(self.add_experiments)
         self.main_gui.start_experiment.clicked.connect(self.start_experiment)
         self.main_gui.create_new_subject.clicked.connect(self.show_subject_form)
         self.new_subject_form.create_button.clicked.connect(self.create_new_subject)
+        # Connect the signal to a slot
 
     ################ main gui helper functions ################
+    def add_experiments(self):
+        if self.main_gui.protocol.currentText() == "SELECT":
+            self.main_gui.experiment.clear()
+            self.main_gui.experiment.addItem("SELECT")
+            self.main_gui.experiment.setCurrentIndex(0)
+            return None
+        protocol = str_to_code(self.main_gui.protocol.currentText())
+        self.main_gui.experiment.clear()
+        list_experiments = ["SELECT"]
+        self.main_gui.experiment.setCurrentIndex(0)
+        for x in Path(Path.cwd(), "protocols", protocol).iterdir():
+            if x.is_dir() and x.name not in ["__pycache__", "core"]:
+                list_experiments.append(code_to_str(x.name))  # .upper()
+        self.main_gui.experiment.addItems(list_experiments)
+
     def critical_message(self, message):
         msg = QtWidgets.QMessageBox()
         msg.setIcon(QtWidgets.QMessageBox.Critical)
@@ -109,6 +132,8 @@ class Application(mainclass):
         self.main_gui.subject_name.clear()
         self.main_gui.subject_weight.clear()
         self.main_gui.protocol.setCurrentIndex(0)
+        self.main_gui.experiment.clear()
+        self.main_gui.experiment.addItem("SELECT")
         self.main_gui.experiment.setCurrentIndex(0)
         self.main_gui.rig_id.setCurrentIndex(0)
         self.main_gui.response_mode.setCurrentIndex(0)
@@ -132,9 +157,7 @@ class Application(mainclass):
             return None
 
         elif not Path(Path(prefs.get("DATADIR"), subject_name)).exists():
-            self.critical_message(
-                f"'{subject_name}' does not exist. Please create new subject."
-            )
+            self.critical_message(f"'{subject_name}' does not exist. Please create new subject.")
             self.clear_variables()
             return None
 
@@ -194,9 +217,7 @@ class Application(mainclass):
         # create subject info file
         info_dict = {
             "Name": subject_name,
-            "Identification": "N/A"
-            if subject_identification == ""
-            else subject_identification,
+            "Identification": "N/A" if subject_identification == "" else subject_identification,
             "subject_dob": subject_dob,
             "subject_housing": "N/A" if subject_housing == "" else subject_housing,
         }

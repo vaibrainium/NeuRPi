@@ -337,8 +337,10 @@ class Terminal(Application):
                 # Waiting for rig to initiate hardware and start session
                 while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
                     time.sleep(0.1)
+                    if self.pilots[session_info.rig_id]["state"] == "ERROR":
+                        self.critical_message("Rig could not be started because of error")
+                        return
 
-                # self.clear_variables()
                 self.rigs_gui[session_info.rig_id].start_experiment()
 
             else:
