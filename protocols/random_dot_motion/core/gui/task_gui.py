@@ -246,7 +246,7 @@ class TaskGUI(rigclass):
             "total_correct": value["trial_counters"]["correct"],
             "total_incorrect": value["trial_counters"]["incorrect"],
             "total_noresponse": value["trial_counters"]["noresponse"],
-            "total_accuracy": round(value["plots"]["running_accuracy"][-1][1] * 100, 2),
+            "total_accuracy": value["plots"]["running_accuracy"][1],
             "trial_distribution": value["plots"]["trial_distribution"],
             "psychometric_function": value["plots"]["psychometric_function"],
             "response_time_distribution": value["plots"]["response_time_distribution"],
