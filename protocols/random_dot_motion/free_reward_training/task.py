@@ -133,8 +133,8 @@ class Task:
         elif message["key"] == "toggle_right_reward":
             self.managers["hardware"].toggle_reward("Right")
         elif message["key"] == "update_reward":
-            self.managers["session"].reward_volume = message["value"]
-            print(f"NEW REWARD VALUE IS {self.managers['session'].reward_volume}")
+            self.managers["session"].full_reward_volume = message["value"]
+            print(f"NEW REWARD VALUE IS {self.managers['session'].full_reward_volume}")
         elif message["key"] == "calibrate_reward":
             if self.config.SUBJECT["name"] in ["XXX", "xxx"]:
                 self.managers["hardware"].start_calibration_sequence()
