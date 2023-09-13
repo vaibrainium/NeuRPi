@@ -7,6 +7,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
@@ -48,7 +49,7 @@ class Subject(BaseSubject):
         self.start_weight = session_info.subject_weight
         self.end_weight = None
         self.baseline_weight = self.start_weight if self.history.baseline_weight.empty else self.history.baseline_weight.iloc[-1]
-        self.prct_weight = round((self.start_weight / self.baseline_weight * 100),2)
+        self.prct_weight = round((self.start_weight / self.baseline_weight * 100), 2)
         self.protocol = session_info.protocol
         self.experiment = session_info.experiment
         self.experiment_dir = Path(self.data_dir, self.protocol, self.experiment)
@@ -60,9 +61,6 @@ class Subject(BaseSubject):
             # across session
             "summary": str(Path(self.experiment_dir, self.name + "_summary.csv")),
             "rolling_perf": str(Path(self.experiment_dir, "rolling_performance.pkl")),
-            "accu_vs_training": str(Path(self.experiment_dir, "accu_vs_training.csv")),
-            "attmpt_vs_training": str(Path(self.experiment_dir, "attmpt_vs_training.csv")),
-            "attmpt_vs_weight": str(Path(self.experiment_dir, "attmpt_vs_weight.csv")),
             # within session
             "trial": str(Path(self.experiment_dir, self.session, self.name + "_trial.csv")),
             "event": str(Path(self.experiment_dir, self.session, self.name + "_event.csv")),
@@ -76,6 +74,11 @@ class Subject(BaseSubject):
             "psychometric": str(Path(self.experiment_dir, self.session, "psychometric.png")),
             "trials_distribution": str(Path(self.experiment_dir, self.session, "trials_distribution.png")),
             "rt_distribution": str(Path(self.experiment_dir, self.session, "rt_distribution.png")),
+            # summary plots
+            "accu_vs_training": str(Path(self.experiment_dir, "accu_vs_training.png")),
+            "accu_vs_weight": str(Path(self.experiment_dir, "accu_vs_weight.png")),
+            "attmpt_vs_training": str(Path(self.experiment_dir, "attmpt_vs_training.png")),
+            "attmpt_vs_weight": str(Path(self.experiment_dir, "attmpt_vs_weight.png")),
         }
 
         self.prepare_rolling_perf()
@@ -184,12 +187,7 @@ class Subject(BaseSubject):
                 if file_name in ["lick", "event", "trial"]:
                     with open(self.files[file_name], "wb") as file:
                         file.write(file_content)
-                elif file_name in [
-                    "summary",
-                    "accu_vs_training",
-                    "attmpt_vs_training",
-                    "attmpt_vs_weight",
-                ]:
+                elif file_name in ["summary"]:
                     with open(self.files[file_name], "a", newline="") as file:
                         writer = csv.DictWriter(file, fieldnames=file_content.keys())
                         if file.tell() == 0:
@@ -204,9 +202,56 @@ class Subject(BaseSubject):
                     with open(self.files[file_name], "wb") as file:
                         pickle.dump(file_content, file)
 
+            self.create_summary_plots()
+
         except Exception as e:
             print(e)
             pass
+
+    def create_summary_plots(self):
+        """
+        Create summary plots for the session
+        """
+        try:
+            experiment_summary = pd.read_csv(self.files["summary"], index_col=0)
+            # accuracy vs training day
+            plt.plot(experiment_summary["session"].str.split("_").str[0], experiment_summary["total_accuracy"], "o", label="Accuracy vs Training Day")
+            plt.xlabel("Training Day")
+            plt.ylabel("Accuracy")
+            plt.title("Accuracy vs Training Day")
+            plt.legend()
+            plt.ylim([50, 100])
+            plt.savefig(self.plots["accu_vs_training"])
+            plt.close()
+            # accuracy vs weigth
+            plt.plot(experiment_summary["start_weight_prct"], experiment_summary["total_accuracy"], "o", label="Accuracy vs Start Weight")
+            plt.xlabel("Start Weight")
+            plt.ylabel("Accuracy")
+            plt.title("Accuracy vs Start Weight")
+            plt.legend()
+            plt.ylim([50, 100])
+            plt.savefig(self.plots["accu_vs_weight"])
+            plt.close()
+            # attempts vs training
+            plt.plot(experiment_summary["session"].str.split("_").str[0], experiment_summary["total_attempt"], "o", label="Attempts vs Start Weight")
+            plt.xlabel("Start Weight")
+            plt.ylabel("Attempts")
+            plt.title("Attempts vs Start Weight")
+            plt.legend()
+            plt.ylim([0, 1000])
+            plt.savefig(self.plots["attmpt_vs_weight"])
+            plt.close()
+            # attempts vs weigth
+            plt.plot(experiment_summary["start_weight_prct"], experiment_summary["total_attempt"], "o", label="Attempts vs Start Weight")
+            plt.xlabel("Start Weight")
+            plt.ylabel("Attempts")
+            plt.title("Attempts vs Start Weight")
+            plt.legend()
+            plt.ylim([0, 1000])
+            plt.savefig(self.plots["attmpt_vs_weight"])
+            plt.close()
+        except:
+            print("Could not save summary plots")
 
     def save_history(self, start_weight=None, end_weight=None, baseline_weight=None):
         hist_dict = {
