@@ -4,7 +4,6 @@ import time
 # import cv2
 import numpy as np
 import pyqtgraph as pg
-import pyqtgraph.exporters
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
@@ -70,6 +69,7 @@ class TaskGUI(rigclass):
         self.session_pause_time = 0
         self.session_timer = QtCore.QTimer()
         self.trial_timer = QtCore.QTimer()
+        self.video_device = None  # cv2.VideoCapture(camera_index)
         self.camera_timer = QtCore.QTimer()
         self.trial_clock = None
         self.stopped = False
@@ -171,20 +171,21 @@ class TaskGUI(rigclass):
             "timer": QtCore.QTimer(),
             "end": None,
         }
-        self.session_timer.timeout.connect(lambda: self.update_session_clock())
-        self.session_timer.start(1000)
-        # starting camera
-        # if not self.video_device.isOpened():
-        #     print("Error: Could not open camera.")
-        # self.camera_timer.timeout.connect(self.update_video_image)
-        # self.camera_timer.start(50)
+        # self.session_timer.timeout.connect(lambda: self.update_session_clock())
+        # self.session_timer.start(1000)
 
     def start_active_gui_methods(self):
         self.session_timer.timeout.connect(lambda: self.update_session_clock())
         self.session_timer.start(1000)
+        if self.video_device is not None:
+            if self.video_device.isOpened():
+                self.camera_timer.timeout.connect(self.update_video_image)
+                self.camera_timer.start(50)
 
     def stop_active_gui_methods(self):
         self.session_timer.stop()
+        if self.video_device is not None:
+            self.camera_timer.stop()
 
     def update_session_clock(self):
         self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
@@ -302,14 +303,8 @@ class TaskGUI(rigclass):
             self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
             self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
             self.subject.end_weight = self.summary_data["end_weight"]
-            self.summary_data["start_weight_prct"] = round(
-                100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"],
-                2,
-            )
-            self.summary_data["end_weight_prct"] = round(
-                100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"],
-                2,
-            )
+            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
             self.summary_data["comments"] = self.summary.comments.toPlainText()
 
             self.rig.close_experiment.show()
