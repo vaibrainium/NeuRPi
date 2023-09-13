@@ -422,22 +422,22 @@ class SessionManager:
 
     def write_trial_data_to_file(self):
         data = {
-            "idx_attempt": [self.trial_counters["attempt"]],
-            "idx_valid": [self.trial_counters["valid"]],
-            "idx_correction": [self.trial_counters["correction"]],
-            "is correction trial": [self.is_correction_trial],
-            "signed coherence": [self.signed_coherence],
-            "target": [self.target],
-            "choice": [self.choice],
-            "response_time": [self.response_time],
-            "is_valid": [self.valid],
-            "outcome": [self.outcome],
-            "trial_reward": [self.trial_reward],
-            "fixation_duration": [self.fixation_duration],
-            "stimulus_duration": [self.stimulus_duration],
-            "reinforcement_duration": [self.reinforcement_duration],
-            "delay_duration": [self.delay_duration],
-            "intertrial_duration": [self.intertrial_duration]
+            "idx_attempt": self.trial_counters["attempt"],
+            "idx_valid": self.trial_counters["valid"],
+            "idx_correction": self.trial_counters["correction"],
+            "is correction trial": self.is_correction_trial,
+            "signed coherence": self.signed_coherence,
+            "target": self.target,
+            "choice": self.choice,
+            "response_time": self.response_time,
+            "is_valid": self.valid,
+            "outcome": self.outcome,
+            "trial_reward": self.trial_reward,
+            "fixation_duration": self.fixation_duration,
+            "stimulus_duration": self.stimulus_duration,
+            "reinforcement_duration": self.reinforcement_duration,
+            "delay_duration": self.delay_duration,
+            "intertrial_duration": self.intertrial_duration
         }
         with open(self.config.FILES["trial"], "a+", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=data.keys())
