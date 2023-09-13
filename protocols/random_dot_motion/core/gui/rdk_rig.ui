@@ -863,7 +863,7 @@ color: rgb(255, 255, 255);</string>
        </widget>
        <widget class="QWidget" name="tab3_9">
         <attribute name="title">
-         <string>Total Trials</string>
+         <string>Trial Distribution</string>
         </attribute>
         <widget class="PlotWidget" name="trial_distribution" native="true">
          <property name="geometry">
@@ -878,7 +878,7 @@ color: rgb(255, 255, 255);</string>
        </widget>
        <widget class="QWidget" name="tab_27">
         <attribute name="title">
-         <string>Reaction Time</string>
+         <string>Chronometric Function</string>
         </attribute>
         <widget class="PlotWidget" name="rt_distribution" native="true">
          <property name="geometry">

@@ -74,6 +74,10 @@ class TaskGUI(rigclass):
 
         # Task parameter variables
         self.coherences = [-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]
+        self.valid_trial_vector = np.array([])
+        self.accuracy_vector = np.array([])
+        self.outcome_vector = np.array([])
+
         self.initialize_plots()
 
         # Setting up gui intearaction connections
@@ -101,15 +105,16 @@ class TaskGUI(rigclass):
         except EOFError:
             pass
 
-    def initialize_plots(
-        self,
-    ):
+    def initialize_plots(self):
         # Accuracy plots
         self.rig.accuracy_plot.setTitle("Accuracy Plot", color="r", size="10pt")
-        self.rig.accuracy_plot.setYRange(0, 1)
+        self.rig.accuracy_plot.setYRange(0, 100)
         self.rig.accuracy_plot.setInteractive(False)
         self.rig.accuracy_plot.setLabel("left", "Accuracy")
         self.rig.accuracy_plot.setLabel("bottom", "Trial No")
+        self.accuracy_trace_plot = self.rig.accuracy_plot.plot()
+        self.correct_trace_plot = self.rig.accuracy_plot.plot()
+        self.incorrect_trace_plot = self.rig.accuracy_plot.plot()
         # Psychometric plots
         self.rig.psychometric_plot.setTitle("Psychometric Function", color="r", size="10pt")
         self.rig.psychometric_plot.setXRange(-100, 100)
@@ -119,6 +124,7 @@ class TaskGUI(rigclass):
         self.rig.psychometric_plot.setLabel("bottom", "Coherence")
         self.rig.psychometric_plot.showGrid(x=False, y=True, alpha=0.6)
         self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.psychometric_plot = self.rig.psychometric_plot.plot()
         # Total Trial Plot
         self.rig.trial_distribution.setTitle("Total Trials", color="r", size="10pt")
         self.rig.trial_distribution.setXRange(-100, 100)
@@ -127,6 +133,7 @@ class TaskGUI(rigclass):
         self.rig.trial_distribution.setLabel("bottom", "Coherence")
         self.rig.trial_distribution.showGrid(x=False, y=True, alpha=0.6)
         self.rig.trial_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.trial_distribution_plot = self.rig.trial_distribution.plot()
         # Reaction Time Plot
         self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         self.rig.rt_distribution.setTitle("Reaction Times", color="r", size="10pt")
@@ -136,6 +143,7 @@ class TaskGUI(rigclass):
         self.rig.rt_distribution.setLabel("bottom", "Coherence")
         self.rig.rt_distribution.showGrid(x=False, y=True, alpha=0.6)
         self.rig.rt_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.chronometric_plot = self.rig.rt_distribution.plot()
 
     def start_experiment(self):
         self.state = "RUNNING"
@@ -330,16 +338,14 @@ class TaskGUI(rigclass):
             self.update_stimulus(value["coherence"])
 
         if "plots" in value.keys():
-            self.update_plots(value["plots"])
+            if value["is_valid"]:
+                self.update_plots(value["plots"])
 
         if "reward_volume" in value.keys():
             self.rig.reward_volume.setValue(value["reward_volume"])
 
         if "total_reward" in value.keys():
-            try:
-                self.rig.total_reward.setText(str(round(value["total_reward"], 2)))
-            except:
-                self.rig.total_reward.setText(str(value["total_reward"]))
+            self.rig.total_reward.setText(str(round(value["total_reward"], 2)))
 
         # Close session and Task GUI
         if "TRIAL_END" in value.keys() and self.state == "STOPPED":
@@ -398,27 +404,63 @@ class TaskGUI(rigclass):
     def update_plots(self, value):
         # updating running accuracy
         try:
-            self.rig.accuracy_plot.plot(x=list(list(zip(*value["running_accuracy"]))[0]), y=list(list(zip(*value["running_accuracy"]))[1]),
-                                        pen=None, symbol="o", symbolPen="w", symbolBrush=0.2, name="Accuracy", clear=True,)
+            self.valid_trial_vector = np.append(self.valid_trial_vector, value["running_accuracy"][0])
+            self.accuracy_vector = np.append(self.accuracy_vector, value["running_accuracy"][1])
+            self.outcome_vector = np.append(self.outcome_vector, value["running_accuracy"][2])
+            correct_idx = np.squeeze(np.argwhere(self.outcome_vector == 1), axis=1)
+            if correct_idx.size > 0:
+                self.correct_trace_plot.setData(
+                    self.valid_trial_vector[correct_idx],
+                    self.accuracy_vector[correct_idx],
+                    pen=None,
+                    symbol="o",
+                    symbolPen="g",
+                    symbolBrush=0.2,
+                    name="Correct",
+                )
+            incorrect_idx = np.squeeze(np.argwhere(self.outcome_vector == 0), axis=1)
+            if incorrect_idx.size > 0:
+                self.incorrect_trace_plot.setData(
+                    self.valid_trial_vector[incorrect_idx],
+                    self.accuracy_vector[incorrect_idx],
+                    pen=None,
+                    symbol="o",
+                    symbolPen="r",
+                    symbolBrush=0.2,
+                    name="Incorrect",
+                )
         except:
             pass
-            
 
         # updating psychometric function
         try:
             value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
             coherences, psych = zip(*sorted(value["psychometric_function"].items()))
             if len(coherences) > 0:
-                self.rig.psychometric_plot.plot(x=coherences, y=psych, pen="g", symbol="o", symbolPen="g", symbolBrush=0.2, name="Psych", clear=True,)
+                self.psychometric_plot.setData(
+                    x=coherences,
+                    y=psych,
+                    pen="g",
+                    symbol="o",
+                    symbolPen="g",
+                    symbolBrush=0.2,
+                    name="Psych",
+                    clear=True,
+                )
         except:
             pass
         # updating total distribution
-        try:            
+        try:
             value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
             coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
             if len(coherences) > 0:
-                bargraph = pg.BarGraphItem(x=list(coherences), height=list(trials), width=5, brush="w",)
+                bargraph = pg.BarGraphItem(
+                    x=list(coherences),
+                    height=list(trials),
+                    width=5,
+                    brush="w",
+                )
                 self.rig.trial_distribution.addItem(bargraph)
         except:
             pass
@@ -427,14 +469,38 @@ class TaskGUI(rigclass):
             value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
             coherences, rt_dist = zip(*sorted(value["response_time_distribution"].items()))
             if len(coherences) > 0:
-                self.rig.rt_distribution.plot(x=coherences, y=rt_dist, pen="w", symbol="o", symbolPen="w", symbolBrush=0.2, name="RT", clear=True,)
+                self.chronometric_plot.setData(
+                    x=coherences,
+                    y=rt_dist,
+                    pen="w",
+                    symbol="o",
+                    symbolPen="w",
+                    symbolBrush=0.2,
+                    name="RT",
+                    clear=True,
+                )
         except:
             pass
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    window = TaskGUI()
+    from omegaconf import OmegaConf
+
+    session_info = {"protocol": "rdk", "experiment": "rdk"}
+    session_info = OmegaConf.create(session_info)
+
+    subject = {"name": "test", "session": 1, "session_uuid": "test", "prct_weight": 10}
+    subject = OmegaConf.create(subject)
+    window = TaskGUI(rig_id="Test", session_info=session_info, subject=subject)
+
+    value = {"running_accuracy": [1, 100, 1]}
+    window.update_plots(value)
+    value = {"running_accuracy": [2, 50, 0]}
+    window.update_plots(value)
+    value = {"running_accuracy": [3, 66, 1]}
+    window.update_plots(value)
+
     window.show()
     window.start_experiment()
     sys.exit(app.exec_())
