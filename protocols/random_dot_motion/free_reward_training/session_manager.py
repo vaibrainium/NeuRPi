@@ -82,7 +82,7 @@ class SessionManager:
 
         # plot variables
         self.plot_vars = {
-            "running_accuracy": [[0, .5]],
+            "running_accuracy": [],
             "chose_right": {int(coh): 0 for coh in self.full_coherences},
             "chose_left": {int(coh): 0 for coh in self.full_coherences},
             "psych": {int(coh): np.NaN for coh in self.full_coherences},
@@ -348,12 +348,14 @@ class SessionManager:
 
             # update running accuracy
             if (self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0):
-                self.plot_vars["running_accuracy"].append([self.trial_counters["valid"], 
-                                                           self.trial_counters["correct"]/ (self.trial_counters["correct"]+self.trial_counters["incorrect"]),
-                                                           self.outcome,
-                ]   
-                )
-
+                # self.plot_vars["running_accuracy"].append([self.trial_counters["valid"], 
+                #                                            round(self.trial_counters["correct"]/ self.trial_counters["valid"] * 100, 2),
+                #                                            self.outcome
+                #                                            ])  
+                self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], 
+                            round(self.trial_counters["correct"]/ self.trial_counters["valid"] * 100, 2),
+                            self.outcome
+                            ]
             # update psychometric array
             self.plot_vars["psych"][self.signed_coherence] = (
                 self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh
@@ -371,6 +373,7 @@ class SessionManager:
                 ) / tot_trials_in_coh
 
         trial_data = {
+            "is_valid": self.valid,
             "trial_counters": self.trial_counters,
             "reward_volume": self.full_reward_volume,
             "trial_reward": self.trial_reward,
@@ -380,7 +383,7 @@ class SessionManager:
                 "psychometric_function": self.plot_vars["psych"],
                 "trial_distribution": self.plot_vars["trial_distribution"],
                 "response_time_distribution": self.plot_vars["response_time_distribution"],
-            },
+            }
         }
         return trial_data
 
