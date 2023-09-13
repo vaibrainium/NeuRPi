@@ -56,6 +56,7 @@ class Application(mainclass):
         self.main_gui.create_new_subject.clicked.connect(self.show_subject_form)
         self.new_subject_form.create_button.clicked.connect(self.create_new_subject)
         # Connect the signal to a slot
+        self.main_gui.tabs.currentChanged.connect(self.handleTabActivationChange)
 
     ################ main gui helper functions ################
     def add_experiments(self):
@@ -82,6 +83,14 @@ class Application(mainclass):
         return None
 
     ##################### rig functions #####################
+    def handleTabActivationChange(self, tab_index):
+        # Emit the tabActiveStateChanged signal on the corresponding TaskGUI instance
+        for rig_id, task_gui in self.rigs_gui.items():
+            if self.get_tab_index(rig_id) == tab_index:
+                task_gui.tabActiveStateChanged.emit(True)
+            else:
+                task_gui.tabActiveStateChanged.emit(False)
+
     def get_tab_index(self, tab_name, tab_widget=None):
         if not tab_widget:
             tab_widget = self.main_gui.tabs

@@ -25,11 +25,14 @@ def str_to_code(var: str):
 
 
 class TaskGUI(rigclass):
+    tabActiveStateChanged = QtCore.pyqtSignal(bool)
+
     comm_to_taskgui = QtCore.pyqtSignal(dict)
     comm_from_taskgui = QtCore.pyqtSignal(dict)
 
     def __init__(self, rig_id=None, session_info=None, subject=None):
         super().__init__()
+        self.rig_gui_active = False
         # Load GUIs
         self.rig_id = rig_id
         self.subject = subject
@@ -81,6 +84,8 @@ class TaskGUI(rigclass):
         self.initialize_plots()
 
         # Setting up gui intearaction connections
+        self.tabActiveStateChanged.connect(self.handleTabActiveStateChange)
+
         self.comm_to_taskgui.connect(self.update_gui)
         self.rig.reward_left.clicked.connect(lambda: self.reward("reward_left"))
         self.rig.reward_right.clicked.connect(lambda: self.reward("reward_right"))
@@ -97,6 +102,17 @@ class TaskGUI(rigclass):
 
     ###################################################################################################
     # GUI Functions
+    def handleTabActiveStateChange(self, isActive):
+        # This method will be called when the tab's activation state changes
+        if isActive:
+            self.rig_gui_active = True
+            self.start_active_gui_methods()
+            print(f"Tab {self.rig_id} is now active.")
+        else:
+            self.rig_gui_active = False
+            self.stop_active_gui_methods()
+            print(f"Tab {self.rig_id} is now inactive.")
+
     def set_rig_configuration(self, prefs={}):
         try:
             hardware = prefs.get("HARDWARE")
@@ -163,16 +179,16 @@ class TaskGUI(rigclass):
         # self.camera_timer.timeout.connect(self.update_video_image)
         # self.camera_timer.start(50)
 
-    def start_session_clock(self):
+    def start_active_gui_methods(self):
         self.session_timer.timeout.connect(lambda: self.update_session_clock())
         self.session_timer.start(1000)
+
+    def stop_active_gui_methods(self):
+        self.session_timer.stop()
 
     def update_session_clock(self):
         self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
         self.rig.session_timer.display(int(self.session_display_clock))
-
-    def stop_session_clock(self):
-        self.session_timer.stop()
 
     def update_video_image(self):
         pass
@@ -229,7 +245,7 @@ class TaskGUI(rigclass):
         """End task after current trial finishes"""
         self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
         self.state = "STOPPED"
-        self.stop_session_clock()
+        self.stop_active_gui_methods()
 
     def create_summary_data(self, value):
         self.summary_data = {
@@ -264,16 +280,6 @@ class TaskGUI(rigclass):
             f"{self.summary_data['total_incorrect']}/{self.summary_data['total_attempt']}; {self.summary_data['total_noresponse']}/{self.summary_data['total_attempt']} \n\n"
             f"{self.summary_data['total_reward']} ul @ {self.summary_data['reward_rate']} ul"
         )
-
-        # summary_string = (
-        #     f"Start Time: {time.ctime(self.session_clock['start'])} \n\n"
-        #     f"End Time: {time.ctime(self.session_clock['end'])} \n\n"
-        #     f"Total Trials: {self.summary_data['total_valid']} {self.summary_data['trial_distribution']} \n\n"
-        #     f"Accuracy (%): {self.summary_data['total_accuracy']}% {self.summary_data['psychometric_function']} \n\n"
-        #     f"Mean RT (in secs):{self.summary_data['response_time_distribution']} \n\n"
-        #     f"Inc/Attempts; NR/Attempts: {self.summary_data['total_incorrect']}/{self.summary_data['total_attempt']}; {self.summary_data['total_noresponse']}/{self.summary_data['total_attempt']} \n\n"
-        #     f"Total Reward @ Reward Rate: {self.summary_data['total_reward']} ul @ {self.summary_data['reward_rate']} ul"
-        # )
 
         self.summary.baseline_weight.setText(str(self.subject.baseline_weight))
         self.summary.start_weight.setText(str(self.subject.start_weight))
