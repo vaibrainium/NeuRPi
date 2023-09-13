@@ -238,6 +238,7 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
+                        self.stopping.clear()
                         self.task.end()  
                         try:
                             # sending files to terminal only when successfully finished the task
