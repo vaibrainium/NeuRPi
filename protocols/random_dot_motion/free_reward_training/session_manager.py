@@ -400,6 +400,8 @@ class SessionManager:
         }
         with open(self.config.FILES["trial"], "a+", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=data.keys())
+            if file.tell() == 0:
+                writer.writeheader()
             writer.writerow(data)        
 
     def end_of_session_updates(self):
