@@ -148,8 +148,12 @@ class Pilot:
             self.update_state()
 
         except KeyError as e:
+            self.state = "ERROR"
+            self.update_state()
             self.logger.exception(f"Missing required parameter: {e}")
         except Exception as e:
+            self.state = "ERROR"
+            self.update_state()
             self.logger.exception(f"Could not initialize task: {e}")
         
         return
