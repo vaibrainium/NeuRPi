@@ -5,6 +5,7 @@ import time
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from pyqtgraph import exporters
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")
@@ -183,6 +184,7 @@ class TaskGUI(rigclass):
                 self.camera_timer.start(50)
 
     def stop_active_gui_methods(self):
+        # self.session_timer.timeout.disconnect()
         self.session_timer.stop()
         if self.video_device is not None:
             self.camera_timer.stop()
