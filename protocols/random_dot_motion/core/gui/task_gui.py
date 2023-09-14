@@ -108,11 +108,11 @@ class TaskGUI(rigclass):
         if isActive:
             self.rig_gui_active = True
             self.start_active_gui_methods()
-            print(f"Tab {self.rig_id} is now active.")
+            # print(f"Tab {self.rig_id} is now active.")
         else:
             self.rig_gui_active = False
             self.stop_active_gui_methods()
-            print(f"Tab {self.rig_id} is now inactive.")
+            # print(f"Tab {self.rig_id} is now inactive.")
 
     def set_rig_configuration(self, prefs={}):
         try:
