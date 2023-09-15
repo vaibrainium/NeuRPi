@@ -204,9 +204,16 @@ class SessionManager:
                 self.trial_reward = self.full_reward_volume
                 self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
             else:
-                # If repeat trial give half reward. Should motivate to be more accurate but 
-                # might also create bias by giving less reward on repeat trials which is most likely going to be opposite of biased direction
-                self.trial_reward = self.full_reward_volume #/ 2
+                # # If repeat trial give 3/4th reward. Should motivate to be more accurate
+                self.trial_reward = (self.full_reward_volume * .75)                 
+                if np.abs(np.mean(self.rolling_bias)) > 3: 
+                    # if repeat correct trial is in biased direction, give less reward (-0.3ul)
+                    if self.choice == np.mean(self.rolling_bias):
+                        self.trial_reward -= 0.3
+                    # if repeat correct trial is in non-biased direction, give additional reawrd (+0.3ul)
+                    if self.choice == -np.mean(self.rolling_bias): 
+                        self.trial_reward += 0.3
+                
                 self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
         else:
             self.trial_reward = None
