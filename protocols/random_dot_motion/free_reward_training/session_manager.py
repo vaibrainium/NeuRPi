@@ -48,6 +48,13 @@ class SessionManager:
         self.reinforcement_duration = None
         self.delay_duration = None
         self.intertrial_duration = self.config.TASK["epochs"]["intertrial"]["duration"]
+        # stage onset variables
+        self.fixation_onset = None
+        self.stimulus_onset = None
+        self.response_onset = None
+        self.reinforcement_onset = None
+        self.delay_onset = None
+        self.intertrial_onset = None
         # behavior dependent function
         self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
@@ -104,6 +111,13 @@ class SessionManager:
             self.stimulus_duration,
             self.reinforcement_duration,
             self.delay_duration,
+            # epoch onsets
+            self.fixation_onset,
+            self.stimulus_onset,
+            self.response_onset,
+            self.reinforcement_onset,
+            self.delay_onset,
+            self.intertrial_onset,
         ]
 
     ####################### pre-session methods #######################
@@ -286,7 +300,6 @@ class SessionManager:
     ####################### between-trial methods #######################
     
     def end_of_trial_updates(self):
-
         # function to finalize current trial and set parameters for next trial
         # codify trial outcome
         if self.outcome == "correct":
@@ -318,18 +331,18 @@ class SessionManager:
         if np.isnan(self.choice) and self.training_type >= 2:
             self.is_correction_trial = True
         
-        # if responded, update rolling bias
-        if not np.isnan(self.choice):
-            self.rolling_bias[self.rolling_bias_index] = self.choice
-            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+        # # if responded, update rolling bias
+        # if not np.isnan(self.choice):
+        #     self.rolling_bias[self.rolling_bias_index] = self.choice
+        #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
 
         # write trial data to file
         self.write_trial_data_to_file()
         # if valid update trial variables and send data to terminal
         if self.valid:
-        #     # update rolling bias
-        #     self.rolling_bias[self.rolling_bias_index] = self.choice
-        #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+            # update rolling bias
+            self.rolling_bias[self.rolling_bias_index] = self.choice
+            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
             # update rolling choice history
             idx = self.rolling_history_indices[str(self.signed_coherence)]
             self.rolling_history[str(self.signed_coherence)][idx] = self.outcome
@@ -405,7 +418,13 @@ class SessionManager:
             "stimulus_duration": self.stimulus_duration,
             "reinforcement_duration": self.reinforcement_duration,
             "delay_duration": self.delay_duration,
-            "intertrial_duration": self.intertrial_duration
+            "intertrial_duration": self.intertrial_duration,
+            "fixation_onset": self.fixation_onset,
+            "stimulus_onset": self.stimulus_onset,
+            "response_onset": self.response_onset,
+            "reinforcement_onset": self.reinforcement_onset,
+            "delay_onset": self.delay_onset,
+            "intertrial_onset": self.intertrial_onset,
         }
         with open(self.config.FILES["trial"], "a+", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=data.keys())

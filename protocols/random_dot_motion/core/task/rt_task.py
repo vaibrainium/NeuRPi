@@ -129,7 +129,7 @@ class RTTask(TrialConstruct):
         self.msg_to_stimulus.put(("fixation_epoch", stimulus_args))
         self.timers["trial"] = datetime.datetime.now()
         self.response_block.set()
-
+        self.fixation_onset = datetime.datetime.now() - self.timers["session"]
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
@@ -158,13 +158,16 @@ class RTTask(TrialConstruct):
             "targets": task_args["monitor_response"],
             "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
         }
- 
-         # initiate stimulus and start monitoring responses
+        
+        # initiate stimulus and start monitoring responses
         self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
         # set respons_block after minimum viewing time
         threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
+        self.stimulus_onset = datetime.datetime.now() - self.timers["session"]
+
 
         self.stage_block.wait()
+        self.response_onset = datetime.datetime.now() - self.timers["session"]
         self.choice = self.response
 
         print(
@@ -194,6 +197,7 @@ class RTTask(TrialConstruct):
         self.msg_to_stimulus.put(("reinforcement_epoch", stimulus_args))
         # wait for reinforcement duration then send message to stimulus manager
         threading.Timer(task_args["reinforcement_duration"], self.stage_block.set).start()
+        self.reinforcement_onset = datetime.datetime.now() - self.timers["session"]
 
         # if reward is requested:
         if task_args["trial_reward"]:
@@ -239,6 +243,7 @@ class RTTask(TrialConstruct):
             threading.Timer(task_args["delay_duration"], self.stage_block.set).start()
         else:
             self.stage_block.set()
+        self.delay_onset = datetime.datetime.now() - self.timers["session"]
 
         self.stage_block.wait()
         data = {
@@ -261,7 +266,8 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
         self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
         threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
-
+        self.intertrial_onset = datetime.datetime.now() - self.timers["session"]
+        
         self.stage_block.wait()
         data = self.managers["session"].end_of_trial_updates()
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
