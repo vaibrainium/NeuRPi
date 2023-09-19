@@ -255,5 +255,5 @@ if __name__ == "__main__":
         value["stage_block"].wait()
         
         # print(f"completed {data['trial_stage']}")
-        # print("stage block passed")
+        print("stage block passed")
 

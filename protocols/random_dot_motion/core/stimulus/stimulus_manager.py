@@ -92,6 +92,8 @@ class StimulusManager(Display):
             )
 
     def initiate_reinforcement(self, args):
+        func, arg = self.update_stimulus()
+        func(arg)
         if self.initiate_reinforcement_config["audio"][args['outcome']]:
             audio_name = self.initiate_reinforcement_config["audio"][args['outcome']]
             self.play_audio(audio_name)
