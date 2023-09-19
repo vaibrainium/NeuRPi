@@ -242,7 +242,8 @@ class SessionManager:
             self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
-        
+
+        stage_stimulus_args["coherence"] = np.sign(self.target)*100
 
         stage_task_args = {
             "reinforcement_duration": self.reinforcement_duration,
