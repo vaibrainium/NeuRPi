@@ -243,7 +243,7 @@ class SessionManager:
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
 
-        stage_stimulus_args["coherence"] = np.sign(self.target)*100
+        # stage_stimulus_args["coherence"] = np.sign(self.target)*100
 
         stage_task_args = {
             "reinforcement_duration": self.reinforcement_duration,
