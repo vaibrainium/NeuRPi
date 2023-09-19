@@ -220,9 +220,9 @@ class SessionManager:
             self.trial_reward = self.full_reward_volume
             psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
             if np.abs(psych_bias - 0.5) > 0.15:
-                # if correct trial is in biased direction, give less reward (-0.2ul)
+                # if correct trial is in biased direction, give less reward (proportional to bias)
                 if self.choice == np.sign(psych_bias - 0.5):
-                    self.trial_reward *= 0.7
+                    self.trial_reward *= (1-0.65*np.abs(psych_bias - 0.5))
                 # if correct trial is in non-biased direction, give additional reawrd (+0.2ul)
                 if self.choice == -np.sign(psych_bias - 0.5): 
                     self.trial_reward *= 1.2
