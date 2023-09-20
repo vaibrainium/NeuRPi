@@ -298,6 +298,19 @@ class SessionManager:
             #             -coh * self.subject_config["rolling_bias"]
             #         )  # Adding high coherence from unbiased direction.
 
+        max_repeat_signs = 3
+        self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
+
+    def shuffle_seq(self, sequence, max_repeat):
+        """ Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
+        for i in range(len(sequence) - max_repeat):
+            subsequence = sequence[i:i + max_repeat+1]
+            if len(set(np.sign(subsequence))) == 1:
+                temp_block = sequence[i:]
+                np.random.shuffle(temp_block)
+                sequence[i:] = temp_block
+        return sequence
+
 
     ####################### between-trial methods #######################
     
