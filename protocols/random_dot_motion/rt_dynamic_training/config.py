@@ -16,11 +16,11 @@ TASK = {
         },
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 60,
+            "max_viewing": 10,
             "min_viewing": 0.3,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5, size=1)[0], # old free reward
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1, size=1)[0], # new free reward
-            "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0],  # new rt dynamic
+            "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 2, scale=1.5, size=1)[0],  # new rt dynamic
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
@@ -34,8 +34,8 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.000,
-                "incorrect": lambda response_time: 1 + 4 * (np.exp(-2 * response_time)),
-                "noresponse": lambda response_time: 5,
+                "incorrect": lambda response_time: 3 + 3 * (np.exp(-1.5 * response_time)),
+                "noresponse": lambda response_time: 10,
             },
         },
         "intertrial": {
@@ -197,6 +197,7 @@ GRADUATION = {
             3: np.array([-100, -72, -36, 36, 72, 100]),
             4: np.array([-100, -72, -36, -18, 18, 36, 72, 100]),
             5: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
+            6: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
         },
     },
     "accuracy": {
