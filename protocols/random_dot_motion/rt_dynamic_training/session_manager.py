@@ -218,7 +218,10 @@ class SessionManager:
             # # if invalid trial (i.e., correct repeat), give half reward_volume irrespective of training type
             # if self.valid:
             self.trial_reward = self.full_reward_volume
-            psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
+            try:
+                psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
+            except RuntimeWarning:
+                psych_bias = 0.5
             if np.abs(psych_bias - 0.5) > 0.15:
                 # if correct trial is in biased direction, give less reward (proportional to bias)
                 if self.choice == np.sign(psych_bias - 0.5):

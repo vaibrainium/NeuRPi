@@ -171,13 +171,6 @@ class Task:
         self.config.FILES["rolling_perf_after"] = Path(data_path, "rolling_perf_after.pkl")
         self.config.FILES["rolling_perf"] = Path(data_path.parent, "rolling_perf.pkl")
 
-        # # create trial file header
-        # header = ["idx_attempt", "idx_valid", "idx_correction", "is correction trial", "signed coherence", "target", 
-        #           "choice", "response_time", "is_valid", "outcome", "trial_reward", 
-        #           "fixation_duration", "stimulus_duration", "reinforcement_duration", "delay_duration", "intertrial_duration"]
-        # with open(self.config.FILES["trial"], "w") as file:
-        #     writer = csv.DictWriter(file, fieldnames=header)
-        #     writer.writeheader()
 
     def pause(self):
         pass
@@ -247,10 +240,6 @@ if __name__ == "__main__":
     while True:
 
         data = next(stages)()
-        # Calculate next stage data and prepare triggers
-        # data = next(task.stages)()
-        # print("called stage method")
-
         # Waiting for stage block to clear
         value["stage_block"].wait()
         

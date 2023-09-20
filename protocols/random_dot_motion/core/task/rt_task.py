@@ -79,6 +79,7 @@ class RTTask(TrialConstruct):
         # Event locks, triggers
         self.stage_block = stage_block
         self.response_block = response_block
+        self.response_block.clear()
 
         # Initializing managers
         self.managers = managers
@@ -121,17 +122,18 @@ class RTTask(TrialConstruct):
         # Determine stage parameters
         task_args, stimulus_args = self.managers["session"].prepare_fixation_stage()
         self.trigger = {
-            "type": "FIXATE_ON",
+            "type": "FIXATE",
             "targets": task_args["monitor_response"],
             "duration": task_args["fixation_duration"],
         }
         # initiate fixation and start monitoring responses
         self.msg_to_stimulus.put(("fixation_epoch", stimulus_args))
+        self.response_block.set()
         self.timers["trial"] = datetime.datetime.now()
-        # self.response_block.set()
         self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
-        self.fixation_monitor(target=task_args["monitor_response"], duration=task_args["fixation_duration"])
-        self.stage_block.set()
+        self.stage_block.wait()
+        # self.fixation_monitor(target=task_args["monitor_response"], duration=task_args["fixation_duration"])
+        # self.stage_block.set()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
@@ -151,19 +153,20 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = {}, {}
 
         task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
-
+        self.trigger = {
+            "type": "GO",
+            "targets": task_args["monitor_response"],
+            "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
+        }
         # initiate stimulus
         self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
-        # start min viewing timer
-        min_view_timer = threading.Timer(task_args["minimum_viewing_duration"], lambda: None)
-        min_view_timer.start()
+        # set respons_block after minimum viewing time
+        threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
         self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
-        # start monitoring responses after timer expires
-        min_view_timer.join()
-        self.choice, self.response_time = self.choice_monitor(target=task_args["monitor_response"], duration=task_args["stimulus_duration"] - task_args["minimum_viewing_duration"])
+
+        self.stage_block.wait()
         self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
         print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
-        self.stage_block.set()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "stimulus_stage",
@@ -171,43 +174,6 @@ class RTTask(TrialConstruct):
             "response_time": self.response_time,
         }
         return data
-
-        # # Clear stage block
-        # self.stage_block.clear()
-        # task_args, stimulus_args = {}, {}
-
-        # task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
-
-        # print(f"Passive Trial Duration is {self.managers['session'].stimulus_duration}")
-        # self.trigger = {
-        #     "type": "GO",
-        #     "targets": task_args["monitor_response"],
-        #     "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
-        # }
-        
-        # # initiate stimulus and start monitoring responses
-        # self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
-        # # set respons_block after minimum viewing time
-        # threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
-        # self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
-
-
-        # self.stage_block.wait()
-        # self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
-        # self.choice = self.response
-
-        # print(
-        #     f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}"
-        # )
-
-        # self.stage_block.wait()
-        # data = {
-        #     "DC_timestamp": datetime.datetime.now().isoformat(),
-        #     "trial_stage": "stimulus_stage",
-        #     "response": self.choice,
-        #     "response_time": self.response_time,
-        # }
-        # return data
 
     def reinforcement_stage(self):
         """
@@ -234,20 +200,16 @@ class RTTask(TrialConstruct):
             elif task_args["reward_side"] == 1:  # reward right
                 self.managers["hardware"].reward_right(task_args["trial_reward"])
                 self.managers["session"].total_reward += task_args["trial_reward"]
-                            
-            self.must_respond_monitor(target=[task_args["reward_side"]])
-            self.stage_block.set()
-            # # start monitoting for reward consumption
-            # self.trigger = {
-            #     "type": "MUST_GO",
-            #     "targets": [task_args["reward_side"]],
-            #     "duration": None,
-            # }
-            # # wait for reward consumption
-            # self.response_block.set()
-            # self.must_respond_block.wait()
-            # # reset must_respond_block
-            # self.must_respond_block.clear()
+
+            self.trigger = {
+            "type": "MUST_RESPOND",
+            "targets": [task_args["reward_side"]],
+            "duration": None,
+            }
+            self.response_block.set()
+            self.must_respond_block.wait()
+            # reset must_respond_block
+            self.must_respond_block.clear()
 
         # waiting for reinforcement durations to be over
         self.stage_block.wait()
@@ -280,7 +242,6 @@ class RTTask(TrialConstruct):
         }
         return data
 
-
     def intertrial_stage(self, *args, **kwargs):
         """
         Stage 3: Inter-trial Interval.
@@ -300,7 +261,6 @@ class RTTask(TrialConstruct):
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"
         data["TRIAL_END"] = True
-
         return data
 
 if __name__ == "__main__":
