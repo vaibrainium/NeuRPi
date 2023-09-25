@@ -282,24 +282,28 @@ class SessionManager:
 
 
     def generate_block_schedule(self):
-        self.block_schedule = (list(self.active_coherences) * self.repeats_per_block)
-        np.random.shuffle(self.block_schedule)
+        self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
+        # self.block_schedule = (list(self.active_coherences) * self.repeats_per_block)
+        if self.trial_counters["attempt"] == 0:
+            self.block_schedule = np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
+        else:
+            np.random.shuffle(self.block_schedule)
 
-        # TODO: active bias correction needed?
-        # swap coherence direction to unbiased side if coherence is above active threshold
-            # for _, coh in enumerate(
-            #     coherences[: self.subject_config["current_coherence_level"]]
-            # ):
-            #     if np.abs(coh) > self.config.TASK["bias"]["active_correction"]["threshold"]:
-            #         self.trial_schedule.remove(
-            #             coh * self.subject_config["rolling_bias"]
-            #         )  # Removing high coherence from biased direction (-1:left; 1:right)
-            #         self.trial_schedule.append(
-            #             -coh * self.subject_config["rolling_bias"]
-            #         )  # Adding high coherence from unbiased direction.
+            # TODO: active bias correction needed?
+            # swap coherence direction to unbiased side if coherence is above active threshold
+                # for _, coh in enumerate(
+                #     coherences[: self.subject_config["current_coherence_level"]]
+                # ):
+                #     if np.abs(coh) > self.config.TASK["bias"]["active_correction"]["threshold"]:
+                #         self.trial_schedule.remove(
+                #             coh * self.subject_config["rolling_bias"]
+                #         )  # Removing high coherence from biased direction (-1:left; 1:right)
+                #         self.trial_schedule.append(
+                #             -coh * self.subject_config["rolling_bias"]
+                #         )  # Adding high coherence from unbiased direction.
 
-        max_repeat_signs = 3
-        self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
+            max_repeat_signs = 3
+            self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
 
     def shuffle_seq(self, sequence, max_repeat):
         """ Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
