@@ -47,6 +47,7 @@ class TaskGUI(rigclass):
             self.rig.setupUi(self)
             self.rig.close_experiment.hide()
             self.rig.subject_id.setText(self.subject.name)
+            self.rig.age.setText(str(self.subject.age))
             self.rig.baseline_weight.setText(str(self.subject.prct_weight))
             self.rig.protocol.setText(code_to_str(self.protocol))
             self.rig.experiment.setText(code_to_str(self.experiment))

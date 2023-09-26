@@ -8,6 +8,7 @@ import time
 import typing
 import uuid
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
@@ -60,6 +61,8 @@ class Subject:
             self.import_subject_biography()
         except FileNotFoundError:
             raise FileNotFoundError("Subject or root files not found")
+
+        self.age = (datetime.now() - datetime.strptime(self.info["subject_dob"], "%Y-%m-%d")).days // 7
 
     ############################ context manager for files ############################
     @contextmanager
@@ -141,4 +144,5 @@ if __name__ == "__main__":
     }
 
     a.update_history(new_line)
+
     print(a.dir)
