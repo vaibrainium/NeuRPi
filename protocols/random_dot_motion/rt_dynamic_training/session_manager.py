@@ -40,7 +40,7 @@ class SessionManager:
         self.update_reward_volume()
         self.trial_reward = None # reward given on current trial
         self.total_reward = 0 # total reward given in session
-        self.fixation_duration = self.config.TASK["epochs"]["fixation"]["duration"]
+        self.fixation_duration = None #self.config.TASK["epochs"]["fixation"]["duration"]
         self.stimulus_duration = None
         self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
         self.passive_viewing_duration = None
