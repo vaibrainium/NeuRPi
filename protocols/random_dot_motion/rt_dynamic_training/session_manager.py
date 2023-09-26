@@ -311,7 +311,8 @@ class SessionManager:
                 self.next_coh_level = self.next_coh_level + 1
                 self.trials_in_current_level = 0
             else:
-                break
+                break  
+
         # backward level change
         if self.graduation_direction == 0:
             while self.next_coh_level > 2:
@@ -321,6 +322,11 @@ class SessionManager:
                 else:
                     break
 
+        # if current level accuracy breaks, then reset trials_in_current_level
+        if self.current_coh_level > 2:
+            if any(list(self.rolling_accuracy.values()) < self.accuracy_thresholds[self.current_coh_level-1]):
+                self.trials_in_current_level = 0
+  
         if self.next_coh_level != self.current_coh_level:
             self.update_coherence_level()
 
