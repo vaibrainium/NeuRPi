@@ -56,6 +56,7 @@ class SessionManager:
         self.delay_onset = None
         self.intertrial_onset = None
         # behavior dependent function
+        self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
         self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
@@ -112,6 +113,7 @@ class SessionManager:
             self.outcome,
             self.trial_reward,
             # time related dynamic variables
+            self.fixation_duration,
             self.stimulus_duration,
             self.reinforcement_duration,
             self.delay_duration,
@@ -159,6 +161,8 @@ class SessionManager:
         self.random_generator_seed = np.random.randint(0, 1000000)
         # updating trial parameters
         self.prepare_trial_variables()       
+        # get fixation duratino
+        self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = {}, 
         stage_task_args = {"fixation_duration": self.fixation_duration, "monitor_response": [np.NaN], "signed_coherence": self.signed_coherence}

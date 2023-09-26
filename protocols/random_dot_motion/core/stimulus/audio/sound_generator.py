@@ -2,7 +2,7 @@ import numpy as np
 import scipy.io.wavfile
 
 
-def generate_sound(frequency, duration, ramping_time, sampling_rate):
+def generate_sound(filename, frequency, duration, ramping_time, sampling_rate, volume):
     """
     Generate sinewave sounds at a given frequency for specified duration with sampling rate and optional ramping_time, and save sound as .wav file
     """
@@ -15,11 +15,14 @@ def generate_sound(frequency, duration, ramping_time, sampling_rate):
         sound[: len(ramp)] = sound[: len(ramp)] * ramp
         sound[-len(ramp) :] = sound[-len(ramp) :] * ramp[::-1]
 
+    # Scale sound by the volume
+    sound = (sound * volume)
+
     # Scale sound to 16-bit range (optional, if needed for compatibility with Pygame)
     sound = (sound * 32767).astype(np.int16)
 
     # Save sound
-    scipy.io.wavfile.write("sound.wav", sampling_rate, sound)
+    scipy.io.wavfile.write(filename, sampling_rate, sound)
     return sound
 
 
@@ -28,7 +31,9 @@ if __name__ == "__main__":
     # https://stackoverflow.com/questions/45596189/why-cant-i-play-a-wav-file-with-aplay
 
 
+    # fixation onset
+    generate_sound(filename="fixation_tone_ramp.wav", frequency=5000, duration=0.1, ramping_time=0.01, sampling_rate=192000, volume=.2)
     # # stimulus onset
     # generate_sound(frequency=5000, duration=0.1, ramping_time=0.01, sampling_rate=192000)
-    # correct response
-    generate_sound(frequency=1000, duration=0.3, ramping_time=0.0, sampling_rate=192000)
+    # # correct response
+    generate_sound(filename="correct_tone.wav", frequency=1000, duration=0.3, ramping_time=0.01, sampling_rate=192000, volume=.2)

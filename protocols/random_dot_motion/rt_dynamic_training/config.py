@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import numpy as np
-from scipy.stats import pearson3
+from scipy.stats import pearson3, expon
 
 REQUIRED_HARDWARE = ["Arduino", "Display"]
 
