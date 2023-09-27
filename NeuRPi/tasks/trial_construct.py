@@ -80,17 +80,26 @@ class TrialConstruct:
         """
         Monitors response on target for given duration.
         """
+        monitor_duration = duration
         start = time.time()
-        try:
-            response = self.response_queue.get(block=True, timeout=duration)
-            if response in target:
-                response_time = time.time() - start
-        except queue.Empty:
-            response = np.nan
-            response_time = np.nan
-        finally:
-            self.clear_queue()
-            self.response_block.clear()
+        remaining_duration = monitor_duration - (time.time() - start)
+        while remaining_duration > 0:
+            print(remaining_duration)
+            try:
+                response = self.response_queue.get(block=True, timeout=remaining_duration)
+                if response in target:
+                    response_time = time.time() - start
+                    break
+                else:
+                    remaining_duration = monitor_duration - (time.time() - start)
+
+            except queue.Empty:
+                response = np.nan
+                response_time = np.nan
+                break
+        
+        self.clear_queue()
+        self.response_block.clear()
         return [response, response_time]
         
 
