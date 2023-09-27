@@ -84,7 +84,6 @@ class TrialConstruct:
         start = time.time()
         remaining_duration = monitor_duration - (time.time() - start)
         while remaining_duration > 0:
-            print(remaining_duration)
             try:
                 response = self.response_queue.get(block=True, timeout=remaining_duration)
                 if response in target:
