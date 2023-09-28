@@ -174,7 +174,7 @@ class SessionManager:
         if self.training_type == 0: # passive-only training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
             #TODO: passive should not take any response
-            monitor_response = [self.target]
+            monitor_response = []
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 1: # active-passive training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
