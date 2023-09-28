@@ -81,6 +81,8 @@ class TrialConstruct:
         Monitors response on target for given duration.
         """
         monitor_duration = duration
+        response = np.nan
+        response_time = np.nan
         start = time.time()
         remaining_duration = monitor_duration - (time.time() - start)
         while remaining_duration > 0:
