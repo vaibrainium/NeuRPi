@@ -271,9 +271,9 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
 
         if self.training_type < 2 and self.outcome=="noresponse":
-            self.delay_duration = self.delay_duration_function["correct"](self.response_time)
+            self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
         else:
-            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time)
+            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
         stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
