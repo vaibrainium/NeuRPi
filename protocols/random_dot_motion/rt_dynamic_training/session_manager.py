@@ -226,7 +226,7 @@ class SessionManager:
                 psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
             except RuntimeWarning:
                 psych_bias = 0.5
-            if np.abs(psych_bias - 0.5) > 0.15:
+            if np.abs(psych_bias - 0.5) > 0.10:
                 # if correct trial is in biased direction, give less reward (proportional to bias)
                 if self.choice == np.sign(psych_bias - 0.5):
                     # self.trial_reward *= (1-0.65*np.abs(psych_bias - 0.5))
