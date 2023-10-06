@@ -299,7 +299,7 @@ if __name__ == "__main__":
     import time
 
     num_pulses = 10
-    num_pulses = input()
+    num_pulses = input("Please input number of pulse:")
     print(f"Calibration for Left is {a.reward_calibration_left}")
     print(f"Calibration for Right is {a.reward_calibration_right}")
     time.sleep(5)
