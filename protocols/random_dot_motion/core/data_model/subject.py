@@ -250,8 +250,8 @@ class Subject(BaseSubject):
             plt.ylim([0, 1000])
             plt.savefig(self.plots["attmpt_vs_weight"])
             plt.close()
-        except:
-            print("Could not save summary plots")
+        except Exception as e:
+            print(f"Could not save summary plots: {e}")
 
     def save_history(self, start_weight=None, end_weight=None, baseline_weight=None):
         hist_dict = {

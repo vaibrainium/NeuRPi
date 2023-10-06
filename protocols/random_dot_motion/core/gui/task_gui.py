@@ -61,6 +61,7 @@ class TaskGUI(rigclass):
         self.summary = Ui_summary()
         self.summary.setupUi(self.summary_window)
         self.summary_window.raise_()
+        self.summary.close.hide()
         # Camera
         # self.video_device = cv2.VideoCapture(camera_index)
         # Rig parameter variables
@@ -101,6 +102,7 @@ class TaskGUI(rigclass):
         self.rig.stop_experiment.clicked.connect(self.stop_experiment)
         self.rig.close_experiment.clicked.connect(self.close_experiment)
         self.summary.okay.clicked.connect(self.hide_summary)
+        self.summary.close.clicked.connect(self.close_summary)
 
     ###################################################################################################
     # GUI Functions
@@ -130,6 +132,7 @@ class TaskGUI(rigclass):
         self.rig.accuracy_plot.setInteractive(False)
         self.rig.accuracy_plot.setLabel("left", "Accuracy")
         self.rig.accuracy_plot.setLabel("bottom", "Trial No")
+        self.rig.accuracy_plot.showGrid(x=False, y=True, alpha=0.6)
         self.accuracy_trace_plot = self.rig.accuracy_plot.plot()
         self.correct_trace_plot = self.rig.accuracy_plot.plot()
         self.incorrect_trace_plot = self.rig.accuracy_plot.plot()
@@ -311,10 +314,12 @@ class TaskGUI(rigclass):
             self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
             self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
             self.summary_data["comments"] = self.summary.comments.toPlainText()
-
             self.check_water_requirement()
-            self.rig.close_experiment.show()
-            self.summary_window.hide()
+            self.summary.close.show()
+
+    def close_summary(self):
+        self.summary_window.hide()
+        self.rig.close_experiment.show()
 
     def check_water_requirement(self):
         additional_water = 0
@@ -377,8 +382,9 @@ class TaskGUI(rigclass):
 
         if "session_files" in value.keys():
             self.show_summary_window(value)
-            while self.summary_window.isVisible():
+            while not self.rig.close_experiment.isVisible():
                 QtWidgets.QApplication.processEvents()
+                time.sleep(0.01)
 
             value["session_files"]["summary"] = self.summary_data
             self.subject.save_files(value["session_files"])

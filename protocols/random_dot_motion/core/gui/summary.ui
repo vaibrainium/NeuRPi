@@ -255,7 +255,7 @@ p, li { white-space: pre-wrap; }
   <widget class="QPushButton" name="okay">
    <property name="geometry">
     <rect>
-     <x>440</x>
+     <x>300</x>
      <y>540</y>
      <width>131</width>
      <height>51</height>
@@ -379,6 +379,27 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>Entropy</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="close">
+   <property name="geometry">
+    <rect>
+     <x>600</x>
+     <y>540</y>
+     <width>131</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>22</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(226, 50, 50);</string>
+   </property>
+   <property name="text">
+    <string>Close</string>
    </property>
   </widget>
  </widget>
