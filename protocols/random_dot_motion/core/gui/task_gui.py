@@ -177,8 +177,9 @@ class TaskGUI(rigclass):
         # self.session_timer.start(1000)
 
     def start_active_gui_methods(self):
-        self.session_timer.timeout.connect(lambda: self.update_session_clock())
-        self.session_timer.start(1000)
+        if self.state != "STOPPED":
+            self.session_timer.timeout.connect(lambda: self.update_session_clock())
+            self.session_timer.start(1000)
         if self.video_device is not None:
             if self.video_device.isOpened():
                 self.camera_timer.timeout.connect(self.update_video_image)
@@ -186,7 +187,8 @@ class TaskGUI(rigclass):
 
     def stop_active_gui_methods(self):
         # self.session_timer.timeout.disconnect()
-        self.session_timer.stop()
+        if self.state != "STOPPED":
+            self.session_timer.stop()
         if self.video_device is not None:
             self.camera_timer.stop()
 
@@ -310,8 +312,24 @@ class TaskGUI(rigclass):
             self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
             self.summary_data["comments"] = self.summary.comments.toPlainText()
 
+            self.check_water_requirement()
             self.rig.close_experiment.show()
             self.summary_window.hide()
+
+    def check_water_requirement(self):
+        additional_water = 0
+        if self.summary_data['total_reward'] < 500:
+            additional_water = max(additional_water,500 - self.summary_data['total_reward'])
+        if self.summary_data['end_weight_prct'] < 85:
+            additional_water = max(additional_water, ((85 - self.summary_data['end_weight_prct'])/100)*self.summary_data['baseline_weight']*1000)
+        if additional_water > 0:
+            msg = QtWidgets.QMessageBox()
+            msg.setIcon(QtWidgets.QMessageBox.Critical)
+            msg.setText(f"Did not meet water requirement. Please provide {int(additional_water)} ul of water")
+            msg.setWindowTitle("Additional Water")
+            msg.exec_()
+        self.summary_data["additional_water"] = int(additional_water)
+        return False
 
     def close_experiment(self):
         """Task has ended but waiting to trial to end to close session"""
