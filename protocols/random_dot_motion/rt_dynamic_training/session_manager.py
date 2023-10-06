@@ -101,6 +101,11 @@ class SessionManager:
             "trial_distribution": {int(coh): 0 for coh in self.full_coherences},
             "response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
         }
+        # Additional fixed ratio reward
+        self.fixed_ratio = self.config.TASK["fixed_ratio"]["value"] # number of trials to give additional reward 
+        self.last_rewarded_side = None
+        self.correct_streak_counter = 0
+        self.FRR_reward = None
 
         # list of all variables needed to be reset every trial
         self.trial_reset_variables = [
@@ -124,6 +129,8 @@ class SessionManager:
             self.reinforcement_onset,
             self.delay_onset,
             self.intertrial_onset,
+            # fixed reward ratio
+            self.FRR_reward,
         ]
 
     ####################### pre-session methods #######################
@@ -161,7 +168,7 @@ class SessionManager:
         self.random_generator_seed = np.random.randint(0, 1000000)
         # updating trial parameters
         self.prepare_trial_variables()       
-        # get fixation duratino
+        # get fixation duration
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = {}, 
@@ -219,8 +226,6 @@ class SessionManager:
         # determine reinfocement duration and reward
         self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
         if self.outcome=="correct":
-            # # if invalid trial (i.e., correct repeat), give half reward_volume irrespective of training type
-            # if self.valid:
             self.trial_reward = self.full_reward_volume
             try:
                 psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
@@ -229,24 +234,28 @@ class SessionManager:
             if np.abs(psych_bias - 0.5) > 0.05:
                 # if correct trial is in biased direction, give less reward (proportional to bias)
                 if self.choice == np.sign(psych_bias - 0.5):
-                    # self.trial_reward *= (1-0.65*np.abs(psych_bias - 0.5))
-                    # self.trial_reward *= 1 - (0.15 + (np.abs(psych_bias - 0.5)-.15)/2.33)
                     multiplier = 0.9 * (1-np.abs(psych_bias - 0.5)/2)
                     self.trial_reward *= multiplier
-
                 # if correct trial is in non-biased direction, give additional reawrd (+0.2ul)
                 if self.choice == -np.sign(psych_bias - 0.5): 
-                    # self.trial_reward *= 1.2
                     multiplier = 0.9 * (1+np.abs(psych_bias - 0.5)/2)
                     self.trial_reward *= multiplier
 
             self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
-            # else:
-            #     # # If repeat trial give 3/4th reward. Should motivate to be more accurate
-            #     self.trial_reward = (self.full_reward_volume * .75)                                 
-            #     self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+
+            # Fixed ratio reward
+            self.correct_streak_counter += 1
+            # if correct streak is longer than fixed ratio and if last rewarded side is not the same as current choice
+            if (self.correct_streak_counter >= self.fixed_ratio) and (self.choice != self.last_rewarded_side):
+                self.FRR_reward = self.full_reward_volume
+                self.last_rewarded_side = self.choice
+                self.correct_streak_counter = 0
+            else:
+                self.FRR_reward = None
         else:
             self.trial_reward = None
+            self.FRR_reward = None
+            self.correct_streak_counter = 0
 
         # making changes to typical reinforcement durations and reward based on training type and trial validity
         # if no response on passive/active-passive training assume correct trial durations and give half reward_volume
@@ -257,12 +266,11 @@ class SessionManager:
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
 
-        # stage_stimulus_args["coherence"] = np.sign(self.target)*100
-
         stage_task_args = {
             "reinforcement_duration": self.reinforcement_duration,
             "trial_reward": self.trial_reward,
             "reward_side": self.target,
+            "FRR_reward": self.FRR_reward,
         }
 
         return stage_task_args, stage_stimulus_args
@@ -309,7 +317,6 @@ class SessionManager:
     def graduation_check(self):
         # deciding next_coherence level based on rolling accuracy. 
         # forward level change
-        #TODO: swap the logic between "if" and "while" to make it more straightforward
         #TODO: implement direct key value comparison between two dictionaries
         while self.next_coh_level < len(self.accuracy_thresholds):
             if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.next_coh_level]) and (
@@ -451,10 +458,6 @@ class SessionManager:
 
             # update running accuracy
             if (self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0):
-                # self.plot_vars["running_accuracy"].append([self.trial_counters["valid"], 
-                #                                            round(self.trial_counters["correct"]/ self.trial_counters["valid"] * 100, 2),
-                #                                            self.outcome
-                #                                            ])   
                 self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], 
                                             round(self.trial_counters["correct"]/ self.trial_counters["valid"] * 100, 2),
                                             self.outcome
@@ -477,9 +480,9 @@ class SessionManager:
         trial_data = {
             "is_valid": self.valid,
             "trial_counters": self.trial_counters,
-            "reward_volume": self.full_reward_volume,
-            "trial_reward": self.trial_reward,
-            "total_reward": self.total_reward,
+            "reward_volume": round(self.full_reward_volume, 2),
+            "trial_reward": round(self.trial_reward, 2) if self.trial_reward is not None else None,
+            "total_reward": round(self.total_reward, 2),
             "plots": {
                 "running_accuracy": self.plot_vars["running_accuracy"],
                 "psychometric_function": self.plot_vars["psych"],
@@ -503,6 +506,7 @@ class SessionManager:
             "is_valid": self.valid,
             "outcome": self.outcome,
             "trial_reward": self.trial_reward,
+            "FRR_reward": self.FRR_reward,
             "fixation_duration": self.fixation_duration,
             "stimulus_duration": self.stimulus_duration,
             "reinforcement_duration": self.reinforcement_duration,

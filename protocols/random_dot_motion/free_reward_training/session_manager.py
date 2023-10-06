@@ -288,7 +288,6 @@ class SessionManager:
 
     def generate_block_schedule(self):
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
-        # self.block_schedule = (list(self.active_coherences) * self.repeats_per_block)
         if self.trial_counters["attempt"] == 0:
             self.block_schedule = np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
         else:

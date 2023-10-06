@@ -15,24 +15,25 @@ TASK = {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
             "min_viewing": 0.3,
-            # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5, size=1)[0], # old free reward
-            # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1, size=1)[0], # new free reward
-            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0],  # new rt dynamic
+            # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
+            # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1), # new free reward
+            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=(coh_level - 1) * 2, scale=1) / 2,  # new rt dynamic
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0.300,
-                "incorrect": lambda response_time: 0.300, #1.000,
-                "noresponse": lambda response_time: 0.300, #1.000,
+                "correct": lambda response_time: 0, # 0.300,
+                "incorrect": lambda response_time: 0,  # .300,  # 1.000,
+                "noresponse": lambda response_time: 0,  # .300,  # 1.000,
             },
         },
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0.000,
-                "incorrect": lambda response_time: 8 * (np.exp(-2 * response_time)),
-                "noresponse": lambda response_time: 8 * (np.exp(-2 * response_time)),
+                "correct": lambda response_time, coh: 0.000,
+                # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
+                "incorrect": lambda response_time, coh: 4 + ((np.abs(coh)/100*-5)+6) * (np.exp(-0.5 * response_time)),
+                "noresponse": lambda response_time, coh: 10,
             },
         },
         "intertrial": {
@@ -77,6 +78,10 @@ TASK = {
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
         "value": 2,
+    },
+    "fixed_ratio": {
+	"tag": "Fixed reward ratio minimum streak",
+	"value": 3,
     },
 }
 
@@ -181,8 +186,6 @@ DATAFILES = {
     "trial": "_trial.csv",
 }
 
-TASK["epochs"]["stimulus"]["passive_viewing"] = lambda coh_level: pearson3.rvs(skew=0.6, loc=(coh_level - 1) * 10, scale=1.5, size=1)[0]
-
 GRADUATION = {
     "direction": {
         "tag": "Direction of graduation. 0: 'forward' or 1:'forward and backward'",
@@ -196,6 +199,7 @@ GRADUATION = {
             3: np.array([-100, -72, -36, 36, 72, 100]),
             4: np.array([-100, -72, -36, -18, 18, 36, 72, 100]),
             5: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
+            6: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
         },
     },
     "accuracy": {
@@ -206,12 +210,12 @@ GRADUATION = {
         "thresholds": {
             "tag": "List of all accuracy conditions for each coherence level to move forward (or backward)",
             "value": {
-                1: np.array([0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7]),
-                2: np.array([0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7]),
-                3: np.array([0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7]),
-                4: np.array([0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7]),
-                5: np.array([0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7]),
-                6: np.array([0.7, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7]),
+                1: np.array([0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8]),
+                2: np.array([0.8, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.8]),
+                3: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
+                4: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
+                5: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
+                6: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
             },
         },
     },
@@ -220,10 +224,10 @@ GRADUATION = {
         "value": {
             1: 0,
             2: 0,
-            3: 0,
-            4: 200,
-            5: 200,
-            6: 200,
+            3: 200,
+            4: 500,
+            5: 500,
+            6: 500,
         },
     },
     "reward_change": {

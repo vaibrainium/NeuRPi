@@ -210,6 +210,17 @@ class RTTask(TrialConstruct):
             self.must_respond_block.wait()
             # reset must_respond_block
             self.must_respond_block.clear()
+        
+        # If fixed reward ratio is requested:
+        if task_args.get("FRR_reward") is not None:
+            # give reward
+            if task_args["reward_side"] == -1:
+                self.managers["hardware"].reward_left(task_args["FRR_reward"])
+                self.managers["session"].total_reward += task_args["FRR_reward"]
+            elif task_args["reward_side"] == 1:
+                self.managers["hardware"].reward_right(task_args["FRR_reward"])
+                self.managers["session"].total_reward += task_args["FRR_reward"]
+            print(f"FRR reward given: {task_args['FRR_reward']}")
 
         # waiting for reinforcement durations to be over
         self.stage_block.wait()
