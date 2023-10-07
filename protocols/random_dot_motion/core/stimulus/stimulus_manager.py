@@ -1,7 +1,7 @@
 import time
 from multiprocessing import Process
 import omegaconf
-from protocols.random_dot_motion.core.stimulus.display_new import Display
+from protocols.random_dot_motion.core.stimulus.display import Display
 import logging
 
  # TODO: Need to work with new config.py system

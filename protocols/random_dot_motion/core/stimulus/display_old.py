@@ -107,66 +107,79 @@ class Display:
         try:
             self.connect()
             self.load_media()
-            # threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
-            # threading.Thread(target=self.render_visual, args=[], daemon=False).start()
-            self.display_process()
+            threading.Thread(target=self.in_queue_manager, args=[], daemon=False).start()
+            threading.Thread(target=self.render_visual, args=[], daemon=False).start()
         except Exception as e:
-            logging.error(f"An error occurred in the 'start' method: {e}")
+            logging.error(f"An error occurred in the display 'start' method: {e}")
 
-    def display_process(self):
-        init_method, update_method, draw_method = None, None, None
+    def in_queue_manager(self):
+        init_method, update_method = None, None
         while True:
-            
-            if update_method is None:
-                init_method, update_method, draw_method = None, None, None
-                (epoch, args) = self.in_queue.get(block=True, timeout=None)
-                epoch_value = self.stimulus_config["task_epochs"]["value"][epoch]
-                if epoch_value["clear_queue"]:
-                    # Re-defining clock here removes runaway effect
-                    self.clock = self.pygame.time.Clock()
-                init_method = getattr(self, epoch_value["init_func"])
-                try:
-                    init_method(args)
-                except:
-                    raise Warning(f"Unable to process {init_method}")
-                if epoch_value["update_func"]:
-                    update_method = getattr(self, epoch_value["update_func"])                
-
-            # if not self.in_queue.empty():
-            # #     # New epoch 
-            #     init_method, update_method, draw_method = None, None, None
-            #     (epoch, args) = self.in_queue.get()
-            #     epoch_value = self.stimulus_config["task_epochs"]["value"][epoch]
-            #     if epoch_value["clear_queue"]:
-            #         # Re-defining clock here removes runaway effect
-            #         self.clock = self.pygame.time.Clock()
-            #     init_method = getattr(self, epoch_value["init_func"])
-            #     try:
-            #         init_method(args)
-            #     except:
-            #         raise Warning(f"Unable to process {init_method}")
-            #     if epoch_value["update_func"]:
-            #         update_method = getattr(self, epoch_value["update_func"])
-
-            # if update is coming
-            if update_method:
-                if self.in_queue.empty():
-                    try:
-                        draw_method, draw_args = update_method(args)
-                        if draw_method:
-                            self.draw(draw_method, draw_args)
-                        self.clock.tick_busy_loop(self.frame_rate)
-                    except:
-                        raise Warning(f"Unable to process {update_method}")
+            if not self.in_queue.empty():
+                (epoch, args) = self.in_queue.get()
+                if epoch == "play_audio":
+                    self.play_audio(args)
                 else:
-                    update_method = None
-            
+                    init_method, update_method = None, None
+                    epoch_value = self.stimulus_config["task_epochs"]["value"][epoch]
+                    self.epoch_update_event.clear()
+                    self.render_block.wait()
+                    if epoch_value["clear_queue"]:
+                        self.frame_queue.queue.clear()
+                        # Re-defining clock here removes runaway effect
+                        self.clock = self.pygame.time.Clock()
+                    init_method = getattr(self, epoch_value["init_func"])
+                    try:
+                        init_method(args)
+                    except:
+                        raise Warning(f"Unable to process {init_method}")
+                    if epoch_value["update_func"]:
+                        update_method = getattr(self, epoch_value["update_func"])
+                        
+                        # filling the queue before rendering starts
+                        self.lock.acquire()
+                        if epoch_value["clear_queue"]==False:
+                            while not self.frame_queue.full():
+                                try:
+                                    draw_func, args = update_method(args)
+                                    self.frame_queue.put([draw_func, args])
+                                except:
+                                    raise Warning(f"Unable to process {update_method}")
+                        self.lock.release()
+                        self.epoch_update_event.set()
 
+            if update_method:
+                if not self.frame_queue.full():
+                    try:
+                        # Adding lock here improves FPS from ~30 Hz to ~50 Hz
+                        self.lock.acquire()
+                        draw_func, args = update_method(args)
+                        self.frame_queue.put([draw_func, args])
+                        self.lock.release()
+                    except:
+                        raise Warning(f"Failed to update visual for {epoch}")
 
+    def render_visual(self):
+        self.render_block.set()
+        while True:
+            self.epoch_update_event.wait() # without this event geting Segmentation fault error
+            if not self.frame_queue.empty():
+                try:
+                    self.render_block.clear()
+                    (func, pars) = self.frame_queue.get()
+                    self.lock.acquire()
+                    self.draw(func, pars)
+                    self.lock.release()
+                    self.render_block.set()
+                    self.clock.tick_busy_loop(self.frame_rate)
+                except Exception as e:
+                    raise Warning(f"Unable to render visual: {e}")
 
     def draw(self, func, args=None):
         try:
+            # start = time.time()
             func(args=args)
+            # print(f"Render time: {time.time()-start}")
         except:
             raise Warning(f"Rendering error: Unable to process {func}")
         # print(f"FPS: {self.clock.get_fps()}")
@@ -181,13 +194,10 @@ if __name__ == "__main__":
     from multiprocessing import Queue
 
     import hydra
-    from omegaconf import DictConfig, OmegaConf
 
-    path = "../random_dot_motion/config"
+    path = "../../random_dot_motion/config"
     filename = "free_reward_training.yaml"
-    # hydra.initialize(version_base=None, config_path=path)
-
-    config = OmegaConf.load(path+filename)
-    # config = hydra.compose(filename, overrides=[])
+    hydra.initialize(version_base=None, config_path=path)
+    config = hydra.compose(filename, overrides=[])
     courier = Queue()
     display_window = Display(stimulus_configuration=config, stimulus_courier=courier)
