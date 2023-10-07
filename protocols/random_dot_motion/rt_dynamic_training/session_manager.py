@@ -250,6 +250,7 @@ class SessionManager:
                 self.FRR_reward = self.full_reward_volume
                 self.last_rewarded_side = self.choice
                 self.correct_streak_counter = 0
+                stage_stimulus_args["play_FRR_audio"] = "correct_tone"
             else:
                 self.FRR_reward = None
         else:

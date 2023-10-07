@@ -215,6 +215,8 @@ class RTTask(TrialConstruct):
         if task_args.get("FRR_reward") is not None:
             # give reward after some delay
             time.sleep(.1)
+            if stimulus_args.get("play_FRR_audio") is not None: # play FRR reward stimulus
+                self.msg_to_stimulus.put(("play_audio", stimulus_args['play_FRR_audio']))
             if task_args["reward_side"] == -1:
                 self.managers["hardware"].reward_left(task_args["FRR_reward"])
                 self.managers["session"].total_reward += task_args["FRR_reward"]
