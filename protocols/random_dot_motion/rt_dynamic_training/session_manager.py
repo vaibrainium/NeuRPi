@@ -247,7 +247,7 @@ class SessionManager:
             self.correct_streak_counter += 1
             # if correct streak is longer than fixed ratio and if last rewarded side is not the same as current choice
             if (self.correct_streak_counter >= self.fixed_ratio) and (self.choice != self.last_rewarded_side):
-                self.FRR_reward = self.full_reward_volume
+                self.FRR_reward = self.trial_reward # self.full_reward_volume
                 self.last_rewarded_side = self.choice
                 self.correct_streak_counter = 0
                 stage_stimulus_args["play_FRR_audio"] = "correct_tone"
