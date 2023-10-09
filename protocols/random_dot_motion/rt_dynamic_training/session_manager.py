@@ -234,11 +234,11 @@ class SessionManager:
             if np.abs(psych_bias - 0.5) > 0.05:
                 # if correct trial is in biased direction, give less reward (proportional to bias)
                 if self.choice == np.sign(psych_bias - 0.5):
-                    multiplier = 0.9 * (1-np.abs(psych_bias - 0.5)/2)
+                    multiplier = 0.85 * (1-np.abs(psych_bias - 0.5)/2)
                     self.trial_reward *= multiplier
                 # if correct trial is in non-biased direction, give additional reawrd (+0.2ul)
                 if self.choice == -np.sign(psych_bias - 0.5): 
-                    multiplier = 0.9 * (1+np.abs(psych_bias - 0.5)/2)
+                    multiplier = 0.85 * (1+np.abs(psych_bias - 0.5)/2)
                     self.trial_reward *= multiplier
 
             self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
