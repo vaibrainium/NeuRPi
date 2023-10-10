@@ -239,7 +239,7 @@ class Subject(BaseSubject):
             plt.title("Attempts vs Start Weight")
             plt.legend()
             plt.ylim([0, 1000])
-            plt.savefig(self.plots["attmpt_vs_weight"])
+            plt.savefig(self.plots["attmpt_vs_training"])
             plt.close()
             # attempts vs weigth
             plt.plot(experiment_summary["start_weight_prct"], experiment_summary["total_attempt"], "o", label="Attempts vs Start Weight")
