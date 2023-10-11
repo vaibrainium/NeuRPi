@@ -11,7 +11,6 @@ from matplotlib import pyplot as plt
 
 from NeuRPi.data_model.subject import Subject as BaseSubject
 
-# TODO: 2. Generate phase graphs
 # TODO: 4. Add bias calculation
 
 
@@ -233,10 +232,10 @@ class Subject(BaseSubject):
             plt.savefig(self.plots["accu_vs_weight"])
             plt.close()
             # attempts vs training
-            plt.plot(experiment_summary["session"].str.split("_").str[0], experiment_summary["total_attempt"], "o", label="Attempts vs Start Weight")
-            plt.xlabel("Start Weight")
+            plt.plot(experiment_summary["session"].str.split("_").str[0], experiment_summary["total_attempt"], "o", label="Attempts vs Training Day")
+            plt.xlabel("Training Day")
             plt.ylabel("Attempts")
-            plt.title("Attempts vs Start Weight")
+            plt.title("Attempts vs Training Day")
             plt.legend()
             plt.ylim([0, 1000])
             plt.savefig(self.plots["attmpt_vs_training"])
