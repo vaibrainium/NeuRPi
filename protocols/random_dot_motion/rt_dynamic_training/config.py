@@ -22,7 +22,7 @@ TASK = {
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0, # 0.300,
+                "correct": lambda response_time: 0,  # 0.300,
                 "incorrect": lambda response_time: 0,  # .300,  # 1.000,
                 "noresponse": lambda response_time: 0,  # .300,  # 1.000,
             },
@@ -32,7 +32,7 @@ TASK = {
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
                 # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
-                "incorrect": lambda response_time, coh: 4 + ((np.abs(coh)/100*-5)+6) * (np.exp(-0.5 * response_time)),
+                "incorrect": lambda response_time, coh: 4 + ((np.abs(coh) / 100 * -5) + 6) * (np.exp(-0.5 * response_time)),
                 "noresponse": lambda response_time, coh: 10,
             },
         },
@@ -66,7 +66,7 @@ TASK = {
     "rolling_performance": {
         "rolling_window": 50,
         "current_coherence_level": 2,
-        "reward_volume": 3,
+        "reward_volume": 3.5,
     },
     "bias_correction": {
         "repeat_threshold": {
@@ -80,8 +80,8 @@ TASK = {
         "value": 2,
     },
     "fixed_ratio": {
-	"tag": "Fixed reward ratio minimum streak",
-	"value": 3,
+        "tag": "Fixed reward ratio minimum streak",
+        "value": 3,
     },
 }
 
