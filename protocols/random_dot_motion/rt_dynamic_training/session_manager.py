@@ -155,8 +155,8 @@ class SessionManager:
         if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
             self.full_reward_volume -= 0.1 
 
-        ## limiting reward volume between 1.5 and 3
-        self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3)
+        ## limiting reward volume between 2 and 3.5
+        self.full_reward_volume = np.clip(self.full_reward_volume, 2, 3.5)
 
     ####################### trial epoch methods #######################
     def prepare_fixation_stage(self):
@@ -263,7 +263,7 @@ class SessionManager:
         if self.training_type < 2 and self.outcome=="noresponse":
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
             self.trial_reward = self.full_reward_volume / 2
-            self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+            self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1.5 ul
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
 
@@ -351,8 +351,8 @@ class SessionManager:
             self.full_reward_volume += self.graduation_reward_change["increase"]
         elif self.next_coh_level < self.current_coh_level: # if level decreased
             self.full_reward_volume -= self.graduation_reward_change["decrease"]
-        # setting reward volume withing 1.5 to 3 range
-        np.clip(self.full_reward_volume, 1.5, 3)
+        # setting reward volume withing 2 to 3.5 range
+        np.clip(self.full_reward_volume, 2, 3.5)
         # updating current coherence level
         self.current_coh_level = self.next_coh_level
         self.active_coherences = self.active_coherences_by_level[self.current_coh_level]

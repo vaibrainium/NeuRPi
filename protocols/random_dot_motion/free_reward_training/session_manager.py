@@ -144,8 +144,8 @@ class SessionManager:
         if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
             self.full_reward_volume -= 0.1 
 
-        ## limiting reward volume between 1.5 and 3
-        self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3)
+        ## limiting reward volume between 2 and 3.5
+        self.full_reward_volume = np.clip(self.full_reward_volume, 2, 3.5)
 
     ####################### trial epoch methods #######################
     def prepare_fixation_stage(self):
@@ -219,13 +219,13 @@ class SessionManager:
             # if invalid trial (i.e., correct repeat), give half reward_volume irrespective of training type
             if self.valid:
                 self.trial_reward = self.full_reward_volume
-                self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+                self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1.5 ul
 
             else:
                 # If repeat trial give half reward. Should motivate to be more accurate but 
                 # might also create bias by giving less reward on repeat trials which is most likely going to be opposite of biased direction
                 self.trial_reward = self.full_reward_volume #/ 2
-                self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+                self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1ul
         else:
             self.trial_reward = None
 
@@ -234,7 +234,7 @@ class SessionManager:
         if self.training_type < 2 and self.outcome=="noresponse":
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
             self.trial_reward = self.full_reward_volume / 2
-            self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+            self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1.5 ul
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
         

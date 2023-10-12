@@ -200,9 +200,9 @@ if __name__ == "__main__":
     rolling_window = config.TASK["rolling_performance"]["rolling_window"]
     rolling_perf = {
                 "rolling_window": rolling_window,
-                "history": {str(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
-                "history_indices": {str(coh): 0 for coh in full_coherences},
-                "accuracy": {str(coh): 0 for coh in full_coherences},
+                "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
+                "history_indices": {int(coh): 0 for coh in full_coherences},
+                "accuracy": {int(coh): 0 for coh in full_coherences},
                 "current_coherence_level": current_coherence_level,
                 "trials_in_current_level": 0,
                 "total_attempts": 0,
