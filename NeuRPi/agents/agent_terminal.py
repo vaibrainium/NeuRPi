@@ -1,5 +1,5 @@
 import importlib
-import os
+import inspect
 import threading
 import time
 import typing
@@ -263,13 +263,14 @@ class Terminal(Application):
         Returns:
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
         """
-        module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.config"
+        # module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.config"
+        module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.{session_info.configuration}"
         session_config = importlib.import_module(module_path)
 
-        session_config = importlib.import_module(f"protocols.{session_info.protocol}.{session_info.experiment}.config")
+        session_config = importlib.import_module(f"protocols.{session_info.protocol}.{session_info.experiment}.{session_info.configuration}")
         file_path = Path(
             Path.cwd(),
-            Path(f"protocols/{session_info.protocol}/{session_info.experiment}/config.py"),
+            Path(f"protocols/{session_info.protocol}/{session_info.experiment}/{session_info.experiment}.py"),
         )
         with open(file_path, "r") as f:
             string_session_config = f.read()
@@ -298,6 +299,7 @@ class Terminal(Application):
         """
         Before starting the task, verify that all the hardware requirements to run the task as met
         """
+        # TODO: Implement hardware verification on the rig
         pass
 
     def start_experiment(self):
@@ -318,7 +320,8 @@ class Terminal(Application):
                     value={
                         "session_info": session_info,
                         # python object cannot be sent over network, so converting to string and will convert back to module on rig
-                        "session_config": string_session_config,
+                        # "session_config": string_session_config,
+                        "session_config": inspect.getsource(session_config),
                         "subject_config": subject_config,
                     },
                     flags={"NOLOG": True},

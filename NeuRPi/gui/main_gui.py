@@ -52,6 +52,7 @@ class Application(mainclass):
 
         # all connect signals
         self.main_gui.protocol.activated[str].connect(self.add_experiments)
+        self.main_gui.experiment.activated[str].connect(self.add_configurations)
         self.main_gui.start_experiment.clicked.connect(self.start_experiment)
         self.main_gui.create_new_subject.clicked.connect(self.show_subject_form)
         self.new_subject_form.create_button.clicked.connect(self.create_new_subject)
@@ -73,6 +74,23 @@ class Application(mainclass):
             if x.is_dir() and x.name not in ["__pycache__", "core"]:
                 list_experiments.append(code_to_str(x.name))  # .upper()
         self.main_gui.experiment.addItems(list_experiments)
+
+    def add_configurations(self):
+        if self.main_gui.experiment.currentText() == "SELECT":
+            self.main_gui.rig_id.clear()
+            self.main_gui.rig_id.addItem("SELECT")
+            self.main_gui.rig_id.setCurrentIndex(0)
+            return None
+        protocol = str_to_code(self.main_gui.protocol.currentText())
+        experiment = str_to_code(self.main_gui.experiment.currentText())
+        self.main_gui.configuration.clear()
+        list_configurations = ["SELECT"]
+        self.main_gui.configuration.setCurrentIndex(0)
+        for x in Path(Path.cwd(), "protocols", protocol, experiment).iterdir():
+            if not x.is_dir() and x.name not in ["__pycache__", "core"]:
+                # list_configurations.append(code_to_str(x.name))
+                list_configurations.append(code_to_str(x.stem))
+        self.main_gui.configuration.addItems(list_configurations)
 
     def critical_message(self, message):
         msg = QtWidgets.QMessageBox()
@@ -144,6 +162,9 @@ class Application(mainclass):
         self.main_gui.experiment.clear()
         self.main_gui.experiment.addItem("SELECT")
         self.main_gui.experiment.setCurrentIndex(0)
+        self.main_gui.configuration.clear()
+        self.main_gui.configuration.addItem("SELECT")
+        self.main_gui.configuration.setCurrentIndex(0)
         self.main_gui.rig_id.setCurrentIndex(0)
         self.main_gui.response_mode.setCurrentIndex(0)
         self.main_gui.right_prior.setValue(50)
@@ -159,6 +180,7 @@ class Application(mainclass):
         subject_weight = self.main_gui.subject_weight.toPlainText()
         protocol = self.main_gui.protocol.currentText()
         experiment = self.main_gui.experiment.currentText()
+        configuration = self.main_gui.configuration.currentText()
         rig_id = self.main_gui.rig_id.currentText()
 
         if subject_name == "":
@@ -182,6 +204,10 @@ class Application(mainclass):
             self.critical_message("Select Experiment")
             return None
 
+        if configuration == "SELECT":
+            self.critical_message("Select Configuration")
+            return None
+
         if rig_id == "SELECT":
             self.critical_message("Select Rig")
             return None
@@ -193,6 +219,7 @@ class Application(mainclass):
                 "rig_id": str_to_code(rig_id),
                 "protocol": str_to_code(protocol),
                 "experiment": str_to_code(experiment),
+                "configuration": str_to_code(configuration),
             }
         )
         return session_info

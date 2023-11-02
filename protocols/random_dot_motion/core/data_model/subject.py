@@ -1,6 +1,6 @@
 import csv
 import glob
-import os
+import inspect
 import pickle
 import time
 from pathlib import Path
@@ -61,6 +61,7 @@ class Subject(BaseSubject):
             "summary": str(Path(self.experiment_dir, self.name + "_summary.csv")),
             "rolling_perf": str(Path(self.experiment_dir, "rolling_performance.pkl")),
             # within session
+            "config": str(Path(self.experiment_dir, self.session, self.name + "_config.pkl")),
             "trial": str(Path(self.experiment_dir, self.session, self.name + "_trial.csv")),
             "event": str(Path(self.experiment_dir, self.session, self.name + "_event.csv")),
             "lick": str(Path(self.experiment_dir, self.session, self.name + "_lick.csv")),
@@ -206,6 +207,11 @@ class Subject(BaseSubject):
         except Exception as e:
             print(e)
             pass
+
+        finally:
+            session_config_content = inspect.getsource(self.session_config)
+            with open(self.files["config"], "w") as file:
+                file.write(session_config_content)
 
     def create_summary_plots(self):
         """
