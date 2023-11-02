@@ -318,15 +318,18 @@ class TaskGUI(rigclass):
             self.summary.close.show()
 
     def close_summary(self):
+        self.summary_data["comments"] = self.summary.comments.toPlainText()  # update comments
         self.summary_window.hide()
         self.rig.close_experiment.show()
 
     def check_water_requirement(self):
         additional_water = 0
-        if self.summary_data['total_reward'] < 500:
-            additional_water = max(additional_water,500 - self.summary_data['total_reward'])
-        if self.summary_data['end_weight_prct'] < 85:
-            additional_water = max(additional_water, ((85 - self.summary_data['end_weight_prct'])/100)*self.summary_data['baseline_weight']*1000)
+        if self.summary_data["total_reward"] < 500:
+            additional_water = max(additional_water, 500 - self.summary_data["total_reward"])
+        if self.summary_data["end_weight_prct"] < 85:
+            additional_water = max(
+                additional_water, ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000
+            )
         if additional_water > 0:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Critical)
