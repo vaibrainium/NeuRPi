@@ -307,25 +307,17 @@ class TaskGUI(rigclass):
             msg.setWindowTitle("Error")
             msg.exec_()
         else:
-            # self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
-            # self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
-            # self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
-            # self.subject.end_weight = self.summary_data["end_weight"]
-            # self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
-            # self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
-            # self.summary_data["comments"] = self.summary.comments.toPlainText()
-            # self.check_water_requirement()
+            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
+            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
+            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
+            self.subject.end_weight = self.summary_data["end_weight"]
+            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["comments"] = self.summary.comments.toPlainText()
+            self.check_water_requirement()
             self.summary.close.show()
 
     def close_summary(self):
-        self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
-        self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
-        self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
-        self.subject.end_weight = self.summary_data["end_weight"]
-        self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
-        self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
-        self.summary_data["comments"] = self.summary.comments.toPlainText()
-        self.check_water_requirement()
         self.summary_window.hide()
         self.rig.close_experiment.show()
 
