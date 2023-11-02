@@ -33,6 +33,7 @@ class StimulusManager(Display):
         )
 
         self.process = None
+        self.frame_counter = None
   
         if isinstance(stimulus_configuration, omegaconf.dictconfig.DictConfig):
             stimulus_configuration = omegaconf.OmegaConf.to_container(stimulus_configuration, resolve=True)
@@ -60,16 +61,26 @@ class StimulusManager(Display):
             self.play_audio(self.initiate_fixation_config["audio"])
 
     def initiate_stimulus(self, args):
+        self.frame_counter = 0
         args.update(self.initiate_stimulus_config["dots"])
         self.stimulus.new_stimulus(args)
         if self.initiate_stimulus_config["audio"]:
             self.play_audio(self.initiate_stimulus_config["audio"])
 
     def update_stimulus(self, args=None):
-        if self.clock.get_fps():
-            self.stimulus.move_dots(frame_rate=self.clock.get_fps())
+        frame_rate = self.clock.get_fps() or self.frame_rate
+        
+        # pulse = [(frame, coherence), (frame, coherence), ...]
+        if args and 'pulse' in args and args['pulse']:
+            if self.frame_counter == args['pulse'][0][0]:
+                self.stimulus.move_dots(frame_rate=frame_rate, new_coherence=args['pulse'][0][1])
+                args['pulse'].pop(0)
+            else:
+                self.stimulus.move_dots(frame_rate=frame_rate)
         else:
-            self.stimulus.move_dots(frame_rate=self.frame_rate)
+            self.stimulus.move_dots(frame_rate=frame_rate)
+        self.frame_counter += 1
+
 
         func = self.draw_stimulus
         args = {
@@ -92,8 +103,6 @@ class StimulusManager(Display):
             )
 
     def initiate_reinforcement(self, args):
-        # args.update(self.initiate_stimulus_config["dots"])
-        # self.stimulus.new_stimulus(args)
         func, arg = self.update_stimulus()
         func(arg)
         if self.initiate_reinforcement_config["audio"][args['outcome']]:
@@ -166,9 +175,10 @@ def main():
         in_queue.put(eval(message))
         time.sleep(2)
         print("Starting Stimulus")
-        message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280)})"
+        # message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280)})"
+        message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280), 'pulse': [(240,9),(243,9)]})"
         in_queue.put(eval(message))
-        time.sleep(4)
+        time.sleep(6)
         print("Starting Reinforcement")
         message = "('reinforcement_epoch', {'outcome': 'correct'})"
         in_queue.put(eval(message))
