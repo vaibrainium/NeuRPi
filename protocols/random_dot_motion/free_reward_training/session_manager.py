@@ -448,6 +448,7 @@ class SessionManager:
             "reinforcement_onset": self.reinforcement_onset,
             "delay_onset": self.delay_onset,
             "intertrial_onset": self.intertrial_onset,
+            "stimulus_seed": self.random_generator_seed,
         }
         with open(self.config.FILES["trial"], "a+", newline="") as file:
             writer = csv.DictWriter(file, fieldnames=data.keys())
