@@ -28,8 +28,8 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 7,
-                "noresponse": lambda response_time, coh: 10,
+                "incorrect": lambda response_time, coh: 10,
+                "noresponse": lambda response_time, coh: 15,
             },
         },
         "intertrial": {
@@ -46,7 +46,7 @@ TASK = {
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "list",
-            "value": np.array([-100, -36, -18, -9, 9, 18, 36, 100]),
+            "value": np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
