@@ -248,9 +248,6 @@
       <property name="tabChangesFocus">
        <bool>true</bool>
       </property>
-      <property name="markdown">
-       <string/>
-      </property>
       <property name="html">
        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -260,6 +257,9 @@ p, li { white-space: pre-wrap; }
       </property>
       <property name="placeholderText">
        <string>00.0</string>
+      </property>
+      <property name="markdown" stdset="0">
+       <string/>
       </property>
      </widget>
      <widget class="QLabel" name="label">
@@ -307,15 +307,15 @@ p, li { white-space: pre-wrap; }
       <property name="tabChangesFocus">
        <bool>true</bool>
       </property>
-      <property name="markdown">
-       <string/>
-      </property>
       <property name="html">
        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:36pt; font-weight:400; font-style:normal;&quot;&gt;
 &lt;p align=&quot;center&quot; style=&quot;-qt-paragraph-type:empty; margin-top:24px; margin-bottom:24px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="markdown" stdset="0">
+       <string/>
       </property>
      </widget>
      <widget class="QWidget" name="layoutWidget_6">
@@ -446,6 +446,7 @@ p, li { white-space: pre-wrap; }
   <tabstop>rig_id</tabstop>
   <tabstop>protocol</tabstop>
   <tabstop>experiment</tabstop>
+  <tabstop>configuration</tabstop>
   <tabstop>response_mode</tabstop>
   <tabstop>start_experiment</tabstop>
   <tabstop>create_new_subject</tabstop>

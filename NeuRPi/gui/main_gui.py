@@ -138,8 +138,8 @@ class Application(mainclass):
             self.rigs_gui[id].comm_from_taskgui.connect(self.message_from_taskgui)
             # clearing variables from control panel
             self.clear_variables()
-        except:
-            print("COULD NOT ADD RIG GUI")
+        except Exception as e:
+            print(f"COULD NOT ADD RIG GUI: {e}")
 
     def remove_rig(self, id: str):
         index = self.get_tab_index(id)
@@ -167,7 +167,6 @@ class Application(mainclass):
         self.main_gui.configuration.setCurrentIndex(0)
         self.main_gui.rig_id.setCurrentIndex(0)
         self.main_gui.response_mode.setCurrentIndex(0)
-        self.main_gui.right_prior.setValue(50)
 
     def start_experiment(self):
         self.verify_session_info()
