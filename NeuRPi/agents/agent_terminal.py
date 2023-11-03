@@ -270,7 +270,7 @@ class Terminal(Application):
         session_config = importlib.import_module(f"protocols.{session_info.protocol}.{session_info.experiment}.{session_info.configuration}")
         file_path = Path(
             Path.cwd(),
-            Path(f"protocols/{session_info.protocol}/{session_info.experiment}/{session_info.experiment}.py"),
+            Path(f"protocols/{session_info.protocol}/{session_info.experiment}/{session_info.configuration}.py"),
         )
         with open(file_path, "r") as f:
             string_session_config = f.read()
