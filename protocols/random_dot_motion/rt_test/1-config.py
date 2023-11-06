@@ -131,7 +131,7 @@ STIMULUS = {
     },
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
-              Format:
+            Format:
                 epoch_name:
                     init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
                     update_func: function to update epoch. This will be executed continuously until epoch is over.""",
