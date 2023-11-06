@@ -87,6 +87,7 @@ TASK = {
     "rolling_performance": {
         "rolling_window": 50,
         "reward_volume": 2,
+        "current_coherence_level": 6,
     },
     "bias_correction": {
         "repeat_threshold": {
