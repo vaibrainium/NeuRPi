@@ -384,8 +384,8 @@ class SessionManager:
 
     def shuffle_seq(self, sequence, max_repeat):
         """ Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
-        for i in range(len(sequence) - max_repeat):
-            subsequence = sequence[i:i + max_repeat+1]
+        for i in range(len(sequence) - max_repeat+1):
+            subsequence = sequence[i:i + max_repeat]
             if len(set(np.sign(subsequence))) == 1:
                 temp_block = sequence[i:]
                 np.random.shuffle(temp_block)
