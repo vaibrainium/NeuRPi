@@ -169,7 +169,7 @@ class Terminal:
             self.heartbeat_timer.start()
 
     def toggle_start(
-        self, starting, pilot, subject=None, task_module=None, task_phase=None
+        self, starting, pilot, subject=None, protocol=None, task_phase=None
     ):
         """
         Start or Stop running the currently selected subject's task. Sends a
@@ -182,7 +182,7 @@ class Terminal:
                 or stopping (False) the task?
             pilot: Which Pilot is starting or stopping?
             subject: Which Subject is currently selected?
-            task_module: Which task subject will be running on?
+            protocol: Which task subject will be running on?
             task_phase: What phase of the task subject will be performing?
         """
         # stopping is the enemy of starting so we put them in the same function to learn about each other
@@ -194,7 +194,7 @@ class Terminal:
             if ok:
                 # Ope'nr up if she aint
                 if subject not in self.subjects.keys():
-                    self.subjects[subject] = Subject(subject, task_module, task_phase)
+                    self.subjects[subject] = Subject(subject, protocol, task_phase)
 
                 self.subjects[subject].update_weights(start=float(start_weight))
                 task = self.subjects[subject].prepare_run()

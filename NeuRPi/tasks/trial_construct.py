@@ -31,7 +31,7 @@ class TrialConstruct:
     def __init__(
         self,
         stage_block,
-        stimulus_queue,
+        msg_to_stimulus,
         response_block,
         response_queue,
         *args,
@@ -45,121 +45,102 @@ class TrialConstruct:
         """
 
         # Task Variables
-        self.stimulus_queue = stimulus_queue
+        self.choice = None
+        self.response_time = None
         self.response_queue = response_queue
-        self.stages = (
-            "fixation",
-            "stimulus_rt",
-            "stimulus_delay",
-            "response",
-            "reinforcement",
-            "intertrial",
-        )
-        self.stage_block = (
-            stage_block  # threading.Event used by the Task to manage stage transitions
-        )
+        self.stage_block = stage_block  # threading.Event used by the Task to manage stage transitions
         self.response_block = response_block  # threading.Event used by the pilot to manage stage transitions
+        self.response_block.clear()
         self.trigger = {}
         self.must_respond_block = threading.Event()
         self.must_respond_block.clear()
-        self.thread = threading.Thread(
-            target=self.monitor_response, args=[response_queue], daemon=True
-        )
+
+        self.thread = threading.Thread(target=self.monitor_response, daemon=True)
         self.thread.start()
 
-    def monitor_response(self, response_queue):
+    def fixation_monitor(self, target, duration):
         """
-        Monitoring response from agent when requested by 'response_block.set()'.
-        Monitoring can be either GO or NoGO for requested time. Conditions are passed by
-        setting 'self.trigger' dictionary type: NoGO/GO and time: float in ms
+        Monitors fixation on target for given duration.
         """
-        while True:
-            self.clear_queue()
-            self.response_block.wait()
-            monitoring_behavior = True
-            responded = False
-            self.response = np.nan
-            start = time.time()
-            wait_time = self.trigger["duration"]  # Converting wait time from ms to sec
-
+        fixation_success = False
+        while not fixation_success:
             try:
-                # When agent is supposed to fixate on one of the targets
-                if self.trigger["type"] == "FIXATE_ON":
-                    while monitoring_behavior:
-                        if time.time() - start > wait_time:
-                            # fixation time passed
-                            monitoring_behavior = False
-                            self.response_block.clear()
-                            self.stage_block.set()
-                            self.trigger = None
-                        else:
-                            if not response_queue.empty():
-                                # responded
-                                responded = response_queue.get()
-                                # print("RESPONDED DURING FIXATION")
-                                if responded not in self.trigger["targets"]:
-                                    # incorrect response
-                                    self.response_block.clear()
-                                    self.clear_queue()
-
-                                    responded = False
-                                    self.response_block.set()
-                                    start = time.time()
-
-                                    # monitoring_behavior = False
-                                    # self.monitor_response(response_queue)
-
-                # When agent is supposed to wait on one of the targets
-                elif self.trigger["type"] == "WAIT_ON":
-                    while monitoring_behavior:
-                        if time.time() - start > wait_time:
-                            monitoring_behavior = False
-                        if not response_queue.empty():
-                            responded = response_queue.get()
-                            if responded not in self.trigger["targets"]:
-                                # self.response_time = time.time() - start
-                                self.clear_queue()
-                                self.response_block.clear()
-                                self.stage_block.set()
-                                monitoring_behavior = False
-
-                # When agent is supposed to go to one of the targets
-                elif self.trigger["type"] == "GO":
-                    while monitoring_behavior:
-                        if time.time() - start > wait_time:
-                            self.clear_queue()
-                            self.response_block.clear()
-                            self.stage_block.set()
-                            monitoring_behavior = False
-                        elif not response_queue.empty():
-                            responded = response_queue.get()
-                            if responded in self.trigger["targets"]:
-                                self.response = responded
-                                self.response_time = time.time() - start
-                                self.clear_queue()
-                                self.response_block.clear()
-                                self.stage_block.set()
-                                monitoring_behavior = False
-
-                # When agent Must respond
-                elif self.trigger["type"] == "MUST_GO":
-                    self.must_respond_block.clear()
+                response = self.response_queue.get(block=True, timeout=duration)
+                if response not in target:
+                    # fixation failed so repeat
                     self.clear_queue()
-                    while monitoring_behavior:
-                        if not response_queue.empty():
-                            responded = response_queue.get()
-                            if responded in self.trigger["targets"]:
-                                self.clear_queue()
-                                self.response_block.clear()
-                                self.must_respond_block.set()
-                                monitoring_behavior = False
-                    # print(f"MONITOR BEHAVIOR {monitoring_behavior}")
+            except queue.Empty:
+                # fixation success
+                fixation_success = True
+                self.clear_queue()
+                self.response_block.clear()
+        return fixation_success
 
+    def choice_monitor(self, target, duration):
+        """
+        Monitors response on target for given duration.
+        """
+        monitor_duration = duration
+        response = np.nan
+        response_time = np.nan
+        start = time.time()
+        remaining_duration = monitor_duration - (time.time() - start)
+        while remaining_duration > 0:
+            try:
+                response = self.response_queue.get(block=True, timeout=remaining_duration)
+                if response in target:
+                    response_time = time.time() - start
+                    break
+                else:
+                    remaining_duration = monitor_duration - (time.time() - start)
+
+            except queue.Empty:
+                response = np.nan
+                response_time = np.nan
+                break
+        
+        self.clear_queue()
+        self.response_block.clear()
+        return [response, response_time]
+        
+
+    def must_respond_monitor(self, target):
+        """
+        Making sure that agent responds to target.
+        """
+        must_respond_success = False
+        self.must_respond_block.clear()
+        while not must_respond_success:
+            try:
+                response = self.response_queue.get(block=True)
+                if response in target:
+                    must_respond_success = True
+                    self.clear_queue()
+                    self.response_block.clear()
+            except queue.Empty:
+                pass
+
+        return must_respond_success
+                
+    def monitor_response(self):
+        while True:
+            self.trigger = None
+            self.clear_queue()
+            self.must_respond_block.clear()
+            self.response_block.wait()
+            try:
+                if self.trigger['type'] == "FIXATE":
+                    self.fixation_monitor(self.trigger['targets'], self.trigger['duration'])
+                    self.stage_block.set()
+                elif self.trigger['type'] == "GO":
+                    self.choice, self.response_time = self.choice_monitor(self.trigger['targets'], self.trigger['duration'])
+                    self.stage_block.set()
+                elif self.trigger['type'] == "MUST_RESPOND":
+                    self.must_respond_monitor(self.trigger['targets'])
+                    self.must_respond_block.set()
             except Exception as e:
                 print(e)
-                raise Warning(
-                    f"Problem with response monitoring for {self.trigger['type']}"
-                )
+                raise Warning(f"Problem with response monitoring for {self.trigger['type']}")
 
     def clear_queue(self):
         while not self.response_queue.empty():
@@ -177,7 +158,7 @@ if __name__ == "__main__":
     response_queue = mp.Queue()
     a = TrialConstruct(
         stage_block=stage_block,
-        stimulus_queue=stim_handler,
+        msg_to_stimulus=stim_handler,
         response_queue=response_queue,
         response_block=response_block,
     )

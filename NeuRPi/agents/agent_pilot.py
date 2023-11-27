@@ -6,6 +6,8 @@ import sys
 import threading
 import time
 from pathlib import Path
+import pickle
+import types
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking import Net_Node, Pilot_Station
@@ -25,7 +27,8 @@ class Pilot:
     node = None
     networking = None
 
-    def __init__(self):
+    def __init__(self): 
+
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
             self.child = True
@@ -69,11 +72,34 @@ class Pilot:
 
         # handshake on initialization
         self.ip = self.networking.get_ip()
-        self.handshake()
-        self.logger.debug("handshake sent")
+        if self.varify_hardware_connectivity():
+            self.handshake()
+            self.logger.debug("handshake sent")
+        else: 
+            raise TimeoutError("Hardware is not connected. Please check hardware connectivity and try again.")
 
         self.task = None
         self.stimulus_display = None
+
+        # initialize default variables required for any task
+        self.session_info = None
+        self.session_config = None
+        self.subject_config = None
+        self.handware_manager = None
+        self.task_manager = None
+        self.stimulus_manager = None
+        self.display_process = None
+
+        self.modules = None
+
+    ############################### HANDSHAKE FUNCTIONS ########################################        
+
+    def varify_hardware_connectivity(self):
+        """
+        Check if all required hardwares mentioned in prefs is connected to the rig 
+        """
+        # TODO: start implementing pre-emptive check on hardware connectivity before sending handshake so that terminal has better idea whether the rig is ready to run the specific task or not
+        return True
 
     def handshake(self):
         hello = {
@@ -90,6 +116,8 @@ class Pilot:
         """
         self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
+    ############################### LISTEN FUNCTIONS ########################################
+
     def l_start(self, value):
         """
         Terminal requested to start running the task
@@ -101,32 +129,35 @@ class Pilot:
         if self.state == "RUNNING" or self.running.is_set():
             self.logger.warning("Task already running. Cannot start new task")
             return
-        self.logger.info(f"Starting task: {value['task_module']}")
 
-        self.state = "RUNNING"
-        self.running.set()
+        # Required parameteres from terminal to start task
         try:
-            self.task_module = value["task_module"]
-            self.task_phase = value["task_phase"]
-            self.subject = value["subject"]
+            self.session_info = value["session_info"]
+            self.config = self.convert_str_to_module(value["session_config"])
+            self.config.SUBJECT = value["subject_config"]
 
+            # import task module
+            task_module = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
             self.stage_block.clear()
+            self.task = task_module.Task(stage_block=self.stage_block, config=self.config, **value)
+            self.logger.debug("task initialized")
 
-            # # Start display on separate process and wait for three secs for display initiation
-            # # additing stimulus display queue
-            value["stimulus_queue"] = mp.Manager().Queue()
-            self.stimulus_display = mp.Process(target=self.start_display, args=(value,))
-            self.stimulus_display.start()
-            time.sleep(2)
-
-            # Start the task on separate thread and update terminal
             threading.Thread(target=self.run_task, args=(value,)).start()
+            self.state = "RUNNING"
+            self.running.set()
             self.update_state()
 
+        except KeyError as e:
+            self.state = "ERROR"
+            self.update_state()
+            self.logger.exception(f"Missing required parameter: {e}")
         except Exception as e:
-            self.state = "IDLE"
-            self.logger.exception(f"Could not start the task: {e}")
-
+            self.state = "ERROR"
+            self.update_state()
+            self.logger.exception(f"Could not initialize task: {e}")
+        
+        return
+        
     def l_stop(self, value):
         """
         Terminal requested to stop the task
@@ -164,65 +195,27 @@ class Pilot:
 
         elif value["key"] == "HARDWARE":
             if self.task:
-                self.task.manage_hardware(value["value"])
+                self.task.handle_terminal_request(value["value"])
 
-    def start_display(self, task_params):
-        """
-        Import relevant stimulus configuration
-        Import and start stimulus_display class relevant for requested task
-        """
-
-        display_module = (
-            "protocols."
-            + task_params["task_module"]
-            + ".stimulus."
-            + task_params["task_phase"]
-        )
-        display_module = importlib.import_module(display_module)
-
-        try:
-            stimulus_configuration = task_params["phase_config"].STIMULUS.copy()
-        except:
-            directory = "protocols/" + task_params["task_module"] + "/config"
-            stimulus_configuration = get_configuration(
-                directory=directory, filename="stimulus"
-            )
-
-        display = display_module.Stimulus_Display(
-            stimulus_configuration=stimulus_configuration,
-            stimulus_courier=task_params["stimulus_queue"],
-        )
-        display.start()
-
-    def run_task(self, task_params):
-        """
-        Start running task under new thread
-
-        Initiate the task, and progress through each stage of task with `task.stages.next`
-
-        Send data to terminal after every stage
-
-        Waits for the task to clear `stage_block` between stages
+    ############################### SECONDARY FUNCTIONS ########################################
+    def convert_str_to_module(self, module_string):
 
         """
-        self.logger.debug("initialing task")
-        # Importing protocol function/class object using importlib
-        task_module = importlib.import_module(
-            "protocols." + self.task_module + ".tasks." + self.task_phase
-        )
+        Convert string to module
+        """
+        module_name = "session_config"
+        session_config = types.ModuleType(module_name)
+        exec(module_string, session_config.__dict__)
+        return session_config
 
-        # self.config = get_configuration(
-        #     directory="protocols/" + task_params["task_module"] + "/config",
-        #     filename=task_params["task_phase"],
-        # )
-        self.config = task_params["phase_config"]
+    def run_task(self, value):
+        """
+        start running task under new thread
+        initiate the task, and progress through each stage of task with `task.stages.next`
+        send data to terminal after every stage
+        waits for the task to clear `stage_block` between stages
 
-        self.task = task_module.Task(
-            stage_block=self.stage_block, config=self.config, **task_params
-        )
-        self.logger.debug("task initialized")
-
-        # TODO: Initialize sending continuous data here
+        """
         self.logger.debug("Starting task loop")
         try:
             while True:
@@ -236,7 +229,7 @@ class Pilot:
 
                 if data:
                     data["pilot"] = self.name
-                    data["subject"] = self.subject
+                    data["subject"] = self.session_info.subject_name
 
                     # send data back to terminal
                     self.node.send("T", "DATA", data)
@@ -245,8 +238,21 @@ class Pilot:
                 if not self.running.is_set() and "TRIAL_END" in data.keys():
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
-                        # self.task.end_session()
-                        self.stimulus_display.kill()
+                        self.stopping.clear()
+                        self.task.end()  
+                        try:
+                            # sending files to terminal only when successfully finished the task
+                            value = {
+                                "pilot": self.name,
+                                "subject": self.session_info.subject_name,
+                                "session_files": {}
+                            }
+                            for file_name, file_path in self.config.FILES.items():
+                                with open(file_path, "rb") as reader:
+                                    value["session_files"][file_name] = reader.read()
+                            self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})         
+                        except:
+                            self.logger.exception("Could not send files to terminal")    
                         break
 
                     # if paused, wait for running event set?
@@ -261,7 +267,7 @@ class Pilot:
         finally:
             self.logger.debug("stopping task")
             try:
-                self.task.end_session()
+                pass
             except Exception as e:
                 self.logger.exception(f"got exception while stopping task: {e}")
             del self.task
@@ -277,9 +283,9 @@ def main():
         pi.handshake()
 
         msg = {
-            "subjectID": "PSUIM4",
-            "task_module": "rt_dynamic_training",
-            "task_phase": "4",
+            "subjectID": "XXX",
+            "protocol": "rt_dynamic_training",
+            "experiment": "4",
         }
         quitting.wait()
 
@@ -289,4 +295,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    from omegaconf import OmegaConf
+
+    dicto = OmegaConf.create()

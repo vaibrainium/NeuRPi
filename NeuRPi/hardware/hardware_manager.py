@@ -2,6 +2,7 @@ import omegaconf
 
 from NeuRPi.hardware.arduino import Arduino
 from NeuRPi.hardware.gpio import GPIO
+# from NeuRPi.hardware.display import Display
 from NeuRPi.prefs import prefs
 
 
@@ -28,6 +29,14 @@ class HardwareManager(Arduino, GPIO):
                 for name, properties in container.items():
                     self.hardware[name] = Arduino(**properties.connection)
                     self.hardware[name].connect()
+            elif group == "GPIO":
+                pass
+            # TODO: eventually add Display initialization here
+            # elif group == "Display":
+            #     for name, properties in container.items():
+            #         self.hardware[f"{group}_{name}"] = Display(**properties.connection)
+            #         self.hardware[f"{group}_{name}"].connect()
+
 
     def update_config(self):
         prefs.set("HARDWARE", self.config)

@@ -16,7 +16,6 @@ class Display:
     """
 
     def __init__(self, configuration=None, courier=None):
-
         super(Display, self).__init__()
         import pygame
 
@@ -85,6 +84,19 @@ class Display:
         self.update()
 
         self.gather_media()
+
+        # Letting terminal agent know that display is ready
+        while True:
+            if self.pygame.display.get_init():
+                self.courier.put(("info", "display_ready"))
+                break
+
+        # Waiting for terminal agent to send start signal
+        while True:
+            if not self.courier.empty():
+                (message, arguments) = self.courier.get()
+                if message == "start":
+                    break
 
     def gather_media(self):
         for key, val in self.stim_config.courier_handle.items():
