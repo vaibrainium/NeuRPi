@@ -145,7 +145,7 @@ class SessionManager:
             self.full_reward_volume -= 0.1 
 
         ## limiting reward volume between 2 and 3.5
-        self.full_reward_volume = np.clip(self.full_reward_volume, 2, 3.5)
+        self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
 
     ####################### trial epoch methods #######################
     def prepare_fixation_stage(self):

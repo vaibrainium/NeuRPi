@@ -156,7 +156,7 @@ class SessionManager:
             self.full_reward_volume -= 0.1 
 
         ## limiting reward volume between 2 and 3.5
-        self.full_reward_volume = np.clip(self.full_reward_volume, 2, 3.5)
+        self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
 
     ####################### trial epoch methods #######################
     def prepare_fixation_stage(self):
@@ -351,8 +351,8 @@ class SessionManager:
             self.full_reward_volume += self.graduation_reward_change["increase"]
         elif self.next_coh_level < self.current_coh_level: # if level decreased
             self.full_reward_volume -= self.graduation_reward_change["decrease"]
-        # setting reward volume withing 2 to 3.5 range
-        np.clip(self.full_reward_volume, 2, 3.5)
+        # setting reward volume withing 1.5 to 3.5 range
+        np.clip(self.full_reward_volume, 1.5, 3.5)
         # updating current coherence level
         self.current_coh_level = self.next_coh_level
         self.active_coherences = self.active_coherences_by_level[self.current_coh_level]
