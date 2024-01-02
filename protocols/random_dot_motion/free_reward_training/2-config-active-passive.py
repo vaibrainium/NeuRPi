@@ -15,21 +15,23 @@ TASK = {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
             "min_viewing": 0.3,
+            # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
+            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=2, scale=1),  # new free reward
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0,
-                "incorrect": lambda response_time: 0,
-                "noresponse": lambda response_time: 0,
+                "correct": lambda response_time: 0.300,
+                "incorrect": lambda response_time: 0,  # .300,  # 1.000,
+                "noresponse": lambda response_time: 0,  # .300,  # 1.000,
             },
         },
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 10,
-                "noresponse": lambda response_time, coh: 15,
+                "correct": lambda response_time: 0.000,
+                "incorrect": lambda response_time: 0.5 + 2 * (np.exp(-2 * response_time)),
+                "noresponse": lambda response_time: 5,
             },
         },
         "intertrial": {
@@ -46,7 +48,12 @@ TASK = {
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "list",
-            "value": np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
+            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
+        },
+        "active_coherences": {
+            "tag": "Signed coherences to be used withough graduation",
+            "type": "int",
+            "value": np.array([-100, -72, 72, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
@@ -57,22 +64,18 @@ TASK = {
     "rolling_performance": {
         "rolling_window": 50,
         "current_coherence_level": 2,
-        "reward_volume": 1.5,
+        "reward_volume": 3.5,
     },
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 100,
+            "passive": 35,
         },
         "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 2,
-    },
-    "fixed_ratio": {
-        "tag": "Fixed reward ratio minimum streak",
-        "value": 1000,
+        "value": 1,
     },
 }
 

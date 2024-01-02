@@ -10,7 +10,7 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.5, loc=2, scale=0.3) * 0.75},
+        "fixation": {"tag": "Fixation epoch", "duration": stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
@@ -32,7 +32,7 @@ TASK = {
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
                 # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
-                "incorrect": lambda response_time, coh: 3 + (12-0.1*np.abs(coh)) * (np.exp(-4 * response_time)),
+                "incorrect": lambda response_time, coh: 3 + (12 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
                 # "incorrect": lambda response_time, coh: 4 + ((np.abs(coh) / 100 * -5) + 8) * (np.exp(-0.5 * response_time)),
                 "noresponse": lambda response_time, coh: 10,
             },
