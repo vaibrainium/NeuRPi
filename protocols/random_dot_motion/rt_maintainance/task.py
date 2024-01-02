@@ -99,10 +99,10 @@ class Task:
                                              response_queue=self.response_queue,
                                              timers=self.timers,
                                              )
-        self.start()
 
-    def start(self):
+    def initialize(self):
         """Starting required processes"""
+        init_successful = True
         try:
             self.processes["behavior"].start()
             self.processes["stimulus"].start()
@@ -110,12 +110,16 @@ class Task:
             message = self.msg_from_stimulus.get(timeout=5)
             if message != "display_connected":
                 raise TimeoutError("Display did not start in time")
+                init_successful = False
             else:
                 print("Display started")
 
         except Exception as e:
             print(f"Error in starting processes: {e}")
             raise e
+            init_successful = False
+
+        return init_successful
 
     # Reward management from GUI
     def handle_terminal_request(self, message: dict):

@@ -140,13 +140,14 @@ class Pilot:
             task_module = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.task")
             self.stage_block.clear()
             self.task = task_module.Task(stage_block=self.stage_block, config=self.config, **value)
-            self.logger.debug("task initialized")
-
-            threading.Thread(target=self.run_task, args=(value,)).start()
-            self.state = "RUNNING"
-            self.running.set()
-            self.update_state()
-
+            init_successful = self.task.initialize()
+            if not init_successful:
+                self.logger.error("Task initialization failed")
+            else:
+                self.logger.debug("task initialized")
+                self.state = "INITIALIZED"
+                self.update_state()
+                threading.Thread(target=self.run_task, args=(value,)).start()
         except KeyError as e:
             self.state = "ERROR"
             self.update_state()
@@ -217,6 +218,10 @@ class Pilot:
 
         """
         self.logger.debug("Starting task loop")
+        self.state = "RUNNING"
+        self.running.set()
+        self.update_state()
+
         try:
             while True:
                 # Calculate next stage data and prepare triggers

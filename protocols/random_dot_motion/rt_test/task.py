@@ -99,10 +99,10 @@ class Task:
                                              response_queue=self.response_queue,
                                              timers=self.timers,
                                              )
-        self.start()
 
-    def start(self):
+    def initialize(self):
         """Starting required processes"""
+        init_successful = True
         try:
             self.processes["behavior"].start()
             self.processes["stimulus"].start()
