@@ -10,7 +10,7 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.5, loc=2, scale=0.3) * 0.75},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
@@ -31,7 +31,7 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 4 + (25-0.1*np.abs(coh)) * (np.exp(-3 * response_time)),
+                "incorrect": lambda response_time, coh: 4 + (25 - 0.1 * np.abs(coh)) * (np.exp(-3 * response_time)),
                 # "incorrect": lambda response_time, coh: 7 + ((np.abs(coh) / 100 * -5) + 18) * (np.exp(-2.5 * response_time)),
                 "noresponse": lambda response_time, coh: 10,
             },
