@@ -81,7 +81,7 @@ TASK = {
     },
     "fixed_ratio": {
         "tag": "Fixed reward ratio minimum streak",
-        "value": 2,
+        "value": 200,
     },
 }
 
