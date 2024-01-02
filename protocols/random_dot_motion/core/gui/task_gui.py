@@ -266,16 +266,29 @@ class TaskGUI(rigclass):
             "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
-            "total_attempt": value["trial_counters"]["attempt"],
-            "total_valid": value["trial_counters"]["valid"],
-            "total_correct": value["trial_counters"]["correct"],
-            "total_incorrect": value["trial_counters"]["incorrect"],
-            "total_noresponse": value["trial_counters"]["noresponse"],
-            "total_accuracy": value["plots"]["running_accuracy"][1],
-            "trial_distribution": value["plots"]["trial_distribution"],
-            "psychometric_function": value["plots"]["psychometric_function"],
-            "response_time_distribution": value["plots"]["response_time_distribution"],
         }
+        # Following variables need not occur in every session
+        try:
+            self.summary_data["total_attempt"] = value["trial_counters"]["attempt"]
+            self.summary_data["total_valid"] = value["trial_counters"]["valid"]
+            self.summary_data["total_correct"] = value["trial_counters"]["correct"]
+            self.summary_data["total_incorrect"] = value["trial_counters"]["incorrect"]
+            self.summary_data["total_noresponse"] = value["trial_counters"]["noresponse"]
+            self.summary_data["total_accuracy"] = value["plots"]["running_accuracy"][1]
+            self.summary_data["trial_distribution"] = value["plots"]["trial_distribution"]
+            self.summary_data["psychometric_function"] = value["plots"]["psychometric_function"]
+            self.summary_data["response_time_distribution"] = value["plots"]["response_time_distribution"]
+        except:
+            # Make them none
+            self.summary_data["total_attempt"] = None
+            self.summary_data["total_valid"] = None
+            self.summary_data["total_correct"] = None
+            self.summary_data["total_incorrect"] = None
+            self.summary_data["total_noresponse"] = None
+            self.summary_data["total_accuracy"] = None
+            self.summary_data["trial_distribution"] = None
+            self.summary_data["psychometric_function"] = None
+            self.summary_data["response_time_distribution"] = None
 
     def show_summary_window(self, value=None):
         """Show summary window with summarized data"""
