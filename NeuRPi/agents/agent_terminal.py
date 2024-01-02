@@ -337,14 +337,14 @@ class Terminal(Application):
                 )
                 self.rigs_gui[session_info.rig_id].set_rig_configuration(self.pilots[session_info.rig_id]["prefs"])
 
-                # Waiting for rig to initiate hardware and start session
-                while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
-                    time.sleep(0.1)
-                    if self.pilots[session_info.rig_id]["state"] == "ERROR":
-                        self.critical_message("Rig could not be started because of error")
-                        return
+                # # Waiting for rig to initiate hardware and start session
+                # while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
+                #     time.sleep(0.1)
+                #     if self.pilots[session_info.rig_id]["state"] == "ERROR":
+                #         self.critical_message("Rig could not be started because of error")
+                #         return
 
-                self.rigs_gui[session_info.rig_id].start_experiment()
+                # self.rigs_gui[session_info.rig_id].start_experiment()
 
             else:
                 self.critical_message("Rig is not available to start experiment")

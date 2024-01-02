@@ -65,7 +65,13 @@ class TaskGUI(rigclass):
         # Camera
         # self.video_device = cv2.VideoCapture(camera_index)
         # Rig parameter variables
-        self.session_clock = {}
+        self.session_clock = {
+            "start": 0,
+            "display": 0,
+            "pause": 0,
+            "timer": QtCore.QTimer(),
+            "end": None,
+        }
         self.pause_time = None
         self.session_start_time = None
         self.session_display_clock = None
@@ -180,7 +186,7 @@ class TaskGUI(rigclass):
         # self.session_timer.start(1000)
 
     def start_active_gui_methods(self):
-        if self.state != "STOPPED":
+        if self.state != "STOPPED" or self.state != "IDLE":
             self.session_timer.timeout.connect(lambda: self.update_session_clock())
             self.session_timer.start(1000)
         if self.video_device is not None:
@@ -190,7 +196,7 @@ class TaskGUI(rigclass):
 
     def stop_active_gui_methods(self):
         # self.session_timer.timeout.disconnect()
-        if self.state != "STOPPED":
+        if self.state != "STOPPED" or self.state != "IDLE":
             self.session_timer.stop()
         if self.video_device is not None:
             self.camera_timer.stop()
