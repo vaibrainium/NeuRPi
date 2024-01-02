@@ -17,7 +17,7 @@ from NeuRPi.prefs import prefs
 
 class Terminal(Application):
     """
-    Servert class to initiate and manage all downstream agents.
+    Server class to initiate and manage all downstream agents.
     """
 
     def __init__(
@@ -157,8 +157,12 @@ class Terminal(Application):
         if value["pilot"] not in self.pilots.keys():
             self.logger.info("Got state info from an unknown pilot, adding...")
             self.new_pilot(name=value["pilot"])
-
         self.pilots[value["pilot"]]["state"] = value["state"]
+
+        if value["state"] == "INITIALIZED":
+            # Waiting for rig to initiate hardware and start session
+            self.rigs_gui[value["pilot"]].start_experiment()
+
         # QT Change
         self.update_rig_availability()
 
@@ -190,7 +194,7 @@ class Terminal(Application):
         """
         Incoming data from pilot.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identifiation.
+        `value` should have `subject` and `pilot` field added to dictionary for identification.
 
         Any key in `value` that matches a column in the subject's trial data table will be saved.
 
@@ -204,7 +208,7 @@ class Terminal(Application):
         """
         Incoming change from pilot.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identifiation.
+        `value` should have `subject` and `pilot` field added to dictionary for identification.
 
         """
         pass
@@ -217,7 +221,7 @@ class Terminal(Application):
         """
         Incoming session files from pilot.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identifiation.
+        `value` should have `subject` and `pilot` field added to dictionary for identification.
 
         """
         # with open("lick.csv", "wb") as writer:
