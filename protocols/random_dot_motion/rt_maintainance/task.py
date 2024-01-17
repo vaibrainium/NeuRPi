@@ -12,8 +12,8 @@ from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareM
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
 from protocols.random_dot_motion.core.task.rt_task import RTTask
 
-from protocols.random_dot_motion.rt_test.session_manager import SessionManager
-from protocols.random_dot_motion.rt_test.stimulus_manager import StimulusManager
+from protocols.random_dot_motion.rt_maintainance.session_manager import SessionManager
+from protocols.random_dot_motion.rt_maintainance.stimulus_manager import StimulusManager
 
 #TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 #TODO: 5. Make sure graduation is working properly
@@ -188,7 +188,7 @@ class Task:
 
 if __name__ == "__main__":
 
-    import protocols.random_dot_motion.rt_test.config as config
+    import protocols.random_dot_motion.rt_maintainance.config as config
 
     full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
     # current_coherence_level = config.TASK["rolling_performance"]["current_coherence_level"]
@@ -213,7 +213,7 @@ if __name__ == "__main__":
             "start_weight": 19,
             "prct_weight": 95,
             "protocol": "random_dot_motion",
-            "experiment": "rt_test",
+            "experiment": "rt_maintainance",
             "session": "1_1",
             "session_uuid": "XXXX",
             "rolling_perf": rolling_perf,
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     value = {
         "stage_block": threading.Event(),
         "protocol": "random_dot_motion",
-        "experiment": "rt_dynamic_training",
+        "experiment": "rt_maintainance",
         "config": config,
     }
 
