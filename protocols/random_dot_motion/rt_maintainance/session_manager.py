@@ -260,6 +260,12 @@ class SessionManager:
 
         # check if next trial is correction trial
         self.is_correction_trial = False
+        # if incorrect and above passive correction threshold
+        if self.outcome == 0 and np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
+            self.is_correction_trial = True
+        # if no response and no passive training
+        if np.isnan(self.choice):
+            self.is_correction_trial = True
 
         # write trial data to file
         self.write_trial_data_to_file()
