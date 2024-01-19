@@ -13,7 +13,7 @@ TASK = {
         "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 60,
+            "max_viewing": 10,
             "min_viewing": 0.3,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1), # new free reward
@@ -31,10 +31,11 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
-                "incorrect": lambda response_time, coh: 3 + (12 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
+                "incorrect": lambda response_time, coh: (5 + 1) * (np.exp(-1 * response_time)),
+                # "incorrect": lambda response_time, coh: 3 + (12 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
                 # "incorrect": lambda response_time, coh: 4 + ((np.abs(coh) / 100 * -5) + 8) * (np.exp(-0.5 * response_time)),
-                "noresponse": lambda response_time, coh: 10,
+                # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
+                "noresponse": lambda response_time, coh: 2,
             },
         },
         "intertrial": {
@@ -82,7 +83,7 @@ TASK = {
     },
     "fixed_ratio": {
         "tag": "Fixed reward ratio minimum streak",
-        "value": 2,
+        "value": 200,
     },
 }
 
