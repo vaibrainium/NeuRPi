@@ -62,7 +62,7 @@ TASK = {
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 50,
+            "passive": 35,
         },
         "bias_window": 10,
     },
