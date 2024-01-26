@@ -68,7 +68,7 @@ class SessionManager:
         self.block_schedule = []
         self.trials_in_block = 0
         self.current_coh_level = self.config.SUBJECT["rolling_perf"]["current_coherence_level"]
-        self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
+        self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"]["value"][self.current_coh_level]
         self.active_coherences = self.config.TASK["stimulus"]["active_coherences"]["value"]
         self.active_coherence_indices = [np.where(self.full_coherences == value)[0][0] for value in self.active_coherences]
         # rolling performance
