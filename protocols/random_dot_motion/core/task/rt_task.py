@@ -266,11 +266,18 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = {}, {}
         
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
+        self.trigger = {
+            "type": "FIXATE",
+            "targets": task_args["monitor_response"],
+            "duration": task_args["intertrial_duration"],
+        }
+
+        # initiate intertrial and start monitoring responses
         self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
-        threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
+        self.response_block.set()
         self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
-        
         self.stage_block.wait()
+       
         data = self.managers["session"].end_of_trial_updates()
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"

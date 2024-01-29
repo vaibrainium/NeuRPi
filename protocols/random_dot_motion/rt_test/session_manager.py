@@ -187,7 +187,7 @@ class SessionManager:
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        stage_task_args = {"intertrial_duration": self.intertrial_duration}        
+        stage_task_args = {"intertrial_duration": self.intertrial_duration, "monitor_response": [np.NaN]}          
         return stage_task_args, stage_stimulus_args
     
     ######################### trial-stage methods #########################
