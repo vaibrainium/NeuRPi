@@ -178,7 +178,8 @@ class SessionManager:
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 1: # active-passive training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
-            monitor_response = [self.target]
+            # monitor_response = [self.target]
+            monitor_response = [-1, 1]
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 2: # active training
             self.stimulus_duration = self.maximum_viewing_duration
