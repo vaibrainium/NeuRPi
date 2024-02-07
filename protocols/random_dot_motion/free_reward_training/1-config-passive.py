@@ -75,7 +75,7 @@ TASK = {
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 0,
+        "value": 1,
     },
 }
 
