@@ -249,12 +249,16 @@ class TaskGUI(rigclass):
             self.rig.pause_experiment.setText("Resume")
             self.state = "PAUSED"
             self.pause_time = time.time()
+            # hide end button
+            self.rig.stop_experiment.hide()
         elif self.state == "PAUSED":
             self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}})
             self.rig.pause_experiment.setStyleSheet("background-color: rgb(255,170,0)")
             self.rig.pause_experiment.setText("Pause")
             self.state = "RUNNING"
             self.session_clock["pause"] = time.time() - self.pause_time
+            # show end button
+            self.rig.stop_experiment.show()
 
     def stop_experiment(self):
         """End task after current trial finishes"""
