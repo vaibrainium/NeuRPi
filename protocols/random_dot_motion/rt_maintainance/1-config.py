@@ -13,7 +13,7 @@ TASK = {
         "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 5,
+            "max_viewing": 10,
             "min_viewing": 0.3,
         },
         "reinforcement": {
@@ -28,8 +28,8 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 2 + (6*np.exp(-1 * response_time)), #5,
-                "noresponse": lambda response_time, coh: 2,
+                "incorrect": lambda response_time, coh: 5 + (6*np.exp(-1 * response_time)), #5,
+                "noresponse": lambda response_time, coh: 5,
             },
         },
         "intertrial": {
