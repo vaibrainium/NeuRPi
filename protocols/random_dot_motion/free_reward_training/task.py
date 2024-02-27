@@ -75,6 +75,7 @@ class Task:
         # Preparing Managers
         self.managers = {}
         self.managers["hardware"] = HardwareManager()
+        self.managers["hardware"].start_session(session_id=self.config.SUBJECT["session_uuid"])
         self.managers["session"] = SessionManager(config=self.config)
         self.managers["trial"] = RTTask(stage_block=self.stage_block,
                                         response_block=self.response_block,
@@ -187,6 +188,7 @@ class Task:
 
     def end(self):
         self.managers["session"].end_of_session_updates()
+        self.managers["hardware"].end_session()
         self.processes["stimulus"].stop()
         self.processes["behavior"].stop()
 
