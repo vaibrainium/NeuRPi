@@ -25,7 +25,6 @@ class HardwareManager(BaseHWManager):
 
         self.init_hardware()
         self.reset_lick_sensor()
-        self.start_clock()
 
         self._reward_calibration = self.config.Arduino.Primary.reward.calibration
         self._reward_calibration_left = (
@@ -73,7 +72,7 @@ class HardwareManager(BaseHWManager):
         prefs.set("HARDWARE", self.config)
 
     def reset_lick_sensor(self):
-        self.hardware["Primary"].write(str(0) + "reset")
+        self.hardware["Primary"].write(str(0) + "reset_lick")
         # print("waiting for reset")
         # self.hw_update_event.set()
         # # with self.threading_lock:
@@ -86,8 +85,13 @@ class HardwareManager(BaseHWManager):
         # print("Board resetted")
         # self.hw_update_event.clear()
 
-    def start_clock(self):
-        self.hardware["Primary"].write(str(0) + "start_clock")
+    def reset_wheel_sensor(self):
+        self.hardware["Primary"].write(str(0) + "reset_wheel")
+
+    def start_session(self, session_id = 0):
+        self.hardware["Primary"].write(str(0) + "start_session")
+        if session_id!=0:
+            self.hardware["Primary"].write(session_id)
         # print("waiting for clock to start")
         # self.hw_update_event.set()
         # # with self.threading_lock:
@@ -99,6 +103,11 @@ class HardwareManager(BaseHWManager):
         #             break
         # print("Clock started")
         # self.hw_update_event.clear()
+        
+    def end_session(self, return_file = False):
+        self.hardware["Primary"].write(str(0) + "end_session")
+        if return_file:
+            return self.hardware["Primary"].read()
 
     @property
     def lick_threshold(self):
@@ -274,13 +283,16 @@ class HardwareManager(BaseHWManager):
 
         message = self.hardware["Primary"].read()
         if message:
-            timestamp, lick = message.split("\t")
             try:
-                lick = int(lick)
+                timestamp, lick = message.split("\t")
+                try:
+                    lick = int(lick)
+                except:
+                    pass
+                timestamp = float(timestamp)
+                print(timestamp, lick)
             except:
-                pass
-            timestamp = float(timestamp)
-            print(timestamp, lick)
+                print(message)
         return timestamp, lick
 
 
