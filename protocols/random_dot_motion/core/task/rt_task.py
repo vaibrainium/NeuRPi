@@ -114,6 +114,7 @@ class RTTask(TrialConstruct):
     def fixation_stage(self):
         # Clear stage block
         self.stage_block.clear()
+        self.managers["hardware"].reset_wheel_sensor()
 
         task_args, stimulus_args = {}, {}
         self.choice = np.NaN
