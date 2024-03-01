@@ -28,7 +28,7 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 4,
+                "incorrect": lambda response_time, coh: 8,
                 "noresponse": lambda response_time, coh: 10,
             },
         },

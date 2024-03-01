@@ -31,8 +31,8 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 5 + (6*np.exp(-1 * response_time)),
-                # "incorrect": lambda response_time, coh: 3 + (12 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
+                "incorrect": lambda response_time, coh:0.5+(25*np.exp(-4 * response_time)), #5,
+                # "incorrect": lambda response_time, coh: 5 + (10 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
                 # "incorrect": lambda response_time, coh: 4 + ((np.abs(coh) / 100 * -5) + 8) * (np.exp(-0.5 * response_time)),
                 # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
                 "noresponse": lambda response_time, coh: 5, # 2,
@@ -119,10 +119,10 @@ STIMULUS = {
                 "stimulus_size": (1280, 720),
                 "background_color": (0, 0, 0),
                 "dots": {
-                    "dot_radius": 17,
+                    "dot_radius": 12, #17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 350,  # 50 degrees/sec
+                    "dot_vel": 350, #350,  # 50 degrees/sec
                     "dot_lifetime": 30,
                 },
                 "audio": None,  # "stimulus_tone",
