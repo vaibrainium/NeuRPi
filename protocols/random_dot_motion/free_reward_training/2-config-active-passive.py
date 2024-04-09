@@ -21,9 +21,9 @@ TASK = {
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0.300,
-                "incorrect": lambda response_time: 0,  # .300,  # 1.000,
-                "noresponse": lambda response_time: 0,  # .300,  # 1.000,
+                "correct": lambda response_time: 0.500,
+                "incorrect": lambda response_time: 1.5,  # .300,  # 1.000,
+                "noresponse": lambda response_time: 1.5,  # .300,  # 1.000,
             },
         },
         "delay": {

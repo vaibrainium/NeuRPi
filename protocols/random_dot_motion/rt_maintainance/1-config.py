@@ -13,22 +13,22 @@ TASK = {
         "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 10,
+            "max_viewing": 25,
             "min_viewing": 0.3,
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0,
-                "incorrect": lambda response_time: 0,
-                "noresponse": lambda response_time: 0,
+                "correct": lambda response_time: 0.5,
+                "incorrect": lambda response_time: 1.5,
+                "noresponse": lambda response_time: 1.5,
             },
         },
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 0.5+(25*np.exp(-4 * response_time)), #5,
+                "incorrect": lambda response_time, coh: 0.5+(25*np.exp(-3 * response_time)), #5,
                 "noresponse": lambda response_time, coh: 5,
             },
         },
@@ -114,14 +114,14 @@ STIMULUS = {
                 "background_color": (255, 255, 255),
                 "audio": {
                     "correct": "correct_tone",
-                    "incorrect": None,  # "incorrect_tone",
-                    "noresponse": None,  # "incorrect_tone",
+                    "incorrect": "incorrect_tone",
+                    "noresponse": "incorrect_tone",
                     "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
             "initiate_delay": {
-                "background_color": (255, 255, 255),
+                "background_color": (100, 100, 100),
             },
             "update_delay": None,
             "initiate_must_respond": None,
