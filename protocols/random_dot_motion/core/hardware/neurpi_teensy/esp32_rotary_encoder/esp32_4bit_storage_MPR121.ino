@@ -1,5 +1,8 @@
 #include "FS.h"
 #include "SD_MMC.h"
+#include <MPR121.h>
+
+MPR121 mpr121;
 
 #define ONE_BIT_MODE false
 File DataFile; // File on microSD card, to store waveform data
@@ -36,13 +39,13 @@ uint8_t sdReadBuffer[sdReadBufferSize] = {0};
 
 // Define the pins
 #define ledPin 13
-#define leftTouchPin 32
-#define rightTouchPin 33
+#define leftTouchPin 10
+#define rightTouchPin 11
 #define encoderPinA 25
 #define encoderPinB 26
 
-int32_t leftThreshold = 10;
-int32_t rightThreshold = 10;
+int32_t leftThreshold = 40;
+int32_t rightThreshold = 40;
 int32_t leftBaseline = 0;
 int32_t rightBaseline = 0;
 int rescalingFactor = 1; //000;
@@ -73,12 +76,14 @@ void setup(){
   RewardSerial.begin(115200);
   while (!Serial) { delay(10); }
   while (!RewardSerial) { delay(10); }
+  mpr121_begin();
+  
   // Starting session timer
   startTime = millis();
  
-  // Set touch sensor pins as input
-  pinMode(leftTouchPin, INPUT);
-  pinMode(rightTouchPin, INPUT);
+  // // Set touch sensor pins as input
+  // pinMode(leftTouchPin, INPUT);
+  // pinMode(rightTouchPin, INPUT);
   resetTouchSensor();
   // Set encoder pins as input with pull-up resistors
   pinMode(encoderPinA, INPUT_PULLUP);
@@ -99,6 +104,20 @@ void setup(){
   }
 }
 
+
+void mpr121_begin(){
+  mpr121.setupSingleDevice(*&Wire, MPR121::ADDRESS_5A, true);
+  mpr121.setAllChannelsThresholds(40, 20);
+  mpr121.setDebounce(MPR121::ADDRESS_5A, 10, 10);
+  mpr121.setBaselineTracking(MPR121::ADDRESS_5A, MPR121::BASELINE_TRACKING_INIT_10BIT);
+  mpr121.setChargeDischargeCurrent(MPR121::ADDRESS_5A, 63);
+  mpr121.setChargeDischargeTime(MPR121::ADDRESS_5A, MPR121::CHARGE_DISCHARGE_TIME_HALF_US);
+  mpr121.setFirstFilterIterations(MPR121::ADDRESS_5A, MPR121::FIRST_FILTER_ITERATIONS_34);
+  mpr121.setSecondFilterIterations(MPR121::ADDRESS_5A, MPR121::SECOND_FILTER_ITERATIONS_10);
+  mpr121.setSamplePeriod(MPR121::ADDRESS_5A, MPR121::SAMPLE_PERIOD_1MS);
+  mpr121.startAllChannels(MPR121::ADDRESS_5A, MPR121::COMBINE_CHANNELS_0_TO_11);
+  // mpr121.setChannelThresholds(uint8_t channel, uint8_t touch_threshold, uint8_t release_threshold)
+}
 
 void startSession(int msgInt){
   startTime = millis();
@@ -162,8 +181,9 @@ void endSession(int logNeeded){
   dataPos = 0;
   DataFile.close();
   Serial.println("\nSession successfully ended");
-  }
 }
+}
+
 
 void sendMessage(int startTime, String msg) {
   unsigned long currentTime = millis();
@@ -172,30 +192,13 @@ void sendMessage(int startTime, String msg) {
   Serial.println(msgString);
 }
 
-void resetTouchSensor() {
-  int totalLeft = 0;
-  int totalRight = 0;
-  for (int i = 0; i < 50; i++) {
-    totalLeft += touchRead(leftTouchPin);
-    totalRight += touchRead(rightTouchPin);
-    delay(1);
-  }
-  leftBaseline = totalLeft / 50;
-  rightBaseline = totalRight / 50;
+void resetTouchSensor(){
+  mpr121_begin();
 }
 
-void updateLicks() {
-  // leftTouchValue = touchRead(leftTouchPin) - leftBaseline;
-  // rightTouchValue = touchRead(rightTouchPin) - rightBaseline;
-  leftTouchValue = leftBaseline - touchRead(leftTouchPin); //touchRead(leftTouchPin) - leftBaseline;
-  rightTouchValue = rightBaseline - touchRead(rightTouchPin); //touchRead(rightTouchPin) - rightBaseline;
-
-  leftTouchAnalog = constrain(leftTouchValue / rescalingFactor, 0, 100);
-  rightTouchAnalog = constrain(rightTouchValue / rescalingFactor, 0, 100);
-
-  // Serial.print(leftTouchAnalog);
-  // Serial.print("\t");
-  // Serial.println(rightTouchAnalog);
+void updateLicks(){
+  leftTouchAnalog = mpr121.getChannelFilteredData(leftTouchPin) - mpr121.getChannelBaselineData(leftTouchPin);
+  rightTouchAnalog = mpr121.getChannelFilteredData(rightTouchPin) - mpr121.getChannelBaselineData(rightTouchPin);
 
   if ((leftTouchAnalog > leftThreshold) && !(leftTouched)) {
     leftTouched = true;
@@ -216,6 +219,51 @@ void updateLicks() {
     sendMessage(startTime, "2");
   }
 }
+
+void updateLickThreshold(int channel, int threshold){
+  mpr121.setChannelThresholds(channel, threshold, threshold);
+  mpr121.stopAllChannels();
+  mpr121.startAllChannels(MPR121::ADDRESS_5A, MPR121::COMBINE_CHANNELS_0_TO_11);
+}
+// void resetTouchSensor() {
+//   int totalLeft = 0;
+//   int totalRight = 0;
+//   for (int i = 0; i < 50; i++) {
+//     totalLeft += touchRead(leftTouchPin);
+//     totalRight += touchRead(rightTouchPin);
+//     delay(1);
+//   }
+//   leftBaseline = totalLeft / 50;
+//   rightBaseline = totalRight / 50;
+// }
+
+// void updateLicks() {
+//   // // leftTouchValue = touchRead(leftTouchPin) - leftBaseline;
+//   // // rightTouchValue = touchRead(rightTouchPin) - rightBaseline;
+//   // leftTouchValue = leftBaseline - touchRead(leftTouchPin); //touchRead(leftTouchPin) - leftBaseline;
+//   // rightTouchValue = rightBaseline - touchRead(rightTouchPin); //touchRead(rightTouchPin) - rightBaseline;
+//   // leftTouchAnalog = constrain(leftTouchValue / rescalingFactor, 0, 100);
+//   // rightTouchAnalog = constrain(rightTouchValue / rescalingFactor, 0, 100);
+
+//   // if ((leftTouchAnalog > leftThreshold) && !(leftTouched)) {
+//   //   leftTouched = true;
+//   //   lickState = -1;
+//   //   sendMessage(startTime, "-1");
+//   // } else if ((leftTouchAnalog < leftThreshold) && (leftTouched)) {
+//   //   leftTouched = false;
+//   //   lickState = -2;
+//   //   sendMessage(startTime, "-2");
+//   // }
+//   // if ((rightTouchAnalog > rightThreshold) && !(rightTouched)) {
+//   //   rightTouched = true;
+//   //   lickState = 1;
+//   //   sendMessage(startTime, "1");
+//   // } else if ((rightTouchAnalog < rightThreshold) && (rightTouched)) {
+//   //   rightTouched = false;
+//   //   lickState = 2;
+//   //   sendMessage(startTime, "2");
+//   // }
+// }
 
 void updateEncoder() {
   int MSB = digitalRead(encoderPinA);  // MSB = most significant bit
@@ -253,11 +301,13 @@ void checkMessage(){
       resetTouchSensor();
     } else if (msg == "reset_wheel") {
       encoderPosCount = 0;
-    } else if (msg == "update_lick_threshold_left)") {
+    } else if (msg == "update_lick_threshold_left") {
       leftThreshold = msgInt;
+    //   updateLickThreshold(leftTouchPin, msgInt);
       sendMessage(startTime, "left_threshold_modified");
-    } else if (msg == "update_lick_threshold_right)") {
+    } else if (msg == "update_lick_threshold_right") {
       rightThreshold = msgInt;
+    //   updateLickThreshold(rightTouchPin, msgInt);
       sendMessage(startTime, "right_threshold_modified");
     } else if (msg == "end_session") {
       endSession(msgInt);

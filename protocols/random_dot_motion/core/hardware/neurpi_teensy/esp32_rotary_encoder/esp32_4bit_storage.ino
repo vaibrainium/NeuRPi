@@ -41,8 +41,8 @@ uint8_t sdReadBuffer[sdReadBufferSize] = {0};
 #define encoderPinA 25
 #define encoderPinB 26
 
-int32_t leftThreshold = 10;
-int32_t rightThreshold = 10;
+int32_t leftThreshold = 40;
+int32_t rightThreshold = 40;
 int32_t leftBaseline = 0;
 int32_t rightBaseline = 0;
 int rescalingFactor = 1; //000;
@@ -89,10 +89,10 @@ void setup(){
 
   // Initialized SD card for MMS
   pinMode(2, INPUT_PULLUP);
-  // pinMode(4, INPUT_PULLUP);
-  // pinMode(12, INPUT_PULLUP);
-  // pinMode(13, INPUT_PULLUP);
-  // pinMode(15, INPUT_PULLUP);
+  pinMode(4, INPUT_PULLUP);
+  pinMode(12, INPUT_PULLUP);
+  pinMode(13, INPUT_PULLUP);
+  pinMode(15, INPUT_PULLUP);
   if(!SD_MMC.begin("/sdcard", ONE_BIT_MODE)){
       Serial.println("Card Mount Failed");
       return;
@@ -162,8 +162,9 @@ void endSession(int logNeeded){
   dataPos = 0;
   DataFile.close();
   Serial.println("\nSession successfully ended");
-  }
 }
+}
+
 
 void sendMessage(int startTime, String msg) {
   unsigned long currentTime = millis();
@@ -189,13 +190,8 @@ void updateLicks() {
   // rightTouchValue = touchRead(rightTouchPin) - rightBaseline;
   leftTouchValue = leftBaseline - touchRead(leftTouchPin); //touchRead(leftTouchPin) - leftBaseline;
   rightTouchValue = rightBaseline - touchRead(rightTouchPin); //touchRead(rightTouchPin) - rightBaseline;
-
   leftTouchAnalog = constrain(leftTouchValue / rescalingFactor, 0, 100);
   rightTouchAnalog = constrain(rightTouchValue / rescalingFactor, 0, 100);
-
-  // Serial.print(leftTouchAnalog);
-  // Serial.print("\t");
-  // Serial.println(rightTouchAnalog);
 
   if ((leftTouchAnalog > leftThreshold) && !(leftTouched)) {
     leftTouched = true;
@@ -245,7 +241,7 @@ void checkMessage(){
   if (Serial.available() > 0) {
     int msgInt = int(Serial.parseInt());
     String msg = Serial.readStringUntil('\n');  // read until new line character
-    RewardSerial.print(msgInt + msg);
+    RewardSerial.println(msgInt + msg);
 
     if (msg == "start_session") {
       startSession(msgInt);

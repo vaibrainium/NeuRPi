@@ -10,10 +10,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.5, loc=2, scale=0.3) * 0.75},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 60,
+            "max_viewing": 10,
             "min_viewing": 0.3,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1), # new free reward
@@ -22,18 +22,20 @@ TASK = {
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0, # 0.300,
-                "incorrect": lambda response_time: 0,  # .300,  # 1.000,
-                "noresponse": lambda response_time: 0,  # .300,  # 1.000,
+                "correct": lambda response_time: 0.5,  # 0.300,
+                "incorrect": lambda response_time: 1.5,  # .300,  # 1.000,
+                "noresponse": lambda response_time: 1.5,  # .300,  # 1.000,
             },
         },
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
+                "incorrect": lambda response_time, coh: 0.5+(25*np.exp(-4 * response_time)), #5,
+                # "incorrect": lambda response_time, coh: 3 + (12 - 0.1 * np.abs(coh)) * (np.exp(-4 * response_time)),
+                # "incorrect": lambda response_time, coh: 4 + ((np.abs(coh) / 100 * -5) + 8) * (np.exp(-0.5 * response_time)),
                 # "incorrect": lambda response_time, coh: 5 + 3 * (np.exp(-2 * response_time)),
-                "incorrect": lambda response_time, coh: 4 + ((np.abs(coh)/100*-5)+6) * (np.exp(-0.5 * response_time)),
-                "noresponse": lambda response_time, coh: 10,
+                "noresponse": lambda response_time, coh: 2,
             },
         },
         "intertrial": {
@@ -60,13 +62,20 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "int",
-            "value": 3,
+            "value": {
+		1: np.array([3, 3]),
+		2: np.array([3, 3, 3, 3]),
+		3: np.array([3, 3, 1, 1, 3, 3]),
+		4: np.array([3, 3, 2, 1, 1, 2, 3, 3]),
+		5: np.array([3, 3, 2, 1, 1, 1, 1, 2, 3, 3]),
+		6: np.array([3, 3, 2, 1, 1, 1, 1, 2, 3, 3]),
+	    },	#3,
         },
     },
     "rolling_performance": {
         "rolling_window": 50,
         "current_coherence_level": 2,
-        "reward_volume": 3,
+        "reward_volume": 3.5,
     },
     "bias_correction": {
         "repeat_threshold": {
@@ -80,8 +89,8 @@ TASK = {
         "value": 2,
     },
     "fixed_ratio": {
-	"tag": "Fixed reward ratio minimum streak",
-	"value": 3,
+        "tag": "Fixed reward ratio minimum streak",
+        "value": 200,
     },
 }
 
@@ -123,14 +132,14 @@ STIMULUS = {
                 "background_color": (255, 255, 255),
                 "audio": {
                     "correct": "correct_tone",
-                    "incorrect": None,  # "incorrect_tone",
-                    "noresponse": None,  # "incorrect_tone",
+                    "incorrect": "incorrect_tone",
+                    "noresponse": "incorrect_tone",
                     "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
             "initiate_delay": {
-                "background_color": (255, 255, 255),
+                "background_color": (100, 100, 100), #(255, 255, 255),
             },
             "update_delay": None,
             "initiate_must_respond": None,
@@ -140,7 +149,7 @@ STIMULUS = {
     },
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
-              Format:
+            Format:
                 epoch_name:
                     init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
                     update_func: function to update epoch. This will be executed continuously until epoch is over.""",
@@ -212,10 +221,10 @@ GRADUATION = {
             "value": {
                 1: np.array([0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8]),
                 2: np.array([0.8, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.8]),
-                3: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
-                4: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
-                5: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
-                6: np.array([0.8, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.8]),
+                3: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
+                4: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
+                5: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
+                6: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
             },
         },
     },
@@ -225,8 +234,8 @@ GRADUATION = {
             1: 0,
             2: 0,
             3: 200,
-            4: 500,
-            5: 500,
+            4: 200,
+            5: 200,
             6: 500,
         },
     },

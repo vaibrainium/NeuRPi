@@ -66,6 +66,7 @@ class Display:
                 pass
 
             self.pygame.mixer.init()
+            self.pygame.mixer.Sound.set_volume(1)
             self.pygame.font.init()
             self.pygame.mouse.set_visible(False)
             self.font = self.pygame.font.SysFont("Arial", 20)
@@ -99,9 +100,12 @@ class Display:
         except Exception as e:
             raise Exception(f"Cannot load media to display device. {e}")
 
-    def play_audio(self, audio_name):
+    def play_audio(self, audio_name, loops=0):
         self.pygame.mixer.stop()
-        self.audios[audio_name].play()
+        self.audios[audio_name].play(loops=loops)
+        
+    def stop_audio(self):
+        self.pygame.mixer.stop()
 
     def _run(self):
         try:
