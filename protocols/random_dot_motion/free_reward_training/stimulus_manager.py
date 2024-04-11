@@ -29,3 +29,14 @@ class StimulusManager(core_StimulusManager):
     ):
         super().__init__(stimulus, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
 
+    
+    def initiate_stimulus(self, args):
+        self.frame_counter = 0
+        args.update(self.initiate_stimulus_config["dots"])
+        self.stimulus.new_stimulus(args)
+        if args["coherence"] < 0:
+            # play left audio
+        else args["coherence"] > 0:
+            # play right audio
+        if self.initiate_stimulus_config["audio"]:
+            self.play_audio(self.initiate_stimulus_config["audio"])

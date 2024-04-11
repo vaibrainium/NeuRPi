@@ -64,8 +64,8 @@ class StimulusManager(Display):
         self.frame_counter = 0
         args.update(self.initiate_stimulus_config["dots"])
         self.stimulus.new_stimulus(args)
-        if self.initiate_stimulus_config["audio"]:
-            self.play_audio(self.initiate_stimulus_config["audio"])
+        # if self.initiate_stimulus_config["audio"]:
+        #     self.play_audio(self.initiate_stimulus_config["audio"])
 
     def update_stimulus(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate
