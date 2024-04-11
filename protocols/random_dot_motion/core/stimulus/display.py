@@ -66,7 +66,6 @@ class Display:
                 pass
 
             self.pygame.mixer.init()
-            self.pygame.mixer.Sound.set_volume(1)
             self.pygame.font.init()
             self.pygame.mouse.set_visible(False)
             self.font = self.pygame.font.SysFont("Arial", 20)
