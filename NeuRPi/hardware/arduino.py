@@ -65,12 +65,12 @@ class Arduino(Hardware):
         if self.is_connected:
             # message = self.connection.readline(self.connection.inWaiting()).decode().strip()
             message = self.connection.readline().decode().strip()
+            return message
         else:
             raise Warning(
                 f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"
             )
 
-        return message
 
     def write(self, message):
         """
