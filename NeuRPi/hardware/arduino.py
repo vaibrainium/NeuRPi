@@ -68,6 +68,7 @@ class Arduino(Hardware):
                 message = self.connection.readline().decode().strip()
             except:
                 message = self.connection.readline().strip()
+            return message
         else:
             raise Warning(
                 f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"
