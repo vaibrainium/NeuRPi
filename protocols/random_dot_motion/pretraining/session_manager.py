@@ -102,7 +102,7 @@ class SessionManager:
         }
 
         session_day = int(self.config.SUBJECT["session"].split('_')[0])
-        self.audio_volume = 1/session_day
+        self.audio_volume = 1 - (0.1*(session_day-1))
         
         # list of all variables needed to be reset every trial
         self.trial_reset_variables = [
