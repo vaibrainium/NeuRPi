@@ -180,7 +180,6 @@ class SessionManager:
         elif np.sign(self.signed_coherence) < 0:
             self.audio_stim = "8KHz"
             
-        print(self.audio_stim, self.audio_volume)
         stage_stimulus_args = {
             "coherence": self.signed_coherence,
             "seed": self.random_generator_seed,
