@@ -10,7 +10,7 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.5, loc=2, scale=0.3) * 0.75},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
@@ -30,7 +30,7 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time: 0.000,
-                "incorrect": lambda response_time: 0.5 + 5 * (np.exp(-2 * response_time)),
+                "incorrect": lambda response_time: 0.5 + 2 * (np.exp(-2 * response_time)),
                 "noresponse": lambda response_time: 5,
             },
         },
@@ -64,7 +64,7 @@ TASK = {
     "rolling_performance": {
         "rolling_window": 50,
         "current_coherence_level": 2,
-        "reward_volume": 3,
+        "reward_volume": 3.5,
     },
     "bias_correction": {
         "repeat_threshold": {
@@ -134,7 +134,7 @@ STIMULUS = {
     },
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
-              Format:
+            Format:
                 epoch_name:
                     init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
                     update_func: function to update epoch. This will be executed continuously until epoch is over.""",

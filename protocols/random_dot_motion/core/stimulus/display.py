@@ -99,8 +99,9 @@ class Display:
         except Exception as e:
             raise Exception(f"Cannot load media to display device. {e}")
 
-    def play_audio(self, audio_name, loops=0):
+    def play_audio(self, audio_name, loops=0, volume=1.0):
         self.pygame.mixer.stop()
+        self.audios[audio_name].set_volume(volume)
         self.audios[audio_name].play(loops=loops)
         
     def stop_audio(self):
@@ -169,9 +170,16 @@ if __name__ == "__main__":
     import hydra
     from omegaconf import DictConfig, OmegaConf
 
-    path = "../random_dot_motion/config"
-    filename = "free_reward_training.yaml"
+    path = "../NeuRPi/protocols/random_dot_motion/free_reward_training/"
+    filename = "config.py"
+    
+    from protocols.random_dot_motion.free_reward_training import config
+    
 
-    config = OmegaConf.load(path+filename)
-    courier = Queue()
-    display_window = Display(stimulus_configuration=config, stimulus_courier=courier)
+    in_queue = Queue()
+    out_queue = Queue()
+    display_window = Display(stimulus_configuration=config.STIMULUS, in_queue=in_queue, out_queue=out_queue)
+    
+    
+    
+    

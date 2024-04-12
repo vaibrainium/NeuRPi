@@ -73,7 +73,6 @@ class Arduino(Hardware):
                 f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"
             )
 
-        return message
 
     def write(self, message):
         """
