@@ -105,8 +105,8 @@ STIMULUS = {
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
                 # "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
-                "left_direction_tone": "protocols/random_dot_motion/core/stimulus/audio/left_direction_tone.wav",
-                "right_direction_tone": "protocols/random_dot_motion/core/stimulus/audio/right_direction_tone.wav",
+                "8KHz": "protocols/random_dot_motion/core/stimulus/audio/left_direction_tone.wav",
+                "16KHz": "protocols/random_dot_motion/core/stimulus/audio/right_direction_tone.wav",
             },
         },
     },
@@ -127,11 +127,10 @@ STIMULUS = {
                     "dot_vel": 350,  # 50 degrees/sec
                     "dot_lifetime": 30,
                 },
-                "audio":
-                    {
-                        "left_direction_tone": "left_direction_tone",
-                        "right_direction_tone": "right_direction_tone"
-                    }
+                "audio": {
+                        "8KHz": "8KHz",
+                        "16KHz": "16KHz",
+                }
             },
             "update_stimulus": None,
             "initiate_reinforcement": {

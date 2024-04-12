@@ -38,5 +38,5 @@ if __name__ == "__main__":
     # # correct response
     # generate_sound(filename="correct_tone.wav", frequency=1000, duration=0.3, ramping_time=0.01, sampling_rate=192000, volume=.2)
     
-    generate_sound(filename="left_direction_tone.wav", frequency=8000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.5)
-    generate_sound(filename="right_direction_tone.wav", frequency=16000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.5)
+    generate_sound(filename="left_direction_tone.wav", frequency=8000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.2)
+    generate_sound(filename="right_direction_tone.wav", frequency=16000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=1)

@@ -64,8 +64,11 @@ class StimulusManager(Display):
         self.frame_counter = 0
         args.update(self.initiate_stimulus_config["dots"])
         self.stimulus.new_stimulus(args)
-        # if self.initiate_stimulus_config["audio"]:
-        #     self.play_audio(self.initiate_stimulus_config["audio"])
+        audio_stim = args.get("audio_stim", None)
+        audio_volume = args.get("volume", 1)
+        audio_loops = args.get("loops", 0)
+        if audio_stim and self.initiate_stimulus_config["audio"][audio_stim]:
+            self.play_audio(self.initiate_stimulus_config["audio"][audio_stim], loops=audio_loops, volume=audio_volume)
 
     def update_stimulus(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate
@@ -80,7 +83,6 @@ class StimulusManager(Display):
         else:
             self.stimulus.move_dots(frame_rate=frame_rate)
         self.frame_counter += 1
-
 
         func = self.draw_stimulus
         args = {

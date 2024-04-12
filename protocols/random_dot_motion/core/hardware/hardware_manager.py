@@ -217,8 +217,9 @@ class HardwareManager(BaseHWManager):
                 try:
                     timestamp = float(timestamp)
                     lick = int(lick)
-                except:
-                    print(f"Could not parse message: {message}")
+                except Exception as error:
+                    pass
+                    # print(f"Could not parse message: {message} due to {error}")
                 print(timestamp, lick)
             except:
                 print(message)
