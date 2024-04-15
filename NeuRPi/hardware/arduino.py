@@ -65,7 +65,7 @@ class Arduino(Hardware):
         if self.is_connected:
             # message = self.connection.readline(self.connection.inWaiting()).decode().strip()
             try:
-                message = self.connection.readline().decode().strip()
+                message = self.connection.readline().decode("utf-8").strip()
             except:
                 message = self.connection.readline().strip()
             return message
