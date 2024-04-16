@@ -303,7 +303,7 @@ class SessionManager:
             self.trial_counters["correction"] = 0 # resetting correction counter
         else:
             # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias), 0.5)))
+            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias)*2, 0.5)))
             # Repeat probability to opposite side of bias
             self.signed_coherence = self.target * np.abs(self.signed_coherence)
             print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" 
