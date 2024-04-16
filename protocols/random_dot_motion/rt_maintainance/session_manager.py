@@ -263,18 +263,21 @@ class SessionManager:
         # if incorrect and above passive correction threshold
         if self.outcome == 0 and np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
             self.is_correction_trial = True
+
         # if no response and no passive training
         if np.isnan(self.choice):
             self.is_correction_trial = True
-
-        # write trial data to file
-        self.write_trial_data_to_file()
-        # if valid update trial variables and send data to terminal
-        if self.valid:
-            # update rolling bias
+            
+        # if responded, update rolling bias
+        if not np.isnan(self.choice):
             self.rolling_bias[self.rolling_bias_index] = self.choice
             self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
 
+        # write trial data to file
+        self.write_trial_data_to_file()
+        
+        # if valid update trial variables and send data to terminal
+        if self.valid:
             # update plot parameters
             if self.choice == -1:
                 # computing left choices coherence-wise
