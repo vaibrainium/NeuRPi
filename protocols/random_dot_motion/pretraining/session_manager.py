@@ -245,15 +245,14 @@ class SessionManager:
                 # might also create bias by giving less reward on repeat trials which is most likely going to be opposite of biased direction
                 self.trial_reward = self.full_reward_volume #/ 2
                 self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1ul
-        else:
+         else:
             self.trial_reward = None
 
         # making changes to typical reinforcement durations and reward based on training type and trial validity
         # if no response on passive/active-passive training assume correct trial durations and give half reward_volume
         if self.training_type < 2 and self.outcome=="noresponse":
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
-            self.trial_reward = self.full_reward_volume / 2
-            self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1.5 ul
+            self.trial_reward = 1
             # msg to stimulus
             stage_stimulus_args["outcome"] = "correct"
         
