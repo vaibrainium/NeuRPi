@@ -245,7 +245,7 @@ class SessionManager:
                 # might also create bias by giving less reward on repeat trials which is most likely going to be opposite of biased direction
                 self.trial_reward = self.full_reward_volume #/ 2
                 self.trial_reward = max(self.trial_reward, 1.5) # making sure reward is not below 1ul
-         else:
+        else:
             self.trial_reward = None
 
         # making changes to typical reinforcement durations and reward based on training type and trial validity
