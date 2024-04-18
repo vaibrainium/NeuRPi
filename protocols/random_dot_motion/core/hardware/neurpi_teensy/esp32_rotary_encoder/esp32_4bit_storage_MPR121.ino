@@ -99,7 +99,7 @@ void setup(){
   // pinMode(13, INPUT_PULLUP);
   // pinMode(15, INPUT_PULLUP);
   if(!SD_MMC.begin("/sdcard", ONE_BIT_MODE)){
-      Serial.println("Card Mount Failed");
+      Serial.println("Card_Mount_Failed");
       return;
   }
 }
@@ -135,7 +135,7 @@ void startSession(int msgInt){
 
   DataFile = SD_MMC.open(filename_cstr, FILE_WRITE);
   if(!DataFile){
-      Serial.println("Failed to open file for writing");
+      Serial.println("Failed_to_open_file_for_writing");
       return;
   }
 
@@ -143,7 +143,7 @@ void startSession(int msgInt){
   currentTime = micros();
   DataFile.seek(0);
   dataPos = 0;
-  sendMessage(startTime, "Session Started");
+  sendMessage(startTime, "session_started");
 }
 
 void logCurrentData(){
@@ -180,16 +180,15 @@ void endSession(int logNeeded){
 
   dataPos = 0;
   DataFile.close();
-  Serial.println("\nSession successfully ended");
+  Serial.println("\nsession_successfully_ended");
 }
 }
-
 
 void sendMessage(int startTime, String msg) {
-  unsigned long currentTime = millis();
-  unsigned long elapsedTime = currentTime - startTime;
-  String msgString = String(elapsedTime) + "\t" + msg;
-  Serial.println(msgString);
+  unsigned long elapsedTime = millis() - startTime;
+  Serial.print(elapsedTime);
+  Serial.print("\t");
+  Serial.println(msg);
 }
 
 void resetTouchSensor(){
