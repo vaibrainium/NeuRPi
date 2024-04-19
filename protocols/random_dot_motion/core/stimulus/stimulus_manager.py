@@ -65,8 +65,8 @@ class StimulusManager(Display):
         args.update(self.initiate_stimulus_config["dots"])
         self.stimulus.new_stimulus(args)
         audio_stim = args.get("audio_stim", None)
-        audio_volume = args.get("volume", 1)
-        audio_loops = args.get("loops", 0)
+        audio_volume = args.get("audio_volume", 1)
+        audio_loops = args.get("audio_loops", 0)
         if audio_stim and self.initiate_stimulus_config["audio"][audio_stim]:
             self.play_audio(self.initiate_stimulus_config["audio"][audio_stim], loops=audio_loops, volume=audio_volume)
 
