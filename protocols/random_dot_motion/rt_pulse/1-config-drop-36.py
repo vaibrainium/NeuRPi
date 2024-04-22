@@ -125,7 +125,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": "fixation_tone",
+                "audio": None, #"fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
