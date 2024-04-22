@@ -51,7 +51,7 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "np.array",
-            "value": np.array([4, 4, 3, 2, 2, 2, 2, 3, 4, 4]) # 3,
+            "value": np.array([4, 4, 3, 3, 2, 2, 3, 3, 4, 4]) # 3,
         },
     },
     "rolling_performance": {
