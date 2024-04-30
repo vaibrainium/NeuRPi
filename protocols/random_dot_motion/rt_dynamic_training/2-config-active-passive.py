@@ -14,7 +14,7 @@ TASK = {
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 25,
-            "min_viewing": 0.3,
+            "min_viewing": 1,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=1.5, loc=2, scale=1), # new free reward
             "passive_viewing": lambda coh_level: 5 + (stats.pearson3.rvs(skew=1.5, loc=(coh_level - 1) * 10, scale=1) / 2),  # new rt dynamic
