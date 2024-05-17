@@ -105,6 +105,30 @@ class SessionManager:
 
     ####################### pre-session methods #######################
     def update_reward_volume(self):
+        # function to update reward volume based on weight and previous session performance
+        volume_change = 0
+        ## weight based reward adjustment
+        # % baseline weight is below 85% increase reward by 0.1 ul
+        if self.config.SUBJECT["prct_weight"] < 85:
+            volume_change += 0.1
+        # if % baseline weight is below 80% increase reward by another 0.1 ul
+        if self.config.SUBJECT["prct_weight"] < 80:
+            volume_change += 0.1
+
+        ## reward volume based reward adjustment
+        if self.config.SUBJECT["rolling_perf"]["total_reward"] < 700:
+            volume_change += 0.1
+            if self.config.SUBJECT["rolling_perf"]["total_reward"] < 500:
+                volume_change += 0.1
+
+        ## Attempt based reward adjustment
+        # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
+        if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
+            volume_change -= 0.1 
+
+        self.full_reward_volume += np.clip(volume_change, -0.2, 0.2)
+        
+        ## limiting reward volume between 2 and 3.5
         self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
 
     ####################### trial epoch methods #######################
