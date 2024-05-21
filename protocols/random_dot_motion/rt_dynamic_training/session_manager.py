@@ -138,9 +138,9 @@ class SessionManager:
         # function to update reward volume based on weight and previous session performance
         volume_change = 0
         ## weight based reward adjustment
-        # % baseline weight is below 85% increase reward by 0.1 ul
-        if self.config.SUBJECT["prct_weight"] < 85:
-            volume_change += 0.1
+        # # % baseline weight is below 85% increase reward by 0.1 ul
+        # if self.config.SUBJECT["prct_weight"] < 85:
+        #     volume_change += 0.1
         # if % baseline weight is below 80% increase reward by another 0.1 ul
         if self.config.SUBJECT["prct_weight"] < 80:
             volume_change += 0.1
