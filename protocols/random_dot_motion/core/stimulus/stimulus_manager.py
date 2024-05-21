@@ -157,11 +157,14 @@ def main():
 
     from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 
-    import protocols.random_dot_motion.rt_dynamic_training.config as config
+    import protocols.random_dot_motion.core.stimulus.config as config
 
 
     in_queue = multiprocessing.Queue()
     out_queue = multiprocessing.Queue()
+
+
+    config.STIMULUS
 
     a = StimulusManager(
         stimulus=RandomDotMotion,
@@ -172,24 +175,31 @@ def main():
     a.start()
 
     while True:
-        print("Starting Fixation")
-        message = "('fixation_epoch', {})"
+
+        
+        message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
         in_queue.put(eval(message))
-        time.sleep(2)
-        print("Starting Stimulus")
-        # message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280)})"
-        message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280), 'pulse': [(240,9),(243,9)]})"
-        in_queue.put(eval(message))
-        time.sleep(6)
-        print("Starting Reinforcement")
-        message = "('reinforcement_epoch', {'outcome': 'correct'})"
-        in_queue.put(eval(message))
-        time.sleep(2)
-        print("Starting Intertrial")
-        message = "('intertrial_epoch', {})"
-        in_queue.put(eval(message))
-        time.sleep(2)
-        # print("Loop complete")
+        time.sleep(1)
+
+        # # pass
+        # print("Starting Fixation")
+        # message = "('fixation_epoch', {})"
+        # in_queue.put(eval(message))
+        # time.sleep(2)
+        # print("Starting Stimulus")
+        # # message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280)})"
+        # message = "('stimulus_epoch', {'seed': 1, 'coherence': 9, 'stimulus_size': (1920, 1280), 'pulse': [(240,9),(243,9)]})"
+        # in_queue.put(eval(message))
+        # time.sleep(6)
+        # print("Starting Reinforcement")
+        # message = "('reinforcement_epoch', {'outcome': 'correct'})"
+        # in_queue.put(eval(message))
+        # time.sleep(2)
+        # print("Starting Intertrial")
+        # message = "('intertrial_epoch', {})"
+        # in_queue.put(eval(message))
+        # time.sleep(2)
+        # # print("Loop complete")
 
 
 if __name__ == "__main__":
