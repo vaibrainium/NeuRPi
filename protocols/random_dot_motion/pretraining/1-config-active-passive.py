@@ -110,7 +110,7 @@ STIMULUS = {
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 240,# 25 degrees/sec # #350,  # 50 degrees/sec
-                    "dot_lifetime": 30,
+                    "dot_lifetime": 60,
                 },
                 "audio": {
                         "8KHz": "8KHz",
