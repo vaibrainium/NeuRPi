@@ -292,7 +292,7 @@ void checkMessage(){
   if (Serial.available() > 0) {
     int msgInt = int(Serial.parseInt());
     String msg = Serial.readStringUntil('\n');  // read until new line character
-    RewardSerial.print(msgInt + msg);
+    RewardSerial.println(msgInt + msg);
 
     if (msg == "start_session") {
       startSession(msgInt);

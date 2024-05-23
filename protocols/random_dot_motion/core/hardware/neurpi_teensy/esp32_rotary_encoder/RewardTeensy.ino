@@ -11,6 +11,7 @@ bool right_valve_open = false;
 
 
 void setup() {
+  Serial.begin(115200);
   Serial1.begin(115200);
   Serial1.setTimeout(100);
   // initialize pins
@@ -28,9 +29,10 @@ void loop() {
     // read incoming string from serial buffer
     msg_int = Serial1.parseInt();
     msg = Serial1.readString();
+    msg = msg.trim();
     Serial.println(msg_int);
-    Serial.println(msg);
-    
+    Serial.println(msg);   
+
     // opening left valve for pulse_width msecs
     if (msg=="reward_left"){
       digitalWrite(left_valve_pin, HIGH);
