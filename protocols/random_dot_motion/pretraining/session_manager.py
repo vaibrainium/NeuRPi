@@ -301,7 +301,7 @@ class SessionManager:
             self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias)*2, 0.3)))
             # Repeat probability to opposite side of bias
             self.signed_coherence = self.target * np.abs(self.signed_coherence)
-            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" 
+            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n"
                     f"Passive bias correction with: {self.signed_coherence}")
             # increment correction trial counter
             self.trial_counters["correction"] += 1
@@ -310,7 +310,8 @@ class SessionManager:
     def generate_block_schedule(self):
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
         if self.trial_counters["attempt"] == 0:
-            self.block_schedule = np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
+            # np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
+            self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3) 
         else:
             np.random.shuffle(self.block_schedule)
 
