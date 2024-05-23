@@ -215,7 +215,7 @@ class SessionManager:
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
         if self.trial_counters["attempt"] == 0:
             # self.block_schedule = np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
-            self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3) 
+            self.block_schedule = self.shuffle_seq(np.repeat([-100, 100], 5), max_repeat=3) 
         else:
             np.random.shuffle(self.block_schedule)
             max_repeat_signs = 3
