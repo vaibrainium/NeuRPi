@@ -102,8 +102,7 @@ class SessionManager:
         }
 
         session_day = int(self.config.SUBJECT["session"].split('_')[0])
-        self.audio_volume = max(min(1 - ((session_day-5)*1.5), 0), 1) # volume decreases with number of trained days.
-        
+        self.audio_volume = np.clip((1 - ((session_day-5)*0.15)), 0, 1) # volume decreases with number of trained days.
         # list of all variables needed to be reset every trial
         self.trial_reset_variables = [
             self.random_generator_seed,
