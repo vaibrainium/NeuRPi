@@ -124,6 +124,7 @@ class StimulusManager(Display):
             self.screen.fill((0, 0, 0))
         else:
             self.screen.fill((255, 255, 255))
+        
         self.update()
                 
     def update_delay(self, args=None):

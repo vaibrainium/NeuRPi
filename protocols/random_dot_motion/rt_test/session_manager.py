@@ -259,11 +259,12 @@ class SessionManager:
             elif self.outcome == 0:
                 self.trial_counters["incorrect"] += 1
 
+        # write trial data to file
+        self.write_trial_data_to_file()
+        
         # check if next trial is correction trial
         self.is_correction_trial = False
 
-        # write trial data to file
-        self.write_trial_data_to_file()
         # if valid update trial variables and send data to terminal
         if self.valid:
             # update rolling bias
