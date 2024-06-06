@@ -105,7 +105,7 @@ STIMULUS = {
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 350,  # 50 degrees/sec
-                    "dot_lifetime": 50,
+                    "dot_lifetime": 30,
                 },
                 "audio": None,  # "stimulus_tone",
             },
@@ -154,7 +154,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None,
+                "update_func": "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,

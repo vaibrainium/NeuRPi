@@ -131,7 +131,7 @@ STIMULUS = {
             "initiate_delay": {
                 "background_color": (100, 100, 100),
             },
-            "update_delay": None,
+           "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
             "initiate_intertrial": {"background_color": (100, 100, 100)},
@@ -162,7 +162,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None,
+                "update_func": "update_delay",
             },
             "must_respond_epoch": {
                 "clear_queue": False,

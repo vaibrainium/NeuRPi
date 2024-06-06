@@ -178,7 +178,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None,
+                "update_func": "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,
