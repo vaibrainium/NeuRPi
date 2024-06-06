@@ -118,8 +118,19 @@ class StimulusManager(Display):
         self.screen.fill(self.initiate_delay_config["background_color"])
         self.update()
     
+    def draw_flicker(self, args=None):
+        # change color fill from white to black and white on every call
+        if self.screen.get_at((0, 0)) == (255, 255, 255, 255):
+            self.screen.fill((0, 0, 0))
+        else:
+            self.screen.fill((255, 255, 255))
+        self.update()
+                
     def update_delay(self, args=None):
-        pass
+        args.get
+        func = self.draw_flicker
+        return func, args
+        #pass
         
     def initiate_must_respond(self, args=None):
         pass
