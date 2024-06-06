@@ -295,13 +295,16 @@ class SessionManager:
         if np.isnan(self.choice):
             self.is_correction_trial = True
             
-        # if responded, update rolling bias
-        if not np.isnan(self.choice):
-            self.rolling_bias[self.rolling_bias_index] = self.choice
-            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+        # # if responded, update rolling bias
+        # if not np.isnan(self.choice):
+        #     self.rolling_bias[self.rolling_bias_index] = self.choice
+        #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
         
         # if valid update trial variables and send data to terminal
         if self.valid:
+            # update rolling bias
+            self.rolling_bias[self.rolling_bias_index] = self.choice
+            self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
             # update plot parameters
             if self.choice == -1:
                 # computing left choices coherence-wise
