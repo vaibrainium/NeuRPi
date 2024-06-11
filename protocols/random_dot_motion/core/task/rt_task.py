@@ -282,6 +282,7 @@ class RTTask(TrialConstruct):
         data = self.managers["session"].end_of_trial_updates()
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"
+        data['intertrial_duration'] = task_args["intertrial_duration"]
         data["TRIAL_END"] = True
         return data
 
