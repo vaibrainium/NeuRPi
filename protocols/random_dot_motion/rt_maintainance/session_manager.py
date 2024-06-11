@@ -209,11 +209,12 @@ class SessionManager:
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
-        if self.trial_counters["correction"] % 3 == 0:
+        stage_task_args, stage_stimulus_args = {}, {}
+        if (self.trial_counters["correction"] > 0) and (self.trial_counters["correction"] % 3 == 2):
             ITI = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             ITI = self.intertrial_duration
-        stage_task_args = {"intertrial_duration": ITI, "monitor_response": [np.NaN]}        
+        stage_task_args = {"intertrial_duration": ITI, "monitor_response": [np.NaN]}
         return stage_task_args, stage_stimulus_args
     
     ######################### trial-stage methods #########################

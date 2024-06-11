@@ -285,7 +285,7 @@ class SessionManager:
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        if self.trial_counters["correction"] % 3 == 0:
+        if (self.trial_counters["correction"] > 0) and (self.trial_counters["correction"] % 3 == 2):
             ITI = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             ITI = self.intertrial_duration
