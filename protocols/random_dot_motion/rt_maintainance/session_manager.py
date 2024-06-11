@@ -292,7 +292,7 @@ class SessionManager:
             self.is_correction_trial = True
 
         # if no response and no passive training
-        if np.isnan(self.choice):
+        if np.isnan(self.outcome):
             self.is_correction_trial = True
             
         # # if responded, update rolling bias

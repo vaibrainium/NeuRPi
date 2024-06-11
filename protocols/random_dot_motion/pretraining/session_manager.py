@@ -188,8 +188,6 @@ class SessionManager:
             "audio_stim": self.audio_stim,
             "audio_volume": self.audio_volume,            
         }
-        
-
 
         if self.training_type == 0: # passive-only training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
@@ -375,7 +373,7 @@ class SessionManager:
         if self.outcome == 0 and np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
             self.is_correction_trial = True
         # if no response and no passive training
-        if np.isnan(self.choice) and self.training_type >= 2:
+        if np.isnan(self.outcome) and self.training_type >= 2:
             self.is_correction_trial = True
         
         # # if responded, update rolling bias
