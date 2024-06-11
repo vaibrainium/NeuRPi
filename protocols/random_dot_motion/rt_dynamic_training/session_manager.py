@@ -48,6 +48,7 @@ class SessionManager:
         self.reinforcement_duration = None
         self.delay_duration = None
         self.intertrial_duration = self.config.TASK["epochs"]["intertrial"]["duration"]
+        self.trial_ITI_duration = None
         # stage onset variables
         self.fixation_onset = None
         self.stimulus_onset = None
@@ -122,6 +123,7 @@ class SessionManager:
             self.stimulus_duration,
             self.reinforcement_duration,
             self.delay_duration,
+            self.trial_ITI_duration,
             # epoch onsets
             self.fixation_onset,
             self.stimulus_onset,
@@ -286,10 +288,10 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         if (self.trial_counters["correction"] > 0) and (self.trial_counters["correction"] % 3 == 2):
-            ITI = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
+            self.trial_ITI_duration = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
-            ITI = self.intertrial_duration
-        stage_task_args = {"intertrial_duration": ITI, "monitor_response": [np.NaN]}        
+            self.trial_ITI_duration = self.intertrial_duration
+        stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "monitor_response": [np.NaN]}        
         return stage_task_args, stage_stimulus_args
     
     ######################### trial-stage methods #########################
@@ -513,7 +515,7 @@ class SessionManager:
             "stimulus_duration": self.stimulus_duration,
             "reinforcement_duration": self.reinforcement_duration,
             "delay_duration": self.delay_duration,
-            "intertrial_duration": self.intertrial_duration,
+            "intertrial_duration": self.trial_ITI_duration,
             "fixation_onset": self.fixation_onset,
             "stimulus_onset": self.stimulus_onset,
             "response_onset": self.response_onset,
