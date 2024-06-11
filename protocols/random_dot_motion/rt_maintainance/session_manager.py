@@ -258,8 +258,6 @@ class SessionManager:
         return sequence
 
 
-
-
     ####################### between-trial methods #######################
     
     def end_of_trial_updates(self):
