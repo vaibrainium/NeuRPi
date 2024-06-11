@@ -278,7 +278,11 @@ class SessionManager:
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        stage_task_args = {"intertrial_duration": self.intertrial_duration, "monitor_response": [np.NaN]}        
+        if self.trial_counters["correction"] % 3 == 0:
+            ITI = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
+        else:
+            ITI = self.intertrial_duration
+        stage_task_args = {"intertrial_duration": ITI, "monitor_response": [np.NaN]}        
         return stage_task_args, stage_stimulus_args
     
     ######################### trial-stage methods #########################
@@ -380,7 +384,6 @@ class SessionManager:
         # if not np.isnan(self.choice):
         #     self.rolling_bias[self.rolling_bias_index] = self.choice
         #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
-
 
         # if valid update trial variables and send data to terminal
         if self.valid:
