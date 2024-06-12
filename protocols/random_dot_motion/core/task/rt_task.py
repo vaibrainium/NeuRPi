@@ -257,6 +257,7 @@ class RTTask(TrialConstruct):
         }
         return data
 
+
     def intertrial_stage(self, *args, **kwargs):
         """
         Stage 3: Inter-trial Interval.
@@ -267,24 +268,52 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = {}, {}
         
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
-        self.trigger = {
-            "type": "FIXATE",
-            "targets": task_args["monitor_response"],
-            "duration": task_args["intertrial_duration"],
-        }
-
-        # initiate intertrial and start monitoring responses
-        self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
-        self.response_block.set()
+        if task_args["intertrial_duration"] > 0:
+            # start delay epoch
+            self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
+            # wait for delay duration then send message to stimulus manager
+            threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
+        else:
+            self.stage_block.set()
         self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
+
         self.stage_block.wait()
-       
         data = self.managers["session"].end_of_trial_updates()
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"
         data['intertrial_duration'] = task_args["intertrial_duration"]
         data["TRIAL_END"] = True
         return data
+
+    # # Intertrial interval monitoring licks
+    # def intertrial_stage(self, *args, **kwargs):
+    #     """
+    #     Stage 3: Inter-trial Interval.
+
+    #     """
+    #     # Clear stage block
+    #     self.stage_block.clear()
+    #     task_args, stimulus_args = {}, {}
+        
+    #     task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
+    #     self.trigger = {
+    #         "type": "FIXATE",
+    #         "targets": task_args["monitor_response"],
+    #         "duration": task_args["intertrial_duration"],
+    #     }
+
+    #     # initiate intertrial and start monitoring responses
+    #     self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
+    #     self.response_block.set()
+    #     self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
+    #     self.stage_block.wait()
+       
+    #     data = self.managers["session"].end_of_trial_updates()
+    #     data["DC_timestamp"] = datetime.datetime.now().isoformat()
+    #     data["trial_stage"] = "intertrial_stage"
+    #     data['intertrial_duration'] = task_args["intertrial_duration"]
+    #     data["TRIAL_END"] = True
+    #     return data
 
 if __name__ == "__main__":
     stage_block = threading.Event()
