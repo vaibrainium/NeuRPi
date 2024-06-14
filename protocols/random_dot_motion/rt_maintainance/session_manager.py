@@ -214,7 +214,7 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
         # if 3rd attempt and not correct, then give higher ITI to take rest
         if (self.outcome != "correct") and (self.trial_counters["correction"] % 3 == 2):
-            self.trial_ITI_duration = 30 # 30 secs ITI for 3 incorrect attempts in a loop for easy condition
+            self.trial_ITI_duration = 20 # 20 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             self.trial_ITI_duration = self.intertrial_duration
         stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "monitor_response": [np.NaN]}
