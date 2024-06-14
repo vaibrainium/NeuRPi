@@ -119,12 +119,11 @@ class StimulusManager(Display):
         self.update()
     
     def draw_flicker(self, args=None):
-        # change color fill from white to black and white on every call
+        # change color fill from white to gray and white on every call      
         if self.screen.get_at((0, 0)) == (255, 255, 255, 255):
-            self.screen.fill((0, 0, 0))
+            self.screen.fill((100, 100, 100))
         else:
             self.screen.fill((255, 255, 255))
-        
         self.update()
                 
     def update_delay(self, args=None):
