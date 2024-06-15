@@ -31,6 +31,9 @@ class SessionManager:
         self.random_generator_seed = None
         self.is_correction_trial = False
         self.signed_coherence = None
+        self.audio_stim = None
+        self.audio_volume = 1
+        self.audio_loops = 0
         self.target = None
         self.choice = None
         self.response_time = None
@@ -98,10 +101,14 @@ class SessionManager:
             "response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
         }
 
+        session_day = int(self.config.SUBJECT["session"].split('_')[0])
+        self.audio_volume = 1
+
         # list of all variables needed to be reset every trial
         self.trial_reset_variables = [
             self.random_generator_seed,
             self.signed_coherence,
+            self.audio_stim,
             self.target,
             self.choice,
             self.response_time,
@@ -166,9 +173,18 @@ class SessionManager:
 
     def prepare_stimulus_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
+        if self.signed_coherence == 0:
+            self.audio_stim = None
+        if np.sign(self.signed_coherence) > 0:
+            self.audio_stim = "16KHz"
+        elif np.sign(self.signed_coherence) < 0:
+            self.audio_stim = "8KHz"
+            
         stage_stimulus_args = {
             "coherence": self.signed_coherence,
             "seed": self.random_generator_seed,
+            "audio_stim": self.audio_stim,
+            "audio_volume": self.audio_volume,    
         }
 
         if self.training_type == 0: # passive-only training
