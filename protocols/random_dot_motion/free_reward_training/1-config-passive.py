@@ -75,7 +75,7 @@ TASK = {
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 1,
+        "value": 0,
     },
 }
 
@@ -90,6 +90,8 @@ STIMULUS = {
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
                 "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
+                "8KHz": "protocols/random_dot_motion/core/stimulus/audio/8KHz_1sec.wav",
+                "16KHz": "protocols/random_dot_motion/core/stimulus/audio/16KHz_1sec.wav",
             },
         },
     },
@@ -98,7 +100,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": "fixation_tone",
+                "audio": None, #"fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -110,7 +112,10 @@ STIMULUS = {
                     "dot_vel": 350,# 240 # for 25 degrees/sec
                     "dot_lifetime": 30,
                 },
-                "audio": None,  # "stimulus_tone",
+                "audio": {
+                        "8KHz": "8KHz",
+                        "16KHz": "16KHz",
+                }
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
