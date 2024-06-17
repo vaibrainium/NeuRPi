@@ -14,7 +14,7 @@ TASK = {
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 25,
-            "min_viewing": 0.3,
+            "min_viewing": 0, #0.3,
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
