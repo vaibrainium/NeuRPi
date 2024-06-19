@@ -120,7 +120,7 @@ class StimulusManager(Display):
     
     def draw_flicker(self, args=None):
         on_color = (155, 155, 155, 255)
-        off_color = (100, 100, 100)
+        off_color = (50, 50, 50)
         # change color fill from white to gray and white on every call      
         if self.screen.get_at((0, 0)) == on_color:
             self.screen.fill(off_color)
