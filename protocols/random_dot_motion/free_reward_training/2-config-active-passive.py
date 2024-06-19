@@ -109,8 +109,8 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 350,# 240 # for 25 degrees/sec
-                    "dot_lifetime": 30,
+                    "dot_vel": 200, #350,# 240 # for 25 degrees/sec
+                    "dot_lifetime": 60,
                 },
                 "audio": {
                         "8KHz": "8KHz",

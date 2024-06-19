@@ -60,14 +60,6 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "int",
-            # "value": {
-            #     1: np.array([3, 3]),
-            #     2: np.array([3, 3, 3, 3]),
-            #     3: np.array([3, 3, 1, 1, 3, 3]),
-            #     4: np.array([3, 3, 2, 1, 1, 2, 3, 3]),
-            #     5: np.array([3, 3, 2, 1, 1, 1, 1, 2, 3, 3]),
-            #     6: np.array([3, 3, 2, 1, 1, 1, 1, 2, 3, 3]),
-            # },
             "value": {
                 1: np.array([3, 3, 1, 1, 0, 0, 1, 1, 3, 3]),
                 2: np.array([3, 3, 2, 1, 0, 0, 1, 2, 3, 3]),
@@ -128,8 +120,8 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 350,# 240 # for 25 degrees/sec
-                    "dot_lifetime": 30,
+                    "dot_vel": 200, #350,# 240 # for 25 degrees/sec
+                    "dot_lifetime": 60,
                 },
                 "audio": None,  # "stimulus_tone",
             },
