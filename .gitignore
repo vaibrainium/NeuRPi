@@ -50,6 +50,7 @@ data
 */config/config_terminal.yaml
 .pre-commit-config.yaml
 /commitlint.config.js
+node_modules/
 # Uncomment if needed
 # #git
 # .gitignore
