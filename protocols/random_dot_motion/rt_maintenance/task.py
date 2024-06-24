@@ -2,18 +2,21 @@ import csv
 import datetime
 import itertools
 import multiprocessing as mp
+import pickle
 import threading
 from pathlib import Path
+
 import numpy as np
-import pickle
 
 from NeuRPi.prefs import prefs
-from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
+from protocols.random_dot_motion.core.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-
-from protocols.random_dot_motion.rt_maintainance.session_manager import SessionManager
-from protocols.random_dot_motion.rt_maintainance.stimulus_manager import StimulusManager
+from protocols.random_dot_motion.rt_maintenance.session_manager import \
+    SessionManager
+from protocols.random_dot_motion.rt_maintenance.stimulus_manager import \
+    StimulusManager
 
 # TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 # TODO: 5. Make sure graduation is working properly
@@ -210,7 +213,7 @@ if __name__ == "__main__":
         "start_weight": 19,
         "prct_weight": 95,
         "protocol": "random_dot_motion",
-        "experiment": "rt_maintainance",
+        "experiment": "rt_maintenance",
         "session": "1_1",
         "session_uuid": "XXXX",
         "rolling_perf": rolling_perf,
@@ -219,7 +222,7 @@ if __name__ == "__main__":
     value = {
         "stage_block": threading.Event(),
         "protocol": "random_dot_motion",
-        "experiment": "rt_maintainance",
+        "experiment": "rt_maintenance",
         "config": config,
     }
 
