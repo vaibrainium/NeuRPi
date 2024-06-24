@@ -43,7 +43,7 @@ venv
 
 # Package directories
 data
-logs
+*/logs/*
 
 # Configuration files
 */config/config_pilot.yaml
