@@ -43,6 +43,7 @@ venv
 
 # Package directories
 data
+logs
 */logs/*
 
 # Configuration files
