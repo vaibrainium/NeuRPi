@@ -21,9 +21,7 @@ class RandomDotMotion(object):
         self.Xpath = np.array([])
         self.Ypath = np.array([])
 
-        self.rdk_generator = (
-            np.random.RandomState()
-        )  # Creating separate random number generator -> rdk_generator
+        self.rdk_generator = np.random.RandomState()  # Creating separate random number generator -> rdk_generator
 
     def update_lifetime(self, pars):
         self.lifetime = pars["lifetime"]
@@ -40,35 +38,22 @@ class RandomDotMotion(object):
         self.vel = pars["dot_vel"]
         self.lifetime = pars["dot_lifetime"]
 
-        self.nDots = round(
-            (self.fill / 100)
-            * self.stimulus_size[0]
-            * self.stimulus_size[1]
-            / (np.pi * self.radius**2)
-        )
+        self.nDots = round((self.fill / 100) * self.stimulus_size[0] * self.stimulus_size[1] / (np.pi * self.radius**2))
         self.x = self.rdk_generator.randint(self.stimulus_size[0], size=self.nDots)
         self.y = self.rdk_generator.randint(self.stimulus_size[1], size=self.nDots)
         self.age = self.rdk_generator.randint(self.lifetime, size=self.nDots)
-        self.theta = self.rdk_generator.randint(
-            360, size=self.nDots
-        )  # Non coherent dots in all direction of 360 degrees
+        self.theta = self.rdk_generator.randint(360, size=self.nDots)  # Non coherent dots in all direction of 360 degrees
         # self.theta = self.rdk_generator.choice(self.randTheta, size=self.nDots)     # Non coherent dots in one of 8 direction separated by 45 degrees
         self.cohDots = list(range(round(np.abs(self.coherence) * self.nDots / 100)))
         if not self.cohDots:
-            self.noncohDots = list(
-                range(self.nDots)
-            )  # If cohDots are empty all dots are non-coherent
+            self.noncohDots = list(range(self.nDots))  # If cohDots are empty all dots are non-coherent
         else:
             self.noncohDots = list(range(self.cohDots[-1] + 1, self.nDots))
         self.theta[self.cohDots] = np.sign(pars["coherence"]) * 90
 
     def move_dots(self, frame_rate):
-        self.x[self.age == self.lifetime] = self.rdk_generator.randint(
-            self.stimulus_size[0], size=np.count_nonzero(self.age == self.lifetime)
-        )
-        self.y[self.age == self.lifetime] = self.rdk_generator.randint(
-            self.stimulus_size[1], size=np.count_nonzero(self.age == self.lifetime)
-        )
+        self.x[self.age == self.lifetime] = self.rdk_generator.randint(self.stimulus_size[0], size=np.count_nonzero(self.age == self.lifetime))
+        self.y[self.age == self.lifetime] = self.rdk_generator.randint(self.stimulus_size[1], size=np.count_nonzero(self.age == self.lifetime))
         self.age[self.age == self.lifetime] = 0
         # Accounting for boundaries
         self.x[self.x >= self.stimulus_size[0]] = 0

@@ -122,7 +122,7 @@ void writeData() {
     // file.println(data);
     if (bufferIndex < bufferSize) {
         dataBuffer[bufferIndex++] = data;
-    } 
+    }
     else {
         for (int i = 0; i < bufferSize; i++) {
             file.println(dataBuffer[i]);

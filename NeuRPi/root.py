@@ -4,6 +4,7 @@ Abstract Root Objects from which all other autopilot objects inherit from.
 These objects are not intended to be instantiated on their own,
 and this module should not import from any other autopilot module
 """
+
 import typing
 from abc import ABC
 from logging import Logger

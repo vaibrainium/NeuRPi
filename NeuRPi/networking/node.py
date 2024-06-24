@@ -224,11 +224,7 @@ class Net_Node(object):
                 except Exception as e:
                     self.logger.exception(e)
 
-            self.logger.exception(
-                "MSG ID {} - No listen function found for key: {}".format(
-                    msg.id, msg.key
-                )
-            )
+            self.logger.exception("MSG ID {} - No listen function found for key: {}".format(msg.id, msg.key))
 
         if (msg.key != "CONFIRM") and ("NOREPEAT" not in msg.flags.keys()):
             # send confirmation
@@ -366,9 +362,7 @@ class Net_Node(object):
             if len(outbox) > 0:
                 for id in outbox.keys():
                     if outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            "PUBLISH FAILED {} - {}".format(id, str(outbox[id][1]))
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(outbox[id][1])))
                         try:
                             del self.outbox[id]
                         except KeyError:
@@ -377,9 +371,7 @@ class Net_Node(object):
                     else:
                         # if we didn't just put this message in the outbox...
                         if (time.time() - outbox[id][0]) > (self.repeat_interval * 2):
-                            self.logger.debug(
-                                "REPUBLISH {} - {}".format(id, str(outbox[id][1]))
-                            )
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(outbox[id][1])))
                             self.sock.send_multipart(
                                 [
                                     self.upstream.encode("utf-8"),
@@ -619,15 +611,9 @@ class Net_Node(object):
                         flags={"NOREPEAT": True, "MINPRINT": True},
                         sender=socket_id,
                     ).serialize()
-                    last_msg = socket.send_multipart(
-                        (upstream, upstream, msg), track=True, copy=True
-                    )
+                    last_msg = socket.send_multipart((upstream, upstream, msg), track=True, copy=True)
 
-                    self.logger.debug(
-                        "STREAM {}: Sent {} items".format(
-                            self.id + "_" + id, len(pending_data)
-                        )
-                    )
+                    self.logger.debug("STREAM {}: Sent {} items".format(self.id + "_" + id, len(pending_data)))
                     pending_data = []
         else:
             # just send like normal messags
@@ -656,9 +642,7 @@ class Net_Node(object):
                     id="{}_{}".format(id, next(msg_counter)),
                     sender=socket_id,
                 ).serialize()
-                socket.send_multipart(
-                    (upstream, upstream, msg), track=False, copy=False
-                )
+                socket.send_multipart((upstream, upstream, msg), track=False, copy=False)
 
                 self.logger.debug("STREAM {}: Sent 1 item".format(self.id + "_" + id))
 
@@ -681,18 +665,9 @@ class Net_Node(object):
         if self._ip is None:
 
             # get ips that aren't the loopback
-            unwrap00 = [
-                ip
-                for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                if not ip.startswith("127.")
-            ][:1]
+            unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
             # ??? truly dk
-            unwrap01 = [
-                [
-                    (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
-                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
-                ][0][1]
-            ]
+            unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
 
             self._ip = [l for l in (unwrap00, unwrap01) if l][0][0]
 

@@ -4,8 +4,9 @@ import omegaconf
 from protocols.random_dot_motion.core.stimulus.display import Display
 import logging
 
- # TODO: Need to work with new config.py system
+# TODO: Need to work with new config.py system
 # CHANGE REINFORCEMENT and TUPLE HANDLING
+
 
 class StimulusManager(Display):
     """
@@ -24,8 +25,7 @@ class StimulusManager(Display):
         initiate_intertrial - show intertrial display
     """
 
-    def __init__(
-        self, stimulus=None, stimulus_configuration=None, in_queue=None, out_queue=None):
+    def __init__(self, stimulus=None, stimulus_configuration=None, in_queue=None, out_queue=None):
         super(StimulusManager, self).__init__(
             stimulus_configuration=stimulus_configuration,
             in_queue=in_queue,
@@ -34,7 +34,7 @@ class StimulusManager(Display):
 
         self.process = None
         self.frame_counter = None
-  
+
         if isinstance(stimulus_configuration, omegaconf.dictconfig.DictConfig):
             stimulus_configuration = omegaconf.OmegaConf.to_container(stimulus_configuration, resolve=True)
         self.stimulus_config = stimulus_configuration
@@ -72,12 +72,12 @@ class StimulusManager(Display):
 
     def update_stimulus(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate
-        
+
         # pulse = [(frame, coherence), (frame, coherence), ...]
-        if args and 'pulse' in args and args['pulse']:
-            if self.frame_counter == args['pulse'][0][0]:
-                self.stimulus.move_dots(frame_rate=frame_rate, new_coherence=args['pulse'][0][1])
-                args['pulse'].pop(0)
+        if args and "pulse" in args and args["pulse"]:
+            if self.frame_counter == args["pulse"][0][0]:
+                self.stimulus.move_dots(frame_rate=frame_rate, new_coherence=args["pulse"][0][1])
+                args["pulse"].pop(0)
             else:
                 self.stimulus.move_dots(frame_rate=frame_rate)
         else:
@@ -107,8 +107,8 @@ class StimulusManager(Display):
     def initiate_reinforcement(self, args):
         func, arg = self.update_stimulus()
         func(arg)
-        if self.initiate_reinforcement_config["audio"][args['outcome']]:
-            audio_name = self.initiate_reinforcement_config["audio"][args['outcome']]
+        if self.initiate_reinforcement_config["audio"][args["outcome"]]:
+            audio_name = self.initiate_reinforcement_config["audio"][args["outcome"]]
             self.play_audio(audio_name)
 
     def update_reinforcement(self, args=None):
@@ -117,23 +117,23 @@ class StimulusManager(Display):
     def initiate_delay(self, args=None):
         self.screen.fill(self.initiate_delay_config["background_color"])
         self.update()
-    
+
     def draw_flicker(self, args=None):
         on_color = (180, 180, 180, 255)
         off_color = (120, 120, 120)
-        # change color fill from white to gray and white on every call      
+        # change color fill from white to gray and white on every call
         if self.screen.get_at((0, 0)) == on_color:
             self.screen.fill(off_color)
         else:
             self.screen.fill(on_color)
         self.update()
-                
+
     def update_delay(self, args=None):
         args.get
         func = self.draw_flicker
         return func, args
-        #pass
-        
+        # pass
+
     def initiate_must_respond(self, args=None):
         pass
 
@@ -172,10 +172,8 @@ def main():
 
     import protocols.random_dot_motion.core.stimulus.config as config
 
-
     in_queue = multiprocessing.Queue()
     out_queue = multiprocessing.Queue()
-
 
     config.STIMULUS
 
@@ -189,7 +187,6 @@ def main():
 
     while True:
 
-        
         message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
         in_queue.put(eval(message))
         time.sleep(1)
@@ -217,6 +214,6 @@ def main():
 
 if __name__ == "__main__":
     import multiprocessing
-    
+
     game = multiprocessing.Process(target=main())
     game.start()

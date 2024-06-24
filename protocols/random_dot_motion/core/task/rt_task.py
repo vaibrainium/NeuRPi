@@ -180,7 +180,7 @@ class RTTask(TrialConstruct):
         """
         Stage 2: Evaluate choice and deliver reinforcement (reward/punishment) and decide respective intertrial interval
 
-        """        
+        """
         # Clear stage block
         self.stage_block.clear()
         task_args, stimulus_args = {}, {}
@@ -203,21 +203,21 @@ class RTTask(TrialConstruct):
                 self.managers["session"].total_reward += task_args["trial_reward"]
 
             self.trigger = {
-            "type": "MUST_RESPOND",
-            "targets": [task_args["reward_side"]],
-            "duration": None,
+                "type": "MUST_RESPOND",
+                "targets": [task_args["reward_side"]],
+                "duration": None,
             }
             self.response_block.set()
             self.must_respond_block.wait()
             # reset must_respond_block
             self.must_respond_block.clear()
-        
+
         # If fixed reward ratio is requested:
         if task_args.get("FRR_reward") is not None:
             # give reward after some delay
-            time.sleep(.1)
-            if stimulus_args.get("play_FRR_audio") is not None: # play FRR reward stimulus
-                self.msg_to_stimulus.put(("play_audio", stimulus_args['play_FRR_audio']))
+            time.sleep(0.1)
+            if stimulus_args.get("play_FRR_audio") is not None:  # play FRR reward stimulus
+                self.msg_to_stimulus.put(("play_audio", stimulus_args["play_FRR_audio"]))
             if task_args["reward_side"] == -1:
                 self.managers["hardware"].reward_left(task_args["FRR_reward"])
                 self.managers["session"].total_reward += task_args["FRR_reward"]
@@ -257,7 +257,6 @@ class RTTask(TrialConstruct):
         }
         return data
 
-
     def intertrial_stage(self, *args, **kwargs):
         """
         Stage 3: Inter-trial Interval.
@@ -266,7 +265,7 @@ class RTTask(TrialConstruct):
         # Clear stage block
         self.stage_block.clear()
         task_args, stimulus_args = {}, {}
-        
+
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
         if task_args["intertrial_duration"] > 0:
             # start delay epoch
@@ -281,7 +280,7 @@ class RTTask(TrialConstruct):
         data = self.managers["session"].end_of_trial_updates()
         data["DC_timestamp"] = datetime.datetime.now().isoformat()
         data["trial_stage"] = "intertrial_stage"
-        data['intertrial_duration'] = task_args["intertrial_duration"]
+        data["intertrial_duration"] = task_args["intertrial_duration"]
         data["TRIAL_END"] = True
         return data
 
@@ -294,7 +293,7 @@ class RTTask(TrialConstruct):
     #     # Clear stage block
     #     self.stage_block.clear()
     #     task_args, stimulus_args = {}, {}
-        
+
     #     task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
     #     self.trigger = {
     #         "type": "FIXATE",
@@ -307,13 +306,14 @@ class RTTask(TrialConstruct):
     #     self.response_block.set()
     #     self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
     #     self.stage_block.wait()
-       
+
     #     data = self.managers["session"].end_of_trial_updates()
     #     data["DC_timestamp"] = datetime.datetime.now().isoformat()
     #     data["trial_stage"] = "intertrial_stage"
     #     data['intertrial_duration'] = task_args["intertrial_duration"]
     #     data["TRIAL_END"] = True
     #     return data
+
 
 if __name__ == "__main__":
     stage_block = threading.Event()

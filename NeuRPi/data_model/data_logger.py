@@ -42,9 +42,7 @@ class DataLogger:
         Create csv file with provided name and headers
         """
         with open(self.file, "x") as csvfile:
-            file_handle = csv.DictWriter(
-                csvfile, fieldnames=headers, lineterminator="\n"
-            )
+            file_handle = csv.DictWriter(csvfile, fieldnames=headers, lineterminator="\n")
             file_handle.writeheader()
 
     def read_file(self):
@@ -52,9 +50,7 @@ class DataLogger:
         Reads file if exists and returns content as a pandas dataframe
         """
         if not self.file.exists():
-            self.logger.warning(
-                "Subject file {str(self.file)} does not exist! Please create new file"
-            )
+            self.logger.warning("Subject file {str(self.file)} does not exist! Please create new file")
         dataframe = pd.DataFrame()
         try:
             dataframe = pd.read_csv(self.file)
@@ -76,9 +72,7 @@ class DataLogger:
         """
 
         if not self.file.exists():
-            self.logger.warning(
-                "Subject file {str(self.file)} does not exist! Please create new file"
-            )
+            self.logger.warning("Subject file {str(self.file)} does not exist! Please create new file")
 
         with self._lock:
             try:
@@ -87,9 +81,7 @@ class DataLogger:
                     if isinstance(data, list):
                         csvwriter = csv.writer(csvfile)
                     elif isinstance(data, dict):
-                        csvwriter = csv.DictWriter(
-                            csvfile, fieldnames=list(data.keys())
-                        )
+                        csvwriter = csv.DictWriter(csvfile, fieldnames=list(data.keys()))
 
                     # writing the data rows
                     csvwriter.writerows(data)

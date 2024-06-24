@@ -98,11 +98,10 @@ class TrialConstruct:
                 response = np.nan
                 response_time = np.nan
                 break
-        
+
         self.clear_queue()
         self.response_block.clear()
         return [response, response_time]
-        
 
     def must_respond_monitor(self, target):
         """
@@ -121,7 +120,7 @@ class TrialConstruct:
                 pass
 
         return must_respond_success
-                
+
     def monitor_response(self):
         while True:
             self.trigger = None
@@ -129,14 +128,14 @@ class TrialConstruct:
             self.must_respond_block.clear()
             self.response_block.wait()
             try:
-                if self.trigger['type'] == "FIXATE":
-                    self.fixation_monitor(self.trigger['targets'], self.trigger['duration'])
+                if self.trigger["type"] == "FIXATE":
+                    self.fixation_monitor(self.trigger["targets"], self.trigger["duration"])
                     self.stage_block.set()
-                elif self.trigger['type'] == "GO":
-                    self.choice, self.response_time = self.choice_monitor(self.trigger['targets'], self.trigger['duration'])
+                elif self.trigger["type"] == "GO":
+                    self.choice, self.response_time = self.choice_monitor(self.trigger["targets"], self.trigger["duration"])
                     self.stage_block.set()
-                elif self.trigger['type'] == "MUST_RESPOND":
-                    self.must_respond_monitor(self.trigger['targets'])
+                elif self.trigger["type"] == "MUST_RESPOND":
+                    self.must_respond_monitor(self.trigger["targets"])
                     self.must_respond_block.set()
             except Exception as e:
                 print(e)

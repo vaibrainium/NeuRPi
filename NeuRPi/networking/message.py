@@ -76,9 +76,7 @@ class Message(object):
         if msg:
             self.serialized = msg
             if expand_arrays:
-                deserialized = json.loads(
-                    msg, object_pairs_hook=self._deserialize_msg_block
-                )
+                deserialized = json.loads(msg, object_pairs_hook=self._deserialize_msg_block)
             else:
                 deserialized = json.loads(msg)
             kwargs.update(deserialized)
@@ -98,15 +96,9 @@ class Message(object):
         #     self.DETECTED_MINPRINT = True
         # TODO: Make verbose/debugging mode, print value in that case.
         if self.key == "FILE" or ("MINPRINT" in self.flags.keys()):
-            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}, FLAGS: {}".format(
-                self.id, self.to, self.sender, self.key, self.flags
-            )
+            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}, FLAGS: {}".format(self.id, self.to, self.sender, self.key, self.flags)
         else:
-            me_string = (
-                "ID: {}; TO: {}; SENDER: {}; KEY: {}; FLAGS: {}; VALUE: {}".format(
-                    self.id, self.to, self.sender, self.key, self.flags, self.value
-                )
-            )
+            me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}; FLAGS: {}; VALUE: {}".format(self.id, self.to, self.sender, self.key, self.flags, self.value)
         # me_string = "ID: {}; TO: {}; SENDER: {}; KEY: {}".format(self.id, self.to, self.sender, self.key)
 
         return me_string
@@ -143,9 +135,7 @@ class Message(object):
         """
         if isinstance(msg_block, np.ndarray):
             if self.blosc:
-                compressed = base64.b64encode(blosc.pack_array(msg_block)).decode(
-                    "ascii"
-                )
+                compressed = base64.b64encode(blosc.pack_array(msg_block)).decode("ascii")
             else:
                 compressed = base64.b64encode(msg_block.tobytes()).decode("ascii")
             return {
@@ -174,9 +164,7 @@ class Message(object):
                     arr = blosc.unpack_array(decode)
                 except RuntimeError:
                     # cannot decompress, maybe because wasn't compressed
-                    arr = np.frombuffer(
-                        decode, dtype=literal_eval(obj_pairs[2][1])
-                    ).reshape(literal_eval(obj_pairs[3][1]))
+                    arr = np.frombuffer(decode, dtype=literal_eval(obj_pairs[2][1])).reshape(literal_eval(obj_pairs[3][1]))
                 return arr
             else:
                 message_bytes = obj_pairs[0][1].encode("ascii")
@@ -261,11 +249,7 @@ class Message(object):
 
         valid = self.validate()
         if not valid:
-            Exception(
-                """Message invalid at the time of serialization!\n {}""".format(
-                    str(self)
-                )
-            )
+            Exception("""Message invalid at the time of serialization!\n {}""".format(str(self)))
             return False
 
         msg = self.__dict__

@@ -30,13 +30,13 @@ void loop() {
     msg = Serial1.readString();
     Serial.println(msg_int);
     Serial.println(msg);
-    
+
     // opening left valve for pulse_width msecs
     if (msg=="reward_left"){
       digitalWrite(left_valve_pin, HIGH);
       digitalWrite(led, HIGH);
       delay(msg_int);
-      digitalWrite(left_valve_pin, LOW);   
+      digitalWrite(left_valve_pin, LOW);
       digitalWrite(led, LOW);
     }
     // opening right valve for pulse_width msecs
@@ -45,25 +45,25 @@ void loop() {
       digitalWrite(led, HIGH);
       delay(msg_int);
       digitalWrite(right_valve_pin, LOW);
-      digitalWrite(led, LOW);          
+      digitalWrite(led, LOW);
     }
     // toggle right valve state
     if (msg=="toggle_left_reward"){
       if (left_valve_open){
         digitalWrite(left_valve_pin, LOW);
-        digitalWrite(led, LOW);            
+        digitalWrite(led, LOW);
         left_valve_open = false;
         }
       else{
         digitalWrite(left_valve_pin, HIGH);
         digitalWrite(led, HIGH);
         left_valve_open = true;
-        }         
+        }
     }
     // toggle right valve state
-    if (msg=="toggle_right_reward"){ 
+    if (msg=="toggle_right_reward"){
       if (right_valve_open){
-        digitalWrite(right_valve_pin, LOW);            
+        digitalWrite(right_valve_pin, LOW);
         digitalWrite(led, LOW);
         right_valve_open = false;
         }
@@ -71,17 +71,17 @@ void loop() {
         digitalWrite(right_valve_pin, HIGH);
         digitalWrite(led, HIGH);
         right_valve_open = true;
-        }         
+        }
     }
     // give `msg_int` pulses of 50ms to both spouts
     if (msg=="caliberate_reward"){
       digitalWrite(left_valve_pin, LOW);
       digitalWrite(right_valve_pin, LOW);
       digitalWrite(led, LOW);
-      for (counter=0; counter<=msg_int; counter++){ 
+      for (counter=0; counter<=msg_int; counter++){
           digitalWrite(left_valve_pin, HIGH);
           digitalWrite(led, HIGH);
-          delay(100); 
+          delay(100);
           digitalWrite(left_valve_pin, LOW);
           digitalWrite(led, LOW);
           delay(100);

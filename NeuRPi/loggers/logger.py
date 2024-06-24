@@ -21,9 +21,7 @@ _INIT_LOCK = Lock()  # type: Lock
 _LOGGERS = []  # type: list
 
 
-def init_logger(
-    instance=None, module_name=None, class_name=None, object_name=None
-) -> logging.Logger:
+def init_logger(instance=None, module_name=None, class_name=None, object_name=None) -> logging.Logger:
 
     # --------------------------------------------------
     # gather variables
@@ -61,14 +59,10 @@ def init_logger(
         # check if logger needs to be made, or exists already
         # --------------------------------------------------
     elif not any((module_name, class_name, object_name)):
-        raise ValueError(
-            "Need to either give an object to create a logger for, or one of module_name, class_name, or object_name"
-        )
+        raise ValueError("Need to either give an object to create a logger for, or one of module_name, class_name, or object_name")
 
     # get name of logger to get
-    logger_name_pieces = [
-        v for v in (module_name, class_name, object_name) if v is not None
-    ]
+    logger_name_pieces = [v for v in (module_name, class_name, object_name) if v is not None]
     logger_name = ".".join(logger_name_pieces)
 
     # trim __ from logger names, linux don't like to make things like that
@@ -83,9 +77,7 @@ def init_logger(
 
         # check if something starting with module_name already exists in loggers
         MAKE_NEW = False
-        if not any(
-            [test_logger == module_name for test_logger in globals()["_LOGGERS"]]
-        ):
+        if not any([test_logger == module_name for test_logger in globals()["_LOGGERS"]]):
             MAKE_NEW = True
 
         if MAKE_NEW:
@@ -97,9 +89,7 @@ def init_logger(
             parent_logger.setLevel(loglevel)
 
             # make formatter that includes name
-            log_formatter = logging.Formatter(
-                "[%(asctime)s] %(levelname)s [%(name)s]: %(message)s"
-            )
+            log_formatter = logging.Formatter("[%(asctime)s] %(levelname)s [%(name)s]: %(message)s")
 
             ## file handler
             # base filename is the module_name + '.log
@@ -155,13 +145,9 @@ def _file_handler(base_filename: Path) -> RotatingFileHandler:
     except PermissionError as e:
         # catch permissions errors, try to chmod our way out of it
         try:
-            for mod_file in Path(base_filename).parent.glob(
-                f"{Path(base_filename).stem}"
-            ):
+            for mod_file in Path(base_filename).parent.glob(f"{Path(base_filename).stem}"):
                 os.chmod(mod_file, 0o777)
-                warnings.warn(
-                    f"Couldnt access {mod_file}, changed permissions to 0o777"
-                )
+                warnings.warn(f"Couldnt access {mod_file}, changed permissions to 0o777")
 
             fh = RotatingFileHandler(
                 base_filename,
@@ -170,12 +156,7 @@ def _file_handler(base_filename: Path) -> RotatingFileHandler:
                 backupCount=int(prefs.get("LOGNUM")),
             )
         except Exception as f:
-            raise PermissionError(
-                f"Couldnt open logfile {base_filename}, and couldnt chmod our way out of it.\n"
-                + "-" * 20
-                + f"\ngot errors:\n{e}\n\n{f}\n"
-                + "-" * 20
-            )
+            raise PermissionError(f"Couldnt open logfile {base_filename}, and couldnt chmod our way out of it.\n" + "-" * 20 + f"\ngot errors:\n{e}\n\n{f}\n" + "-" * 20)
     return fh
 
 

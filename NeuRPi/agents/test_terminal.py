@@ -23,9 +23,7 @@ class Terminal:
         # networking
         self.node = None
         self.networking = None
-        self.heartbeat_dur = (
-            10  # check every n seconds whether our pis are still around
-        )
+        self.heartbeat_dur = 10  # check every n seconds whether our pis are still around
 
         # data
         self.subjects = {}  # Dict of our open subject objects
@@ -168,9 +166,7 @@ class Terminal:
             self.heartbeat_timer.daemon = True
             self.heartbeat_timer.start()
 
-    def toggle_start(
-        self, starting, pilot, subject=None, protocol=None, task_phase=None
-    ):
+    def toggle_start(self, starting, pilot, subject=None, protocol=None, task_phase=None):
         """
         Start or Stop running the currently selected subject's task. Sends a
         message containing the task information to the concerned pilot.
@@ -188,9 +184,7 @@ class Terminal:
         # stopping is the enemy of starting so we put them in the same function to learn about each other
         if starting is True:
             # Get Weights
-            start_weight, ok = QtWidgets.QInputDialog.getDouble(
-                self, "Set Starting Weight", "Starting Weight:"
-            )
+            start_weight, ok = QtWidgets.QInputDialog.getDouble(self, "Set Starting Weight", "Starting Weight:")
             if ok:
                 # Ope'nr up if she aint
                 if subject not in self.subjects.keys():
@@ -214,9 +208,7 @@ class Terminal:
             # also let the plot know to start
             self.node.send(to="P_{}".format(pilot), key="STOP")
             # Get Weights
-            stop_weight, ok = QtWidgets.QInputDialog.getDouble(
-                self, "Set Stopping Weight", "Stopping Weight:"
-            )
+            stop_weight, ok = QtWidgets.QInputDialog.getDouble(self, "Set Stopping Weight", "Stopping Weight:")
 
             self.subjects[subject].stop_run()
             self.subjects[subject].update_weights(stop=float(stop_weight))

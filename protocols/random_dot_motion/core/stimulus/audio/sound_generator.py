@@ -16,7 +16,7 @@ def generate_sound(filename, frequency, duration, ramping_time, sampling_rate, v
         sound[-len(ramp) :] = sound[-len(ramp) :] * ramp[::-1]
 
     # Scale sound by the volume
-    sound = (sound * volume)
+    sound = sound * volume
 
     # Scale sound to 16-bit range (optional, if needed for compatibility with Pygame)
     sound = (sound * 32767).astype(np.int16)
@@ -30,17 +30,15 @@ if __name__ == "__main__":
     # Solve error aplay: test_wavefile:1131:  can't play WAVE-files with sample 64 bits wide
     # https://stackoverflow.com/questions/45596189/why-cant-i-play-a-wav-file-with-aplay
 
-
     # fixation onset
     # generate_sound(filename="fixation_tone_ramp.wav", frequency=5000, duration=0.1, ramping_time=0.01, sampling_rate=192000, volume=.2)
     # # stimulus onset
     # generate_sound(frequency=5000, duration=0.1, ramping_time=0.01, sampling_rate=192000)
     # # correct response
     # generate_sound(filename="correct_tone.wav", frequency=1000, duration=0.3, ramping_time=0.01, sampling_rate=192000, volume=.2)
-    
+
     # generate_sound(filename="left_direction_tone.wav", frequency=8000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.2)
     # generate_sound(filename="right_direction_tone.wav", frequency=16000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=1)
-    
-    
-    generate_sound(filename="8KHz_1sec.wav", frequency=8000, duration=1, ramping_time=0.05, sampling_rate=192000, volume=.2)
+
+    generate_sound(filename="8KHz_1sec.wav", frequency=8000, duration=1, ramping_time=0.05, sampling_rate=192000, volume=0.2)
     generate_sound(filename="16KHz_1sec.wav", frequency=16000, duration=1, ramping_time=0.05, sampling_rate=192000, volume=1)

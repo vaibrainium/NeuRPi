@@ -4,15 +4,16 @@ import numpy as np
 import pickle
 import pandas as pd
 
-#TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
-#TODO: 5. Make sure graduation is working properly
-#TODO: 6. Activate sound on display
+# TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
+# TODO: 5. Make sure graduation is working properly
+# TODO: 6. Activate sound on display
 
 
 class SessionManager:
     """
     Class for managing session structure i.e., trial sequence, graduation, and session level summary.
     """
+
     def __init__(self, config):
         self.config = config
 
@@ -38,9 +39,9 @@ class SessionManager:
         self.outcome = None
         self.full_reward_volume = self.config.SUBJECT["rolling_perf"]["reward_volume"]
         self.update_reward_volume()
-        self.trial_reward = None # reward given on current trial
-        self.total_reward = 0 # total reward given in session
-        self.fixation_duration = None #self.config.TASK["epochs"]["fixation"]["duration"]
+        self.trial_reward = None  # reward given on current trial
+        self.total_reward = 0  # total reward given in session
+        self.fixation_duration = None  # self.config.TASK["epochs"]["fixation"]["duration"]
         self.stimulus_duration = None
         self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
         self.passive_viewing_duration = None
@@ -103,7 +104,7 @@ class SessionManager:
             "response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
         }
         # Additional fixed ratio reward
-        self.fixed_ratio = self.config.TASK["fixed_ratio"]["value"] # number of trials to give additional reward 
+        self.fixed_ratio = self.config.TASK["fixed_ratio"]["value"]  # number of trials to give additional reward
         self.last_rewarded_side = None
         self.correct_streak_counter = 0
         self.FRR_reward = None
@@ -156,10 +157,10 @@ class SessionManager:
         ## Attempt based reward adjustment
         # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
         if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
-            volume_change -= 0.1 
+            volume_change -= 0.1
 
         self.full_reward_volume += np.clip(volume_change, -0.2, 0.2)
-        
+
         ## limiting reward volume between 2 and 3.5
         self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
 
@@ -172,11 +173,11 @@ class SessionManager:
         # updating random generator seed
         self.random_generator_seed = np.random.randint(0, 1000000)
         # updating trial parameters
-        self.prepare_trial_variables()       
+        self.prepare_trial_variables()
         # get fixation duration
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
-        stage_stimulus_args = {}, 
+        stage_stimulus_args = ({},)
         stage_task_args = {"fixation_duration": self.fixation_duration, "monitor_response": [np.NaN], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
@@ -187,18 +188,18 @@ class SessionManager:
             "seed": self.random_generator_seed,
         }
 
-        if self.training_type == 0: # passive-only training
+        if self.training_type == 0:  # passive-only training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
             monitor_response = [self.target]
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
-        elif self.training_type == 1: # active-passive training
+        elif self.training_type == 1:  # active-passive training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
             monitor_response = [-1, 1]
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
-        elif self.training_type == 2: # active training
+        elif self.training_type == 2:  # active training
             self.stimulus_duration = self.maximum_viewing_duration
             monitor_response = [-1, 1]
-        
+
         stage_task_args = {
             "coherence": self.signed_coherence,
             "target": self.target,
@@ -212,25 +213,25 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
         self.choice = choice
         self.response_time = response_time
-        
+
         # determining validity of the trial
-        if not self.is_correction_trial and (not np.isnan(self.choice)): # if this is not a correction trial and there is a response
-            self.valid = 1 # trial is valid
+        if not self.is_correction_trial and (not np.isnan(self.choice)):  # if this is not a correction trial and there is a response
+            self.valid = 1  # trial is valid
         else:
-            self.valid = 0 # trial is invalid            
+            self.valid = 0  # trial is invalid
 
         # determining outcome of the trial
-        if np.isnan(self.choice): # if no response
+        if np.isnan(self.choice):  # if no response
             self.outcome = "noresponse"
-        elif self.choice == self.target: # if correct
+        elif self.choice == self.target:  # if correct
             self.outcome = "correct"
-        elif self.choice != self.target: # if incorrect
+        elif self.choice != self.target:  # if incorrect
             self.outcome = "incorrect"
-        stage_stimulus_args["outcome"] =  self.outcome
+        stage_stimulus_args["outcome"] = self.outcome
 
         # determine reinfocement duration and reward
         self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
-        if self.outcome=="correct":
+        if self.outcome == "correct":
             self.trial_reward = self.full_reward_volume
             try:
                 psych_bias = np.nanmean([self.plot_vars["psych"][coh] for coh in self.active_coherences])
@@ -242,17 +243,17 @@ class SessionManager:
             #         multiplier = 0.85 * (1-np.abs(psych_bias - 0.5)/2)
             #         self.trial_reward *= multiplier
             #     # if correct trial is in non-biased direction, give additional reawrd (+0.2ul)
-            #     if self.choice == -np.sign(psych_bias - 0.5): 
+            #     if self.choice == -np.sign(psych_bias - 0.5):
             #         multiplier = 0.85 * (1+np.abs(psych_bias - 0.5)/2)
             #         self.trial_reward *= multiplier
 
-            self.trial_reward = max(self.trial_reward, 1) # making sure reward is not below 1ul
+            self.trial_reward = max(self.trial_reward, 1)  # making sure reward is not below 1ul
 
             # Fixed ratio reward
             self.correct_streak_counter += 1
             # if correct streak is longer than fixed ratio and if last rewarded side is not the same as current choice
             if (self.correct_streak_counter >= self.fixed_ratio) and (self.choice != self.last_rewarded_side):
-                self.FRR_reward = self.trial_reward # self.full_reward_volume
+                self.FRR_reward = self.trial_reward  # self.full_reward_volume
                 self.last_rewarded_side = self.choice
                 self.correct_streak_counter = 0
                 stage_stimulus_args["play_FRR_audio"] = "correct_tone"
@@ -265,9 +266,9 @@ class SessionManager:
 
         # making changes to typical reinforcement durations and reward based on training type and trial validity
         # if no response on passive/active-passive training assume correct trial durations and give half reward_volume
-        if self.training_type < 2 and self.outcome=="noresponse":
+        if self.training_type < 2 and self.outcome == "noresponse":
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
-            self.trial_reward = 1   # Giving minimum reward on no response trials to keep the motivation but not to reinforce no response
+            self.trial_reward = 1  # Giving minimum reward on no response trials to keep the motivation but not to reinforce no response
             stage_stimulus_args["outcome"] = "correct"
 
         stage_task_args = {
@@ -278,7 +279,7 @@ class SessionManager:
         }
 
         return stage_task_args, stage_stimulus_args
-    
+
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
@@ -289,15 +290,15 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
         # if 3rd attempt and not correct, then give higher ITI to take rest
         if (self.outcome != "correct") and (self.trial_counters["correction"] % 3 == 4):
-            self.trial_ITI_duration = 20 # 20 secs ITI for 3 incorrect attempts in a loop for easy condition
+            self.trial_ITI_duration = 20  # 20 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             self.trial_ITI_duration = self.intertrial_duration
-        stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "monitor_response": [np.NaN]}        
+        stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "monitor_response": [np.NaN]}
         return stage_task_args, stage_stimulus_args
-    
+
     ######################### trial-stage methods #########################
     def prepare_trial_variables(self):
-        if not self.is_correction_trial:    # if not correction trial
+        if not self.is_correction_trial:  # if not correction trial
             # is this start of new trial block?
             if self.trials_in_block == 0 or self.trials_in_block == len(self.block_schedule):
                 self.trials_in_block = 0
@@ -305,31 +306,28 @@ class SessionManager:
                 self.generate_block_schedule()
             self.signed_coherence = self.block_schedule[self.trials_in_block]
             self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
-            self.trials_in_block += 1 # incrementing within block counter
-            self.trials_in_current_level += 1 # incrementing within level counter
-            self.trial_counters["correction"] = 0 # resetting correction counter
+            self.trials_in_block += 1  # incrementing within block counter
+            self.trials_in_current_level += 1  # incrementing within level counter
+            self.trial_counters["correction"] = 0  # resetting correction counter
         else:
             # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias)*2, 0.4)))
+            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
             # Repeat probability to opposite side of bias
             self.signed_coherence = self.target * np.abs(self.signed_coherence)
-            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" 
-                    f"Passive bias correction with: {self.signed_coherence}")
+            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
             # increment correction trial counter
             self.trial_counters["correction"] += 1
 
     def graduation_check(self):
-        # deciding next_coherence level based on rolling accuracy. 
+        # deciding next_coherence level based on rolling accuracy.
         # forward level change
-        #TODO: implement direct key value comparison between two dictionaries
+        # TODO: implement direct key value comparison between two dictionaries
         while self.next_coh_level < len(self.accuracy_thresholds):
-            if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.next_coh_level]) and (
-                self.trials_in_current_level >= self.trials_threshold[self.next_coh_level]
-            ):
+            if all(list(self.rolling_accuracy.values()) >= self.accuracy_thresholds[self.next_coh_level]) and (self.trials_in_current_level >= self.trials_threshold[self.next_coh_level]):
                 self.next_coh_level = self.next_coh_level + 1
                 self.trials_in_current_level = 0
             else:
-                break  
+                break
 
         # backward level change
         if self.graduation_direction == 0:
@@ -342,17 +340,17 @@ class SessionManager:
 
         # if current level accuracy breaks, then reset trials_in_current_level
         if self.current_coh_level > 2:
-            if any(list(self.rolling_accuracy.values()) < self.accuracy_thresholds[self.current_coh_level-1]):
+            if any(list(self.rolling_accuracy.values()) < self.accuracy_thresholds[self.current_coh_level - 1]):
                 self.trials_in_current_level = 0
-  
+
         if self.next_coh_level != self.current_coh_level:
             self.update_coherence_level()
 
     def update_coherence_level(self):
         # update reward volume based on coherence level change
-        if self.next_coh_level > self.current_coh_level: # if level increased
+        if self.next_coh_level > self.current_coh_level:  # if level increased
             self.full_reward_volume += self.graduation_reward_change["increase"]
-        elif self.next_coh_level < self.current_coh_level: # if level decreased
+        elif self.next_coh_level < self.current_coh_level:  # if level decreased
             self.full_reward_volume -= self.graduation_reward_change["decrease"]
         # setting reward volume withing 1.5 to 3.5 range
         np.clip(self.full_reward_volume, 1.5, 3.5)
@@ -365,41 +363,38 @@ class SessionManager:
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
         if self.trial_counters["attempt"] == 0:
             # self.block_schedule = np.flip(self.block_schedule[np.argsort(np.abs(self.block_schedule))])
-            self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3) 
+            self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3)
         else:
             np.random.shuffle(self.block_schedule)
 
             # TODO: active bias correction needed?
             # swap coherence direction to unbiased side if coherence is above active threshold
-                # for _, coh in enumerate(
-                #     coherences[: self.subject_config["current_coherence_level"]]
-                # ):
-                #     if np.abs(coh) > self.config.TASK["bias"]["active_correction"]["threshold"]:
-                #         self.trial_schedule.remove(
-                #             coh * self.subject_config["rolling_bias"]
-                #         )  # Removing high coherence from biased direction (-1:left; 1:right)
-                #         self.trial_schedule.append(
-                #             -coh * self.subject_config["rolling_bias"]
-                #         )  # Adding high coherence from unbiased direction.
+            # for _, coh in enumerate(
+            #     coherences[: self.subject_config["current_coherence_level"]]
+            # ):
+            #     if np.abs(coh) > self.config.TASK["bias"]["active_correction"]["threshold"]:
+            #         self.trial_schedule.remove(
+            #             coh * self.subject_config["rolling_bias"]
+            #         )  # Removing high coherence from biased direction (-1:left; 1:right)
+            #         self.trial_schedule.append(
+            #             -coh * self.subject_config["rolling_bias"]
+            #         )  # Adding high coherence from unbiased direction.
 
             max_repeat_signs = 3
             self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
 
     def shuffle_seq(self, sequence, max_repeat):
-        """ Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
-        for i in range(len(sequence) - max_repeat+1):
-            subsequence = sequence[i:i + max_repeat]
+        """Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
+        for i in range(len(sequence) - max_repeat + 1):
+            subsequence = sequence[i : i + max_repeat]
             if len(set(np.sign(subsequence))) == 1:
                 temp_block = sequence[i:]
                 np.random.shuffle(temp_block)
                 sequence[i:] = temp_block
         return sequence
 
-
-
-
     ####################### between-trial methods #######################
-    
+
     def end_of_trial_updates(self):
         # function to finalize current trial and set parameters for next trial
         # codify trial outcome
@@ -425,7 +420,7 @@ class SessionManager:
 
         # write trial data to file
         self.write_trial_data_to_file()
-        
+
         # check if next trial is correction trial
         self.is_correction_trial = False
         # if incorrect and above passive correction threshold
@@ -434,12 +429,12 @@ class SessionManager:
         # if no response and no passive training
         if np.isnan(self.outcome) and self.training_type > 0:
             self.is_correction_trial = True
-        
+
         # # if responded, update rolling bias
         # if not np.isnan(self.choice):
         #     self.rolling_bias[self.rolling_bias_index] = self.choice
         #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
-        
+
         # if valid update trial variables and send data to terminal
         if self.valid:
             # update rolling bias
@@ -458,15 +453,12 @@ class SessionManager:
             elif self.choice == 1:
                 # computing right choices coherence-wise
                 self.plot_vars["chose_right"][self.signed_coherence] += 1
-                
+
             tot_trials_in_coh = self.plot_vars["chose_left"][self.signed_coherence] + self.plot_vars["chose_right"][self.signed_coherence]
 
             # update running accuracy
-            if (self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0):
-                self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], 
-                                            round(self.trial_counters["correct"]/ self.trial_counters["valid"] * 100, 2),
-                                            self.outcome
-                                            ]
+            if self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0:
+                self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2), self.outcome]
             # update psychometric array
             self.plot_vars["psych"][self.signed_coherence] = round(self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh, 2)
 
@@ -477,10 +469,7 @@ class SessionManager:
             if np.isnan(self.plot_vars["response_time_distribution"][self.signed_coherence]):
                 self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
             else:
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = round((
-                    ((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time
-                ) / tot_trials_in_coh,
-                2)
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round((((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh, 2)
 
         trial_data = {
             "is_valid": self.valid,
@@ -493,10 +482,9 @@ class SessionManager:
                 "psychometric_function": self.plot_vars["psych"],
                 "trial_distribution": self.plot_vars["trial_distribution"],
                 "response_time_distribution": self.plot_vars["response_time_distribution"],
-            }
+            },
         }
         return trial_data
-
 
     def write_trial_data_to_file(self):
         data = {
@@ -545,4 +533,3 @@ class SessionManager:
         with open(self.config.FILES["rolling_perf"], "wb") as file:
             pickle.dump(self.config.SUBJECT["rolling_perf"], file)
         print("SAVING EOS FILES")
-

@@ -33,7 +33,7 @@
 #     pygame.mixer.init()
 #     pygame.font.init()
 #     pygame.mouse.set_visible(False)
-    
+
 #     @classmethod
 #     def load_media(cls):
 #         """
@@ -110,11 +110,11 @@
 #             )
 
 #     def run_display(self):#, frame_queue, stop_event):
-        
+
 #         # create default screen
 #         self.screen.fill((0, 0, 0))
 #         self.default_screen = Display.pygame.surfarray.array3d(self.screen)
-        
+
 #         while self.is_connected and not self.stop_event.is_set():
 #             if not self.frame_queue.empty():
 #                 frame = frame_queue.get()
@@ -122,12 +122,12 @@
 #             else:
 #                 # Render a black screen if no frame is available
 #                 self.update_screen()
-        
+
 #         # self.release()
 
 
 #     def update_screen(self, frame=None):
-#         """ 
+#         """
 #         Shows a frame on the display.
 
 #         Args:
@@ -170,7 +170,7 @@
 #             raise Warning(
 #                 f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')"
 #             )
-        
+
 
 # def test_func():
 #     a = Display()
@@ -187,7 +187,7 @@
 #     except KeyboardInterrupt:
 #         pass
 
-#     # a = Display()    
+#     # a = Display()
 #     # a.connect()
 
 #     # # Create a multiprocessing Queue to pass frames between processes

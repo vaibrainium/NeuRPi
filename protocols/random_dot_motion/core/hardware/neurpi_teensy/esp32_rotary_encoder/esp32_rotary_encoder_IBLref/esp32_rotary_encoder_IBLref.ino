@@ -69,7 +69,7 @@ volatile int encoderPosCount = 0;
 volatile uint32_t encoderPosDegree = 0;
 int lastEncoded = 0;
 
-int8_t photodiodeState = 0;  
+int8_t photodiodeState = 0;
 
 
 // general variables
@@ -100,7 +100,7 @@ void setup(){
   attachInterrupt(digitalPinToInterrupt(encoderPinA), updateEncoder, CHANGE);
   attachInterrupt(digitalPinToInterrupt(encoderPinB), updateEncoder, CHANGE);
 
-  SPI.begin(SCK, MISO, MOSI, DAC_CS_Pin);  
+  SPI.begin(SCK, MISO, MOSI, DAC_CS_Pin);
   if (!SDcard.begin(DAC_CS_Pin, SPI_SPEED)) {
     Serial.println("SD card initialization failed!");
     while (1);
@@ -121,7 +121,7 @@ void startSession(int msgInt){
   filename = String(filename + ".dat");
   SDcard.remove(filename);
   DataFile = SDcard.open(filename, O_RDWR | O_CREAT);
-  
+
   if (!DataFile.isOpen()) {
     Serial.println("Error opening dat file");
     return;
@@ -175,7 +175,7 @@ void logCurrentData(){
 void endSession(int logNeeded){
   logCurrentData();
   isLogging = false;
-  
+
   DataFile.flush();
   if (DataFile.size() > dataPos * sizeof(DataUnion)) {
     DataFile.truncate(dataPos * sizeof(DataUnion));

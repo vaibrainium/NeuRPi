@@ -1,6 +1,8 @@
 from protocols.random_dot_motion.core.stimulus.stimulus_manager import StimulusManager as core_StimulusManager
 from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion as core_RDK
 import multiprocessing as mp
+
+
 class RandomDotMotion(core_RDK):
     """
     Class for managing stimulus structure i.e., shape, size and location of the stimuli
@@ -30,9 +32,6 @@ class StimulusManager(core_StimulusManager):
         super().__init__(stimulus, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
 
 
-
-
-
 def main():
     import queue
     import time
@@ -42,9 +41,8 @@ def main():
     from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 
     import protocols.random_dot_motion.pretraining.config as config
-    
-    import numpy as np
 
+    import numpy as np
 
     in_queue = multiprocessing.Queue()
     out_queue = multiprocessing.Queue()
@@ -59,7 +57,7 @@ def main():
 
     volumes = [0.2, 0.4, 0.6, 0.8, 1]
     while True:
-        vol_idx = np.random.randint(0,5)
+        vol_idx = np.random.randint(0, 5)
         print("Starting Fixation")
         message = "('fixation_epoch', {})"
         in_queue.put(eval(message))
@@ -83,6 +81,6 @@ def main():
 
 if __name__ == "__main__":
     import multiprocessing
-    
+
     game = multiprocessing.Process(target=main())
     game.start()

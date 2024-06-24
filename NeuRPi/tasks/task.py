@@ -80,9 +80,7 @@ class Task(object):
         self.task_manages = None
         self.subject = kwargs.get("subject", None)
         self.trigger = {}
-        self.stage_block = (
-            None  # threading.Event used by the pilot to manage stage transitions
-        )
+        self.stage_block = None  # threading.Event used by the pilot to manage stage transitions
         self.stages = None
 
         self.trial_counter = count(int(kwargs.get("current_trial", 0)))
@@ -106,9 +104,7 @@ class Task(object):
             port (None, Port_ID): If None, set value to all ports in 'PORTS', otherwise only set in 'port'
         """
         if not vol and not duration:
-            raise Exception(
-                "Did not provide either volume or duration of trigger for each pulse"
-            )
+            raise Exception("Did not provide either volume or duration of trigger for each pulse")
         if vol and duration:
             raise Warning("Both volume and duration provided. Using volume")
 

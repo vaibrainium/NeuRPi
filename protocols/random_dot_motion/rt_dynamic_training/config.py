@@ -32,8 +32,8 @@ TASK = {
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
                 # "incorrect": lambda response_time, coh:0.5+(10*np.exp(-3 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
-                "incorrect": lambda response_time, coh:0.5+(25*np.exp(-4 * response_time)), #5,
-                "noresponse": lambda response_time, coh: 5, # 2,
+                "incorrect": lambda response_time, coh: 0.5 + (25 * np.exp(-4 * response_time)),  # 5,
+                "noresponse": lambda response_time, coh: 5,  # 2,
             },
         },
         "intertrial": {
@@ -119,7 +119,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -128,7 +128,7 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 350, #350,  # 50 degrees/sec
+                    "dot_vel": 350,  # 350,  # 50 degrees/sec
                     "dot_lifetime": 30,
                 },
                 "audio": None,  # "stimulus_tone",
@@ -145,7 +145,7 @@ STIMULUS = {
             },
             "update_reinforcement": None,
             "initiate_delay": {
-                "background_color": (100, 100, 100), #(255, 255, 255),
+                "background_color": (100, 100, 100),  # (255, 255, 255),
             },
             "update_delay": None,
             "initiate_must_respond": None,

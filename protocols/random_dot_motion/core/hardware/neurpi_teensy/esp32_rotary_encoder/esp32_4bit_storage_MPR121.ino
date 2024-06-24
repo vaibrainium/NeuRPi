@@ -57,12 +57,12 @@ bool leftTouched = false;
 bool rightTouched = false;
 int8_t lickState;
 
-const float resolution = 90 / 1024.0;  
+const float resolution = 90 / 1024.0;
 volatile int encoderPosCount = 0;
 volatile uint32_t encoderPosDegree = 0;
 int lastEncoded = 0;
 
-int8_t photodiodeState = 0;  
+int8_t photodiodeState = 0;
 
 // general variables
 int startTime;
@@ -77,10 +77,10 @@ void setup(){
   while (!Serial) { delay(10); }
   while (!RewardSerial) { delay(10); }
   mpr121_begin();
-  
+
   // Starting session timer
   startTime = millis();
- 
+
   // // Set touch sensor pins as input
   // pinMode(leftTouchPin, INPUT);
   // pinMode(rightTouchPin, INPUT);

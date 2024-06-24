@@ -49,7 +49,7 @@ data
 */config/config_pilot.yaml
 */config/config_terminal.yaml
 .pre-commit-config.yaml
-
+/commitlint.config.js
 # Uncomment if needed
 # #git
 # .gitignore

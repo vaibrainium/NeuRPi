@@ -1,31 +1,31 @@
 NAME:
   type: str
-  text: 'Agent Name:'
+  text: "Agent Name:"
   default: rig_4
   scope: Scopes.COMMON
 PUSHPORT:
   type: int
-  text: 'Push Port - Router port used by the Terminal or upstream agent:'
+  text: "Push Port - Router port used by the Terminal or upstream agent:"
   default: 10000
   scope: Scopes.COMMON
 MSGPORT:
   type: int
-  text: 'Message Port - Router port used by this agent to receive messages:'
+  text: "Message Port - Router port used by this agent to receive messages:"
   default: 10001
   scope: Scopes.COMMON
 TERMINALIP:
   type: str
-  text: 'Terminal IP:'
+  text: "Terminal IP:"
   default: 10.155.206.212
   scope: Scopes.COMMON
 LOGLEVEL:
   type: choice
-  text: 'Log Level:'
+  text: "Log Level:"
   choices:
-  - DEBUG
-  - INFO
-  - WARNING
-  - ERROR
+    - DEBUG
+    - INFO
+    - WARNING
+    - ERROR
   default: WARNING
   scope: Scopes.COMMON
 LOGSIZE:
@@ -42,42 +42,42 @@ LINEAGE:
   type: choice
   text: Are we a parent or a child?
   choices:
-  - NONE
-  - PARENT
-  - CHILD
+    - NONE
+    - PARENT
+    - CHILD
   default: NONE
   scope: Scopes.LINEAGE
 CHILDID:
   type: list
-  text: 'List of Child ID:'
+  text: "List of Child ID:"
   default: []
   depends:
-  - LINEAGE
-  - PARENT
+    - LINEAGE
+    - PARENT
   scope: Scopes.LINEAGE
 PARENTID:
   type: str
-  text: 'Parent ID:'
+  text: "Parent ID:"
   default: NONE
   depends:
-  - LINEAGE
-  - CHILD
+    - LINEAGE
+    - CHILD
   scope: Scopes.LINEAGE
 PARENTIP:
   type: str
-  text: 'Parent IP:'
+  text: "Parent IP:"
   default: NONE
   depends:
-  - LINEAGE
-  - CHILD
+    - LINEAGE
+    - CHILD
   scope: Scopes.LINEAGE
 PARENTPORT:
   type: str
-  text: 'Parent Port:'
+  text: "Parent Port:"
   default: NONE
   depends:
-  - LINEAGE
-  - CHILD
+    - LINEAGE
+    - CHILD
   scope: Scopes.LINEAGE
 PING_INTERVAL:
   type: float

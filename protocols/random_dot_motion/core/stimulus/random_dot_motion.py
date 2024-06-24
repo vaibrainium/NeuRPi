@@ -55,7 +55,7 @@ class RandomDotMotion(object):
         self.age[self.age == self.lifetime] = 0
         # If update is required
         if new_coherence is not None:
-            print(f'changing coherence from {self.coherence} to {new_coherence}')
+            print(f"changing coherence from {self.coherence} to {new_coherence}")
             self.update_coherence(new_coherence)
         # Moving dots one step a time
         self.x = self.x + int(self.vel / frame_rate) * np.sin(np.deg2rad(self.theta))
@@ -142,11 +142,39 @@ if __name__ == "__main__":
 
     rdk.new_stimulus(pars)
 
-    coh_list = [100, 100, -100, 0, -0, -50, 50, -10,
-                -50, -60, 100, -10, 60, 100, 50,
-                100, -50, 60, -60, -20, -80, 0, -0,
-                -50, 50, -10, -50, -60, 100, -10, 60,
-                ]
+    coh_list = [
+        100,
+        100,
+        -100,
+        0,
+        -0,
+        -50,
+        50,
+        -10,
+        -50,
+        -60,
+        100,
+        -10,
+        60,
+        100,
+        50,
+        100,
+        -50,
+        60,
+        -60,
+        -20,
+        -80,
+        0,
+        -0,
+        -50,
+        50,
+        -10,
+        -50,
+        -60,
+        100,
+        -10,
+        60,
+    ]
 
     frames = 60
 

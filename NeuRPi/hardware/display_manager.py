@@ -7,14 +7,13 @@
 # from NeuRPi.prefs import prefs
 
 
-
 # class DisplayManager:
 
 #     def __init__(self, stimulus_config, in_queue=None, out_queue=None, epoch_update_event=None, stop_event=None):
-        
+
 #         # initialize pygame
 #         import pygame
-        
+
 #         self.pygame = pygame
 #         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
 #         os.putenv('DISPLAY', ':0.0')
@@ -54,11 +53,11 @@
 
 #     def connect(self):
 #         try:
-#             self.pygame.init()  
+#             self.pygame.init()
 #             self.pygame.display.init()
 #             # wait for display to be initialized
 #             while not self.pygame.display.get_init():
-#                 pass  
+#                 pass
 #             # initialize other pygame modules
 #             self.pygame.mixer.init()
 #             self.pygame.font.init()
@@ -74,8 +73,8 @@
 #             self.buffer_surf = self.pygame.Surface(self.display_config["window_size"])
 
 #             self.buffers = [self.pygame.Surface(self.display_config["window_size"]) for _ in range(self.buffer_count)]
-            
-            
+
+
 #         except Exception as e:
 #             raise Exception(f"Cannot connect to provided display device. {e}")
 #         finally:
@@ -95,7 +94,7 @@
 #                 raise TypeError("Video loading not supported yet")
 #         except Exception:
 #             raise Exception(f"Cannot load media to display device.")
-        
+
 #     def start(self):
 #         threading.Thread(target=self.run_display, daemon=False).start()
 #         threading.Thread(target=self.update_display, daemon=False).start()
@@ -104,7 +103,7 @@
 
 #     def update_surfaces(self, method, args):
 #         if not self.display_queue.full():
-#             self.buffer_index = (self.buffer_index + 1) % self.buffer_count       
+#             self.buffer_index = (self.buffer_index + 1) % self.buffer_count
 #             method(args=args, surface=self.buffers[self.buffer_index])
 #             self.display_queue.put(self.buffers[self.buffer_index])
 
@@ -120,7 +119,7 @@
 #         epoch, args = None, None
 #         self.epoch_update_event.clear()
 #         self.display_updated.set()
-        
+
 #         while self.is_connected:
 #             print(f"observed in {self.state} state")
 #             if self.state == "idle":
@@ -147,11 +146,11 @@
 #                         self.state = "update_epoch"
 #                     else:
 #                         self.state = "idle"
-#             elif self.state == "update_epoch": 
+#             elif self.state == "update_epoch":
 #                 method = getattr(self, update_method)
 #                 while not self.epoch_update_event.is_set():
 #                     self.update_surfaces(method, args)
-            
+
 #             if self.epoch_update_event.is_set():
 #                 self.state="init_epoch"
 #                 self.clear_queue(self.frame_queue)
@@ -170,7 +169,6 @@
 #                 # print(f"FPS: {self.clock.get_fps()}")
 
 
-
 #     def clear_queue(self, q):
 #         try:
 #             while True:
@@ -185,4 +183,3 @@
 #             self.is_connected = False
 #         except:
 #             raise Warning(f"Could not close connection with display device")
-        

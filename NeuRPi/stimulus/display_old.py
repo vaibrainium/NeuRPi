@@ -3,7 +3,7 @@ from queue import Queue, Empty
 from omegaconf import DictConfig, OmegaConf
 
 
-class Display():
+class Display:
     """
     Base class for video stimulus display. Defines display properties.
     """
@@ -25,7 +25,6 @@ class Display():
         self.gen_visual = {}
         self._start()
 
-
     def _start(self):
         # Initialize all screens with black background
         self.pygame.init()
@@ -34,13 +33,11 @@ class Display():
         self.font = self.pygame.font.SysFont("Arial", 20)
 
         if self.stim_config.display.num_screens == 1:
-            self.screen[0] = self.pygame.display.set_mode(self.window_size, flags=self.flags,
-                                                     display=eval(self.stim_config.display.screen), vsync=self.vsync)
+            self.screen[0] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=eval(self.stim_config.display.screen), vsync=self.vsync)
             self.screen[0].fill((0, 0, 0))
         else:
             for screen in range(self.stim_config.display.num_screens):
-                exec(
-                    f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
+                exec(f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
                 exec(f"""self.screen[{screen}].fill((0,0,0))""")
         self._update()
 
@@ -48,7 +45,7 @@ class Display():
 
     def gather_media(self):
         for key, val in self.stim_config.courier_handle.items():
-            if key not in ['tag', 'type']:
+            if key not in ["tag", "type"]:
                 # exec(f"self.{key} = dict()")
                 if val.visual.properties.load:
                     self.load_videos(key, val.audio.properties.load)
@@ -65,7 +62,7 @@ class Display():
                         pass
                         # temp_list.append(pygame.mixer.Sound(file))
                     except:
-                        raise Warning(f'Could not initialize {file} in {key2} in {key}')
+                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
                     finally:
                         self.audio[key][key2] = temp_list
         else:
@@ -75,7 +72,7 @@ class Display():
                     pass
                     # temp_list.append(pygame.mixer.Sound(file))
                 except:
-                    raise Warning(f'Could not initialize {file} in {key}')
+                    raise Warning(f"Could not initialize {file} in {key}")
                 finally:
                     self.audio[key] = temp_list
 
@@ -88,7 +85,7 @@ class Display():
                     try:
                         temp_list.append(self.pygame.mixer.Sound(file))
                     except:
-                        raise Warning(f'Could not initialize {file} in {key2} in {key}')
+                        raise Warning(f"Could not initialize {file} in {key2} in {key}")
                     finally:
                         self.audio[key][key2] = temp_list
         else:
@@ -97,7 +94,7 @@ class Display():
                 try:
                     temp_list.append(self.pygame.mixer.Sound(file))
                 except:
-                    raise Warning(f'Could not initialize {file} in {key}')
+                    raise Warning(f"Could not initialize {file} in {key}")
                 finally:
                     self.audio[key] = temp_list
 

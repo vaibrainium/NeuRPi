@@ -25,12 +25,8 @@ class HardwareManager(BaseHWManager):
         self.reset_lick_sensor()
 
         self._reward_calibration = self.config.Arduino.Primary.reward.calibration
-        self._reward_calibration_left = (
-            self.config.Arduino.Primary.reward.calibration_left
-        )
-        self._reward_calibration_right = (
-            self.config.Arduino.Primary.reward.calibration_right
-        )
+        self._reward_calibration_left = self.config.Arduino.Primary.reward.calibration_left
+        self._reward_calibration_right = self.config.Arduino.Primary.reward.calibration_right
         # self.lick_threshold = self.config.Arduino.Primary.lick.threshold
         self.lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
         self.lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
@@ -75,13 +71,12 @@ class HardwareManager(BaseHWManager):
     def reset_wheel_sensor(self):
         self.hardware["Primary"].write(str(0) + "reset_wheel")
 
-    def start_session(self, session_id = 0):
+    def start_session(self, session_id=0):
         self.hardware["Primary"].write(str(0) + "start_session")
-        if session_id!=0:
+        if session_id != 0:
             self.hardware["Primary"].write(session_id)
 
-        
-    def end_session(self, return_file = 0):
+    def end_session(self, return_file=0):
         self.hardware["Primary"].write(str(return_file) + "end_session")
         if return_file:
             return self.hardware["Primary"].read()
@@ -97,7 +92,6 @@ class HardwareManager(BaseHWManager):
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold")
 
-
     @property
     def lick_threshold_left(self):
         return self._lick_threshold_left
@@ -110,7 +104,6 @@ class HardwareManager(BaseHWManager):
 
         self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold_left")
 
-
     @property
     def lick_threshold_right(self):
         return self._lick_threshold_right
@@ -121,7 +114,6 @@ class HardwareManager(BaseHWManager):
         self.config.Arduino.Primary.lick.threshold_right = value
         prefs.set("HARDWARE", self.config)
         self.hardware["Primary"].write(str(int(value)) + "update_lick_threshold_right")
-
 
     @property
     def lick_slope(self):
@@ -182,10 +174,7 @@ class HardwareManager(BaseHWManager):
         elif spout == "Center":
             self.hardware["Primary"].write(str(0) + "toggle_center_reward")
         else:
-            raise Exception(
-                "Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout"
-                " \n 'Right': For right spout \n 'Center': For center spout"
-            )
+            raise Exception("Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout" " \n 'Right': For right spout \n 'Center': For center spout")
 
     def start_calibration_sequence(self, num_pulses=50):
         """
@@ -228,6 +217,7 @@ class HardwareManager(BaseHWManager):
 
 if __name__ == "__main__":
     import time
+
     a = HardwareManager()
     print("Hardware Manager Initialized")
     # a.lick_threshold_left = 20
@@ -238,7 +228,7 @@ if __name__ == "__main__":
     # start = time.time()
     # while True:
     #    lick = a.read_licks()
-       
+
     # #    if time.time() - start > 4:
     # #        a.reward_left(3)
     # #        start = time.time()

@@ -109,9 +109,7 @@ class Subject:
         # Finding max number of current sessions recorded
         for file in sub_dirs:
             try:
-                num1, num2 = [
-                    int(i) for i in re.search("(\d+)_" + "(\d+)", file).group(1, 2)
-                ]
+                num1, num2 = [int(i) for i in re.search("(\d+)_" + "(\d+)", file).group(1, 2)]
                 if num1 > day:
                     day = num1
                     session_no = num2
@@ -128,12 +126,8 @@ class Subject:
         else:
             # checking if multiple entry on same day
 
-            file_time = os.stat(
-                Path(self.dir, str(day) + "_" + str(session_no))
-            ).st_ctime
-            if (
-                time.time() - file_time
-            ) / 3600 < 12:  # Was file created today (less than 12 hours ago)?
+            file_time = os.stat(Path(self.dir, str(day) + "_" + str(session_no))).st_ctime
+            if (time.time() - file_time) / 3600 < 12:  # Was file created today (less than 12 hours ago)?
                 session = str(day) + "_" + str(session_no + 1)  # Increasing Version
             else:
                 session = str(day + 1) + "_1"  # Increasing Day

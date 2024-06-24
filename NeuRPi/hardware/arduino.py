@@ -16,9 +16,7 @@ class Arduino(Hardware):
 
     """
 
-    def __init__(
-        self, name=None, port=None, baudrate=None, timeout=None, group="Arduino"
-    ):
+    def __init__(self, name=None, port=None, baudrate=None, timeout=None, group="Arduino"):
         super(Arduino, self).__init__()
         self.name = name if name else port
         self.port = port
@@ -31,15 +29,11 @@ class Arduino(Hardware):
         Connect to serial hardware at given port with given baudrate and timeout
         """
         try:
-            self.connection = serial.Serial(
-                port=self.port, baudrate=self.baudrate, timeout=self.timeout
-            )
+            self.connection = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout)
             self.is_connected = True
             # self.reset()
         except:
-            raise Exception(
-                f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')"
-            )
+            raise Exception(f"Cannot connect to provided {self.group} device: {self.name} (at '{self.port}')")
 
     def reset(self):
         # Resetting Teensy
@@ -70,10 +64,7 @@ class Arduino(Hardware):
                 message = self.connection.readline().strip()
             return message
         else:
-            raise Warning(
-                f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading"
-            )
-
+            raise Warning(f"Please establish hardware connection with {self.group} device: {self.name} (at '{self.port}') before reading")
 
     def write(self, message):
         """
@@ -88,9 +79,7 @@ class Arduino(Hardware):
                     message = str(message) + "\n"
                     self.connection.write(str(message).encode("utf-8"))
                 except:
-                    raise Warning(
-                        f"Could not send message to provided {self.group} device: {self.name} (at '{self.port}')"
-                    )
+                    raise Warning(f"Could not send message to provided {self.group} device: {self.name} (at '{self.port}')")
 
     def release(self):
         """
@@ -100,6 +89,4 @@ class Arduino(Hardware):
             self.connection.close()
             self.is_connected = False
         except:
-            raise Warning(
-                f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')"
-            )
+            raise Warning(f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')")

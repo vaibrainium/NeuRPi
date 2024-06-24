@@ -7,7 +7,6 @@ import pygame
 from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 
 
-
 os.environ["DISPLAY"] = ":0.0"
 # Load the C++ shared library
 so_path = "protocols/random_dot_motion/core/stimulus/cpp_approach/libdrawcircle.so"
@@ -20,10 +19,10 @@ window_y = 1080
 window.init(window_x, window_y, 60, 1, b"My Window", 1)
 
 
-
 def draw_circle(x, y, radius, r, g, b):
     window.fill_screen(ctypes.c_ubyte(0), ctypes.c_ubyte(0), ctypes.c_ubyte(0))
     window.drawCircle(ctypes.c_float(x), ctypes.c_float(y), ctypes.c_float(radius), ctypes.c_ubyte(r), ctypes.c_ubyte(g), ctypes.c_ubyte(b))
+
 
 def draw_circles(x, y, radius, r, g, b):
     window.fill_screen(ctypes.c_ubyte(0), ctypes.c_ubyte(0), ctypes.c_ubyte(0))
@@ -35,19 +34,22 @@ def draw_circles(x, y, radius, r, g, b):
     for i in range(len(x)):
         window.drawCircle(ctypes.c_float(x[i]), ctypes.c_float(y[i]), ctypes.c_float(radius), ctypes.c_ubyte(r), ctypes.c_ubyte(g), ctypes.c_ubyte(b))
 
+
 frame = 0
 
 
-rdk = RandomDotMotion(stimulus_size=(window_x,window_y))
-rdk.new_stimulus({
-    "coherence": 90,
-    "seed": 1,
-    "dot_vel": 400,
-    "dot_fill": 15,
-    "dot_radius": 17,
-    "dot_color": (255, 255, 255),
-    "dot_lifetime": 30,
-})
+rdk = RandomDotMotion(stimulus_size=(window_x, window_y))
+rdk.new_stimulus(
+    {
+        "coherence": 90,
+        "seed": 1,
+        "dot_vel": 400,
+        "dot_fill": 15,
+        "dot_radius": 17,
+        "dot_color": (255, 255, 255),
+        "dot_lifetime": 30,
+    }
+)
 
 fps = 60
 while True:

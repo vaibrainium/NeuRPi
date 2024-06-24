@@ -70,8 +70,8 @@ TASK = {
         "value": 2,
     },
     "fixed_ratio": {
-	"tag": "Fixed reward ratio minimum streak",
-	"value": 1000,
+        "tag": "Fixed reward ratio minimum streak",
+        "value": 1000,
     },
 }
 
@@ -175,4 +175,3 @@ DATAFILES = {
     "lick": "_lick.csv",
     "trial": "_trial.csv",
 }
-

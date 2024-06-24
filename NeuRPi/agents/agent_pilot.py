@@ -27,7 +27,7 @@ class Pilot:
     node = None
     networking = None
 
-    def __init__(self): 
+    def __init__(self):
 
         self.name = prefs.get("NAME")
         if prefs.get("LINEAGE") == "CHILD":
@@ -75,7 +75,7 @@ class Pilot:
         if self.varify_hardware_connectivity():
             self.handshake()
             self.logger.debug("handshake sent")
-        else: 
+        else:
             raise TimeoutError("Hardware is not connected. Please check hardware connectivity and try again.")
 
         self.task = None
@@ -92,11 +92,11 @@ class Pilot:
 
         self.modules = None
 
-    ############################### HANDSHAKE FUNCTIONS ########################################        
+    ############################### HANDSHAKE FUNCTIONS ########################################
 
     def varify_hardware_connectivity(self):
         """
-        Check if all required hardwares mentioned in prefs is connected to the rig 
+        Check if all required hardwares mentioned in prefs is connected to the rig
         """
         # TODO: start implementing pre-emptive check on hardware connectivity before sending handshake so that terminal has better idea whether the rig is ready to run the specific task or not
         return True
@@ -156,9 +156,9 @@ class Pilot:
             self.state = "ERROR"
             self.update_state()
             self.logger.exception(f"Could not initialize task: {e}")
-        
+
         return
-        
+
     def l_stop(self, value):
         """
         Terminal requested to stop the task
@@ -200,7 +200,6 @@ class Pilot:
 
     ############################### SECONDARY FUNCTIONS ########################################
     def convert_str_to_module(self, module_string):
-
         """
         Convert string to module
         """
@@ -244,29 +243,23 @@ class Pilot:
                     # exit loop if stopping flag is set
                     if self.stopping.is_set():
                         self.stopping.clear()
-                        self.task.end()  
+                        self.task.end()
                         try:
                             # sending files to terminal only when successfully finished the task
-                            value = {
-                                "pilot": self.name,
-                                "subject": self.session_info.subject_name,
-                                "session_files": {}
-                            }
+                            value = {"pilot": self.name, "subject": self.session_info.subject_name, "session_files": {}}
                             for file_name, file_path in self.config.FILES.items():
                                 with open(file_path, "rb") as reader:
                                     value["session_files"][file_name] = reader.read()
-                            self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})         
+                            self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})
                         except:
-                            self.logger.exception("Could not send files to terminal")    
+                            self.logger.exception("Could not send files to terminal")
                         break
 
                     # if paused, wait for running event set?
                     self.running.wait()
 
         except Exception as e:
-            self.logger.exception(
-                f"got exception while running task; stopping task\n {e}"
-            )
+            self.logger.exception(f"got exception while running task; stopping task\n {e}")
             print("GOT Exception")
 
         finally:

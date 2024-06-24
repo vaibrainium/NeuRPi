@@ -98,9 +98,7 @@ class Station(multiprocessing.Process):
         if listens is None:
             listens = {}
         self.listens = listens
-        self.listens.update(
-            {"CONFIRM": self.l_confirm, "STREAM": self.l_stream, "KILL": self.l_kill}
-        )
+        self.listens.update({"CONFIRM": self.l_confirm, "STREAM": self.l_stream, "KILL": self.l_kill})
 
         # closing event signal
         self.closing = multiprocessing.Event()
@@ -122,18 +120,9 @@ class Station(multiprocessing.Process):
         # (and i don't really understand how it works)
 
         # get ips that aren't the loopback
-        unwrap00 = [
-            ip
-            for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-            if not ip.startswith("127.")
-        ][:1]
+        unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
         # ??? truly dk
-        unwrap01 = [
-            [
-                (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
-                for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
-            ][0][1]
-        ]
+        unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
         unwrap2 = [l for l in (unwrap00, unwrap01) if l][0][0]
         return unwrap2
 
@@ -230,9 +219,7 @@ class Station(multiprocessing.Process):
 
             if isinstance(msg.to, list):
 
-                self.listener.send_multipart(
-                    [*[hop.encode("utf-8") for hop in to], msg_enc]
-                )
+                self.listener.send_multipart([*[hop.encode("utf-8") for hop in to], msg_enc])
             else:
                 self.listener.send_multipart([msg.to.encode("utf-8"), msg_enc])
 
@@ -292,9 +279,7 @@ class Station(multiprocessing.Process):
 
         # Even if the message is not to our upstream node, we still send it
         # upstream because presumably our target is upstream.
-        self.pusher.send_multipart(
-            [self.push_id, bytes(msg.to, encoding="utf-8"), msg_enc]
-        )
+        self.pusher.send_multipart([self.push_id, bytes(msg.to, encoding="utf-8"), msg_enc])
 
         if not (msg.key == "CONFIRM") and log_this:
             self.logger.debug("MESSAGE PUSHED - {}".format(str(msg)))
@@ -402,9 +387,7 @@ class Station(multiprocessing.Process):
             if len(push_outbox) > 0:
                 for id in push_outbox.keys():
                     if push_outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            "PUBLISH FAILED {} - {}".format(id, str(push_outbox[id][1]))
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(push_outbox[id][1])))
                         try:
                             del self.push_outbox[id]
                         except KeyError:
@@ -412,24 +395,16 @@ class Station(multiprocessing.Process):
                             pass
                     else:
                         # if we didn't just put this message in our outbox
-                        if (
-                            time.time() - push_outbox[id][0]
-                        ) > self.repeat_interval * 2:
+                        if (time.time() - push_outbox[id][0]) > self.repeat_interval * 2:
 
-                            self.logger.debug(
-                                "REPUBLISH {} - {}".format(id, str(push_outbox[id][1]))
-                            )
-                            self.pusher.send_multipart(
-                                [self.push_id, push_outbox[id][1].serialize()]
-                            )
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(push_outbox[id][1])))
+                            self.pusher.send_multipart([self.push_id, push_outbox[id][1].serialize()])
                             self.push_outbox[id][1].ttl -= 1
 
             if len(send_outbox) > 0:
                 for id in send_outbox.keys():
                     if send_outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            "PUBLISH FAILED {} - {}".format(id, str(send_outbox[id][1]))
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(send_outbox[id][1])))
                         try:
                             del self.send_outbox[id]
                         except KeyError:
@@ -438,13 +413,9 @@ class Station(multiprocessing.Process):
 
                     else:
                         # if we didn't just put this message in our outbox
-                        if (
-                            time.time() - send_outbox[id][0]
-                        ) > self.repeat_interval * 2:
+                        if (time.time() - send_outbox[id][0]) > self.repeat_interval * 2:
 
-                            self.logger.debug(
-                                "REPUBLISH {} - {}".format(id, str(send_outbox[id][1]))
-                            )
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(send_outbox[id][1])))
                             self.listener.send_multipart(
                                 [
                                     bytes(send_outbox[id][1].to, encoding="utf-8"),
@@ -611,11 +582,7 @@ class Station(multiprocessing.Process):
                 listen_thread = threading.Thread(target=listen_funk, args=(msg,))
                 listen_thread.start()
             except KeyError:
-                self.logger.exception(
-                    "No function could be found for msg id {} with key: {}".format(
-                        msg.id, msg.key
-                    )
-                )
+                self.logger.exception("No function could be found for msg id {} with key: {}".format(msg.id, msg.key))
 
             # send a return message that confirms even if we except
             # don't confirm confirmations
@@ -629,9 +596,7 @@ class Station(multiprocessing.Process):
             # FIXME UGLY HACK
             self.push(msg=msg)
         else:
-            self.logger.exception(
-                f"Message not to us, but wasnt forwarded previously in handling method, message must be misformatted: {msg}"
-            )
+            self.logger.exception(f"Message not to us, but wasnt forwarded previously in handling method, message must be misformatted: {msg}")
 
 
 class Terminal_Station(Station):

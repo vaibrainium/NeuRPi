@@ -15,7 +15,7 @@ class Display:
     """
 
     def __init__(self, stimulus_configuration=None, in_queue=None, out_queue=None):
-        
+
         import pygame
 
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
@@ -37,7 +37,7 @@ class Display:
         self.frame_queue_size = 100
         self.frame_queue = Queue(maxsize=self.frame_queue_size)
 
-        self.display_config = prefs.get('HARDWARE')["Display"]
+        self.display_config = prefs.get("HARDWARE")["Display"]
 
         self.pygame = pygame
 
@@ -69,12 +69,7 @@ class Display:
             self.pygame.font.init()
             self.pygame.mouse.set_visible(False)
             self.font = self.pygame.font.SysFont("Arial", 20)
-            self.screen = self.pygame.display.set_mode(
-                tuple(self.display_config["window_size"]),
-                flags=self.flags,
-                display=self.display_config["port"], 
-                vsync=self.display_config["vsync"]
-            )
+            self.screen = self.pygame.display.set_mode(tuple(self.display_config["window_size"]), flags=self.flags, display=self.display_config["port"], vsync=self.display_config["vsync"])
             self.screen.fill((0, 0, 0))
             self.pygame.display.update()
 
@@ -135,10 +130,10 @@ class Display:
                         raise Warning(f"Unable to process {init_method}")
                     if epoch_value["update_func"]:
                         update_method = getattr(self, epoch_value["update_func"])
-                        
+
                         # filling the queue before rendering starts
                         self.lock.acquire()
-                        if epoch_value["clear_queue"]==False:
+                        if epoch_value["clear_queue"] == False:
                             while not self.frame_queue.full():
                                 try:
                                     draw_func, args = update_method(args)
@@ -162,7 +157,7 @@ class Display:
     def render_visual(self):
         self.render_block.set()
         while True:
-            self.epoch_update_event.wait() # without this event geting Segmentation fault error
+            self.epoch_update_event.wait()  # without this event geting Segmentation fault error
             if not self.frame_queue.empty():
                 try:
                     self.render_block.clear()

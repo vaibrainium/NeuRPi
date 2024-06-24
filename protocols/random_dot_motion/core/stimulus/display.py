@@ -15,7 +15,7 @@ class Display:
     """
 
     def __init__(self, stimulus_configuration=None, in_queue=None, out_queue=None):
-        
+
         import pygame
 
         # When ssh, use display 'hostname:Display.ScreenNo'. In this case using localhost:0.0 or :0.0
@@ -37,7 +37,7 @@ class Display:
         self.frame_queue_size = 100
         self.frame_queue = Queue(maxsize=self.frame_queue_size)
 
-        self.display_config = prefs.get('HARDWARE')["Display"]
+        self.display_config = prefs.get("HARDWARE")["Display"]
 
         self.pygame = pygame
 
@@ -69,12 +69,7 @@ class Display:
             self.pygame.font.init()
             self.pygame.mouse.set_visible(False)
             self.font = self.pygame.font.SysFont("Arial", 20)
-            self.screen = self.pygame.display.set_mode(
-                tuple(self.display_config["window_size"]),
-                flags=self.flags,
-                display=self.display_config["port"], 
-                vsync=self.display_config["vsync"]
-            )
+            self.screen = self.pygame.display.set_mode(tuple(self.display_config["window_size"]), flags=self.flags, display=self.display_config["port"], vsync=self.display_config["vsync"])
             self.screen.fill((0, 0, 0))
             self.pygame.display.update()
 
@@ -103,7 +98,7 @@ class Display:
         self.pygame.mixer.stop()
         self.audios[audio_name].set_volume(volume)
         self.audios[audio_name].play(loops=loops)
-        
+
     def stop_audio(self):
         self.pygame.mixer.stop()
 
@@ -118,7 +113,7 @@ class Display:
     def display_process(self):
         init_method, update_method, draw_method = None, None, None
         while True:
-            
+
             if update_method is None:
                 init_method, update_method, draw_method = None, None, None
                 (epoch, args) = self.in_queue.get(block=True, timeout=None)
@@ -136,7 +131,7 @@ class Display:
                     except:
                         raise Warning(f"Unable to process {init_method}")
                     if epoch_value["update_func"]:
-                        update_method = getattr(self, epoch_value["update_func"])                
+                        update_method = getattr(self, epoch_value["update_func"])
 
             # if update is coming
             if update_method:
@@ -150,7 +145,7 @@ class Display:
                         raise Warning(f"Unable to process {update_method}")
                 else:
                     update_method = None
-            
+
     def draw(self, func, args=None):
         try:
             func(args=args)
@@ -172,14 +167,9 @@ if __name__ == "__main__":
 
     path = "../NeuRPi/protocols/random_dot_motion/free_reward_training/"
     filename = "config.py"
-    
+
     from protocols.random_dot_motion.free_reward_training import config
-    
 
     in_queue = Queue()
     out_queue = Queue()
     display_window = Display(stimulus_configuration=config.STIMULUS, in_queue=in_queue, out_queue=out_queue)
-    
-    
-    
-    

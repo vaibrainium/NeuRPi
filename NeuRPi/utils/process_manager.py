@@ -1,6 +1,7 @@
 import multiprocessing
 import threading
 
+
 class CommunicationProcess(multiprocessing.Process):
     def __init__(self, target_func, args=(), in_queue=None, out_queue=None, stop_event=None, daemon=True):
         super(CommunicationProcess, self).__init__()
@@ -9,7 +10,7 @@ class CommunicationProcess(multiprocessing.Process):
         self.out_queue = out_queue or multiprocessing.Queue()
         self.stop_event = stop_event or multiprocessing.Event()
         self.args = args
-        self.daemon = daemon # if True, the process will be terminated when the main process ends
+        self.daemon = daemon  # if True, the process will be terminated when the main process ends
 
     def run(self):
         try:
@@ -17,12 +18,11 @@ class CommunicationProcess(multiprocessing.Process):
         finally:
             if self.daemon:
                 multiprocessing.current_process().terminate()
-    
-
 
 
 import threading
 from queue import Empty
+
 
 class QueueObserver(threading.Thread):
     def __init__(self, in_queue, update_screen):

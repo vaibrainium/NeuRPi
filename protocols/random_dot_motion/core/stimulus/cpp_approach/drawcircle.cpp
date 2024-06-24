@@ -23,7 +23,7 @@ extern "C" {
 
 int init(int width, int height, int maxFPS, bool fullscreen, const char* title) {
     setenv("DISPLAY", ":0.0", 1); // Set the DISPLAY environment variable
-    
+
     sf::VideoMode videoMode;
     if (fullscreen) {
         // Get the first available fullscreen mode
