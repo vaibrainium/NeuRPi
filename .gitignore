@@ -2,6 +2,7 @@
 __pycache__/
 */__pycache__/
 *.py[cod]
+
 # Distribution / packaging
 bin/
 build/
@@ -16,23 +17,42 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor-specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebooks
+*/.ipynb_checkpoints/*
+.ipynb_checkpoints
+
+# Environments
+.env
+venv
+
+# Package directories
+data
+logs
+
+# Configuration files
+*/config/config_pilot.yaml
+*/config/config_terminal.yaml
+.pre-commit-config.yaml
+
+# Uncomment if needed
 # #git
 # .gitignore
 # .gitattributes
 # #docker
 # .dockerignore
-#jupyter
-*/.ipynb_checkpoints/*
-.ipynb_checkpoints
-build
-
-# Package
-data
-logs
-.env
-venv
-*/config/config_pilot.yaml
-*/config/config_terminal.yaml
