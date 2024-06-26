@@ -1,7 +1,8 @@
 import csv
 import multiprocessing as mp
-import numpy as np
 import pickle
+
+import numpy as np
 import pandas as pd
 
 
@@ -170,32 +171,43 @@ class SessionManager:
         return stage_task_args, stage_stimulus_args
 
     def prepare_reinforcement_stage(self, choice, response_time):
+        """
+        Prepares the reinforcement stage based on the choice and response time.
+
+        Parameters:
+        - choice: The choice made during the trial.
+        - response_time: The time taken to make the response.
+
+        Returns:
+        - A tuple containing stage task arguments and stage stimulus arguments.
+        """
+        # Initialize arguments
         stage_task_args, stage_stimulus_args = {}, {}
         self.choice = choice
         self.response_time = response_time
 
-        # determining validity of the trial
-        if not self.is_correction_trial and (not np.isnan(self.choice)):  # if this is not a correction trial and there is a response
-            self.valid = 1  # trial is valid
+        # Determine outcome
+        if np.isnan(self.choice):
+            self.outcome = np.NaN
         else:
-            self.valid = 0  # trial is invalid
+            self.outcome = 1 if self.choice == self.target else 0
 
-        # determining outcome of the trial
-        if np.isnan(self.choice):  # if no response
-            self.outcome = "noresponse"
-        elif self.choice == self.target:  # if correct
-            self.outcome = "correct"
-        elif self.choice != self.target:  # if incorrect
-            self.outcome = "incorrect"
-        stage_stimulus_args["outcome"] = self.outcome
-
-        # determine reinfocement duration and reward
-        self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
-        if self.outcome == "correct":
+        # Determine trial reward and reinforcement duration and set stage stimulus arguments
+        if self.outcome == 1:
             self.trial_reward = self.full_reward_volume
-        else:
-            self.trial_reward = None
+            self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
+            stage_stimulus_args["outcome"] = "correct"
+        elif self.outcome == 0:
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["incorrect"](self.response_time)
+            stage_stimulus_args["outcome"] = "incorrect"
+        elif np.isnan(self.choice):
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
+            stage_stimulus_args["outcome"] = "noresponse"
+        self.trial_reward = max(self.trial_reward, 1)
 
+        # Set stage task arguments
         stage_task_args = {
             "reinforcement_duration": self.reinforcement_duration,
             "trial_reward": self.trial_reward,
@@ -206,7 +218,8 @@ class SessionManager:
 
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
+        outcome = {1: "correct", 0: "incorrect", np.NaN: "noresponse"}
+        self.delay_duration = self.delay_duration_function[outcome.get(self.outcome)](self.response_time)
 
         stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
@@ -214,7 +227,7 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         # if 3rd attempt and not correct, then give higher ITI to take rest
-        if (self.outcome != "correct") and (self.trial_counters["correction"] % 3 == 4):
+        if (self.outcome != 1) and (self.trial_counters["correction"] % 3 == 4):
             self.trial_ITI_duration = 20  # 20 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             self.trial_ITI_duration = self.intertrial_duration
@@ -265,44 +278,37 @@ class SessionManager:
 
     def end_of_trial_updates(self):
         # function to finalize current trial and set parameters for next trial
-        # codify trial outcome
-        if self.outcome == "correct":
-            self.outcome = 1
-        elif self.outcome == "incorrect":
-            self.outcome = 0
-        elif self.outcome == "noresponse":
-            self.outcome = np.NaN
+        # function to finalize current trial and set parameters for next trial
+        next_trial_vars = {"is_correction_trial": False}
 
-        # update trial counters
-        # count all attempts and response trials
-        self.trial_counters["attempt"] += 1
-        if np.isnan(self.outcome):
-            self.trial_counters["noresponse"] += 1
-        # if trial is valid then update valid, correct and incorrect counters
-        if self.valid:
-            self.trial_counters["valid"] += 1
-            if self.outcome == 1:
+        if self.outcome == 1:
+            if self.trial_counters["correction"] == 0:  # Not a correction trial
+                self.valid = True
+                self.trial_counters["valid"] += 1
                 self.trial_counters["correct"] += 1
-            elif self.outcome == 0:
+            next_trial_vars["is_correction_trial"] = False
+
+        elif self.outcome == 0:
+            if self.trial_counters["correction"] == 0:
+                self.valid = True
+                self.trial_counters["valid"] += 1
                 self.trial_counters["incorrect"] += 1
+            # Determine if a correction trial is needed based on signed coherence
+            self.is_correction_trial = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
+
+        elif np.isnan(self.outcome):
+            self.valid = False
+            self.trial_counters["noresponse"] += 1
+            if self.training_type == 0:
+                next_trial_vars["is_correction_trial"] = False
+            elif self.training_type == 1:
+                next_trial_vars["is_correction_trial"] = False
+            elif self.training_type == 2:
+                next_trial_vars["is_correction_trial"] = True
 
         # write trial data to file
         self.write_trial_data_to_file()
-
-        # check if next trial is correction trial
-        self.is_correction_trial = False
-        # if incorrect and above passive correction threshold
-        if self.outcome == 0 and np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
-            self.is_correction_trial = True
-
-        # if no response and no passive training
-        if np.isnan(self.outcome):
-            self.is_correction_trial = True
-
-        # # if responded, update rolling bias
-        # if not np.isnan(self.choice):
-        #     self.rolling_bias[self.rolling_bias_index] = self.choice
-        #     self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+        self.is_correction_trial = next_trial_vars["is_correction_trial"]
 
         # if valid update trial variables and send data to terminal
         if self.valid:
@@ -321,7 +327,11 @@ class SessionManager:
 
             # update running accuracy
             if self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0:
-                self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2), self.outcome]
+                self.plot_vars["running_accuracy"] = [
+                    self.trial_counters["valid"],
+                    round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2),
+                    self.outcome,
+                ]
             # update psychometric array
             self.plot_vars["psych"][self.signed_coherence] = round(self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh, 2)
 
@@ -332,7 +342,10 @@ class SessionManager:
             if np.isnan(self.plot_vars["response_time_distribution"][self.signed_coherence]):
                 self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
             else:
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = round((((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh, 2)
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round(
+                    (((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh,
+                    2,
+                )
 
         trial_data = {
             "is_valid": self.valid,
