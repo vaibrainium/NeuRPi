@@ -299,12 +299,7 @@ class SessionManager:
         elif np.isnan(self.outcome):
             self.valid = False
             self.trial_counters["noresponse"] += 1
-            if self.training_type == 0:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 1:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 2:
-                next_trial_vars["is_correction_trial"] = True
+            next_trial_vars["is_correction_trial"] = True
 
         # write trial data to file
         self.write_trial_data_to_file()
