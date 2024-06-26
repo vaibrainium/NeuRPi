@@ -285,7 +285,7 @@ class SessionManager:
         outcome = {1: "correct", 0: "incorrect", np.NaN: "noresponse"}
 
         if self.training_type < 2 and np.isnan(self.outcome):
-            self.delay_duration = self.delay_duration_function["correct"](self.response_time)
+            self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
         else:
             self.delay_duration = self.delay_duration_function[outcome.get(self.outcome)](self.response_time, self.signed_coherence)
 
