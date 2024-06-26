@@ -219,7 +219,7 @@ class SessionManager:
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         outcome = {1: "correct", 0: "incorrect", np.NaN: "noresponse"}
-        self.delay_duration = self.delay_duration_function[outcome.get(self.outcome)](self.response_time)
+        self.delay_duration = self.delay_duration_function[outcome.get(self.outcome)](self.response_time, self.signed_coherence)
 
         stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
