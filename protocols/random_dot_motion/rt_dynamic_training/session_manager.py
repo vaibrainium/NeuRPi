@@ -404,7 +404,7 @@ class SessionManager:
     def end_of_trial_updates(self):
         # function to finalize current trial and set parameters for next trial
         next_trial_vars = {"is_correction_trial": False}
-        
+
         self.trial_counters["attempt"] += 1
         if self.outcome == 1:
             if self.trial_counters["correction"] == 0:  # Not a correction trial
@@ -419,7 +419,7 @@ class SessionManager:
                 self.trial_counters["valid"] += 1
                 self.trial_counters["incorrect"] += 1
             # Determine if a correction trial is needed based on signed coherence
-            self.is_correction_trial = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
+            next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
 
         elif np.isnan(self.outcome):
             self.valid = False

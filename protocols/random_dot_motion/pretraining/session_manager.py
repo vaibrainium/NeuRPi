@@ -367,7 +367,7 @@ class SessionManager:
                 self.trial_counters["valid"] += 1
                 self.trial_counters["incorrect"] += 1
             # Determine if a correction trial is needed based on signed coherence
-            self.is_correction_trial = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
+            next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
 
         elif np.isnan(self.outcome):
             self.valid = False
