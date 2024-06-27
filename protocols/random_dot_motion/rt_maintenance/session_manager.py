@@ -278,9 +278,9 @@ class SessionManager:
 
     def end_of_trial_updates(self):
         # function to finalize current trial and set parameters for next trial
-        # function to finalize current trial and set parameters for next trial
         next_trial_vars = {"is_correction_trial": False}
 
+        self.trial_counters["attempt"] += 1
         if self.outcome == 1:
             if self.trial_counters["correction"] == 0:  # Not a correction trial
                 self.valid = True
