@@ -254,7 +254,6 @@ class SessionManager:
                 self.trial_reward = 0
                 self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
                 stage_stimulus_args["outcome"] = "noresponse"
-        self.trial_reward = max(self.trial_reward, 1)
 
         # Fixed ratio reward
         if self.outcome == 1:
