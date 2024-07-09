@@ -167,7 +167,7 @@ STIMULUS = {
             "must_respond_epoch": {
                 "clear_queue": False,
                 "init_func": "initiate_must_respond",
-                "update_func": "update_must_respond",
+                "update_func": None, #"update_must_respond",
             },
             "intertrial_epoch": {
                 "clear_queue": True,
