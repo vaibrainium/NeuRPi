@@ -15,7 +15,7 @@ TASK = {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
             "min_viewing": 0, #0.3,
-            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=10, scale=1),
+            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=15, scale=1),
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
