@@ -30,7 +30,7 @@ TASK = {
             "duration": {
                 "correct": lambda response_time: 0.000,
                 # "incorrect": lambda response_time:0.5+(6*np.exp(-3 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
-                "incorrect": lambda response_time:5+(20*np.exp(-4 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
+                "incorrect": lambda response_time:3+(7*np.exp(-4 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
                 "noresponse": lambda response_time: 10,
             },
         },
