@@ -14,7 +14,7 @@ TASK = {
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 10,
-            "min_viewing": 0, #0.3,
+            "min_viewing": 2, #0.3,
             "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=15, scale=1),
         },
         "reinforcement": {
