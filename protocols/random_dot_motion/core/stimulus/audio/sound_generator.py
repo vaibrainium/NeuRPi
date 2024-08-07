@@ -35,10 +35,10 @@ if __name__ == "__main__":
     # # stimulus onset
     # generate_sound(frequency=5000, duration=0.1, ramping_time=0.01, sampling_rate=192000)
     # # correct response
-    generate_sound(filename="correct_tone.wav", frequency=1000, duration=0.3, ramping_time=0.01, sampling_rate=192000, volume=1)
+    # generate_sound(filename="correct_tone.wav", frequency=1000, duration=0.3, ramping_time=0.01, sampling_rate=192000, volume=1)
 
     # generate_sound(filename="left_direction_tone.wav", frequency=8000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.2)
     # generate_sound(filename="right_direction_tone.wav", frequency=16000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=1)
 
-    # generate_sound(filename="8KHz_1sec.wav", frequency=8000, duration=1, ramping_time=0.05, sampling_rate=192000, volume=0.2)
-    # generate_sound(filename="16KHz_1sec.wav", frequency=16000, duration=1, ramping_time=0.05, sampling_rate=192000, volume=1)
+    generate_sound(filename="8KHz_2sec.wav", frequency=8000, duration=2, ramping_time=0.05, sampling_rate=192000, volume=0.2)
+    generate_sound(filename="16KHz_2sec.wav", frequency=16000, duration=2, ramping_time=0.05, sampling_rate=192000, volume=1)
