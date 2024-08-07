@@ -14,7 +14,7 @@ TASK = {
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
-            "min_viewing": 0, #0.3,
+            "min_viewing": 2, #0.3,
             # "passive_viewing": lambda coh_level: pearson3.rvs(skew=0.6, loc=4.5, scale=1.5), # old free reward
             "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=2, scale=1),  # new free reward
         },
@@ -90,8 +90,8 @@ STIMULUS = {
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
                 "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
-                "8KHz": "protocols/random_dot_motion/core/stimulus/audio/8KHz_1sec.wav",
-                "16KHz": "protocols/random_dot_motion/core/stimulus/audio/16KHz_1sec.wav",
+                "8KHz": "protocols/random_dot_motion/core/stimulus/audio/8KHz_2sec.wav",
+                "16KHz": "protocols/random_dot_motion/core/stimulus/audio/16KHz_2sec.wav",
             },
         },
     },
