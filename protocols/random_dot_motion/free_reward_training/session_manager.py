@@ -5,10 +5,6 @@ import pickle
 import numpy as np
 import pandas as pd
 
-# TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
-# TODO: 5. Make sure graduation is working properly
-# TODO: 6. Activate sound on display
-
 
 class SessionManager:
     """
@@ -34,7 +30,7 @@ class SessionManager:
         self.is_correction_trial = False
         self.signed_coherence = None
         self.audio_stim = None
-        self.audio_volume = 1
+        self.audio_volume = None
         self.audio_loops = 0
         self.target = None
         self.choice = None
