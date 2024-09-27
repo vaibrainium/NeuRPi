@@ -82,6 +82,15 @@ class SessionManager:
             "response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
         }
 
+        # Slowly decreasing minimum viewing duration
+        session_day = int(self.config.SUBJECT["session"].split("_")[0])
+        if session_day <= 4:
+            self.minimum_viewing_duration += 1.5
+        elif session_day <= 8:
+            self.minimum_viewing_duration += 1
+        elif session_day <= 12:
+            self.minimum_viewing_duration += 0.5
+
         # list of all variables needed to be reset every trial
         self.trial_reset_variables = [
             self.random_generator_seed,
