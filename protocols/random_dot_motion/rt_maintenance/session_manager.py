@@ -158,7 +158,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "monitor_response": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -168,14 +168,14 @@ class SessionManager:
             "seed": self.random_generator_seed,
         }
         self.stimulus_duration = self.maximum_viewing_duration
-        monitor_response = [-1, 1]
+        response_to_check = [-1, 1]
 
         stage_task_args = {
             "coherence": self.signed_coherence,
             "target": self.target,
             "stimulus_duration": self.stimulus_duration,
             "minimum_viewing_duration": self.minimum_viewing_duration,
-            "monitor_response": monitor_response,
+            "response_to_check": response_to_check,
         }
         return stage_task_args, stage_stimulus_args
 
@@ -239,7 +239,7 @@ class SessionManager:
             self.trial_ITI_duration = 20  # 20 secs ITI for 3 incorrect attempts in a loop for easy condition
         else:
             self.trial_ITI_duration = self.intertrial_duration
-        stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "monitor_response": [np.NaN]}
+        stage_task_args = {"intertrial_duration": self.trial_ITI_duration, "response_to_check": [np.NaN]}
         return stage_task_args, stage_stimulus_args
 
     ######################### trial-stage methods #########################

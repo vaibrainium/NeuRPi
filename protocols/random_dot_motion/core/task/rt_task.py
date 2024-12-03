@@ -124,17 +124,15 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = self.managers["session"].prepare_fixation_stage()
         self.trigger = {
             "type": "FIXATE",
-            "targets": task_args["monitor_response"],
+            "targets": task_args["response_to_check"],
             "duration": task_args["fixation_duration"],
         }
         # initiate fixation and start monitoring responses
         self.msg_to_stimulus.put(("fixation_epoch", stimulus_args))
-        self.response_block.set()
         self.timers["trial"] = datetime.datetime.now()
         self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
+        self.response_block.set()
         self.stage_block.wait()
-        # self.fixation_monitor(target=task_args["monitor_response"], duration=task_args["fixation_duration"])
-        # self.stage_block.set()
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
@@ -156,12 +154,12 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
         self.trigger = {
             "type": "GO",
-            "targets": task_args["monitor_response"],
+            "targets": task_args["response_to_check"],
             "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
         }
         # initiate stimulus
-        self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
         # set respons_block after minimum viewing time
+        self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
         threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
         self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
 
@@ -297,7 +295,7 @@ class RTTask(TrialConstruct):
     #     task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
     #     self.trigger = {
     #         "type": "FIXATE",
-    #         "targets": task_args["monitor_response"],
+    #         "targets": task_args["response_to_check"],
     #         "duration": task_args["intertrial_duration"],
     #     }
 

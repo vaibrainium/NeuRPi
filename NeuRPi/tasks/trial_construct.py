@@ -55,7 +55,7 @@ class TrialConstruct:
         self.must_respond_block = threading.Event()
         self.must_respond_block.clear()
 
-        self.thread = threading.Thread(target=self.monitor_response, daemon=True)
+        self.thread = threading.Thread(target=self.response_monitor_loop, daemon=True)
         self.thread.start()
 
     def fixation_monitor(self, target, duration):
@@ -121,7 +121,7 @@ class TrialConstruct:
 
         return must_respond_success
 
-    def monitor_response(self):
+    def response_monitor_loop(self):
         while True:
             self.trigger = None
             self.clear_queue()

@@ -1,7 +1,8 @@
 import csv
 import multiprocessing as mp
-import numpy as np
 import pickle
+
+import numpy as np
 import pandas as pd
 
 
@@ -122,7 +123,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "monitor_response": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -132,14 +133,14 @@ class SessionManager:
             "seed": self.random_generator_seed,
         }
         self.stimulus_duration = self.maximum_viewing_duration
-        monitor_response = [-1, 1]
+        response_to_check = [-1, 1]
 
         stage_task_args = {
             "coherence": self.signed_coherence,
             "target": self.target,
             "stimulus_duration": self.stimulus_duration,
             "minimum_viewing_duration": self.minimum_viewing_duration,
-            "monitor_response": monitor_response,
+            "response_to_check": response_to_check,
         }
         return stage_task_args, stage_stimulus_args
 
@@ -187,7 +188,7 @@ class SessionManager:
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        stage_task_args = {"intertrial_duration": self.intertrial_duration, "monitor_response": [np.NaN]}
+        stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
         return stage_task_args, stage_stimulus_args
 
     ######################### trial-stage methods #########################
@@ -279,7 +280,11 @@ class SessionManager:
 
             # update running accuracy
             if self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0:
-                self.plot_vars["running_accuracy"] = [self.trial_counters["valid"], round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2), self.outcome]
+                self.plot_vars["running_accuracy"] = [
+                    self.trial_counters["valid"],
+                    round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2),
+                    self.outcome,
+                ]
             # update psychometric array
             self.plot_vars["psych"][self.signed_coherence] = round(self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh, 2)
 
@@ -290,7 +295,10 @@ class SessionManager:
             if np.isnan(self.plot_vars["response_time_distribution"][self.signed_coherence]):
                 self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
             else:
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = round((((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh, 2)
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round(
+                    (((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh,
+                    2,
+                )
 
         trial_data = {
             "is_valid": self.valid,
