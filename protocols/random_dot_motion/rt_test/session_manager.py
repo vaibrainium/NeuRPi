@@ -159,18 +159,17 @@ class SessionManager:
         # determining outcome of the trial
         if np.isnan(self.choice):  # if no response
             self.outcome = "noresponse"
+            self.trial_reward = None
         elif self.choice == self.target:  # if correct
             self.outcome = "correct"
+            self.trial_reward = self.full_reward_volume
         elif self.choice != self.target:  # if incorrect
             self.outcome = "incorrect"
+            self.trial_reward = None
         stage_stimulus_args["outcome"] = self.outcome
 
         # determine reinfocement duration and reward
         self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
-        if self.outcome == "correct":
-            self.trial_reward = self.full_reward_volume
-        else:
-            self.trial_reward = None
 
         stage_task_args = {
             "reinforcement_duration": self.reinforcement_duration,

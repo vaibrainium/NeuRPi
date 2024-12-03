@@ -240,7 +240,7 @@ class SessionManager:
                 self.trial_reward = 0
                 self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
                 stage_stimulus_args["outcome"] = "noresponse"
-        if self.choice == self.target:
+        elif self.choice == self.target:
             self.outcome = "correct"
             self.trial_reward = self.full_reward_volume
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
