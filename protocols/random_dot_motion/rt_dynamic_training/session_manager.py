@@ -61,7 +61,7 @@ class SessionManager:
         self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
-        self.intertrial_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
@@ -241,12 +241,12 @@ class SessionManager:
                 self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
                 stage_stimulus_args["outcome"] = "noresponse"
         if self.choice == self.target:
-            self.outcome == "correct"
+            self.outcome = "correct"
             self.trial_reward = self.full_reward_volume
             self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
             stage_stimulus_args["outcome"] = "correct"
         elif self.choice != self.target:
-            self.outcome == "incorrect"
+            self.outcome = "incorrect"
             self.trial_reward = 0
             self.reinforcement_duration = self.reinforcement_duration_function["incorrect"](self.response_time)
             stage_stimulus_args["outcome"] = "incorrect"
@@ -278,7 +278,7 @@ class SessionManager:
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
 
-        if self.training_type < 2 and np.isnan(self.outcome):
+        if self.training_type < 2 and self.outcome == "noresponse":
             self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
         else:
             self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)

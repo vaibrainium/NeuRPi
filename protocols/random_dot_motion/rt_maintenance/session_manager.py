@@ -56,7 +56,7 @@ class SessionManager:
         self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
-        self.intertrial_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.active_coherences = self.full_coherences  # self.config.TASK["stimulus"]["active_coherences"]["value"]

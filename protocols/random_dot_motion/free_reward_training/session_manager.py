@@ -61,7 +61,7 @@ class SessionManager:
         self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
-        self.intertrial_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["itertrial"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
@@ -188,7 +188,6 @@ class SessionManager:
 
         if self.training_type == 0:  # passive-only training
             self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
-            # TODO: passive should not take any response
             response_to_check = []
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 1:  # active-passive training
@@ -261,10 +260,10 @@ class SessionManager:
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
 
-        if self.training_type < 2 and np.isnan(self.outcome):
-            self.delay_duration = self.delay_duration_function["correct"](self.response_time)
+        if self.training_type < 2 and self.outcome == "noresponse":
+            self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
         else:
-            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time)
+            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
         stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
@@ -272,7 +271,7 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
 
-        self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time)
+        self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
         stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
         return stage_task_args, stage_stimulus_args
