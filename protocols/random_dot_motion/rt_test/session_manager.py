@@ -44,7 +44,7 @@ class SessionManager:
         self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
         self.reinforcement_duration = None
         self.delay_duration = None
-        self.intertrial_duration = self.config.TASK["epochs"]["intertrial"]["duration"]
+        self.intertrial_duration = None
         # stage onset variables
         self.fixation_onset = None
         self.stimulus_onset = None
@@ -56,6 +56,7 @@ class SessionManager:
         self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.active_coherences = self.full_coherences  # self.config.TASK["stimulus"]["active_coherences"]["value"]
@@ -188,6 +189,8 @@ class SessionManager:
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
+        self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
+
         stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
         return stage_task_args, stage_stimulus_args
 
@@ -234,13 +237,14 @@ class SessionManager:
     ####################### between-trial methods #######################
 
     def end_of_trial_updates(self):
-        # function to finalize current trial and set parameters for next trial
+        """function to finalize current trial and set parameters for next trial"""
         # codify trial outcome
         if self.outcome == "correct":
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
         elif self.outcome == "noresponse":
+            self.outcome = np.NaN
             self.outcome = np.NaN
 
         # update trial counters

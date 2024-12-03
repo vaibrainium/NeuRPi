@@ -48,7 +48,7 @@ class SessionManager:
         self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
         self.reinforcement_duration = None
         self.delay_duration = None
-        self.intertrial_duration = self.config.TASK["epochs"]["intertrial"]["duration"]
+        self.intertrial_duration = None
         # stage onset variables
         self.fixation_onset = None
         self.stimulus_onset = None
@@ -61,6 +61,7 @@ class SessionManager:
         self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
@@ -223,22 +224,9 @@ class SessionManager:
         self.choice = choice
         self.response_time = response_time
 
-        # Determine outcome
-        if np.isnan(self.choice):
-            self.outcome = np.NaN
-        else:
-            self.outcome = 1 if self.choice == self.target else 0
-
         # Determine trial reward and reinforcement duration and set stage stimulus arguments
-        if self.outcome == 1:
-            self.trial_reward = self.full_reward_volume
-            self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
-            stage_stimulus_args["outcome"] = "correct"
-        elif self.outcome == 0:
-            self.trial_reward = 0
-            self.reinforcement_duration = self.reinforcement_duration_function["incorrect"](self.response_time)
-            stage_stimulus_args["outcome"] = "incorrect"
-        elif np.isnan(self.choice):
+        if np.isnan(self.choice):
+            self.outcome = "noresponse"
             if self.training_type == 0:
                 self.trial_reward = self.full_reward_volume
                 self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
@@ -251,6 +239,16 @@ class SessionManager:
                 self.trial_reward = 0
                 self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
                 stage_stimulus_args["outcome"] = "noresponse"
+        elif self.choice == self.target:
+            self.outcome = "correct"
+            self.trial_reward = self.full_reward_volume
+            self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
+            stage_stimulus_args["outcome"] = "correct"
+        elif self.choice != self.target:
+            self.outcome = "incorrect"
+            stage_stimulus_args["outcome"] = "incorrect"
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["incorrect"](self.response_time)
 
         # Set stage task arguments
         stage_task_args = {
@@ -262,18 +260,20 @@ class SessionManager:
 
     def prepare_delay_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
-        outcome = {1: "correct", 0: "incorrect", np.NaN: "noresponse"}
 
         if self.training_type < 2 and np.isnan(self.outcome):
             self.delay_duration = self.delay_duration_function["correct"](self.response_time)
         else:
-            self.delay_duration = self.delay_duration_function[outcome.get(self.outcome)](self.response_time)
+            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time)
 
         stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
+
+        self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time)
+
         stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
         return stage_task_args, stage_stimulus_args
 
@@ -321,6 +321,15 @@ class SessionManager:
     ####################### between-trial methods #######################
 
     def end_of_trial_updates(self):
+        """function to finalize current trial and set parameters for next trial"""
+        # codify trial outcome
+        if self.outcome == "correct":
+            self.outcome = 1
+        elif self.outcome == "incorrect":
+            self.outcome = 0
+        elif self.outcome == "noresponse":
+            self.outcome = np.NaN
+
         # function to finalize current trial and set parameters for next trial
         next_trial_vars = {"is_correction_trial": False}
 
