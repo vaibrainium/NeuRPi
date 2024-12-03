@@ -1,8 +1,10 @@
+import logging
 import time
 from multiprocessing import Process
+
 import omegaconf
+
 from protocols.random_dot_motion.core.stimulus.display import Display
-import logging
 
 # TODO: Need to work with new config.py system
 # CHANGE REINFORCEMENT and TUPLE HANDLING
@@ -105,8 +107,10 @@ class StimulusManager(Display):
             )
 
     def initiate_reinforcement(self, args):
-        func, arg = self.update_stimulus()
-        func(arg)
+        # func, arg = self.update_stimulus()
+        # func(arg)
+        self.screen.fill(self.initiate_reinforcement_config["background_color"])
+        self.update()
         if self.initiate_reinforcement_config["audio"][args["outcome"]]:
             audio_name = self.initiate_reinforcement_config["audio"][args["outcome"]]
             self.play_audio(audio_name)
@@ -164,13 +168,13 @@ class StimulusManager(Display):
 
 
 def main():
-    import queue
     import multiprocessing
+    import queue
+
     from omegaconf import OmegaConf
 
-    from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
-
     import protocols.random_dot_motion.core.stimulus.config as config
+    from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 
     in_queue = multiprocessing.Queue()
     out_queue = multiprocessing.Queue()
