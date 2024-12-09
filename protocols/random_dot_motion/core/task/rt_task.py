@@ -209,7 +209,7 @@ class RTTask(TrialConstruct):
 
             # # Must consume reward block
             # self.must_respond_block.wait()
-            # self.must_respond_block.clear()  # reset must_respond_block
+            self.must_respond_block.clear()  # reset must_respond_block
 
         # If fixed reward ratio is requested:
         if task_args.get("FRR_reward") is not None:
