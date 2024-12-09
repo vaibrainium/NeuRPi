@@ -200,16 +200,15 @@ class RTTask(TrialConstruct):
                 self.managers["hardware"].reward_right(task_args["trial_reward"])
                 self.managers["session"].total_reward += task_args["trial_reward"]
 
-            self.trigger = {
-                "type": "MUST_RESPOND",
-                "targets": [task_args["reward_side"]],
-                "duration": None,
-            }
-            self.response_block.set()
-
             # # Must consume reward block
-            # self.must_respond_block.wait()
-            self.must_respond_block.clear()  # reset must_respond_block
+            # self.trigger = {
+            #     "type": "MUST_RESPOND",
+            #     "targets": [task_args["reward_side"]],
+            #     "duration": None,
+            # }
+            # self.response_block.set()  # start monitoring responses
+            # self.must_respond_block.wait()  # wait for must_respond_block to be set
+            # self.must_respond_block.clear()  # reset must_respond_block
 
         # If fixed reward ratio is requested:
         if task_args.get("FRR_reward") is not None:
