@@ -49,6 +49,8 @@ class StimulusManager(Display):
             else:
                 setattr(self, f"{func}_config", args)  # Store the arguments as an instance variable
 
+    ######################################## Helper Functions ################################################
+
     def start(self):
         """
         Start the stimulus manager process
@@ -56,6 +58,33 @@ class StimulusManager(Display):
         self.process = Process(target=self._run, daemon=True)
         self.process.start()
 
+    def draw_flicker(self, args=None):
+        on_color = (180, 180, 180, 255)
+        off_color = (120, 120, 120)
+        # change color fill from white to gray and white on every call
+        if self.screen.get_at((0, 0)) == on_color:
+            self.screen.fill(off_color)
+        else:
+            self.screen.fill(on_color)
+        self.update()
+
+    def draw_stimulus(self, args):
+        self.screen.fill(self.initiate_stimulus_config["background_color"])
+        for ind in range(len(args["xpos"])):
+            self.pygame.draw.circle(
+                self.screen,
+                args["color"][ind],
+                (args["xpos"][ind], args["ypos"][ind]),
+                args["radius"][ind],
+            )
+
+    def stop(self):
+        """
+        Stopping display process
+        """
+        self.process.kill()
+
+    ######################################## Epoch Functions ################################################
     def initiate_fixation(self, args=None):
         self.screen.fill(self.initiate_fixation_config["background_color"])
         self.update()
@@ -74,7 +103,6 @@ class StimulusManager(Display):
 
     def update_stimulus(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate
-
         # pulse = [(frame, coherence), (frame, coherence), ...]
         if args and "pulse" in args and args["pulse"]:
             if self.frame_counter == args["pulse"][0][0]:
@@ -96,45 +124,28 @@ class StimulusManager(Display):
         }
         return func, args
 
-    def draw_stimulus(self, args):
-        self.screen.fill(self.initiate_stimulus_config["background_color"])
-        for ind in range(len(args["xpos"])):
-            self.pygame.draw.circle(
-                self.screen,
-                args["color"][ind],
-                (args["xpos"][ind], args["ypos"][ind]),
-                args["radius"][ind],
-            )
-
     def initiate_reinforcement(self, args):
         # func, arg = self.update_stimulus()
         # func(arg)
-        self.screen.fill(self.initiate_reinforcement_config["background_color"])
-        self.update()
+        # self.screen.fill(self.initiate_reinforcement_config["background_color"])
+        # self.update()
         if self.initiate_reinforcement_config["audio"][args["outcome"]]:
             audio_name = self.initiate_reinforcement_config["audio"][args["outcome"]]
             self.play_audio(audio_name)
 
     def update_reinforcement(self, args=None):
-        return self.update_stimulus()
+        pass
+        # return self.update_stimulus()
 
     def initiate_delay(self, args=None):
-        self.screen.fill(self.initiate_delay_config["background_color"])
-        self.update()
-
-    def draw_flicker(self, args=None):
-        on_color = (180, 180, 180, 255)
-        off_color = (120, 120, 120)
-        # change color fill from white to gray and white on every call
-        if self.screen.get_at((0, 0)) == on_color:
-            self.screen.fill(off_color)
-        else:
-            self.screen.fill(on_color)
-        self.update()
+        pass
+        # self.screen.fill(self.initiate_delay_config["background_color"])
+        # self.update()
 
     def update_delay(self, args=None):
-        func = self.draw_flicker
-        return func, args
+        pass
+        # func = self.draw_flicker
+        # return func, args
 
     def initiate_must_respond(self, args=None):
         pass
@@ -157,12 +168,6 @@ class StimulusManager(Display):
 
     def update_response(self, args=None):
         raise Warning("update_response Function Not Implemented")
-
-    def stop(self):
-        """
-        Stopping display process
-        """
-        self.process.kill()
 
 
 def main():
