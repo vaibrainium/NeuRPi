@@ -133,16 +133,14 @@ class StimulusManager(Display):
         self.update()
 
     def update_delay(self, args=None):
-        args.get
         func = self.draw_flicker
         return func, args
-        # pass
 
     def initiate_must_respond(self, args=None):
         pass
 
     def update_must_respond(self, args=None):
-        return self.update_stimulus()
+        pass
 
     def initiate_intertrial(self, args=None):
         self.screen.fill(self.initiate_intertrial_config["background_color"])
