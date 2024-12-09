@@ -44,7 +44,6 @@ class SessionManager:
         self.fixation_duration = None  # self.config.TASK["epochs"]["fixation"]["duration"]
         self.stimulus_duration = None
         self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
-        self.passive_viewing_duration = None
         self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
         self.reinforcement_duration = None
         self.delay_duration = None
@@ -58,7 +57,6 @@ class SessionManager:
         self.intertrial_onset = None
         # behavior dependent function
         self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
-        self.passive_viewing_function = self.config.TASK["epochs"]["stimulus"]["passive_viewing"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
         self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
         self.intertrial_duration_function = self.config.TASK["epochs"]["itertrial"]["duration"]
@@ -186,12 +184,13 @@ class SessionManager:
             "audio_volume": self.audio_volume,
         }
 
+        response_to_check = [-1, 1]
         if self.training_type == 0:  # passive-only training
-            self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
+            self.stimulus_duration = self.maximum_viewing_duration
             response_to_check = []
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 1:  # active-passive training
-            self.stimulus_duration = self.passive_viewing_function(self.current_coh_level)
+            self.stimulus_duration = self.maximum_viewing_duration
             response_to_check = [-1, 1]
             print(f"Passive Stimulus Duration is {self.stimulus_duration}")
         elif self.training_type == 2:  # active training
