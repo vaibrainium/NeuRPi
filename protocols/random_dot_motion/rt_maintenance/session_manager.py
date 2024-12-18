@@ -261,12 +261,12 @@ class SessionManager:
 
     def generate_block_schedule(self):
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
-        if True:
-            np.random.shuffle(self.block_schedule)
-            max_repeat_signs = 3
-            self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
+        if self.trial_counters["attempt"] == 0:
+            self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5))
+        else:
+            self.block_schedule = self.shuffle_seq(self.block_schedule)
 
-    def shuffle_seq(self, sequence, max_repeat):
+    def shuffle_seq(self, sequence, max_repeat=3):
         """Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
         for i in range(len(sequence) - max_repeat + 1):
             subsequence = sequence[i : i + max_repeat]
@@ -314,7 +314,7 @@ class SessionManager:
         elif np.isnan(self.outcome):
             self.valid = False
             self.trial_counters["noresponse"] += 1
-            next_trial_vars["is_correction_trial"] = False # True
+            next_trial_vars["is_correction_trial"] = True
 
         # write trial data to file
         self.write_trial_data_to_file()
