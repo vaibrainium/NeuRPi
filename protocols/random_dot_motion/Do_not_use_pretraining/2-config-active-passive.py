@@ -10,11 +10,12 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=1, scale=0.04)},
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 60,
-            "min_viewing": 0.3,
+            "min_viewing": 0.001,
+            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=15, scale=1),
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
@@ -28,13 +29,17 @@ TASK = {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
                 "correct": lambda response_time, coh: 0.000,
-                "incorrect": lambda response_time, coh: 8,
-                "noresponse": lambda response_time, coh: 10,
+                "incorrect": lambda response_time, coh: 0,
+                "noresponse": lambda response_time, coh: 0,
             },
         },
         "intertrial": {
             "tag": "Intertrial epoch",
-            "duration": 0.500,
+            "duration": {
+                "correct": lambda response_time, coh: 0.500,
+                "incorrect": lambda response_time, coh: 3+(7*np.exp(-4 * response_time)),
+                "noresponse": lambda response_time, coh: 10,
+            },
         },
     },
     "stimulus": {
@@ -46,7 +51,12 @@ TASK = {
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "list",
-            "value": np.array([-100, -36, -18, -9, 0, 9, 18, 36, 100]),
+            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
+        },
+        "active_coherences": {
+            "tag": "Signed coherences to be used withough graduation",
+            "type": "int",
+            "value": np.array([-100, -72, 72, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
@@ -56,23 +66,19 @@ TASK = {
     },
     "rolling_performance": {
         "rolling_window": 50,
-        "current_coherence_level": 6,
-        "reward_volume": 1.5,
+        "current_coherence_level": 2,
+        "reward_volume": 3.5,
     },
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 100,
+            "passive": 35,
         },
         "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 2,
-    },
-    "fixed_ratio": {
-        "tag": "Fixed reward ratio minimum streak",
-        "value": 1000,
+        "value": 1,
     },
 }
 
@@ -86,7 +92,8 @@ STIMULUS = {
                 "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
-                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
+                "8KHz": "protocols/random_dot_motion/core/stimulus/audio/8KHz_2sec.wav",
+                "16KHz": "protocols/random_dot_motion/core/stimulus/audio/16KHz_2sec.wav",
             },
         },
     },
@@ -104,29 +111,31 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 350,  # 50 degrees/sec
-                    "dot_lifetime": 30,
+                    "dot_vel": 200,
+                    "dot_lifetime": 60,
                 },
-                "audio": None,  # "stimulus_tone",
+                "audio": {
+                        "8KHz": "8KHz",
+                        "16KHz": "16KHz",
+                }
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
-                "background_color": (255, 255, 255),
+                "background_color": (50, 50, 50),,
                 "audio": {
-                    "correct": "correct_tone",
-                    "incorrect": None,  # "incorrect_tone",
-                    "noresponse": None,  # "incorrect_tone",
-                    "invalid": None,  # "incorrect_tone",
+                    "correct": None, #"correct_tone",
+                    "incorrect": "incorrect_tone",
+                    "noresponse": "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
             "initiate_delay": {
-                "background_color": (255, 255, 255),
+                "background_color": (50, 50, 50),
             },
             "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
-            "initiate_intertrial": {"background_color": (100, 100, 100)},
+            "initiate_intertrial": {"background_color": (50, 50, 50),},
         },
     },
     "task_epochs": {
@@ -147,9 +156,9 @@ STIMULUS = {
                 "update_func": "update_stimulus",
             },
             "reinforcement_epoch": {
-                "clear_queue": False,
+                "clear_queue": True
                 "init_func": "initiate_reinforcement",
-                "update_func": "update_reinforcement",
+                "update_func": None, #"update_reinforcement",
             },
             "delay_epoch": {
                 "clear_queue": True,

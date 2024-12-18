@@ -10,35 +10,38 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=1, scale=0.06)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 60,
-            "min_viewing": 2, #0.3,
-            "passive_viewing": lambda coh_level: stats.pearson3.rvs(skew=1.5, loc=5, scale=1),
+            "max_viewing": 25,
+            "min_viewing": 0,
         },
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0.500,
-                "incorrect": lambda response_time: 1.5,
-                "noresponse": lambda response_time: 1.5,
+                "correct": lambda response_time: 0,
+                "incorrect": lambda response_time: 0,
+                "noresponse": lambda response_time: 0,
             },
         },
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0.000,
-                # "incorrect": lambda response_time:0.5+(6*np.exp(-3 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
-                "incorrect": lambda response_time:3+(7*np.exp(-4 * response_time)), # Reducing the delay for incorrect responses due to delay task implementation
-                "noresponse": lambda response_time: 10,
+                "correct": lambda response_time, coh: 0,
+                "incorrect": lambda response_time, coh: 0,
+                "noresponse": lambda response_time, coh: 0,
             },
         },
         "intertrial": {
             "tag": "Intertrial epoch",
-            "duration": 0.500,
+            "duration": {
+                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
+                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
+                "noresponse": lambda response_time, coh: 7,
+            },
         },
     },
+
     "stimulus": {
         "coherences": {
             "tag": "List of all coherences used in study",
@@ -47,35 +50,34 @@ TASK = {
         },
         "signed_coherences": {
             "tag": "List of all signed coherences",
-            "type": "list",
-            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
-        },
-        "active_coherences": {
-            "tag": "Signed coherences to be used withough graduation",
-            "type": "int",
-            "value": np.array([-100, -72, 72, 100]),
+            "type": "np.array",
+            "value": np.array([100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
-            "type": "int",
-            "value": 3,
+            "type": "np.array",
+            "value": np.array([10]),
         },
     },
     "rolling_performance": {
         "rolling_window": 50,
         "current_coherence_level": 2,
-        "reward_volume": 3.5,
+        "reward_volume": 1.5,
     },
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 35,
+            "passive": 100,
         },
         "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 0,
+        "value": 2,
+    },
+    "fixed_ratio": {
+        "tag": "Fixed reward ratio minimum streak",
+        "value": 1000,
     },
 }
 
@@ -89,12 +91,13 @@ STIMULUS = {
                 "fixation_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
                 "correct_tone": "protocols/random_dot_motion/core/stimulus/audio/correct_tone.wav",
                 "incorrect_tone": "protocols/random_dot_motion/core/stimulus/audio/incorrect_tone.wav",
-                # "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
+                "stimulus_tone": "protocols/random_dot_motion/core/stimulus/audio/fixation_tone_ramp.wav",
                 "8KHz": "protocols/random_dot_motion/core/stimulus/audio/8KHz_2sec.wav",
                 "16KHz": "protocols/random_dot_motion/core/stimulus/audio/16KHz_2sec.wav",
             },
         },
     },
+
     "required_functions": {
         "tag": "List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.",
         "value": {
@@ -109,34 +112,34 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #350,# 240 # for 25 degrees/sec
+                    "dot_vel": 200, #for 25 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": "8KHz",
-                        "16KHz": "16KHz",
+                        "8KHz": None, #"8KHz",
+                        "16KHz": None, #"16KHz",
                 }
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
-                "background_color": (255, 255, 255),
+                "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": "correct_tone",
-                    "incorrect": "incorrect_tone",
-                    "noresponse": "incorrect_tone",
-                    "invalid": None,  # "incorrect_tone",
+                    "correct": None, # "correct_tone",
+                    "incorrect": None, # "incorrect_tone",
+                    "noresponse": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
             "initiate_delay": {
-                "background_color": (255, 255, 255),
+                "background_color": (0, 0, 0),
             },
             "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
-            "initiate_intertrial": {"background_color": (100, 100, 100)},
+            "initiate_intertrial": {"background_color": (0, 0, 0)},
         },
     },
+
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
             Format:
@@ -155,19 +158,19 @@ STIMULUS = {
                 "update_func": "update_stimulus",
             },
             "reinforcement_epoch": {
-                "clear_queue": False,
+                "clear_queue": True,
                 "init_func": "initiate_reinforcement",
-                "update_func": "update_reinforcement",
+                "update_func": None,
             },
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay",
+                "update_func": None, #"update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,
                 "init_func": "initiate_must_respond",
-                "update_func": "update_must_respond",
+                "update_func": None,
             },
             "intertrial_epoch": {
                 "clear_queue": True,

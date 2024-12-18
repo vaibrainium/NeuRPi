@@ -19,7 +19,7 @@ TASK = {
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0, 
+                "correct": lambda response_time: 0,
                 "incorrect": lambda response_time: 0,
                 "noresponse": lambda response_time: 0,
             },
@@ -50,36 +50,24 @@ TASK = {
         },
         "signed_coherences": {
             "tag": "List of all signed coherences",
-            "type": "list",
-            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
-        },
-        "active_coherences": {
-            "tag": "Signed coherences to be used withough graduation",
-            "type": "int",
-            "value": np.array([-100, -72, 72, 100]),
+            "type": "np.array",
+            "value": np.array([-100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
-            "type": "int",
-            "value": {
-                1: np.array([3, 3, 1, 1, 0, 0, 1, 1, 3, 3]),
-                2: np.array([3, 3, 2, 1, 0, 0, 1, 2, 3, 3]),
-                3: np.array([3, 3, 3, 2, 1, 1, 2, 3, 3, 3]),
-                4: np.array([3, 3, 3, 3, 2, 2, 3, 3, 3, 3]),
-                5: np.array([3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
-                6: np.array([3, 3, 3, 3, 3, 3, 3, 3, 3, 3]),
-            },
+            "type": "np.array",
+            "value": np.array([10]),
         },
     },
     "rolling_performance": {
         "rolling_window": 50,
-        "current_coherence_level": 2,
-        "reward_volume": 3.5,
+        "current_coherence_level": 1,
+        "reward_volume": 1.5,
     },
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 0,
+            "passive": 100,
         },
         "bias_window": 10,
     },
@@ -89,7 +77,7 @@ TASK = {
     },
     "fixed_ratio": {
         "tag": "Fixed reward ratio minimum streak",
-        "value": 200,
+        "value": 1000,
     },
 }
 
@@ -199,104 +187,3 @@ DATAFILES = {
     "lick": "_lick.csv",
     "trial": "_trial.csv",
 }
-
-GRADUATION = {
-    "direction": {
-        "tag": "Direction of graduation. 0: 'forward' or 1:'forward and backward'",
-        "value": 1,
-    },
-    "coherence_levels": {
-        "tag": "List of all coherence levels and their properties used in this phase",
-        # "value": {
-        #     1: np.array([-100, 100]),
-        #     2: np.array([-100, -72, 72, 100]),
-        #     3: np.array([-100, -72, -36, 36, 72, 100]),
-        #     4: np.array([-100, -72, -36, -18, 18, 36, 72, 100]),
-        #     5: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-        #     6: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-        # },
-        "value": {
-            1: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-            2: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-            3: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-            4: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-            5: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-            6: np.array([-100, -72, -36, -18, -9, 9, 18, 36, 72, 100]),
-        },
-    },
-    "accuracy": {
-        "rolling_widows": {
-            "tag": "Number of trials per coherence to consider for accuracy calculation",
-            "value": 50,
-        },
-        "thresholds": {
-            "tag": "List of all accuracy conditions for each coherence level to move forward (or backward)",
-            "value": {
-                1: np.array([0.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.8]),
-                2: np.array([0.8, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.8]),
-                3: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
-                4: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
-                5: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
-                6: np.array([0.75, 0.7, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.75]),
-            },
-        },
-    },
-    "trials_threshold": {
-        "tag": "Number of trials required to move forward (or backward) for each coherence level",
-        "value": {
-            1: 0,
-            2: 0,
-            3: 100,
-            4: 100,
-            5: 200,
-            6: 200,
-        },
-    },
-    "reward_change": {
-        "tag": "Reward change for each coherence level increase (or decrease)",
-        "value": {
-            "increase": 0.3,
-            "decrease": 0.3,
-        },
-    },
-}
-
-
-def grad_check(current_level, accuracy, level_change_trial_counter):
-    graduation_direction = GRADUATION["direction"]["value"]
-    accuracy_thesholds = GRADUATION["accuracy"]["thresholds"]["value"]
-    trials_threshold = GRADUATION["trials_threshold"]["value"]
-
-    next_coherence_level = current_level
-    new_trial_counter = level_change_trial_counter + 1
-
-    # forward graduation
-    while next_coherence_level < 5:
-        if all(accuracy >= accuracy_thesholds[next_coherence_level]) and (new_trial_counter >= trials_threshold[next_coherence_level]):
-            next_coherence_level = next_coherence_level + 1
-            new_trial_counter = 0
-        else:
-            break
-
-    # backward graduation
-    if graduation_direction == 0:
-        while next_coherence_level > 1:
-            if any(accuracy < accuracy_thesholds[next_coherence_level - 1]):
-                next_coherence_level = next_coherence_level - 1
-                new_trial_counter = 0
-            else:
-                break
-
-    print(f"Coherence level changed from {current_level} to {next_coherence_level}")
-    print(f"Trial counter: {level_change_trial_counter} to {new_trial_counter}")
-    return next_coherence_level
-
-
-if __name__ == "__main__":
-    GRADUATION["direction"]["value"] = 0
-    accuracy = np.array([0.7, 0.2, 0.7, 0.0, 0.0, 0.0, 0.0, 0.7, 0.7, 0.7])
-    current_level = 5
-    level_change_trial_counter = 1
-    current_level = grad_check(current_level, accuracy, level_change_trial_counter)
-    level_change_trial_counter = 201
-    current_level = grad_check(current_level, accuracy, level_change_trial_counter)

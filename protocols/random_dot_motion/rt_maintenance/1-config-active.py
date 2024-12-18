@@ -10,7 +10,7 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.25, scale=0.075)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=1, scale=0.06)},
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 25,
@@ -36,8 +36,8 @@ TASK = {
             "tag": "Intertrial epoch",
             "duration": {
                 "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
-                "incorrect": lambda response_time, coh: 5 + 20 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 25,
+                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
+                "noresponse": lambda response_time, coh: 7,
             },
         },
     },
@@ -56,7 +56,7 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "np.array",
-            "value": np.array([4, 4, 3, 3, 2, 2, 3, 3, 4, 4]) # 3,
+            "value": np.array([40, 0, 0, 0, 0, 0, 0, 0, 0, 40]) # np.array([4, 4, 3, 3, 2, 2, 3, 3, 4, 4]) # 3,
         },
     },
     "rolling_performance": {
