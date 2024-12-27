@@ -165,7 +165,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -224,7 +224,11 @@ class SessionManager:
 
         # Determine trial reward and reinforcement duration and set stage stimulus arguments
         if np.isnan(self.choice):
-            self.outcome = "noresponse"
+            self.outcome = "invalid"
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["invalid"](self.response_time)
+            stage_stimulus_args["outcome"] = "invalid"
+        elif self.choice == 0:
             if self.training_type == 0:
                 self.trial_reward = self.full_reward_volume
                 self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
@@ -256,17 +260,6 @@ class SessionManager:
         }
         return stage_task_args, stage_stimulus_args
 
-    def prepare_delay_stage(self):
-        stage_task_args, stage_stimulus_args = {}, {}
-
-        if self.training_type < 2 and self.outcome == "noresponse":
-            self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
-        else:
-            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-        stage_task_args = {"delay_duration": self.delay_duration}
-        return stage_task_args, stage_stimulus_args
-
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
 
@@ -277,7 +270,6 @@ class SessionManager:
 
     ######################### trial-stage methods #########################
     def prepare_trial_variables(self):
-
         if not self.is_correction_trial:  # if not correction trial
             # is this start of new trial block?
             if self.trials_in_block == 0 or self.trials_in_block == len(self.block_schedule):
@@ -303,10 +295,9 @@ class SessionManager:
             self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3)
         else:
             np.random.shuffle(self.block_schedule)
-            max_repeat_signs = 3
-            self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
+            self.block_schedule = self.shuffle_seq(self.block_schedule)
 
-    def shuffle_seq(self, sequence, max_repeat):
+    def shuffle_seq(self, sequence, max_repeat=3):
         """Shuffle sequence to minimize max_repeat consecutive elements have same sign"""
         for i in range(len(sequence) - max_repeat + 1):
             subsequence = sequence[i : i + max_repeat]
@@ -325,7 +316,7 @@ class SessionManager:
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
-        elif self.outcome == "noresponse":
+        elif self.outcome == "noresponse" or self.outcome == "invalid":
             self.outcome = np.NaN
 
         # function to finalize current trial and set parameters for next trial
@@ -353,13 +344,9 @@ class SessionManager:
 
         elif np.isnan(self.outcome):
             self.valid = False
-            self.trial_counters["noresponse"] += 1
-            if self.training_type == 0:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 1:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 2:
-                next_trial_vars["is_correction_trial"] = True
+            next_trial_vars["is_correction_trial"] = True
+            if self.choice == 0:
+                self.trial_counters["noresponse"] += 1
 
         # write trial data to file
         self.write_trial_data_to_file()

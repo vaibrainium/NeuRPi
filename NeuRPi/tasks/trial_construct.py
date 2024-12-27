@@ -95,8 +95,8 @@ class TrialConstruct:
                     remaining_duration = monitor_duration - (time.time() - start)
 
             except queue.Empty:
-                response = np.nan
-                response_time = np.nan
+                response = 0
+                response_time = np.NaN
                 break
 
         self.clear_queue()
@@ -130,6 +130,7 @@ class TrialConstruct:
             try:
                 if self.trigger["type"] == "FIXATE":
                     self.fixation_monitor(self.trigger["targets"], self.trigger["duration"])
+                    # self.choice, self.response_time = self.choice_monitor(self.trigger["targets"], self.trigger["duration"])
                     self.stage_block.set()
                 elif self.trigger["type"] == "GO":
                     self.choice, self.response_time = self.choice_monitor(self.trigger["targets"], self.trigger["duration"])
@@ -161,20 +162,3 @@ if __name__ == "__main__":
         response_queue=response_queue,
         response_block=response_block,
     )
-    stage_list = [a.fixation, a.stimulus_rt, a.intertrial]
-    num_stages = len(stage_list)
-    stages = itertools.cycle(stage_list)
-
-    while True:
-        data = next(stages)()
-        time.sleep(0.5)
-        stage_block.wait()
-        print(time.time() - a.start)
-
-    #     # Has trial ended?
-    #     if 'TRIAL_END' in data.keys():
-    #         self.running.wait()  # If paused, waiting for running event set?
-    #         if self.quitting.is_set():  # is quitting event set?
-    #             break  # Won't quit if the task is paused.
-    #
-    # self.task.stop()

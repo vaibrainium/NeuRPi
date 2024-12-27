@@ -2,16 +2,16 @@ import csv
 import datetime
 import itertools
 import multiprocessing as mp
+import pickle
 import threading
 from pathlib import Path
+
 import numpy as np
-import pickle
 
 from NeuRPi.prefs import prefs
-from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
+from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-
 from protocols.random_dot_motion.free_reward_training.session_manager import SessionManager
 from protocols.random_dot_motion.free_reward_training.stimulus_manager import StimulusManager
 
@@ -47,7 +47,7 @@ class Task:
         self,
         stage_block=None,
         protocol="random_dot_motion",
-        experiment="rt_dynamic_training",
+        experiment="free_reward_training",
         config=None,
         **kwargs,
     ):
@@ -156,7 +156,13 @@ class Task:
 
     def prepare_session_files(self):
         self.config.FILES = {}
-        data_path = Path(prefs.get("DATADIR"), self.config.SUBJECT["name"], self.config.SUBJECT["protocol"], self.config.SUBJECT["experiment"], self.config.SUBJECT["session"])
+        data_path = Path(
+            prefs.get("DATADIR"),
+            self.config.SUBJECT["name"],
+            self.config.SUBJECT["protocol"],
+            self.config.SUBJECT["experiment"],
+            self.config.SUBJECT["session"],
+        )
         # since main storage is on server, we will rewrite the directory if already exists assuming that data is already on the server.
         if data_path.exists() and data_path.is_dir():
             # If it exists, delete it and its contents
@@ -227,7 +233,7 @@ if __name__ == "__main__":
     value = {
         "stage_block": threading.Event(),
         "protocol": "random_dot_motion",
-        "experiment": "rt_dynamic_training",
+        "experiment": "rt_directional_training",
         "config": config,
     }
 
@@ -237,7 +243,6 @@ if __name__ == "__main__":
         task.managers["trial"].fixation_stage,
         task.managers["trial"].stimulus_stage,
         task.managers["trial"].reinforcement_stage,
-        task.managers["trial"].delay_stage,
         task.managers["trial"].intertrial_stage,
     ]
     num_stages = len(stage_list)

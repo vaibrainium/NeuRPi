@@ -105,16 +105,17 @@ class RTTask(TrialConstruct):
             self.fixation_stage,
             self.stimulus_stage,
             self.reinforcement_stage,
-            self.delay_stage,
             self.intertrial_stage,
         ]
         self.num_stages = len(stage_list)
         self.stages = itertools.cycle(stage_list)
+        self.abort_trial = False
 
     def fixation_stage(self):
         # Clear stage block
         self.stage_block.clear()
         self.managers["hardware"].reset_wheel_sensor()
+        self.abort_trial = False
 
         task_args, stimulus_args = {}, {}
         self.choice = np.NaN
@@ -123,7 +124,7 @@ class RTTask(TrialConstruct):
         # Determine stage parameters
         task_args, stimulus_args = self.managers["session"].prepare_fixation_stage()
         self.trigger = {
-            "type": "FIXATE",
+            "type": "GO",
             "targets": task_args["response_to_check"],
             "duration": task_args["fixation_duration"],
         }
@@ -133,6 +134,12 @@ class RTTask(TrialConstruct):
         self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
         self.response_block.set()
         self.stage_block.wait()
+
+        if not self.choice:
+            self.abort_trial = True
+            self.choice = np.NaN
+            self.response_time = np.NaN
+
         data = {
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "fixation_stage",
@@ -151,27 +158,36 @@ class RTTask(TrialConstruct):
         self.stage_block.clear()
         task_args, stimulus_args = {}, {}
 
-        task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
-        self.trigger = {
-            "type": "GO",
-            "targets": task_args["response_to_check"],
-            "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
-        }
-        # initiate stimulus
-        # set respons_block after minimum viewing time
-        self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
-        threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
-        self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
+        if not self.abort_trial:
+            task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
+            self.trigger = {
+                "type": "GO",
+                "targets": task_args["response_to_check"],
+                "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
+            }
+            # initiate stimulus
+            # set respons_block after minimum viewing time
+            self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
+            threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
+            self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
 
-        self.stage_block.wait()
-        self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
-        print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_stage": "stimulus_stage",
-            "response": self.choice,
-            "response_time": self.response_time,
-        }
+            self.stage_block.wait()
+            self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
+            print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
+            data = {
+                "DC_timestamp": datetime.datetime.now().isoformat(),
+                "trial_stage": "stimulus_stage",
+                "response": self.choice,
+                "response_time": self.response_time,
+            }
+        else:
+            data = {
+                "DC_timestamp": datetime.datetime.now().isoformat(),
+                "trial_stage": "stimulus_stage",
+                "response": np.NaN,
+                "response_time": np.NaN,
+            }
+
         return data
 
     def reinforcement_stage(self):
@@ -186,6 +202,7 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = self.managers["session"].prepare_reinforcement_stage(self.choice, self.response_time)
         # start reinforcement epoch
         self.msg_to_stimulus.put(("reinforcement_epoch", stimulus_args))
+
         # wait for reinforcement duration then send message to stimulus manager
         threading.Timer(task_args["reinforcement_duration"], self.stage_block.set).start()
         self.managers["session"].reinforcement_onset = datetime.datetime.now() - self.timers["session"]
@@ -199,16 +216,6 @@ class RTTask(TrialConstruct):
             elif task_args["reward_side"] == 1:  # reward right
                 self.managers["hardware"].reward_right(task_args["trial_reward"])
                 self.managers["session"].total_reward += task_args["trial_reward"]
-
-            # # Must consume reward block
-            # self.trigger = {
-            #     "type": "MUST_RESPOND",
-            #     "targets": [task_args["reward_side"]],
-            #     "duration": None,
-            # }
-            # self.response_block.set()  # start monitoring responses
-            # self.must_respond_block.wait()  # wait for must_respond_block to be set
-            # self.must_respond_block.clear()  # reset must_respond_block
 
         # If fixed reward ratio is requested:
         if task_args.get("FRR_reward") is not None:
@@ -230,28 +237,6 @@ class RTTask(TrialConstruct):
             "DC_timestamp": datetime.datetime.now().isoformat(),
             "trial_stage": "reinforcement_stage",
             "reinfocement_duration": task_args["reinforcement_duration"],
-        }
-        return data
-
-    def delay_stage(self, *args, **kwargs):
-        # Clear stage block
-        self.stage_block.clear()
-        task_args, stimulus_args = {}, {}
-        task_args, stimulus_args = self.managers["session"].prepare_delay_stage()
-        if task_args["delay_duration"] > 0:
-            # start delay epoch
-            self.msg_to_stimulus.put(("delay_epoch", stimulus_args))
-            # wait for delay duration then send message to stimulus manager
-            threading.Timer(task_args["delay_duration"], self.stage_block.set).start()
-        else:
-            self.stage_block.set()
-        self.managers["session"].delay_onset = datetime.datetime.now() - self.timers["session"]
-
-        self.stage_block.wait()
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_stage": "delay_stage",
-            "delay_duration": task_args["delay_duration"],
         }
         return data
 
@@ -281,36 +266,6 @@ class RTTask(TrialConstruct):
         data["intertrial_duration"] = task_args["intertrial_duration"]
         data["TRIAL_END"] = True
         return data
-
-    # # Intertrial interval monitoring licks
-    # def intertrial_stage(self, *args, **kwargs):
-    #     """
-    #     Stage 3: Inter-trial Interval.
-
-    #     """
-    #     # Clear stage block
-    #     self.stage_block.clear()
-    #     task_args, stimulus_args = {}, {}
-
-    #     task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
-    #     self.trigger = {
-    #         "type": "FIXATE",
-    #         "targets": task_args["response_to_check"],
-    #         "duration": task_args["intertrial_duration"],
-    #     }
-
-    #     # initiate intertrial and start monitoring responses
-    #     self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
-    #     self.response_block.set()
-    #     self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
-    #     self.stage_block.wait()
-
-    #     data = self.managers["session"].end_of_trial_updates()
-    #     data["DC_timestamp"] = datetime.datetime.now().isoformat()
-    #     data["trial_stage"] = "intertrial_stage"
-    #     data['intertrial_duration'] = task_args["intertrial_duration"]
-    #     data["TRIAL_END"] = True
-    #     return data
 
 
 if __name__ == "__main__":

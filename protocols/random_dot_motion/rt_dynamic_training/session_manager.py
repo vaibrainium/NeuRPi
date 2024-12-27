@@ -176,7 +176,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -226,6 +226,11 @@ class SessionManager:
 
         # Determine trial reward and reinforcement duration and set stage stimulus arguments
         if np.isnan(self.choice):
+            self.outcome = "invalid"
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["invalid"](self.response_time)
+            stage_stimulus_args["outcome"] = "invalid"
+        elif self.choice == 0:
             self.outcome = "noresponse"
             if self.training_type == 0:
                 self.trial_reward = self.full_reward_volume
@@ -272,17 +277,6 @@ class SessionManager:
             "reward_side": self.target,
             "FRR_reward": self.FRR_reward,
         }
-        return stage_task_args, stage_stimulus_args
-
-    def prepare_delay_stage(self):
-        stage_task_args, stage_stimulus_args = {}, {}
-
-        if self.training_type < 2 and self.outcome == "noresponse":
-            self.delay_duration = self.delay_duration_function["correct"](self.response_time, self.signed_coherence)
-        else:
-            self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-        stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
@@ -366,24 +360,9 @@ class SessionManager:
             self.block_schedule = self.shuffle_seq(np.repeat([-100, -72, 72, 100], 5), max_repeat=3)
         else:
             np.random.shuffle(self.block_schedule)
+            self.block_schedule = self.shuffle_seq(self.block_schedule)
 
-            # TODO: active bias correction needed?
-            # swap coherence direction to unbiased side if coherence is above active threshold
-            # for _, coh in enumerate(
-            #     coherences[: self.subject_config["current_coherence_level"]]
-            # ):
-            #     if np.abs(coh) > self.config.TASK["bias"]["active_correction"]["threshold"]:
-            #         self.trial_schedule.remove(
-            #             coh * self.subject_config["rolling_bias"]
-            #         )  # Removing high coherence from biased direction (-1:left; 1:right)
-            #         self.trial_schedule.append(
-            #             -coh * self.subject_config["rolling_bias"]
-            #         )  # Adding high coherence from unbiased direction.
-
-            max_repeat_signs = 3
-            self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
-
-    def shuffle_seq(self, sequence, max_repeat):
+    def shuffle_seq(self, sequence, max_repeat=3):
         """Shuffle sequence to minimize max_repeat consecutive elements have same sign"""
         for i in range(len(sequence) - max_repeat + 1):
             subsequence = sequence[i : i + max_repeat]
@@ -402,7 +381,7 @@ class SessionManager:
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
-        elif self.outcome == "noresponse":
+        elif self.outcome == "noresponse" or self.outcome == "invalid":
             self.outcome = np.NaN
 
         # function to finalize current trial and set parameters for next trial
@@ -430,13 +409,9 @@ class SessionManager:
 
         elif np.isnan(self.outcome):
             self.valid = False
-            self.trial_counters["noresponse"] += 1
-            if self.training_type == 0:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 1:
-                next_trial_vars["is_correction_trial"] = False
-            elif self.training_type == 2:
-                next_trial_vars["is_correction_trial"] = True
+            next_trial_vars["is_correction_trial"] = True
+            if self.choice == 0:
+                self.trial_counters["noresponse"] += 1
 
         # write trial data to file
         self.write_trial_data_to_file()

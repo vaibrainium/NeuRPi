@@ -149,7 +149,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -188,6 +188,11 @@ class SessionManager:
 
         # Determine trial reward and reinforcement duration and set stage stimulus arguments
         if np.isnan(self.choice):
+            self.outcome = "invalid"
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["invalid"](self.response_time)
+            stage_stimulus_args["outcome"] = "invalid"
+        elif self.choice == 0:
             self.outcome = "noresponse"
             self.trial_reward = 0
             self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
@@ -210,13 +215,6 @@ class SessionManager:
             "reward_side": self.target,
             "FRR_reward": None,
         }
-        return stage_task_args, stage_stimulus_args
-
-    def prepare_delay_stage(self):
-        stage_task_args, stage_stimulus_args = {}, {}
-        self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-        stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
@@ -253,7 +251,7 @@ class SessionManager:
     def generate_block_schedule(self):
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
         self.block_schedule = self.shuffle_seq(self.block_schedule)
-        
+
     def shuffle_seq(self, sequence, max_repeat=3):
         """Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
         for i in range(len(sequence) - max_repeat + 1):
@@ -273,7 +271,7 @@ class SessionManager:
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
-        elif self.outcome == "noresponse":
+        elif self.outcome == "noresponse" or self.outcome == "invalid":
             self.outcome = np.NaN
 
         # function to finalize current trial and set parameters for next trial
@@ -301,7 +299,8 @@ class SessionManager:
 
         elif np.isnan(self.outcome):
             self.valid = False
-            self.trial_counters["noresponse"] += 1
+            if self.choice == 0:
+                self.trial_counters["noresponse"] += 1
             if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
                 next_trial_vars["is_correction_trial"] = True
             else:
@@ -405,10 +404,9 @@ class SessionManager:
         print("SAVING EOS FILES")
 
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     import config
-    
+
     full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
     reward_volume = config.TASK["rolling_performance"]["reward_volume"]
     rolling_window = config.TASK["rolling_performance"]["rolling_window"]
@@ -436,22 +434,22 @@ if __name__=="__main__":
         "session_uuid": "XXXX",
         "rolling_perf": rolling_perf,
     }
-    
+
     sm = SessionManager(config)
-    
+
     sm.prepare_fixation_stage()
     print(sm.block_schedule)
-    
+
     sm.prepare_stimulus_stage()
     sm.prepare_reinforcement_stage(1, 3)
     print(f"Outcome: {sm.outcome}")
-    
+
     sm.prepare_delay_stage()
-    
+
     sm.prepare_intertrial_stage()
-    
+
     sm.end_of_trial_updates()
     print(f"Outcome: {sm.outcome}")
-    
+
     sm.prepare_fixation_stage()
     print(f"Is correction Trial: {sm.is_correction_trial}")

@@ -124,7 +124,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -150,14 +150,11 @@ class SessionManager:
         self.choice = choice
         self.response_time = response_time
 
-        # determining validity of the trial
-        if not self.is_correction_trial and (not np.isnan(self.choice)):  # if this is not a correction trial and there is a response
-            self.valid = 1  # trial is valid
-        else:
-            self.valid = 0  # trial is invalid
-
         # determining outcome of the trial
-        if np.isnan(self.choice):  # if no response
+        if np.isnan(self.choice):  # if invalid
+            self.outcome = "invalid"
+            self.trial_reward = None
+        elif self.choice == 0:  # if no response
             self.outcome = "noresponse"
             self.trial_reward = None
         elif self.choice == self.target:  # if correct
@@ -177,13 +174,6 @@ class SessionManager:
             "reward_side": self.target,
             "FRR_reward": None,
         }
-        return stage_task_args, stage_stimulus_args
-
-    def prepare_delay_stage(self):
-        stage_task_args, stage_stimulus_args = {}, {}
-        self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-        stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
@@ -220,10 +210,9 @@ class SessionManager:
             self.block_schedule = self.shuffle_seq(np.repeat([-100, 100], 5), max_repeat=3)
         else:
             np.random.shuffle(self.block_schedule)
-            max_repeat_signs = 3
-            self.block_schedule = self.shuffle_seq(self.block_schedule, max_repeat_signs)
+            self.block_schedule = self.shuffle_seq(self.block_schedule)
 
-    def shuffle_seq(self, sequence, max_repeat):
+    def shuffle_seq(self, sequence, max_repeat=3):
         """Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
         for i in range(len(sequence) - max_repeat + 1):
             subsequence = sequence[i : i + max_repeat]
@@ -242,15 +231,18 @@ class SessionManager:
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
-        elif self.outcome == "noresponse":
-            self.outcome = np.NaN
+        elif self.outcome == "noresponse" or self.outcome == "invalid":
             self.outcome = np.NaN
 
         # update trial counters
         # count all attempts and response trials
         self.trial_counters["attempt"] += 1
+        self.valid = True
         if np.isnan(self.outcome):
-            self.trial_counters["noresponse"] += 1
+            self.valid = False
+            if self.choice == 0:
+                self.trial_counters["noresponse"] += 1
+
         # if trial is valid then update valid, correct and incorrect counters
         if self.valid:
             self.trial_counters["valid"] += 1

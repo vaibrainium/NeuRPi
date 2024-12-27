@@ -158,7 +158,7 @@ class SessionManager:
         self.fixation_duration = self.fixation_duration_function()
         # prepare args
         stage_stimulus_args = ({},)
-        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [np.NaN], "signed_coherence": self.signed_coherence}
+        stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
         return stage_task_args, stage_stimulus_args
 
     def prepare_stimulus_stage(self):
@@ -197,6 +197,11 @@ class SessionManager:
 
         # Determine trial reward and reinforcement duration and set stage stimulus arguments
         if np.isnan(self.choice):
+            self.outcome = "invalid"
+            self.trial_reward = 0
+            self.reinforcement_duration = self.reinforcement_duration_function["invalid"](self.response_time)
+            stage_stimulus_args["outcome"] = "invalid"
+        elif self.choice == 0:
             self.outcome = "noresponse"
             self.trial_reward = 0
             self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
@@ -219,13 +224,6 @@ class SessionManager:
             "reward_side": self.target,
             "FRR_reward": None,
         }
-        return stage_task_args, stage_stimulus_args
-
-    def prepare_delay_stage(self):
-        stage_task_args, stage_stimulus_args = {}, {}
-        self.delay_duration = self.delay_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-        stage_task_args = {"delay_duration": self.delay_duration}
         return stage_task_args, stage_stimulus_args
 
     def prepare_intertrial_stage(self):
@@ -285,7 +283,7 @@ class SessionManager:
             self.outcome = 1
         elif self.outcome == "incorrect":
             self.outcome = 0
-        elif self.outcome == "noresponse":
+        elif self.outcome == "noresponse" or self.outcome == "invalid":
             self.outcome = np.NaN
 
         # function to finalize current trial and set parameters for next trial
@@ -313,8 +311,9 @@ class SessionManager:
 
         elif np.isnan(self.outcome):
             self.valid = False
-            self.trial_counters["noresponse"] += 1
             next_trial_vars["is_correction_trial"] = True
+            if self.choice == 0:
+                self.trial_counters["noresponse"] += 1
 
         # write trial data to file
         self.write_trial_data_to_file()

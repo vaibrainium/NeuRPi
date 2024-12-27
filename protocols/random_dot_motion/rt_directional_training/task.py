@@ -10,13 +10,10 @@ import numpy as np
 
 from NeuRPi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
-from protocols.random_dot_motion.core.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-from protocols.random_dot_motion.rt_directional_training.session_manager import \
-    SessionManager
-from protocols.random_dot_motion.rt_directional_training.stimulus_manager import \
-    StimulusManager
+from protocols.random_dot_motion.rt_directional_training.session_manager import SessionManager
+from protocols.random_dot_motion.rt_directional_training.stimulus_manager import StimulusManager
 
 # TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 # TODO: 5. Make sure graduation is working properly
@@ -50,7 +47,7 @@ class Task:
         self,
         stage_block=None,
         protocol="random_dot_motion",
-        experiment="rt_dynamic_training",
+        experiment="rt_directional_training",
         config=None,
         **kwargs,
     ):
@@ -159,7 +156,13 @@ class Task:
 
     def prepare_session_files(self):
         self.config.FILES = {}
-        data_path = Path(prefs.get("DATADIR"), self.config.SUBJECT["name"], self.config.SUBJECT["protocol"], self.config.SUBJECT["experiment"], self.config.SUBJECT["session"])
+        data_path = Path(
+            prefs.get("DATADIR"),
+            self.config.SUBJECT["name"],
+            self.config.SUBJECT["protocol"],
+            self.config.SUBJECT["experiment"],
+            self.config.SUBJECT["session"],
+        )
         # since main storage is on server, we will rewrite the directory if already exists assuming that data is already on the server.
         if data_path.exists() and data_path.is_dir():
             # If it exists, delete it and its contents
@@ -188,7 +191,7 @@ class Task:
 
 if __name__ == "__main__":
 
-    import protocols.random_dot_motion.rt_maintainance.config as config
+    import protocols.random_dot_motion.rt_directional_training.config as config
 
     full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
     # current_coherence_level = config.TASK["rolling_performance"]["current_coherence_level"]
@@ -213,7 +216,7 @@ if __name__ == "__main__":
         "start_weight": 19,
         "prct_weight": 95,
         "protocol": "random_dot_motion",
-        "experiment": "rt_maintenance",
+        "experiment": "rt_directional_training",
         "session": "1_1",
         "session_uuid": "XXXX",
         "rolling_perf": rolling_perf,
@@ -222,7 +225,7 @@ if __name__ == "__main__":
     value = {
         "stage_block": threading.Event(),
         "protocol": "random_dot_motion",
-        "experiment": "rt_maintenance",
+        "experiment": "rt_directional_training",
         "config": config,
     }
 
@@ -232,7 +235,6 @@ if __name__ == "__main__":
         task.managers["trial"].fixation_stage,
         task.managers["trial"].stimulus_stage,
         task.managers["trial"].reinforcement_stage,
-        task.managers["trial"].delay_stage,
         task.managers["trial"].intertrial_stage,
     ]
     num_stages = len(stage_list)
