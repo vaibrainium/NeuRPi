@@ -43,19 +43,16 @@ class SessionManager:
         self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
         self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
         self.reinforcement_duration = None
-        self.delay_duration = None
         self.intertrial_duration = None
         # stage onset variables
         self.fixation_onset = None
         self.stimulus_onset = None
         self.response_onset = None
         self.reinforcement_onset = None
-        self.delay_onset = None
         self.intertrial_onset = None
         # behavior dependent function
         self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
         self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
-        self.delay_duration_function = self.config.TASK["epochs"]["delay"]["duration"]
         self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
         # initialize session variables
         self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
@@ -105,14 +102,12 @@ class SessionManager:
             self.fixation_duration,
             self.stimulus_duration,
             self.reinforcement_duration,
-            self.delay_duration,
             self.intertrial_duration,
             # epoch onsets
             self.fixation_onset,
             self.stimulus_onset,
             self.response_onset,
             self.reinforcement_onset,
-            self.delay_onset,
             self.intertrial_onset,
         ]
 
@@ -387,13 +382,11 @@ class SessionManager:
             "fixation_duration": self.fixation_duration,
             "stimulus_duration": self.stimulus_duration,
             "reinforcement_duration": self.reinforcement_duration,
-            "delay_duration": self.delay_duration,
             "intertrial_duration": self.intertrial_duration,
             "fixation_onset": self.fixation_onset,
             "stimulus_onset": self.stimulus_onset,
             "response_onset": self.response_onset,
             "reinforcement_onset": self.reinforcement_onset,
-            "delay_onset": self.delay_onset,
             "intertrial_onset": self.intertrial_onset,
             "stimulus_seed": self.random_generator_seed,
         }
