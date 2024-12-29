@@ -135,7 +135,7 @@ class RTTask(TrialConstruct):
         self.response_block.set()
         self.stage_block.wait()
 
-        if not self.choice:
+        if self.choice != 0:  # if subject broke fixation
             self.abort_trial = True
             self.choice = np.NaN
             self.response_time = np.NaN
@@ -181,6 +181,7 @@ class RTTask(TrialConstruct):
                 "response_time": self.response_time,
             }
         else:
+            self.stage_block.set()
             data = {
                 "DC_timestamp": datetime.datetime.now().isoformat(),
                 "trial_stage": "stimulus_stage",
