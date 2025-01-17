@@ -28,6 +28,7 @@ class SessionManager:
         # trial parameters
         self.random_generator_seed = None
         self.is_correction_trial = False
+        self.is_repeat_trial = False
         self.signed_coherence = None
         self.target = None
         self.choice = None
@@ -221,7 +222,7 @@ class SessionManager:
 
     ######################### trial-stage methods #########################
     def prepare_trial_variables(self):
-        if not self.is_correction_trial:  # if not correction trial
+        if (not self.is_correction_trial) and (not self.is_repeat_trial):  # if not correction trial
             # is this start of new trial block?
             if self.trials_in_block == 0 or self.trials_in_block == len(self.block_schedule):
                 self.trials_in_block = 0
@@ -231,13 +232,17 @@ class SessionManager:
             self.trials_in_block += 1  # incrementing within block counter
             self.trial_counters["correction"] = 0  # resetting correction counter
         else:
-            # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-            self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
-            # Repeat probability to opposite side of bias
-            self.signed_coherence = self.target * np.abs(self.signed_coherence)
-            print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
-            # increment correction trial counter
-            self.trial_counters["correction"] += 1
+            if self.is_repeat_trial:
+                # repeat same stimulus on repeat trial
+                pass
+            else:
+                # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
+                self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
+                # Repeat probability to opposite side of bias
+                self.signed_coherence = self.target * np.abs(self.signed_coherence)
+                print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
+                # increment correction trial counter
+                self.trial_counters["correction"] += 1
 
     def generate_block_schedule(self):
         self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
@@ -266,7 +271,7 @@ class SessionManager:
             self.outcome = np.NaN
 
         # function to finalize current trial and set parameters for next trial
-        next_trial_vars = {"is_correction_trial": False}
+        next_trial_vars = {"is_correction_trial": False, "is_repeat_trial": False}
 
         self.trial_counters["attempt"] += 1
         if self.outcome == 1:
@@ -292,13 +297,16 @@ class SessionManager:
             self.valid = False
             if self.choice == 0:
                 self.trial_counters["noresponse"] += 1
-            if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
-                next_trial_vars["is_correction_trial"] = True
+                if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
+                    next_trial_vars["is_correction_trial"] = True
+                    next_trial_vars["is_repeat_trial"] = True
             else:
-                next_trial_vars["is_correction_trial"] = False
+                next_trial_vars["is_repeat_trial"] = True
+
         # write trial data to file
         self.write_trial_data_to_file()
         self.is_correction_trial = next_trial_vars["is_correction_trial"]
+        self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
 
         # if valid update trial variables and send data to terminal
         if self.valid:
