@@ -123,6 +123,7 @@ class RTTask(TrialConstruct):
 
         # Determine stage parameters
         task_args, stimulus_args = self.managers["session"].prepare_fixation_stage()
+        print(f'Fixation stage started: {task_args["fixation_duration"]} secs')
         self.trigger = {
             "type": "GO",
             "targets": task_args["response_to_check"],
@@ -140,13 +141,13 @@ class RTTask(TrialConstruct):
             self.choice = np.NaN
             self.response_time = np.NaN
 
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_stage": "fixation_stage",
-            "subject": self.config.SUBJECT["name"],
-            "coherence": task_args["signed_coherence"],
-        }
-        return data
+        # data = {
+        #     "DC_timestamp": datetime.datetime.now().isoformat(),
+        #     "trial_stage": "fixation_stage",
+        #     "subject": self.config.SUBJECT["name"],
+        #     "coherence": task_args["signed_coherence"],
+        # }
+        # return data
 
     def stimulus_stage(self):
         """
@@ -160,6 +161,7 @@ class RTTask(TrialConstruct):
 
         if not self.abort_trial:
             task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
+            print(f'Stimulus stage started: {task_args["stimulus_duration"]} coh')
             self.trigger = {
                 "type": "GO",
                 "targets": task_args["response_to_check"],
@@ -174,22 +176,22 @@ class RTTask(TrialConstruct):
             self.stage_block.wait()
             self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
             print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
-            data = {
-                "DC_timestamp": datetime.datetime.now().isoformat(),
-                "trial_stage": "stimulus_stage",
-                "response": self.choice,
-                "response_time": self.response_time,
-            }
-        else:
-            self.stage_block.set()
-            data = {
-                "DC_timestamp": datetime.datetime.now().isoformat(),
-                "trial_stage": "stimulus_stage",
-                "response": np.NaN,
-                "response_time": np.NaN,
-            }
+        #     data = {
+        #         "DC_timestamp": datetime.datetime.now().isoformat(),
+        #         "trial_stage": "stimulus_stage",
+        #         "response": self.choice,
+        #         "response_time": self.response_time,
+        #     }
+        # else:
+        #     self.stage_block.set()
+        #     data = {
+        #         "DC_timestamp": datetime.datetime.now().isoformat(),
+        #         "trial_stage": "stimulus_stage",
+        #         "response": np.NaN,
+        #         "response_time": np.NaN,
+        #     }
 
-        return data
+        # return data
 
     def reinforcement_stage(self):
         """
@@ -234,12 +236,12 @@ class RTTask(TrialConstruct):
 
         # waiting for reinforcement durations to be over
         self.stage_block.wait()
-        data = {
-            "DC_timestamp": datetime.datetime.now().isoformat(),
-            "trial_stage": "reinforcement_stage",
-            "reinfocement_duration": task_args["reinforcement_duration"],
-        }
-        return data
+        # data = {
+        #     "DC_timestamp": datetime.datetime.now().isoformat(),
+        #     "trial_stage": "reinforcement_stage",
+        #     "reinfocement_duration": task_args["reinforcement_duration"],
+        # }
+        # return data
 
     def intertrial_stage(self, *args, **kwargs):
         """
@@ -251,6 +253,7 @@ class RTTask(TrialConstruct):
         task_args, stimulus_args = {}, {}
 
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
+        print(f'ITI stage started: {task_args["intertrial_duration"]} secs')
         if task_args["intertrial_duration"] > 0:
             # start delay epoch
             self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
