@@ -30,13 +30,15 @@ class Pilot:
         self.stopping.clear()
 
         # Networking
+        self.listens = self._initialize_listens()
+        # self._load_plugins(prefs.get("PLUGINS", []))
         self.networking = Pilot_Station()
         self.networking.start()
         self.node = Net_Node(
             id=f"_{self.name}",
             upstream=self.name,
             port=int(prefs.get("MSGPORT")),
-            listens=self._initialize_listens(),
+            listens=self.listens,
             instance=False,
         )
         self.logger.debug("Pilot networking initialized")
@@ -62,13 +64,14 @@ class Pilot:
         self.modules = None
 
     def _initialize_listens(self):
-        """Define message handling routes."""
-        return {
+        """Define default message handling routes."""
+        listens = {
             "START": self.l_start,
             "STOP": self.l_stop,
             "PARAM": self.l_param,
             "EVENT": self.l_event,
         }
+        return listens
 
     def _validate_hardware_and_handshake(self):
         """Check hardware connectivity and perform handshake."""
@@ -82,6 +85,24 @@ class Pilot:
         """Check if all required hardware is connected."""
         # TODO: Placeholder for actual hardware checks
         return True
+
+    def _load_plugins(self, plugin_module_names):
+        """
+        Load external plugins dynamically and register their handlers.
+
+        Args:
+            plugin_module_names (list): List of plugin module names as strings.
+        """
+        for module_name in plugin_module_names:
+            try:
+                plugin = importlib.import_module(module_name)
+                if hasattr(plugin, "register_handlers"):
+                    plugin.register_handlers(self)
+                    self.logger.debug(f"Plugin '{module_name}' loaded and handlers registered.")
+                else:
+                    self.logger.warning(f"Plugin '{module_name}' does not define 'register_handlers'.")
+            except Exception as e:
+                self.logger.exception(f"Failed to load plugin '{module_name}': {e}")
 
     def handshake(self):
         """Send a handshake message to the terminal."""
@@ -98,6 +119,19 @@ class Pilot:
         self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
     ############################### LISTEN FUNCTIONS ########################################
+    def register_handler(self, key, handler):
+        """
+        Register a new handler for the listens dictionary.
+
+        Args:
+            key (str): The message type to listen for.
+            handler (callable): A callable that will handle the message.
+        """
+        if not callable(handler):
+            raise ValueError(f"Handler for '{key}' must be a callable.")
+        self.listens[key] = handler
+        self.logger.debug(f"Handler registered for message type: '{key}'")
+
     def l_start(self, value):
         """Handle task start request from terminal."""
         if self.state == "RUNNING" or self.running.is_set():
