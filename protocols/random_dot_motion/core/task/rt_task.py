@@ -176,20 +176,20 @@ class RTTask(TrialConstruct):
             self.stage_block.wait()
             self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
             print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
-        #     data = {
-        #         "DC_timestamp": datetime.datetime.now().isoformat(),
-        #         "trial_stage": "stimulus_stage",
-        #         "response": self.choice,
-        #         "response_time": self.response_time,
-        #     }
-        # else:
-        #     self.stage_block.set()
-        #     data = {
-        #         "DC_timestamp": datetime.datetime.now().isoformat(),
-        #         "trial_stage": "stimulus_stage",
-        #         "response": np.NaN,
-        #         "response_time": np.NaN,
-        #     }
+            # data = {
+            #     "DC_timestamp": datetime.datetime.now().isoformat(),
+            #     "trial_stage": "stimulus_stage",
+            #     "response": self.choice,
+            #     "response_time": self.response_time,
+            # }
+        else:
+            self.stage_block.set()
+            # data = {
+            #     "DC_timestamp": datetime.datetime.now().isoformat(),
+            #     "trial_stage": "stimulus_stage",
+            #     "response": np.NaN,
+            #     "response_time": np.NaN,
+            # }
 
         # return data
 
