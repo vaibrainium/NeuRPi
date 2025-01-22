@@ -3,9 +3,10 @@ import sys
 import threading
 import types
 
-from networking.node import Net_Node
-from networking.station import Pilot_Station
 from omegaconf import OmegaConf
+
+from NeuRPi.networking.node import Net_Node
+from NeuRPi.networking.station import Pilot_Station
 
 
 class Pilot:
@@ -253,4 +254,5 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
     main()
