@@ -239,24 +239,25 @@ class Pilot:
                     self.node.send("T", "DATA", data)
 
                 # pause loop if the running flag is not set and current trial has ended.
-                if not self.running.is_set() and "TRIAL_END" in data.keys():
-                    # exit loop if stopping flag is set
-                    if self.stopping.is_set():
-                        self.stopping.clear()
-                        self.task.end()
-                        try:
-                            # sending files to terminal only when successfully finished the task
-                            value = {"pilot": self.name, "subject": self.session_info.subject_name, "session_files": {}}
-                            for file_name, file_path in self.config.FILES.items():
-                                with open(file_path, "rb") as reader:
-                                    value["session_files"][file_name] = reader.read()
-                            self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})
-                        except:
-                            self.logger.exception("Could not send files to terminal")
-                        break
+                if not self.running.is_set() and isinstance(data, dict):
+                    if "TRIAL_END" in data.keys():
+                        # exit loop if stopping flag is set
+                        if self.stopping.is_set():
+                            self.stopping.clear()
+                            self.task.end()
+                            try:
+                                # sending files to terminal only when successfully finished the task
+                                value = {"pilot": self.name, "subject": self.session_info.subject_name, "session_files": {}}
+                                for file_name, file_path in self.config.FILES.items():
+                                    with open(file_path, "rb") as reader:
+                                        value["session_files"][file_name] = reader.read()
+                                self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})
+                            except:
+                                self.logger.exception("Could not send files to terminal")
+                            break
 
-                    # if paused, wait for running event set?
-                    self.running.wait()
+                        # if paused, wait for running event set?
+                        self.running.wait()
 
         except Exception as e:
             self.logger.exception(f"got exception while running task; stopping task\n {e}")
