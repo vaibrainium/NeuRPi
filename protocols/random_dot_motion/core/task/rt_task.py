@@ -161,7 +161,7 @@ class RTTask(TrialConstruct):
 
         if not self.abort_trial:
             task_args, stimulus_args = self.managers["session"].prepare_stimulus_stage()
-            print(f'Stimulus stage started: {task_args["coherence"]}% coherence')
+            print(f'Stimulus stage started: {task_args["coherence"]} coh')
             self.trigger = {
                 "type": "GO",
                 "targets": task_args["response_to_check"],
