@@ -295,6 +295,9 @@ class SessionManager:
 
         elif np.isnan(self.outcome):
             self.valid = False
+            if self.is_correction_trial:
+                next_trial_vars["is_correction_trial"] = True
+
             if self.choice == 0:
                 self.trial_counters["noresponse"] += 1
                 if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
