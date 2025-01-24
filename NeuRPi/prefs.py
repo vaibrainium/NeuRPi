@@ -1,11 +1,10 @@
-import collections
 import multiprocessing as mp
 from ctypes import c_bool
 from pathlib import Path
 from threading import Lock
 
 import hydra
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import OmegaConf
 
 global _PREF_MANAGER
 global _PREFS

@@ -1,6 +1,5 @@
 from protocols.random_dot_motion.core.stimulus.stimulus_manager import StimulusManager as core_StimulusManager
 from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion as core_RDK
-import multiprocessing as mp
 
 
 class RandomDotMotion(core_RDK):
@@ -33,10 +32,8 @@ class StimulusManager(core_StimulusManager):
 
 
 def main():
-    import queue
     import time
     import multiprocessing
-    from omegaconf import OmegaConf
 
     from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 

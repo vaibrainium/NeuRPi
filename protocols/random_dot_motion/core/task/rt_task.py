@@ -1,13 +1,9 @@
-import csv
 import datetime
 import itertools
-import queue
 import threading
 import time
 
 import numpy as np
-import tables
-from scipy.stats import pearson3
 
 from NeuRPi.tasks.trial_construct import TrialConstruct
 

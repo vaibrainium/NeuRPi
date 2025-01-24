@@ -1,10 +1,7 @@
 import os
 import threading
-import time
 from queue import Queue
 from NeuRPi.prefs import prefs
-import hydra
-from omegaconf import DictConfig, OmegaConf
 import logging
 
 
@@ -162,8 +159,6 @@ class Display:
 if __name__ == "__main__":
     from multiprocessing import Queue
 
-    import hydra
-    from omegaconf import DictConfig, OmegaConf
 
     path = "../NeuRPi/protocols/random_dot_motion/free_reward_training/"
     filename = "config.py"

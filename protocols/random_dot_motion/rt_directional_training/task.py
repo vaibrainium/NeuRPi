@@ -1,4 +1,3 @@
-import csv
 import datetime
 import itertools
 import multiprocessing as mp
@@ -144,7 +143,7 @@ class Task:
         # Lick related changes
         elif message["key"] == "reset_lick_sensor":
             self.managers["hardware"].reset_lick_sensor()
-            print(f"RESETTING LICK SENSOR")
+            print("RESETTING LICK SENSOR")
         elif message["key"] == "update_lick_threshold_left":
             self.managers["hardware"].lick_threshold_left = message["value"]
             print(f'UPDATED LEFT LICK THRESHOLD with {message["value"]}')

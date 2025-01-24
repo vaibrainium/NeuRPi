@@ -1,11 +1,7 @@
-import datetime
-import multiprocessing as mp
 import threading
 import time
 
-import omegaconf
 
-from NeuRPi.hardware.gpio import GPIO
 from NeuRPi.hardware.hardware_manager import HardwareManager as BaseHWManager
 from NeuRPi.prefs import prefs
 
@@ -235,7 +231,6 @@ if __name__ == "__main__":
     ## print(2)
 
     # Reward Calibration
-    import time
 
     num_pulses = 10
     num_pulses = input("Please input number of pulse:")

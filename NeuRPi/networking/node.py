@@ -11,9 +11,9 @@ import zmq
 from tornado.ioloop import IOLoop
 from zmq.eventloop.zmqstream import ZMQStream
 
-from NeuRPi.prefs import prefs
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.networking.message import Message
+from NeuRPi.prefs import prefs
 
 
 class Net_Node(object):
@@ -667,9 +667,11 @@ class Net_Node(object):
             # get ips that aren't the loopback
             unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
             # ??? truly dk
-            unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
+            unwrap01 = [
+                [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
+            ]
 
-            self._ip = [l for l in (unwrap00, unwrap01) if l][0][0]
+            self._ip = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
 
         return self._ip
 

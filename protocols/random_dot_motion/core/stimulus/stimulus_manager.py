@@ -1,4 +1,3 @@
-import logging
 import time
 from multiprocessing import Process
 
@@ -172,9 +171,7 @@ class StimulusManager(Display):
 
 def main():
     import multiprocessing
-    import queue
 
-    from omegaconf import OmegaConf
 
     import protocols.random_dot_motion.core.stimulus.config as config
     from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion

@@ -1,5 +1,6 @@
 import multiprocessing
 import threading
+from queue import Empty
 
 
 class CommunicationProcess(multiprocessing.Process):
@@ -18,10 +19,6 @@ class CommunicationProcess(multiprocessing.Process):
         finally:
             if self.daemon:
                 multiprocessing.current_process().terminate()
-
-
-import threading
-from queue import Empty
 
 
 class QueueObserver(threading.Thread):

@@ -1,7 +1,6 @@
 import multiprocessing as mp
 import threading
 import time
-from queue import Queue
 
 
 class Behavior:
@@ -53,7 +52,7 @@ class Behavior:
 
         while not self.quit_monitoring.is_set():
             hw_timestamp, lick = self.hardware_manager.read_licks()
-            if lick != None:
+            if lick is not None:
                 # Passing information if trigger is requested
                 if response_block.is_set():
                     if lick == -1 or lick == 1:

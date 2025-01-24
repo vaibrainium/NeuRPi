@@ -1,8 +1,5 @@
 import ctypes
 import os
-import time
-import numpy as np
-import pygame
 
 from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
 

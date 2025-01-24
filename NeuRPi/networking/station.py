@@ -7,7 +7,7 @@ import time
 import typing
 from copy import copy
 from itertools import count
-from typing import Optional, Union
+from typing import Optional
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -123,7 +123,7 @@ class Station(multiprocessing.Process):
         unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
         # ??? truly dk
         unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
-        unwrap2 = [l for l in (unwrap00, unwrap01) if l][0][0]
+        unwrap2 = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
         return unwrap2
 
     def prepare_message(self, to, key, value, repeat=True, flags=None):
@@ -839,7 +839,7 @@ class Terminal_Station(Station):
         # The <target> pi has requested some file <value> from us, let's send it back
         # This assumes the file is small, if this starts crashing we'll have to split the message...
 
-        full_path = os.path.join(STORE_DIRECTORY, msg.value)
+        full_path = os.path.join(prefs.STORE_DIRECTORY, msg.value)
         with open(full_path, "rb") as open_file:
             # encode in base64 so json doesn't complain
             file_contents = base64.b64encode(open_file.read())

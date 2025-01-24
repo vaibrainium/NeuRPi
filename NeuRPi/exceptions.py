@@ -2,7 +2,6 @@
 Custom warnings and exceptions for better testing and diagnosis!
 """
 
-import warnings
 
 
 class DefaultPrefWarning(UserWarning):

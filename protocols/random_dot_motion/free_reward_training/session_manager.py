@@ -1,9 +1,7 @@
 import csv
-import multiprocessing as mp
 import pickle
 
 import numpy as np
-import pandas as pd
 
 
 class SessionManager:

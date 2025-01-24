@@ -1,18 +1,12 @@
-import csv
 import glob
 import os
-import queue
 import re
 import threading
 import time
-import typing
 import uuid
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
-import pandas as pd
-import tables
 
 from NeuRPi.loggers.logger import init_logger
 from NeuRPi.prefs import prefs

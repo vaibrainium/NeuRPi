@@ -1,12 +1,10 @@
 import csv
 import threading
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 
-import NeuRPi
 from NeuRPi.loggers.logger import init_logger
 
 

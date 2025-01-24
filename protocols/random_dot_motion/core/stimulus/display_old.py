@@ -1,10 +1,8 @@
 import os
 import threading
-import time
 from queue import Queue
 from NeuRPi.prefs import prefs
 import hydra
-from omegaconf import DictConfig, OmegaConf
 import logging
 
 
@@ -133,7 +131,7 @@ class Display:
 
                         # filling the queue before rendering starts
                         self.lock.acquire()
-                        if epoch_value["clear_queue"] == False:
+                        if epoch_value["clear_queue"] is False:
                             while not self.frame_queue.full():
                                 try:
                                     draw_func, args = update_method(args)

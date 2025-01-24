@@ -1,6 +1,5 @@
 import pygame
-from queue import Queue, Empty
-from omegaconf import DictConfig, OmegaConf
+from omegaconf import DictConfig
 
 
 class Display:

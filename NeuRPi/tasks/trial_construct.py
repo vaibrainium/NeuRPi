@@ -1,14 +1,10 @@
-import datetime
 import queue
 
 # import tables
 import threading
 import time
-from itertools import count
 
-import hydra
 import numpy as np
-from scipy.stats import pearson3
 
 # If need be, work on multithreading later
 
@@ -148,7 +144,6 @@ class TrialConstruct:
 
 
 if __name__ == "__main__":
-    import itertools
     import multiprocessing as mp
 
     stage_block = threading.Event()
