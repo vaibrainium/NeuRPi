@@ -37,3 +37,8 @@ logs
 venv
 */config/config_pilot.yaml
 */config/config_terminal.yaml
+
+.pre-commit-config.yaml
+/commitlint.config.js
+node_modules/
+ruff.toml
