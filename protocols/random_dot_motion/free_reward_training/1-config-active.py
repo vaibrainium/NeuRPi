@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 from scipy import stats
 
@@ -38,10 +36,9 @@ TASK = {
                 "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
                 "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
                 "noresponse": lambda response_time, coh: 7,
-        	},
-    	},
+            },
+        },
     },
-
     "stimulus": {
         "coherences": {
             "tag": "List of all coherences used in study",
@@ -98,13 +95,12 @@ STIMULUS = {
             },
         },
     },
-
     "required_functions": {
         "tag": "List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.",
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -113,20 +109,20 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #for 25 degrees/sec
+                    "dot_vel": 200,  # for 25 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": None, #"8KHz",
-                        "16KHz": None, #"16KHz",
-                }
+                    "8KHz": None,  # "8KHz",
+                    "16KHz": None,  # "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": None, # "correct_tone",
-                    "incorrect": None, # "incorrect_tone",
+                    "correct": None,  # "correct_tone",
+                    "incorrect": None,  # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
                 },
             },
@@ -140,7 +136,6 @@ STIMULUS = {
             "initiate_intertrial": {"background_color": (0, 0, 0)},
         },
     },
-
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
             Format:
@@ -166,7 +161,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay", #None,
+                "update_func": None,  # "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,

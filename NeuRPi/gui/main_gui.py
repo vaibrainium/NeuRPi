@@ -1,11 +1,10 @@
 import csv
 import sys
-import time
 from pathlib import Path
 
 import yaml
 from omegaconf import OmegaConf
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets, uic
 
 from NeuRPi.prefs import prefs
 

@@ -7,4 +7,3 @@ WORKDIR /src/NeuRPi
 RUN apt-get update
 RUN apt-get update && apt-get install -y python3-pyqt5
 RUN apt-get install ffmpeg libsm6 libxext6  -y
-

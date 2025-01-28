@@ -44,20 +44,20 @@ class LowPass
     float x[order+1]; // Raw values
     float y[order+1]; // Filtered values
 
-  public:  
+  public:
     LowPass(float f0, float fs, bool adaptive){
       // f0: cutoff frequency (Hz)
       // fs: sample frequency (Hz)
       // adaptive: boolean flag, if set to 1, the code will automatically set
       // the sample frequency based on the time history.
-      
+
       omega0 = 6.28318530718*f0;
       dt = 1.0/fs;
       adapt = adaptive;
       tn1 = -dt;
       for(int k = 0; k < order+1; k++){
         x[k] = 0;
-        y[k] = 0;        
+        y[k] = 0;
       }
       setCoef();
     }
@@ -68,12 +68,12 @@ class LowPass
         dt = t - tn1;
         tn1 = t;
       }
-      
+
       float alpha = omega0*dt;
       if(order==1){
         a[0] = -(alpha - 2.0)/(alpha+2.0);
         b[0] = alpha/(alpha+2.0);
-        b[1] = alpha/(alpha+2.0);        
+        b[1] = alpha/(alpha+2.0);
       }
       if(order==2){
         float alphaSq = alpha*alpha;
@@ -83,7 +83,7 @@ class LowPass
         b[1] = 2*b[0];
         b[2] = b[0];
         a[0] = -(2*alphaSq*beta[0] - 8*beta[2])/D;
-        a[1] = -(beta[0]*alphaSq - 2*beta[1]*alpha + 4*beta[2])/D;      
+        a[1] = -(beta[0]*alphaSq - 2*beta[1]*alpha + 4*beta[2])/D;
       }
     }
 
@@ -91,7 +91,7 @@ class LowPass
       // Provide me with the current raw value: x
       // I will give you the current filtered value: y
       if(adapt){
-        setCoef(); // Update coefficients if necessary      
+        setCoef(); // Update coefficients if necessary
       }
       y[0] = 0;
       x[0] = xn;
@@ -106,8 +106,8 @@ class LowPass
         y[k] = y[k-1];
         x[k] = x[k-1];
       }
-  
-      // Return the filtered value    
+
+      // Return the filtered value
       return y[0];
     }
 };
@@ -131,20 +131,20 @@ Base_Licks get_licks_baseline(Base_Licks base_licks) {
   int window_size = 1000;
   int led_pin = 13;
   digitalWrite(led_pin, HIGH);
-  
+
   for (int i = 0; i < window_size; i++) {
     sum_left +=  lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
     delay(1);
     sum_right +=  lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
-  }  
+  }
   base_licks.left = sum_left / window_size;
   base_licks.right = sum_right / window_size;
-  
+
   digitalWrite(led_pin, LOW);
   return base_licks;
 }
 
-Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold, int right_threshold){   
+Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold, int right_threshold){
 
 //  Serial.print(touchRead(left_touch_pin));
 //  Serial.print(',');
@@ -155,7 +155,7 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 //  Serial.print(',');
 //  Serial.println(lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000));
 //  delay(1);
-    
+
 //  // Read and filter the lick sensor signals
 ////  delay(1);
 //  float curr_left = lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
@@ -174,20 +174,20 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
   if (curr_left-prev_left > slope){
     counter_L = counter_L + 1;
     }
-    
+
   if (curr_left-prev_left < -(.1*slope)){
     counter_L = 0;
     }
-    
+
   if (curr_right-prev_right > slope){
     counter_R = counter_R + 1;
     }
-    
+
   if (curr_right-prev_right < -(.1*slope)){
     counter_R = 0;
-    }    
+    }
 
-    
+
   Serial.print(counter_L);
   Serial.print(",");
   Serial.println(counter_R);
@@ -198,8 +198,8 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 //    Serial.print(millis() - start_millis);
 //    Serial.print("/t");
 //    Serial.println(-1);
-//    digitalWrite(led_pin, HIGH);  
-//    delay(50);  
+//    digitalWrite(led_pin, HIGH);
+//    delay(50);
 //    }
 //
 //   else if ((counter_L < 3) && (left_touched)){
@@ -207,16 +207,16 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 //    Serial.print(millis() - start_millis);
 //    Serial.print("/t");
 //    Serial.println(-2);
-//    digitalWrite(led_pin, LOW); 
+//    digitalWrite(led_pin, LOW);
 //    }
-//    
+//
 //  else if ((counter_R > 3) && !(right_touched)){
 //    right_touched = true;
 //    Serial.print(millis() - start_millis);
 //    Serial.print("/t");
 //    Serial.println(1);
-//    digitalWrite(led_pin, HIGH);   
-//    delay(50);   
+//    digitalWrite(led_pin, HIGH);
+//    delay(50);
 //    }
 //
 //   else if ((counter_R < 3) && (right_touched)){
@@ -224,7 +224,7 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 //    Serial.print(millis() - start_millis);
 //    Serial.print("/t");
 //    Serial.println(2);
-//    digitalWrite(led_pin, LOW);  
+//    digitalWrite(led_pin, LOW);
 //    }
 //
   prev_left = curr_left;
@@ -233,7 +233,7 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 ////    Serial.print(counter_L);
 ////    Serial.print(',');
 ////    Serial.println(counter_R);
-//  
+//
 ////  curr_left = constrain(curr_left, 0, 255);
 ////  curr_right = constrain(curr_right, 0, 255);
 ////  Serial.print(curr_right);
@@ -244,14 +244,14 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 ////  Serial.print(left_threshold);
 ////  Serial.print(",");
 ////  Serial.println(right_threshold);
-//  
+//
 ////  if ((curr_left > left_threshold) && !(left_touched)){
 ////    left_touched = true;
 ////    Serial.print(millis() - start_millis);
 ////    Serial.print("/t");
 ////    Serial.println(-1);
-////    digitalWrite(led_pin, HIGH);  
-////    delay(50);  
+////    digitalWrite(led_pin, HIGH);
+////    delay(50);
 ////    }
 ////
 ////   else if ((curr_left < left_threshold) && (left_touched)){
@@ -259,16 +259,16 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 ////    Serial.print(millis() - start_millis);
 ////    Serial.print("/t");
 ////    Serial.println(-2);
-////    digitalWrite(led_pin, LOW); 
+////    digitalWrite(led_pin, LOW);
 ////    }
-////    
+////
 ////  else if ((curr_right > right_threshold) && !(right_touched)){
 ////    right_touched = true;
 ////    Serial.print(millis() - start_millis);
 ////    Serial.print("/t");
 ////    Serial.println(1);
-////    digitalWrite(led_pin, HIGH);   
-////    delay(50);   
+////    digitalWrite(led_pin, HIGH);
+////    delay(50);
 ////    }
 ////
 ////   else if ((curr_right < right_threshold) && (right_touched)){
@@ -276,12 +276,12 @@ Base_Licks get_licks(Base_Licks base_licks, int start_millis, int left_threshold
 ////    Serial.print(millis() - start_millis);
 ////    Serial.print("/t");
 ////    Serial.println(2);
-////    digitalWrite(led_pin, LOW);  
+////    digitalWrite(led_pin, LOW);
 ////    }
-  
+
 }
 
-void setup() {  
+void setup() {
 
   pinMode(led_pin, OUTPUT);
   pinMode(left_touch_pin, INPUT);
@@ -291,17 +291,17 @@ void setup() {
   Serial.begin(115200);
   // Reward arduino
   Serial1.begin(115200);
-  
+
    while (!Serial) { // needed to keep leonardo/micro from starting too fast!
    delay(10);
    }
    while (!Serial1) { // needed to keep leonardo/micro from starting too fast!
      delay(10);
    }
-  
+
   Serial.setTimeout(5);
   base_licks = get_licks_baseline(base_licks);
-  
+
   Serial1.print("20reward_left");
   delay(20);
   Serial1.print("20reward_right");
@@ -315,7 +315,7 @@ void setup() {
 void loop() {
   // see if there's incoming serial data:
   if (Serial.available() > 0) {
-      
+
     // read and forward incoming string from serial buffer
     msg_int = int(Serial.parseInt());
     msg = Serial.readString();
@@ -335,13 +335,13 @@ void loop() {
 
     // updating lick_threshold
     else if (msg=="update_lick_threshold_left"){
-        // threshold_multiplier_left = msg_int; 
+        // threshold_multiplier_left = msg_int;
         left_threshold = msg_int;
         // Serial.println("left_threshold_modified");
     }
     // updating lick_threshold
     else if (msg=="update_lick_threshold_right"){
-        // threshold_multiplier_right = msg_int; 
+        // threshold_multiplier_right = msg_int;
         right_threshold = msg_int;
         // Serial.println("right_threshold_modified");
     }

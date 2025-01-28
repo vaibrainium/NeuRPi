@@ -38,5 +38,3 @@ class Hardware():
         If not defined, a warning is given
         """
         raise Exception("Release method is not overridden by the subclass")
-
-

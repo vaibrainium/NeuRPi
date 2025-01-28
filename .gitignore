@@ -28,6 +28,7 @@ pip-delete-this-directory.txt
 */.ipynb_checkpoints/*
 .ipynb_checkpoints
 build
+.vscode/
 
 # Package
 

@@ -1,4 +1,3 @@
-from pathlib import Path
 
 import numpy as np
 from scipy import stats
@@ -28,16 +27,16 @@ TASK = {
         "delay": {
             "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time, coh, coh: 0,
-                "incorrect": lambda response_time, coh, coh: 0,
-                "noresponse": lambda response_time, coh: 0,
+                "correct": lambda response_time: 0,
+                "incorrect": lambda response_time: 0,
+                "noresponse": lambda response_time: 0,
             },
         },
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
                 "correct": lambda response_time, coh: 0.500,
-                "incorrect": lambda response_time, coh: 3 + (7*np.exp(-4 * response_time)),
+                "incorrect": lambda response_time, coh: 3 + (7 * np.exp(-4 * response_time)),
                 "noresponse": lambda response_time, coh: 10,
             },
         },
@@ -102,7 +101,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -111,19 +110,19 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #350,# 240 # for 25 degrees/sec
+                    "dot_vel": 200,  # 350,# 240 # for 25 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": "8KHz",
-                        "16KHz": "16KHz",
-                }
+                    "8KHz": "8KHz",
+                    "16KHz": "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (255, 255, 255),
                 "audio": {
-                    "correct": None, #"correct_tone",
+                    "correct": None,  # "correct_tone",
                     "incorrect": "incorrect_tone",
                     "noresponse": "incorrect_tone",
                 },
@@ -132,7 +131,7 @@ STIMULUS = {
             "initiate_delay": {
                 "background_color": (50, 50, 50),
             },
-           "update_delay": None,
+            "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
             "initiate_intertrial": {"background_color": (100, 100, 100)},
@@ -163,7 +162,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay",
+                "update_func": None,  # "update_delay",
             },
             "must_respond_epoch": {
                 "clear_queue": False,

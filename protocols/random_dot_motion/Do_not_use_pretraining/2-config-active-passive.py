@@ -1,4 +1,3 @@
-from pathlib import Path
 
 import numpy as np
 from scipy import stats
@@ -37,7 +36,7 @@ TASK = {
             "tag": "Intertrial epoch",
             "duration": {
                 "correct": lambda response_time, coh: 0.500,
-                "incorrect": lambda response_time, coh: 3+(7*np.exp(-4 * response_time)),
+                "incorrect": lambda response_time, coh: 3 + (7 * np.exp(-4 * response_time)),
                 "noresponse": lambda response_time, coh: 10,
             },
         },
@@ -102,7 +101,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -115,15 +114,15 @@ STIMULUS = {
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": "8KHz",
-                        "16KHz": "16KHz",
-                }
+                    "8KHz": "8KHz",
+                    "16KHz": "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
-                "background_color": (50, 50, 50),,
+                "background_color": (50, 50, 50),
                 "audio": {
-                    "correct": None, #"correct_tone",
+                    "correct": None,  # "correct_tone",
                     "incorrect": "incorrect_tone",
                     "noresponse": "incorrect_tone",
                 },
@@ -135,7 +134,9 @@ STIMULUS = {
             "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
-            "initiate_intertrial": {"background_color": (50, 50, 50),},
+            "initiate_intertrial": {
+                "background_color": (50, 50, 50),
+            },
         },
     },
     "task_epochs": {
@@ -156,9 +157,9 @@ STIMULUS = {
                 "update_func": "update_stimulus",
             },
             "reinforcement_epoch": {
-                "clear_queue": True
+                "clear_queue": True,
                 "init_func": "initiate_reinforcement",
-                "update_func": None, #"update_reinforcement",
+                "update_func": None,  # "update_reinforcement",
             },
             "delay_epoch": {
                 "clear_queue": True,

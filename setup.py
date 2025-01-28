@@ -1,4 +1,4 @@
-from setuptools import find_namespace_packages, find_packages, setup
+from setuptools import find_namespace_packages, setup
 
 with open("requirements.txt") as f:
     required = f.read().splitlines()

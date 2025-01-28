@@ -1,5 +1,4 @@
 import csv
-import glob
 import inspect
 import pickle
 import time
@@ -272,7 +271,6 @@ class Subject(BaseSubject):
 
 
 if __name__ == "__main__":
-    import sys
 
     from omegaconf import OmegaConf
 

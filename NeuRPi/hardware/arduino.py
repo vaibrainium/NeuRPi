@@ -76,5 +76,3 @@ class Arduino(Hardware):
             self.is_connected = False
         except:
             raise Warning(f"Could not close connection with {self.group} device: {self.name} (at '{self.port}')")
-
-

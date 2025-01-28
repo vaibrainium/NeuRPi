@@ -6,12 +6,11 @@ import typing
 from collections import OrderedDict as odict
 from pathlib import Path
 
-from omegaconf import OmegaConf
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 
 from NeuRPi.gui.main_gui import Application
 from NeuRPi.loggers.logger import init_logger
-from NeuRPi.networking import Message, Net_Node, Terminal_Station
+from NeuRPi.networking import Net_Node, Terminal_Station
 from NeuRPi.prefs import prefs
 
 

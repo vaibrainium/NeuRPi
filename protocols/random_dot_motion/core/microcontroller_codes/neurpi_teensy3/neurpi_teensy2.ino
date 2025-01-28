@@ -33,20 +33,20 @@ class LowPass
     float x[order+1]; // Raw values
     float y[order+1]; // Filtered values
 
-  public:  
+  public:
     LowPass(float f0, float fs, bool adaptive){
       // f0: cutoff frequency (Hz)
       // fs: sample frequency (Hz)
       // adaptive: boolean flag, if set to 1, the code will automatically set
       // the sample frequency based on the time history.
-      
+
       omega0 = 6.28318530718*f0;
       dt = 1.0/fs;
       adapt = adaptive;
       tn1 = -dt;
       for(int k = 0; k < order+1; k++){
         x[k] = 0;
-        y[k] = 0;        
+        y[k] = 0;
       }
       setCoef();
     }
@@ -57,12 +57,12 @@ class LowPass
         dt = t - tn1;
         tn1 = t;
       }
-      
+
       float alpha = omega0*dt;
       if(order==1){
         a[0] = -(alpha - 2.0)/(alpha+2.0);
         b[0] = alpha/(alpha+2.0);
-        b[1] = alpha/(alpha+2.0);        
+        b[1] = alpha/(alpha+2.0);
       }
       if(order==2){
         float alphaSq = alpha*alpha;
@@ -72,7 +72,7 @@ class LowPass
         b[1] = 2*b[0];
         b[2] = b[0];
         a[0] = -(2*alphaSq*beta[0] - 8*beta[2])/D;
-        a[1] = -(beta[0]*alphaSq - 2*beta[1]*alpha + 4*beta[2])/D;      
+        a[1] = -(beta[0]*alphaSq - 2*beta[1]*alpha + 4*beta[2])/D;
       }
     }
 
@@ -80,7 +80,7 @@ class LowPass
       // Provide me with the current raw value: x
       // I will give you the current filtered value: y
       if(adapt){
-        setCoef(); // Update coefficients if necessary      
+        setCoef(); // Update coefficients if necessary
       }
       y[0] = 0;
       x[0] = xn;
@@ -95,8 +95,8 @@ class LowPass
         y[k] = y[k-1];
         x[k] = x[k-1];
       }
-  
-      // Return the filtered value    
+
+      // Return the filtered value
       return y[0];
     }
 };
@@ -119,55 +119,55 @@ Base_Licks get_licks_baseline(Base_Licks base_licks) {
   int window_size = 1000;
   int led_pin = 13;
   digitalWrite(led_pin, HIGH);
-  
+
   for (int i = 0; i < window_size; i++) {
     sum_left +=  lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
     sum_right +=  lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
-  }  
+  }
   base_licks.left = sum_left / window_size;
   base_licks.right = sum_right / window_size;
-  
+
   digitalWrite(led_pin, LOW);
   return base_licks;
 }
 
-Base_Licks get_licks(Base_Licks base_licks){  
+Base_Licks get_licks(Base_Licks base_licks){
 
-  
+
   // Read and filter the lick sensor signals
   float curr_left = lp_l.filt((touchRead(left_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
   float curr_right = lp_r.filt((touchRead(right_touch_pin)*5.0/1023.0 - 2.503)/0.185*1000);
-  
+
 //  Serial.print(curr_left - threshold_multiplier_left*base_licks.left);
 //  Serial.print(',');
 //  Serial.println(curr_right - threshold_multiplier_right*base_licks.right);
-  
-  if (i==0 and (curr_left > threshold_multiplier_left*base_licks.left)){  
+
+  if (i==0 and (curr_left > threshold_multiplier_left*base_licks.left)){
     i = 1;   lick=2;
-    Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)    
+    Serial.println(lick);      // send 2 when left lick starts (-3 in python = -1)
   }
-  if (i==1 and (curr_left < threshold_multiplier_left*base_licks.left)){  
+  if (i==1 and (curr_left < threshold_multiplier_left*base_licks.left)){
     i = 0;   lick=1;
-    Serial.println(lick);       // send 1 when left lick ends (-3 in python = -2)   
+    Serial.println(lick);       // send 1 when left lick ends (-3 in python = -2)
   }
 
-  if (j==0 and (curr_right > threshold_multiplier_right*base_licks.right)){  
+  if (j==0 and (curr_right > threshold_multiplier_right*base_licks.right)){
     j = 1;   lick=4;
-    Serial.println(lick);      // send 4 when right lick starts (-3 in python = 1)    
+    Serial.println(lick);      // send 4 when right lick starts (-3 in python = 1)
   }
-  if (j==1 and (curr_right < threshold_multiplier_right*base_licks.right)){  
+  if (j==1 and (curr_right < threshold_multiplier_right*base_licks.right)){
     j = 0;   lick=5;
-    Serial.println(lick);       // send 5 when right lick ends (-3 in python = 2)  
+    Serial.println(lick);       // send 5 when right lick ends (-3 in python = 2)
   }
 }
 
-void setup() {  
+void setup() {
   Serial.begin(115200);
   Serial.setTimeout(10);
   base_licks = get_licks_baseline(base_licks);
 
   pinMode(led_pin, OUTPUT);
-  
+
   // Reward arduino
   Serial1.begin(9600);
 }
@@ -175,12 +175,12 @@ void setup() {
 void loop() {
   // see if there's incoming serial data:
   if (Serial.available() > 0) {;
-      
+
     // read and forward incoming string from serial buffer
     msg_int = int(Serial.parseInt());
-    msg = Serial.readString();    
+    msg = Serial.readString();
     Serial1.print(msg_int+msg);
-    
+
     if (msg=="reset"){
       // Call the modified get_licks_baseline function and store the returned struct in my_licks
       base_licks = get_licks_baseline(base_licks);
@@ -188,19 +188,19 @@ void loop() {
 
     // updating lick_threshold
     if (msg=="update_lick_threshold"){
-        threshold_multiplier = msg_int; 
+        threshold_multiplier = msg_int;
     }
 
     // updating lick_threshold
     if (msg=="update_lick_threshold_left"){
-        threshold_multiplier_left = msg_int; 
+        threshold_multiplier_left = msg_int;
     }
     // updating lick_threshold
     if (msg=="update_lick_threshold_right"){
-        threshold_multiplier_right = msg_int; 
+        threshold_multiplier_right = msg_int;
     }
   }
 
   get_licks(base_licks);
-  
+
 }

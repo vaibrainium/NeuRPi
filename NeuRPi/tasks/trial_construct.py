@@ -1,13 +1,9 @@
-import datetime
 import queue
 # import tables
 import threading
 import time
-from itertools import count
 
-import hydra
 import numpy as np
-from scipy.stats import pearson3
 
 # If need be, work on multithreading later
 

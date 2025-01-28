@@ -2,9 +2,7 @@
 import threading
 from itertools import count
 
-import hydra
 
-from NeuRPi.hardware.arduino import Arduino
 
 # If need be, work on multithreading later
 

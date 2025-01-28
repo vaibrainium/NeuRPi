@@ -4,8 +4,7 @@ import time
 # import cv2
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from pyqtgraph import exporters
+from PyQt5 import QtCore, QtWidgets, uic
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")

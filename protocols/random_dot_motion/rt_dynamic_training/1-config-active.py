@@ -1,4 +1,3 @@
-from pathlib import Path
 
 import numpy as np
 from scipy import stats
@@ -19,7 +18,7 @@ TASK = {
         "reinforcement": {
             "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration (usually white).",
             "duration": {
-                "correct": lambda response_time: 0, 
+                "correct": lambda response_time: 0,
                 "incorrect": lambda response_time: 0,
                 "noresponse": lambda response_time: 0,
             },
