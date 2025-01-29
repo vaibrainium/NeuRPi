@@ -9,10 +9,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=1, scale=0.06)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 25,
+            "max_viewing": 15,
             "min_viewing": 0,
         },
         "reinforcement": {
@@ -21,26 +21,19 @@ TASK = {
                 "correct": lambda response_time: 0,
                 "incorrect": lambda response_time: 0,
                 "noresponse": lambda response_time: 0,
-            },
-        },
-        "delay": {
-            "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
-            "duration": {
-                "correct": lambda response_time, coh: 0,
-                "incorrect": lambda response_time, coh: 0,
-                "noresponse": lambda response_time, coh: 0,
+                "invalid": lambda response_time: 0,
             },
         },
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
+                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
                 "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 7,
+                "noresponse": lambda response_time, coh: 3,
+                "invalid": lambda response_time, coh: 0,
             },
         },
     },
-
     "stimulus": {
         "coherences": {
             "tag": "List of all coherences used in study",
@@ -96,13 +89,12 @@ STIMULUS = {
             },
         },
     },
-
     "required_functions": {
         "tag": "List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.",
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -111,21 +103,22 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #for 25 degrees/sec
+                    "dot_vel": 200,  # for 25 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": None, #"8KHz",
-                        "16KHz": None, #"16KHz",
-                }
+                    "8KHz": None,  # "8KHz",
+                    "16KHz": None,  # "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": None, # "correct_tone",
-                    "incorrect": None, # "incorrect_tone",
+                    "correct": "correct_tone",
+                    "incorrect": None,  # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
+                    "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
@@ -138,7 +131,6 @@ STIMULUS = {
             "initiate_intertrial": {"background_color": (0, 0, 0)},
         },
     },
-
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
             Format:
@@ -164,7 +156,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay", #None,
+                "update_func": None,  # "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,

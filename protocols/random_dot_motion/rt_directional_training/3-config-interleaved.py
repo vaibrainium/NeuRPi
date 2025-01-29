@@ -9,10 +9,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 25,
+            "max_viewing": 15,
             "min_viewing": 0,
         },
         "reinforcement": {
@@ -27,10 +27,10 @@ TASK = {
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
+                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
                 "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 7,
-                "invalid": lambda response_time, coh: 7,
+                "noresponse": lambda response_time, coh: 3,
+                "invalid": lambda response_time, coh: 0,
             },
         },
     },
@@ -42,54 +42,24 @@ TASK = {
         },
         "signed_coherences": {
             "tag": "List of all signed coherences",
-            "type": "list",
-            "value": np.array([-100, -36, -18, -9, 0, 9, 18, 36, 100]),
+            "type": "np.array",
+            "value": np.array([-100, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
-            "type": "int",
-            "value": 3,
-        },
-        "pulse_probabilities": {
-            "tag": "Probability of pulse at each coherence [left_100_early, left_100_middle, left_100_late, right_100_early, right_100_middle, right_100_late, control_early, control_middle, control_late]",
-            "type": "dict",
-            "value": {
-                # drop 18
-                -100: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                -36: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                -18: [0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.000, 0.000, 0.40],
-                -9: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                0: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                9: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                18: [0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.000, 0.000, 0.40],
-                36: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-                100: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
-            },
-        },
-        "pulse_duration": {
-            "tag": "Duration of pulse in #frames (1/60s)",
-            "type": "int",
-            "value": 4,
-        },
-        "pulse_onset": {
-            "tag": "Onset of pulse in #frames (1/60s)",
-            "type": "dict",
-            "value": {
-                "early": 3,
-                "middle": 14,
-                "late": 25,
-            },
+            "type": "np.array",
+            "value": np.array([10, 10]),
         },
     },
     "rolling_performance": {
         "rolling_window": 50,
+        "current_coherence_level": 1,
         "reward_volume": 1.5,
-        "current_coherence_level": 6,
     },
     "bias_correction": {
         "repeat_threshold": {
             "active": 100,
-            "passive": 100,
+            "passive": 0,
         },
         "bias_window": 10,
     },
@@ -119,13 +89,12 @@ STIMULUS = {
             },
         },
     },
-
     "required_functions": {
         "tag": "List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.",
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -134,20 +103,20 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #for 25 degrees/sec
+                    "dot_vel": 200,  # for 25 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": None, #"8KHz",
-                        "16KHz": None, #"16KHz",
-                }
+                    "8KHz": None,  # "8KHz",
+                    "16KHz": None,  # "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": None, # "correct_tone",
-                    "incorrect": None, # "incorrect_tone",
+                    "correct": "correct_tone",
+                    "incorrect": None,  # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
                     "invalid": None,  # "incorrect_tone",
                 },
@@ -162,7 +131,6 @@ STIMULUS = {
             "initiate_intertrial": {"background_color": (0, 0, 0)},
         },
     },
-
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
             Format:
@@ -188,7 +156,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay,
+                "update_func": None,  # "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,

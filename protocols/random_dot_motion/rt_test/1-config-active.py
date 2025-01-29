@@ -21,14 +21,7 @@ TASK = {
                 "correct": lambda response_time: 0,
                 "incorrect": lambda response_time: 0,
                 "noresponse": lambda response_time: 0,
-            },
-        },
-        "delay": {
-            "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
-            "duration": {
-                "correct": lambda response_time, coh: 0,
-                "incorrect": lambda response_time, coh: 0,
-                "noresponse": lambda response_time, coh: 0,
+                "invalid": lambda response_time: 0,
             },
         },
         "intertrial": {
@@ -37,6 +30,7 @@ TASK = {
                 "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
                 "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
                 "noresponse": lambda response_time, coh: 7,
+                "invalid": lambda response_time, coh: 7,
             },
         },
     },
@@ -125,6 +119,7 @@ STIMULUS = {
                     "correct": None, # "correct_tone",
                     "incorrect": None, # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
+                    "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,

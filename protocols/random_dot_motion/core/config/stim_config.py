@@ -1,77 +1,7 @@
-import numpy as np
-from scipy import stats
 
 REQUIRED_HARDWARE = ["Arduino", "Display"]
 
 REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
-
-TASK = {
-    "epochs": {
-        "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=1, scale=0.06)},
-        "stimulus": {
-            "tag": "Stimulus epoch",
-            "max_viewing": 25,
-            "min_viewing": 0,
-        },
-        "reinforcement": {
-            "tag": "Reinforcement epoch. Returns delay in stimulus display and delay screen duration.",
-            "duration": {
-                "correct": lambda response_time: 0,
-                "incorrect": lambda response_time: 0,
-                "noresponse": lambda response_time: 0,
-                "invalid": lambda response_time: 0,
-            },
-        },
-        "intertrial": {
-            "tag": "Intertrial epoch",
-            "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
-                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 7,
-                "invalid": lambda response_time, coh: 7,
-            },
-        },
-    },
-    "stimulus": {
-        "coherences": {
-            "tag": "List of all coherences used in study",
-            "type": "list",
-            "value": np.array([100, 72, 36, 18, 9, 0]),
-        },
-        "signed_coherences": {
-            "tag": "List of all signed coherences",
-            "type": "list",
-            "value": np.array([-100, -72, -36, -18, -9, 0, 9, 18, 36, 72, 100]),
-        },
-        "active_coherences": {
-            "tag": "Signed coherences to be used withough graduation",
-            "type": "int",
-            "value": np.array([-100, -72, 72, 100]),
-        },
-        "repeats_per_block": {
-            "tag": "Number of repeats of each coherences per block",
-            "type": "int",
-            "value": 3,
-        },
-    },
-    "rolling_performance": {
-        "rolling_window": 50,
-        "current_coherence_level": 2,
-        "reward_volume": 3.5,
-    },
-    "bias_correction": {
-        "repeat_threshold": {
-            "active": 100,
-            "passive": 0,
-        },
-        "bias_window": 10,
-    },
-    "training_type": {
-        "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-        "value": 2,
-    },
-}
 
 STIMULUS = {
     "load_media": {
