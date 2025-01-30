@@ -5,6 +5,7 @@ import time
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets, uic
+from pyqtgraph import exporters
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")
@@ -423,22 +424,22 @@ class TaskGUI(rigclass):
     def save_plots(self):
         # accuracy plot
         self.rig.TaskMonitor.setCurrentIndex(0)
-        exporter = pg.exporters.ImageExporter(self.rig.accuracy_plot.scene())
+        exporter = exporters.ImageExporter(self.rig.accuracy_plot.scene())
         exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["accuracy"])
         # psychometric plot
         self.rig.TaskMonitor.setCurrentIndex(1)
-        exporter = pg.exporters.ImageExporter(self.rig.psychometric_plot.scene())
+        exporter = exporters.ImageExporter(self.rig.psychometric_plot.scene())
         exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["psychometric"])
         # trial distribution plot
         self.rig.TaskMonitor.setCurrentIndex(2)
-        exporter = pg.exporters.ImageExporter(self.rig.trial_distribution.scene())
+        exporter = exporters.ImageExporter(self.rig.trial_distribution.scene())
         exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["trials_distribution"])
         # reaction time distribution plot
         self.rig.TaskMonitor.setCurrentIndex(3)
-        exporter = pg.exporters.ImageExporter(self.rig.rt_distribution.scene())
+        exporter = exporters.ImageExporter(self.rig.rt_distribution.scene())
         exporter.parameters()["width"] = 800
         exporter.export(self.subject.plots["rt_distribution"])
         # resetting plot index
