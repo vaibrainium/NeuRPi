@@ -40,8 +40,8 @@ class RandomDotMotion(object):
         self.x = self.rdk_generator.randint(self.stimulus_size[0], size=self.nDots)
         self.y = self.rdk_generator.randint(self.stimulus_size[1], size=self.nDots)
         self.age = self.rdk_generator.randint(self.lifetime, size=self.nDots)
-        self.theta = self.rdk_generator.randint(360, size=self.nDots)  # Non coherent dots in all direction of 360 degrees
-        # self.theta = self.rdk_generator.choice(self.randTheta, size=self.nDots)     # Non coherent dots in one of 8 direction separated by 45 degrees
+        # self.theta = self.rdk_generator.randint(360, size=self.nDots)  # Non coherent dots in all direction of 360 degrees
+        self.theta = self.rdk_generator.choice(self.randTheta, size=self.nDots)  # Non coherent dots in one of 8 direction separated by 45 degrees
         self.cohDots = np.array(range(round(np.abs(self.coherence) * self.nDots / 100)))
         if not self.cohDots.size:
             self.noncohDots = np.array(range(self.nDots))  # If cohDots are empty all dots are non-coherent
