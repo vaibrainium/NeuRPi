@@ -184,6 +184,8 @@ class Subject(BaseSubject):
 
         # Filter rows where 'date' is today's date
         today_rows = history[history['date'].dt.strftime("%Y-%m-%d") == today_date]
+        if today_rows.empty:
+            return 0
 
         today_received_water = pd.to_numeric(today_rows["received_water"], errors="coerce").sum()
 
