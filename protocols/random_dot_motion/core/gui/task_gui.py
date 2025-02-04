@@ -346,9 +346,10 @@ class TaskGUI(rigclass):
         self.rig.close_experiment.show()
 
     def check_water_requirement(self):
+        received_water = self.subject.get_today_received_water()
         additional_water = 0
-        if self.summary_data["total_reward"] < 500:
-            additional_water = max(additional_water, 500 - self.summary_data["total_reward"])
+        if (received_water + self.summary_data["total_reward"]) < 600:
+            additional_water = max(additional_water, 600 - self.summary_data["total_reward"])
         if self.summary_data["end_weight_prct"] < 85:
             additional_water = max(
                 additional_water, ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000
@@ -418,6 +419,7 @@ class TaskGUI(rigclass):
                 start_weight=self.summary_data["start_weight"],
                 end_weight=self.summary_data["end_weight"],
                 baseline_weight=self.summary_data["baseline_weight"],
+                received_water=self.summary_data["total_reward"],
             )
             self.save_plots()
 
