@@ -130,6 +130,7 @@ if __name__ == "__main__":
         "baseline_weight": 0,
         "start_weight": 0,
         "end_weight": 0,
+        "received_water": 0,
         "protocol": 0,
         "experiment": 0,
         "session": 0,

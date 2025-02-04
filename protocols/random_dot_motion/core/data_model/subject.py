@@ -187,7 +187,7 @@ class Subject(BaseSubject):
         if today_rows.empty:
             return 0
 
-        today_received_water = pd.to_numeric(today_rows["received_water"], errors="coerce").sum()
+        today_received_water = pd.to_numeric(today_rows["water_received"], errors="coerce").sum()
 
         return today_received_water
 
