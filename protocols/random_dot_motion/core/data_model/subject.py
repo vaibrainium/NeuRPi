@@ -2,6 +2,7 @@ import csv
 import inspect
 import pickle
 import time
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -173,6 +174,22 @@ class Subject(BaseSubject):
         }
         return subject_config
 
+    def get_today_received_water(self):
+        history = pd.read_csv(Path(self.dir, "history.csv"))
+
+        # Ensure the 'date' column is in datetime format (if it's a string, it will be converted)
+        history['date'] = pd.to_datetime(history['date'], errors='coerce')
+        # Get today's date (ensure it's in the same format)
+        today_date = datetime.today().strftime("%Y-%m-%d")  # Format as "YYYY-MM-DD"
+
+        # Filter rows where 'date' is today's date
+        today_rows = history[history['date'].dt.strftime("%Y-%m-%d") == today_date]
+
+        today_received_water = pd.to_numeric(today_rows["received_water"], errors="coerce").sum()
+
+        return today_received_water
+
+
     def save_files(self, file_dict):
         """
         Save files in a pickle file
@@ -257,11 +274,12 @@ class Subject(BaseSubject):
         except Exception as e:
             print(f"Could not save summary plots: {e}")
 
-    def save_history(self, start_weight=None, end_weight=None, baseline_weight=None):
+    def save_history(self, start_weight=None, end_weight=None, baseline_weight=None, water_received=None):
         hist_dict = {
             "baseline_weight": baseline_weight if baseline_weight else self.baseline_weight,
             "start_weight": start_weight if start_weight else self.start_weight,
             "end_weight": end_weight if end_weight else self.end_weight,
+            "water_received": water_received,
             "protocol": self.protocol,
             "experiment": self.experiment,
             "session": self.session,
