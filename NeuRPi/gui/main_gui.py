@@ -263,6 +263,7 @@ class Application(mainclass):
             "baseline_weight",
             "start_weight",
             "end_weight",
+            "water_received",
             "rig_id",
             "protocol",
             "experiment",
