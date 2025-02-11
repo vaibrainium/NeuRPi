@@ -112,19 +112,20 @@ class Station(multiprocessing.Process):
 
     def get_ip(self):
         """
-        Find our IP address
-        returns (str): our IPv4 address.
-        """
-        # shamelessly stolen from https://www.w3resource.com/python-exercises/python-basic-exercise-55.php
-        # variables are badly named because this is just a rough unwrapping of what was a monstrous one-liner
-        # (and i don't really understand how it works)
+        Find the local machine's IPv4 address.
 
-        # get ips that aren't the loopback
-        unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
-        # ??? truly dk
-        unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
-        unwrap2 = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
-        return unwrap2
+        Returns:
+            str: The local IPv4 address.
+        """
+        try:
+            # Create a UDP socket and connect to an external server (Google's DNS)
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                s.connect(("8.8.8.8", 53))
+                local_ip = s.getsockname()[0]  # Extract the IP address
+
+            return local_ip
+        except Exception as e:
+            return f"Error retrieving IP: {e}"
 
     def prepare_message(self, to, key, value, repeat=True, flags=None):
         """
@@ -643,7 +644,7 @@ class Terminal_Station(Station):
         """
         super(Terminal_Station, self).__init__()
 
-        # by default terminal doesn't have a puster, since it's a end tree node and everything connects to it
+        # by default terminal doesn't have a pusher, since it's a end tree node and everything connects to it
         self.pusher = False
 
         self.listen_port = prefs.get("MSGPORT")
@@ -661,6 +662,7 @@ class Terminal_Station(Station):
                 "STATE": self.l_state,  # The Pi is confirming/notifying us that it has changed state
                 "HANDSHAKE": self.l_handshake,  # initial connection with some initial info
                 "FILE": self.l_file,  # The pi needs some file from us
+                "SESSION_FILES": self.l_session_files,  # The pi needs some file from us
             }
         )
 
@@ -730,8 +732,12 @@ class Terminal_Station(Station):
         Args:
             msg:
         """
-        # TODO: Should also handle param changes to GUI objects like ntrials, etc.
-        pass
+        # Send through to terminal
+        self.send(to="_T", msg=msg)
+
+        # # Send to plot widget, which should be listening to "P_{pilot_name}"
+        # # self.send('P_{}'.format(msg.value['pilot']), 'DATA', msg.value, flags=msg.flags)
+        # self.send(to="P_{}".format(msg.value["pilot"]), msg=msg)
 
     def l_stopall(self, msg: Message):
         """
@@ -839,7 +845,7 @@ class Terminal_Station(Station):
         # The <target> pi has requested some file <value> from us, let's send it back
         # This assumes the file is small, if this starts crashing we'll have to split the message...
 
-        full_path = os.path.join(prefs.STORE_DIRECTORY, msg.value)
+        full_path = os.path.join(prefs.get("STORE_DIRECTORY"), msg.value)
         with open(full_path, "rb") as open_file:
             # encode in base64 so json doesn't complain
             file_contents = base64.b64encode(open_file.read())
@@ -848,6 +854,12 @@ class Terminal_Station(Station):
 
         self.send(msg.sender, "FILE", file_message)
 
+    def l_session_files(self, msg: Message):
+        """
+        Pilot sent end of session files to be saved
+        """
+        # only rly useful for our terminal object
+        self.send("_T", "SESSION_FILES", value=msg.value)
 
 class Pilot_Station(Station):
     """

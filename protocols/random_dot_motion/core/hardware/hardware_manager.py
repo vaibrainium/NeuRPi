@@ -1,7 +1,6 @@
 import threading
 import time
 
-
 from NeuRPi.hardware.hardware_manager import HardwareManager as BaseHWManager
 from NeuRPi.prefs import prefs
 
@@ -180,9 +179,9 @@ class HardwareManager(BaseHWManager):
         for pulse in range(num_pulses):
             print(pulse)
             self.reward_left(1)
-            time.sleep(0.3)
+            time.sleep(0.5)
             self.reward_right(1)
-            time.sleep(0.3)
+            time.sleep(0.5)
 
     def read_licks(self):
         """
