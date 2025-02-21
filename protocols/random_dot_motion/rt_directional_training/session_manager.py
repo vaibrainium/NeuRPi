@@ -106,30 +106,32 @@ class SessionManager:
     ####################### pre-session methods #######################
     def update_reward_volume(self):
         # function to update reward volume based on weight and previous session performance
-        volume_change = 0
+        # volume_change = 0
         ## weight based reward adjustment
         # # % baseline weight is below 85% increase reward by 0.1 ul
         # if self.config.SUBJECT["prct_weight"] < 85:
         #     volume_change += 0.1
         # if % baseline weight is below 80% increase reward by another 0.1 ul
-        if self.config.SUBJECT["prct_weight"] < 80:
-            volume_change += 0.1
+        # if self.config.SUBJECT["prct_weight"] < 80:
+        #     volume_change += 0.1
 
-        ## reward volume based reward adjustment
-        if self.config.SUBJECT["rolling_perf"]["total_reward"] < 700:
-            volume_change += 0.1
-            if self.config.SUBJECT["rolling_perf"]["total_reward"] < 500:
-                volume_change += 0.1
+        # ## reward volume based reward adjustment
+        # if self.config.SUBJECT["rolling_perf"]["total_reward"] < 700:
+        #     volume_change += 0.1
+        #     if self.config.SUBJECT["rolling_perf"]["total_reward"] < 500:
+        #         volume_change += 0.1
 
-        ## Attempt based reward adjustment
-        # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
-        if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
-            volume_change -= 0.1
+        # ## Attempt based reward adjustment
+        # # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
+        # if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
+        #     volume_change -= 0.1
 
-        self.full_reward_volume += np.clip(volume_change, -0.2, 0.2)
+        # self.full_reward_volume += np.clip(volume_change, -0.2, 0.2)
 
-        ## limiting reward volume between 2 and 3.5
-        self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
+        # ## limiting reward volume between 2 and 3.5
+        # self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
+
+        self.full_reward_volume = 4
 
     ####################### trial epoch methods #######################
     def prepare_fixation_stage(self):
@@ -223,7 +225,7 @@ class SessionManager:
     ######################### trial-stage methods #########################
     def prepare_trial_variables(self):
 
-        if (not self.in_active_bias_correction_block) & (np.abs(np.nanmean(self.rolling_bias)) > self.active_bias_correction_threshold):
+        if (not self.is_correction_trial) & ((not self.in_active_bias_correction_block) & (np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold)):
             self.in_active_bias_correction_block = True
             correction_direction = -np.sign(np.nanmean(self.rolling_bias))
             self.rolling_bias = np.zeros(self.bias_window)
@@ -267,9 +269,8 @@ class SessionManager:
         block_length = self.get_active_trial_block_length()
         self.block_schedule = 100 * np.random.choice([correction_direction, -correction_direction], size=block_length, p=[prob, 1 - prob])
 
-
     def get_active_trial_block_length(self):
-        values = np.array([4, 5, 6, 7, 8])
+        values = np.array([6, 7, 8, 9, 10])
         lambda_val = 1.0
         probabilities = np.exp(-lambda_val * (values - 4))
         probabilities /= probabilities.sum()
