@@ -270,7 +270,7 @@ class SessionManager:
         self.block_schedule = 100 * np.random.choice([correction_direction, -correction_direction], size=block_length, p=[prob, 1 - prob])
 
     def get_active_trial_block_length(self):
-        values = np.array([6, 7, 8, 9, 10])
+        values = np.arange(7,14)
         lambda_val = 1.0
         probabilities = np.exp(-lambda_val * (values - 4))
         probabilities /= probabilities.sum()
