@@ -267,7 +267,12 @@ class SessionManager:
     def generate_active_correction_block_schedule(self, correction_direction, prob):
         """ Generate a block of trials with a mix of correction and non-correction trials with 100% coherence"""
         block_length = self.get_active_trial_block_length()
-        self.block_schedule = 100 * np.random.choice([correction_direction, -correction_direction], size=block_length, p=[prob, 1 - prob])
+
+        correction_coherence = 100
+        num_correction = int(block_length * prob)
+        num_noncorrection = block_length - num_correction
+        self.block_schedule = correction_coherence * np.concatenate([np.full(num_correction, correction_direction), np.full(num_noncorrection, -correction_direction)])
+        np.random.shuffle(self.block_schedule)
 
     def get_active_trial_block_length(self):
         values = np.arange(7,14)
