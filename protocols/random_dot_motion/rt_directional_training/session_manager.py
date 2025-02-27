@@ -155,6 +155,7 @@ class SessionManager:
         stage_stimulus_args = {
             "coherence": self.signed_coherence,
             "seed": self.random_generator_seed,
+            "audio_stim": "onset_tone",
         }
         self.stimulus_duration = self.maximum_viewing_duration
         response_to_check = [-1, 1]
