@@ -225,7 +225,6 @@ class SessionManager:
 
     ######################### trial-stage methods #########################
     def prepare_trial_variables(self):
-
         if (not self.is_correction_trial) & ((not self.in_active_bias_correction_block) & (np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold)):
             self.in_active_bias_correction_block = True
             correction_direction = -np.sign(np.nanmean(self.rolling_bias))
