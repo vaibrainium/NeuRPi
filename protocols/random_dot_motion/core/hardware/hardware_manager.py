@@ -238,4 +238,4 @@ if __name__ == "__main__":
 	print(f"Calibration for Left is {a.reward_calibration_left}")
 	print(f"Calibration for Right is {a.reward_calibration_right}")
 	time.sleep(5)
-	a.start_calibration_sequence(int(num_pulses))
+	a.start_calibration_sequence(int(num_pulses), volume_per_pulse)
