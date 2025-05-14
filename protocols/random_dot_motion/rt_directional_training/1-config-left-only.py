@@ -30,7 +30,7 @@ TASK = {
                 "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
                 "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
                 "noresponse": lambda response_time, coh: 3,
-                "invalid": lambda response_time, coh: 0,
+                "invalid": lambda response_time, coh: 2,
             },
         },
     },
@@ -57,11 +57,14 @@ TASK = {
         "reward_volume": 1.5,
     },
     "bias_correction": {
-        "repeat_threshold": {
-            "active": 100,
-            "passive": 100,
+        "bias_window": 20,
+        "passive": {
+            "coherence_threshold": 100,
+            },
+        "active": {
+            "abs_bias_threshold": 1.1, # absolute bias threshold for active trials range 0 to 1
+            "correction_strength": 1, # between 0 and 1. 0: no correction, 1: full correction block
         },
-        "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
@@ -107,6 +110,7 @@ STIMULUS = {
                     "dot_lifetime": 60,
                 },
                 "audio": {
+                    "onset_tone": "fixation_tone",
                     "8KHz": None,  # "8KHz",
                     "16KHz": None,  # "16KHz",
                 },
