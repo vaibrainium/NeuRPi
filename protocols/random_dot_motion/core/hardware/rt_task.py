@@ -218,7 +218,7 @@ class RTTask(TrialConstruct):
 
 		if task_args.get("flash_led") is not None:
 			# flash LED
-			self.managers["hardware"].flash_led(task_args["flash_led"])
+			self.managers["hardware"].flash_led(task_args["flash_led"]['direction'], task_args["flash_led"]['duration'])
 
 		# If fixed reward ratio is requested:
 		if task_args.get("FRR_reward") is not None:

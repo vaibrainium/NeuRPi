@@ -213,6 +213,7 @@ class SessionManager:
             "trial_reward": self.trial_reward,
             "reward_side": self.target,
             "FRR_reward": None,
+			"flash_led": {'direction': self.target, 'duration': 100},
         }
         return stage_task_args, stage_stimulus_args
 
