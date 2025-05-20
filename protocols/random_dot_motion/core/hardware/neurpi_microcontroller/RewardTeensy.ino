@@ -1,6 +1,9 @@
 #define left_valve_pin 6
 #define right_valve_pin 7
 #define led 13
+#define left_led 3
+#define right_led 4
+#define center_led 5
 
 
 String msg;
@@ -11,6 +14,7 @@ bool right_valve_open = false;
 
 
 void setup() {
+  Serial.begin(115200);
   Serial1.begin(115200);
   Serial1.setTimeout(100);
   // initialize pins
@@ -28,6 +32,7 @@ void loop() {
     // read incoming string from serial buffer
     msg_int = Serial1.parseInt();
     msg = Serial1.readString();
+    msg = msg.trim();
     Serial.println(msg_int);
     Serial.println(msg);
 
@@ -92,5 +97,21 @@ void loop() {
           digitalWrite(led, LOW);
         }
     }
+
+	if (msg=="flash_left_led"){
+	  digitalWrite(left_led, HIGH);
+	  delay(msg_int);
+	  digitalWrite(left_led, LOW);
+	}
+	if (msg=="flash_right_led"){
+	  digitalWrite(right_led, HIGH);
+	  delay(msg_int);
+	  digitalWrite(right_led, LOW);
+	}
+	if (msg=="flash_center_led"){
+	  digitalWrite(center_led, HIGH);
+	  delay(msg_int);
+	  digitalWrite(center_led, LOW);
+	}
   }
 }
