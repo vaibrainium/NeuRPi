@@ -209,6 +209,21 @@ class HardwareManager(BaseHWManager):
 				print(message)
 		return timestamp, lick
 
+	def flash_led(self, direction):
+		"""
+		Function to flash the LED
+		Arguments:
+			direction (str): 'Left', 'Right' or 'Center'
+		"""
+		if direction == "Left":
+			self.hardware["Primary"].write(str(0) + "flash_left_led")
+		elif direction == "Right":
+			self.hardware["Primary"].write(str(0) + "flash_right_led")
+		elif direction == "Center":
+			self.hardware["Primary"].write(str(0) + "flash_center_led")
+		else:
+			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
+
 
 if __name__ == "__main__":
 	import time
