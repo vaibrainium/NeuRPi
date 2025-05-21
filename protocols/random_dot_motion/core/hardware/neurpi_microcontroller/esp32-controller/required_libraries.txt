@@ -1,3 +1,3 @@
-Adafruit MPR121
+MPR121
 Adafruit GFX Library
 Adafruit BusIO
