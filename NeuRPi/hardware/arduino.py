@@ -72,7 +72,6 @@ class Arduino(Hardware):
         """
         if self.is_connected:
             if isinstance(message, str):
-                message = message + "\n"
                 self.connection.write(message.encode("utf-8"))
             else:
                 try:
