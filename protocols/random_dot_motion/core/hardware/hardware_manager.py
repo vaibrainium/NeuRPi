@@ -56,12 +56,12 @@ class HardwareManager(BaseHWManager):
 
 	def start_session(self, session_id=0, filename="session"):
 		# Send start_session with session_id and filename
-		self.hardware["Primary"].write(f"{session_id},start_session\n")
+		self.hardware["Primary"].write(f"start_session,{session_id}\n")
 		time.sleep(0.05)
 		self.hardware["Primary"].write(f"{filename}\n")
 
 	def end_session(self, return_file=0):
-		self.hardware["Primary"].write(f"{return_file},end_session\n")
+		self.hardware["Primary"].write(f"end_session,{return_file}\n")
 		if return_file:
 			return self.hardware["Primary"].read()
 
@@ -97,6 +97,35 @@ class HardwareManager(BaseHWManager):
 				pass
 		return timestamp, lick
 
+	def read_wheel(self):
+		pass
+
+	def flash_led(self, direction, duration=100):
+		"""
+		Function to flash the LED
+		Arguments:
+			direction (int): -1: 'Left', 1: 'Right' or 0: 'Center'
+		"""
+		if direction == -1:
+			self.hardware["Primary"].write(f"flash_left_led,{duration}\n")
+		elif direction == 1:
+			self.hardware["Primary"].write(f"flash_right_led,{duration}\n")
+		elif direction == 0:
+			self.hardware["Primary"].write(f"flash_center_led,{duration}\n")
+		else:
+			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
+
+	def start_calibration_sequence(self, num_pulses=50, volume=1):
+		"""
+		Instruct arduino to give `no_pulses` on each spout
+		"""
+		# self.hardware["Primary"].write(str(no_pulses) + "calibrate_reward")
+		for pulse in range(num_pulses):
+			print(pulse)
+			self.reward_left(volume)
+			time.sleep(0.5)
+			self.reward_right(volume)
+			time.sleep(0.5)
 
 if __name__ == "__main__":
 	a = HardwareManager()

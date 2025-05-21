@@ -1,5 +1,6 @@
-#include "FS.h"
-#include "SD_MMC.h"
+#include <Arduino.h>
+#include <FS.h>
+#include <SD_MMC.h>
 #include <MPR121.h>
 
 MPR121 mpr121;
