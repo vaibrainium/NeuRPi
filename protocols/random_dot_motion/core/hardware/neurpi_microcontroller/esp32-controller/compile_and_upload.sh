@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === CONFIGURATION ===
-SKETCH_PATH="/home/pi3/NeuRPi/protocols/random_dot_motion/core/hardware/neurpi_microcontroller/esp32-controller"
+SKETCH_PATH="~/NeuRPi/protocols/random_dot_motion/core/hardware/neurpi_microcontroller/esp32-controller"
 PORT="/dev/ttyUSB0"
 FQBN="esp32:esp32:esp32"
 

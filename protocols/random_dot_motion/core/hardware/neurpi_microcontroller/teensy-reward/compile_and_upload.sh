@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # === CONFIGURATION ===
-SKETCH_PATH="/home/pi3/NeuRPi/protocols/random_dot_motion/core/hardware/neurpi_microcontroller/teensy-reward"  # Change to your sketch folder
+SKETCH_PATH="~/NeuRPi/protocols/random_dot_motion/core/hardware/neurpi_microcontroller/teensy-reward"  # Change to your sketch folder
 FQBN="teensy:avr:teensy40"
 
 # Default port
