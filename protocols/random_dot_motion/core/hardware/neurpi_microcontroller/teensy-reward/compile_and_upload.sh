@@ -1,24 +1,37 @@
 #!/bin/bash
+set -e  # Exit on any error
 
 # === CONFIGURATION ===
-SKETCH_PATH="$HOME/NeuRPi/protocols/random_dot_motion/core/hardware/neurpi_microcontroller/teensy-reward"  # Change to your sketch folder
+SKETCH_PATH="$(cd "$(dirname "$0")" && pwd)"
 FQBN="teensy:avr:teensy40"
-
-# Default port
 MONITOR_PORT="/dev/ttyACM0"
 
 # Check if default port exists, otherwise auto-detect
 if [ ! -e "$MONITOR_PORT" ]; then
   echo "Default port $MONITOR_PORT not found, trying to auto-detect..."
-  MONITOR_PORT=$(ls /dev/ttyACM* 2>/dev/null | head -n 1)
+  MONITOR_PORT=$(ls /dev/ttyACM* 2>/dev/null | head -n 1 || true)
   if [ -z "$MONITOR_PORT" ]; then
     echo "⚠️ No /dev/ttyACM* devices found. Serial monitor may not work."
-    MONITOR_PORT=""
   else
     echo "Auto-detected serial port: $MONITOR_PORT"
   fi
 else
   echo "Using default serial port: $MONITOR_PORT"
+fi
+
+# === STEP 0: Install Required Libraries (optional) ===
+REQUIRED_LIBS_FILE="$SKETCH_PATH/required_libraries.txt"
+if [[ -f "$REQUIRED_LIBS_FILE" ]]; then
+  echo "📦 Installing required libraries..."
+  while IFS= read -r lib || [[ -n $lib ]]; do
+    lib="${lib#\"}"
+    lib="${lib%\"}"
+    [[ -z "$lib" ]] && continue
+    echo "Installing: $lib"
+    arduino-cli lib install "$lib" || echo "⚠️ $lib may already be installed or failed"
+  done < "$REQUIRED_LIBS_FILE"
+else
+  echo "⚠️ No required_libraries.txt found, skipping library installation."
 fi
 
 # === STEP 1: Compile ===
@@ -49,8 +62,10 @@ if ! command -v teensy_loader_cli &> /dev/null; then
 fi
 
 echo "⬆️  Uploading via teensy_loader_cli..."
-# teensy_loader_cli --mcu=TEENSY40 -w -s "$HEX_FILE"
-teensy_loader_cli --mcu=mk66fx1m0 -w -s "$HEX_FILE"
+sudo teensy_loader_cli --mcu=TEENSY40 -w -s "$HEX_FILE"
+# sudo teensy_loader_cli --mcu=imxrt1062 -w -s "$HEX_FILE"
+
+
 
 if [ $? -ne 0 ]; then
   echo "❌ Upload failed. Try pressing the reset button on the board."
@@ -68,7 +83,11 @@ fi
 read -p "Open serial monitor on $MONITOR_PORT? [y/N]: " answer
 if [[ "$answer" =~ ^[Yy]$ ]]; then
   echo "🖥️  Opening serial monitor. Press Ctrl+C to exit."
-  arduino-cli monitor -p "$MONITOR_PORT" -b "$FQBN"
+	if ! arduino-cli monitor -p "$MONITOR_PORT" -b "$FQBN" -c baudrate=115200; then
+	error_exit "Serial monitor failed."
+	fi
 else
   echo "Serial monitor skipped."
 fi
+
+echo "✅ Done."
