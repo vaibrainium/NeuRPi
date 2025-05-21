@@ -1,2 +1,4 @@
 esp32:esp32
-adafruit:MPR121
+Adafruit MPR121
+Adafruit GFX Library
+Adafruit BusIO
