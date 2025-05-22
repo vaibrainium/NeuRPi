@@ -54,6 +54,7 @@ class SessionManager:
 		self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
 		self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
 		self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
+		self.must_consume_reward = self.config.TASK["reward"]["must_consume"]
 		# initialize session variables
 		self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
 		self.active_coherences = self.full_coherences  # self.config.TASK["stimulus"]["active_coherences"]["value"]
@@ -107,10 +108,7 @@ class SessionManager:
 
 	####################### pre-session methods #######################
 	def update_reward_volume(self):
-		if self.config.TASK["reward"].get(["volume"]) is not None:
-			self.full_reward_volume = self.config.TASK["reward"]["volume"]
-		else:
-			self.full_reward_volume = 4
+		self.full_reward_volume = self.config.TASK["reward"].get("volume", 4)
 
 	####################### trial epoch methods #######################
 	def prepare_fixation_stage(self):
@@ -196,17 +194,17 @@ class SessionManager:
 		if self.knowledge_of_results_duration:
 			stage_task_args["flash_led"] = {"direction": self.target, "duration": self.knowledge_of_results_duration}
 
-		if self.must_consume_reward and self.trial_reward > 0:
-			stage_task_args["wait_for_consumption"] = True
+		if self.trial_reward > 0:
+			stage_task_args["wait_for_consumption"] = self.must_consume_reward
 		return stage_task_args, stage_stimulus_args
 
 	def prepare_intertrial_stage(self):
 		stage_task_args, stage_stimulus_args = {}, {}
 		self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
-
-		if self.must_consume_reward and self.trial_reward > 0:
-			stage_task_args["wait_for_consumption"] = True
 		stage_task_args = {"intertrial_duration": self.intertrial_duration}
+
+		if self.trial_reward > 0:
+			stage_task_args["wait_for_consumption"] = self.must_consume_reward
 		return stage_task_args, stage_stimulus_args
 
 	######################### trial-stage methods #########################
@@ -238,13 +236,14 @@ class SessionManager:
 					# repeat same stimulus on repeat trial
 					pass
 				else:
-					# drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-					self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
-					# Repeat probability to opposite side of bias
-					self.signed_coherence = self.target * np.abs(self.signed_coherence)
-					print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
-					# increment correction trial counter
-					self.trial_counters["correction"] += 1
+					if self.schedule_structure == "interleaved":
+						# drawing repeat trial with direction from a normal distribution with mean of against rolling bias
+						self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
+						# Repeat probability to opposite side of bias
+						self.signed_coherence = self.target * np.abs(self.signed_coherence)
+						print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
+						# increment correction trial counter
+						self.trial_counters["correction"] += 1
 
 	def generate_block_schedule(self):
 		self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)

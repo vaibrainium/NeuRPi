@@ -255,9 +255,12 @@ class RTTask(TrialConstruct):
 			self.stage_block.set()
 		self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
 
-		if task_args.get('wait_for_consumption') is not None:
+		if task_args.get('wait_for_consumption', False):
+			print("[intertrial_stage] Waiting for must_respond_block")
 			self.must_respond_block.wait()
+
 		# reset must_respond_block
+		self.must_respond_block.set()
 		self.must_respond_block.clear()
 
 		self.stage_block.wait()
