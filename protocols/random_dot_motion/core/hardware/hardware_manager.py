@@ -100,12 +100,13 @@ class HardwareManager(BaseHWManager):
 	def read_wheel(self):
 		pass
 
-	def flash_led(self, direction, duration=100):
+	def flash_led(self, direction, duration=0.1):
 		"""
 		Function to flash the LED
 		Arguments:
 			direction (int): -1: 'Left', 1: 'Right' or 0: 'Center'
 		"""
+		duration = int(duration * 1000)  # Convert to milliseconds
 		if direction == -1:
 			self.hardware["Primary"].write(f"flash_left_led,{duration}\n")
 		elif direction == 1:
