@@ -163,7 +163,9 @@ class RTTask(TrialConstruct):
 				"targets": task_args["response_to_check"],
 				"duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
 			}
-			# initiate stimulus
+			# initiate stimulus			# flash LED
+			if task_args.get("flash_led") is not None:
+				self.managers["hardware"].flash_led(task_args["flash_led"]["direction"], task_args["flash_led"]["duration"])
 			# set respons_block after minimum viewing time
 			self.msg_to_stimulus.put(("stimulus_epoch", stimulus_args))
 			threading.Timer(task_args["minimum_viewing_duration"], self.response_block.set).start()
@@ -172,22 +174,9 @@ class RTTask(TrialConstruct):
 			self.stage_block.wait()
 			self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
 			print(f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}")
-			# data = {
-			#     "DC_timestamp": datetime.datetime.now().isoformat(),
-			#     "trial_stage": "stimulus_stage",
-			#     "response": self.choice,
-			#     "response_time": self.response_time,
-			# }
 		else:
 			self.stage_block.set()
-			# data = {
-			#     "DC_timestamp": datetime.datetime.now().isoformat(),
-			#     "trial_stage": "stimulus_stage",
-			#     "response": np.NaN,
-			#     "response_time": np.NaN,
-			# }
 
-		# return data
 
 	def reinforcement_stage(self):
 		"""
@@ -216,6 +205,15 @@ class RTTask(TrialConstruct):
 				self.managers["hardware"].reward_right(task_args["trial_reward"])
 				self.managers["session"].total_reward += task_args["trial_reward"]
 
+			if task_args.get('wait_for_consumption') is not None:
+				self.trigger = {
+					"type": "MUST_RESPOND",
+					"targets": [task_args["reward_side"]],
+					"duration": None,
+				}
+				self.response_block.set()
+
+
 		if task_args.get("flash_led") is not None:
 			# flash LED
 			self.managers["hardware"].flash_led(task_args["flash_led"]["direction"], task_args["flash_led"]["duration"])
@@ -234,14 +232,8 @@ class RTTask(TrialConstruct):
 				self.managers["session"].total_reward += task_args["FRR_reward"]
 			print(f"FRR reward given: {task_args['FRR_reward']}")
 
-		# waiting for reinforcement durations to be over
 		self.stage_block.wait()
-		# data = {
-		#     "DC_timestamp": datetime.datetime.now().isoformat(),
-		#     "trial_stage": "reinforcement_stage",
-		#     "reinfocement_duration": task_args["reinforcement_duration"],
-		# }
-		# return data
+
 
 	def intertrial_stage(self, *args, **kwargs):
 		"""
@@ -262,6 +254,11 @@ class RTTask(TrialConstruct):
 		else:
 			self.stage_block.set()
 		self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
+
+		if task_args.get('wait_for_consumption') is not None:
+			self.must_respond_block.wait()
+		# reset must_respond_block
+		self.must_respond_block.clear()
 
 		self.stage_block.wait()
 		data = self.managers["session"].end_of_trial_updates()
