@@ -52,6 +52,10 @@ TASK = {
             "type": "np.array",
             "value": np.array([3, 3, 3, 3]),
         },
+        "schedule_structure": {
+			"tag": "How to structure block, interleaved or blocked",
+			"value": "blocked"
+		}
     },
     "rolling_performance": {
         "rolling_window": 50,
@@ -76,6 +80,11 @@ TASK = {
         "tag": "Fixed reward ratio minimum streak",
         "value": 1000,
     },
+    "reward":{
+		"volume": 2,
+		"must_consume": True,
+	}
+
 }
 
 STIMULUS = {

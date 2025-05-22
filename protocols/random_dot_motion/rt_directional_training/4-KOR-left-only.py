@@ -81,6 +81,11 @@ TASK = {
         "tag": "Fixed reward ratio minimum streak",
         "value": 1000,
     },
+    "reward":{
+		"volume": 2,
+		"must_consume": True,
+	}
+
 }
 
 STIMULUS = {
