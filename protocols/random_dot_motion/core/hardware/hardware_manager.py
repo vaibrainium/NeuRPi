@@ -90,11 +90,11 @@ class HardwareManager(BaseHWManager):
 			spout (str): 'Left', 'Right' or 'Center'
 		"""
 		if spout == "Left":
-			self.hardware["Primary"].write("0toggle_left_reward")
+			self.hardware["Primary"].write("toggle_left_reward,0\n")
 		elif spout == "Right":
-			self.hardware["Primary"].write("0toggle_right_reward")
+			self.hardware["Primary"].write("toggle_right_reward,0\n")
 		elif spout == "Center":
-			self.hardware["Primary"].write("0toggle_center_reward")
+			self.hardware["Primary"].write("toggle_center_reward,0\n")
 		else:
 			raise Exception(
 				"Incorrect spout provided. Please provide from the following list:\n"
