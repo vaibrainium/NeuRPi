@@ -63,6 +63,7 @@ class SessionManager:
 		self.block_schedule = []
 		self.trials_in_block = 0
 		self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
+		self.schedule_structure = self.config.TASK["stimulus"]["schedule_structure"]["value"]
 		# bias
 		self.rolling_bias_index = 0
 		self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
@@ -106,33 +107,10 @@ class SessionManager:
 
 	####################### pre-session methods #######################
 	def update_reward_volume(self):
-		# function to update reward volume based on weight and previous session performance
-		# volume_change = 0
-		## weight based reward adjustment
-		# # % baseline weight is below 85% increase reward by 0.1 ul
-		# if self.config.SUBJECT["prct_weight"] < 85:
-		#     volume_change += 0.1
-		# if % baseline weight is below 80% increase reward by another 0.1 ul
-		# if self.config.SUBJECT["prct_weight"] < 80:
-		#     volume_change += 0.1
-
-		# ## reward volume based reward adjustment
-		# if self.config.SUBJECT["rolling_perf"]["total_reward"] < 700:
-		#     volume_change += 0.1
-		#     if self.config.SUBJECT["rolling_perf"]["total_reward"] < 500:
-		#         volume_change += 0.1
-
-		# ## Attempt based reward adjustment
-		# # if performed more than 200 trials on previous session, decrease reward by 0.1 ul
-		# if self.config.SUBJECT["rolling_perf"]["total_attempts"] > 200:
-		#     volume_change -= 0.1
-
-		# self.full_reward_volume += np.clip(volume_change, -0.2, 0.2)
-
-		# ## limiting reward volume between 2 and 3.5
-		# self.full_reward_volume = np.clip(self.full_reward_volume, 1.5, 3.5)
-
-		self.full_reward_volume = 4
+		if self.config.TASK["reward"].get(["volume"]) is not None:
+			self.full_reward_volume = self.config.TASK["reward"]["volume"]
+		else:
+			self.full_reward_volume = 4
 
 	####################### trial epoch methods #######################
 	def prepare_fixation_stage(self):
@@ -217,13 +195,18 @@ class SessionManager:
 		}
 		if self.knowledge_of_results_duration:
 			stage_task_args["flash_led"] = {"direction": self.target, "duration": self.knowledge_of_results_duration}
+
+		if self.must_consume_reward and self.trial_reward > 0:
+			stage_task_args["wait_for_consumption"] = True
 		return stage_task_args, stage_stimulus_args
 
 	def prepare_intertrial_stage(self):
 		stage_task_args, stage_stimulus_args = {}, {}
 		self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
-		stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
+		if self.must_consume_reward and self.trial_reward > 0:
+			stage_task_args["wait_for_consumption"] = True
+		stage_task_args = {"intertrial_duration": self.intertrial_duration}
 		return stage_task_args, stage_stimulus_args
 
 	######################### trial-stage methods #########################
@@ -265,7 +248,8 @@ class SessionManager:
 
 	def generate_block_schedule(self):
 		self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
-		self.block_schedule = self.shuffle_seq(self.block_schedule)
+		if self.schedule_structure == "interleaved":
+			self.block_schedule = self.shuffle_seq(self.block_schedule)
 
 	def generate_active_correction_block_schedule(self, correction_direction, prob):
 		""" Generate a block of trials with a mix of correction and non-correction trials with 100% coherence"""
