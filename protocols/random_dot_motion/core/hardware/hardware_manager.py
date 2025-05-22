@@ -84,19 +84,24 @@ class HardwareManager(BaseHWManager):
 		print(f"Rewarded Right with {volume} ul")
 
 	def toggle_reward(self, spout):
-        """
-        Toggle reward spout.
-        Arguments:
-            spout (str): 'Left','Right' or 'Center'
-        """
-        if spout == "Left":
-            self.hardware["Primary"].write(str(0) + "toggle_left_reward")
-        elif spout == "Right":
-            self.hardware["Primary"].write(str(0) + "toggle_right_reward")
-        elif spout == "Center":
-            self.hardware["Primary"].write(str(0) + "toggle_center_reward")
-        else:
-            raise Exception("Incorrect spout provided. Please provide from the following list: \n 'Left': For left spout" " \n 'Right': For right spout \n 'Center': For center spout")
+		"""
+		Toggle reward spout.
+		Arguments:
+			spout (str): 'Left', 'Right' or 'Center'
+		"""
+		if spout == "Left":
+			self.hardware["Primary"].write("0toggle_left_reward")
+		elif spout == "Right":
+			self.hardware["Primary"].write("0toggle_right_reward")
+		elif spout == "Center":
+			self.hardware["Primary"].write("0toggle_center_reward")
+		else:
+			raise Exception(
+				"Incorrect spout provided. Please provide from the following list:\n"
+				"'Left': For left spout\n"
+				"'Right': For right spout\n"
+				"'Center': For center spout"
+			)
 
 	def read_licks(self):
 		timestamp, lick = None, None
