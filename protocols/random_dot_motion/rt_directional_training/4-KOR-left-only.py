@@ -1,3 +1,4 @@
+
 import numpy as np
 from scipy import stats
 
@@ -23,7 +24,7 @@ TASK = {
                 "invalid": lambda response_time: 0,
             },
             "knowledge_of_results": {
-				"duration": None,
+				"duration": 500,
 			},
         },
         "intertrial": {
@@ -45,7 +46,7 @@ TASK = {
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "np.array",
-            "value": np.array([100]),
+            "value": np.array([-100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
@@ -55,7 +56,7 @@ TASK = {
     },
     "rolling_performance": {
         "rolling_window": 50,
-        "current_coherence_level": 2,
+        "current_coherence_level": 1,
         "reward_volume": 1.5,
     },
     "bias_correction": {
@@ -64,7 +65,7 @@ TASK = {
             "coherence_threshold": 100,
             },
         "active": {
-            "abs_bias_threshold":1.1, # absolute bias threshold for active trials range 0 to 1
+            "abs_bias_threshold": 1.1, # absolute bias threshold for active trials range 0 to 1
             "correction_strength": 1, # between 0 and 1. 0: no correction, 1: full correction block
         },
     },
