@@ -52,7 +52,7 @@ TASK = {
             "type": "np.array",
             "value": np.array([3, 3]),
         },
-        "block_structure": {
+        "schedule_structure": {
 			"tag": "How to structure block, interleaved or blocked",
 			"value": "interleaved"
 		}
