@@ -216,7 +216,7 @@ class SessionManager:
 			"FRR_reward": None,
 		}
 		if self.knowledge_of_results_duration:
-			stage_task_args["flash_led"] = {'direction': self.target, 'duration': self.knowledge_of_results_duration},
+			stage_task_args["flash_led"] = {"direction": self.target, "duration": self.knowledge_of_results_duration}
 
 		return stage_task_args, stage_stimulus_args
 
