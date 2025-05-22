@@ -22,6 +22,9 @@ TASK = {
                 "noresponse": lambda response_time: 0,
                 "invalid": lambda response_time: 0,
             },
+            "knowledge_of_results": {
+				"duration": 500,
+			},
         },
         "intertrial": {
             "tag": "Intertrial epoch",
