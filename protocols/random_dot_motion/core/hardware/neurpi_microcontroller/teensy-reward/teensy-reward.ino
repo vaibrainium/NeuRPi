@@ -100,6 +100,34 @@ void handleMessage() {
     right_valve_on = true;
     right_valve_start = now;
     right_valve_duration = (unsigned long)value;
+  } else if (command == "toggle_left_reward") {
+    if (left_valve_on) {
+        // If currently ON, turn OFF
+        digitalWrite(left_valve_pin, LOW);
+        digitalWrite(led, LOW);
+        left_valve_on = false;
+    } else {
+        // If currently OFF, turn ON
+        digitalWrite(left_valve_pin, HIGH);
+        digitalWrite(led, HIGH);
+        left_valve_on = true;
+        left_valve_start = now;
+        left_valve_duration = (unsigned long)value;
+    }
+  } else if (command == "toggle_right_reward") {
+    if (right_valve_on) {
+        // If currently ON, turn OFF
+        digitalWrite(right_valve_pin, LOW);
+        digitalWrite(led, LOW);
+        right_valve_on = false;
+    } else {
+        // If currently OFF, turn ON
+        digitalWrite(right_valve_pin, HIGH);
+        digitalWrite(led, HIGH);
+        right_valve_on = true;
+        right_valve_start = now;
+        right_valve_duration = (unsigned long)value;
+    }
   } else {
     Serial1.print("ERROR: Unknown command '");
     Serial1.print(command);
