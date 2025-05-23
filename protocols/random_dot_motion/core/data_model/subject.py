@@ -124,27 +124,31 @@ class Subject(BaseSubject):
             total_attempts (int): total number of trials in previous session
             total_reward (fload): total reward in previous session
             reward_volume (float): reward volume for current session
-
-
         """
         # If first session, creating
         if self.session == "1_1":
-            full_coherences = self.session_config.TASK["stimulus"]["signed_coherences"]["value"]
-            current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
-            reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]
-            rolling_window = self.session_config.TASK["rolling_performance"]["rolling_window"]
+            if self.experiment not in ["reward_spout_association"]:
+                full_coherences = self.session_config.TASK["stimulus"]["signed_coherences"]["value"]
+                current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
+                reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]
+                rolling_window = self.session_config.TASK["rolling_performance"]["rolling_window"]
 
-            self.rolling_perf = {
-                "rolling_window": rolling_window,
-                "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
-                "history_indices": {int(coh): 0 for coh in full_coherences},
-                "accuracy": {int(coh): 0 for coh in full_coherences},
-                "current_coherence_level": current_coherence_level,
-                "trials_in_current_level": 0,
-                "total_attempts": 0,
-                "total_reward": 0,
-                "reward_volume": reward_volume,
-            }
+                self.rolling_perf = {
+                    "rolling_window": rolling_window,
+                    "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
+                    "history_indices": {int(coh): 0 for coh in full_coherences},
+                    "accuracy": {int(coh): 0 for coh in full_coherences},
+                    "current_coherence_level": current_coherence_level,
+                    "trials_in_current_level": 0,
+                    "total_attempts": 0,
+                    "total_reward": 0,
+                    "reward_volume": reward_volume,
+                }
+            else:
+                self.rolling_perf = {
+                    "total_attempts": 0,
+                    "total_reward": 0,
+                }
 
         else:
             try:
@@ -190,7 +194,6 @@ class Subject(BaseSubject):
         today_received_water = pd.to_numeric(today_rows["water_received"], errors="coerce").sum()
 
         return today_received_water
-
 
     def save_files(self, file_dict):
         """
