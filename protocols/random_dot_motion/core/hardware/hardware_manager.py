@@ -129,11 +129,11 @@ class HardwareManager(BaseHWManager):
 		"""
 		duration = int(duration * 1000)  # Convert to milliseconds
 		if direction == -1:
-			self.hardware["Primary"].write(f"toggle_led_left,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_left,{duration}\n")
 		elif direction == 1:
-			self.hardware["Primary"].write(f"toggle_led_right,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_right,{duration}\n")
 		elif direction == 0:
-			self.hardware["Primary"].write(f"toggle_led_center,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_center,{duration}\n")
 		else:
 			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
 

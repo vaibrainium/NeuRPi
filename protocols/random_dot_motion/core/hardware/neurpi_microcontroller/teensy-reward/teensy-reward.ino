@@ -18,7 +18,7 @@ bool left_led_on = false;
 bool right_led_on = false;
 bool center_led_on = false;
 
-// Timers and durations
+// Flash timers and durations
 unsigned long left_valve_start = 0;
 unsigned long right_valve_start = 0;
 unsigned long left_led_start = 0;
@@ -52,16 +52,9 @@ void setup() {
   digitalWrite(center_led, LOW);
 }
 
-void toggleOutput(bool &state, int pin, unsigned long &start, unsigned long &duration, unsigned long now, int time) {
-  if (state) {
-    digitalWrite(pin, LOW);
-    state = false;
-  } else {
-    digitalWrite(pin, HIGH);
-    state = true;
-    start = now;
-    duration = time;
-  }
+void toggleOutput(bool &state, int pin) {
+  state = !state;
+  digitalWrite(pin, state ? HIGH : LOW);
 }
 
 void handleMessage() {
@@ -80,8 +73,8 @@ void handleMessage() {
 
   // Parse duration value safely
   value = valueStr.toInt();
-  if (value <= 0 || valueStr.length() == 0 || !isDigit(valueStr[0])) {
-    Serial1.print("ERROR: Invalid or non-positive duration value: '");
+  if (valueStr.length() == 0 || (!isDigit(valueStr[0]) && value != 0)) {
+    Serial1.print("ERROR: Invalid duration value: '");
     Serial1.print(valueStr);
     Serial1.println("'");
     return;
@@ -105,11 +98,11 @@ void handleMessage() {
     right_led_start = now;
     right_led_duration = value;
   } else if (command == "toggle_led_left") {
-    toggleOutput(left_led_on, left_led, left_led_start, left_led_duration, now, value);
+    toggleOutput(left_led_on, left_led);
   } else if (command == "toggle_led_center") {
-    toggleOutput(center_led_on, center_led, center_led_start, center_led_duration, now, value);
+    toggleOutput(center_led_on, center_led);
   } else if (command == "toggle_led_right") {
-    toggleOutput(right_led_on, right_led, right_led_start, right_led_duration, now, value);
+    toggleOutput(right_led_on, right_led);
   } else if (command == "reward_left") {
     digitalWrite(left_valve_pin, HIGH);
     digitalWrite(led, HIGH);
@@ -123,10 +116,10 @@ void handleMessage() {
     right_valve_start = now;
     right_valve_duration = value;
   } else if (command == "toggle_reward_left") {
-    toggleOutput(left_valve_on, left_valve_pin, left_valve_start, left_valve_duration, now, value);
+    toggleOutput(left_valve_on, left_valve_pin);
     digitalWrite(led, left_valve_on ? HIGH : LOW);
   } else if (command == "toggle_reward_right") {
-    toggleOutput(right_valve_on, right_valve_pin, right_valve_start, right_valve_duration, now, value);
+    toggleOutput(right_valve_on, right_valve_pin);
     digitalWrite(led, right_valve_on ? HIGH : LOW);
   } else {
     Serial1.print("ERROR: Unknown command '");
@@ -144,7 +137,7 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Timeouts
+  // Handle auto-off for flash commands
   if (left_valve_on && (now - left_valve_start >= left_valve_duration)) {
     digitalWrite(left_valve_pin, LOW);
     digitalWrite(led, LOW);
