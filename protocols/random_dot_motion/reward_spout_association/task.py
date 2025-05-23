@@ -134,7 +134,7 @@ class Task:
 
 		elif key == "flash_led_center":
 			duration = self.managers["session"].knowledge_of_results_duration
-			self.managers["hardware"].flash_led(1, duration)
+			self.managers["hardware"].flash_led(0, duration)
 
 		elif key == "flash_led_right":
 			duration = self.managers["session"].knowledge_of_results_duration
@@ -142,6 +142,9 @@ class Task:
 
 		elif key == "toggle_led_left":
 			self.managers["hardware"].toggle_led(-1)
+
+		elif key == "toggle_led_center":
+			self.managers["hardware"].toggle_led(0)
 
 		elif key == "toggle_led_right":
 			self.managers["hardware"].toggle_led(1)

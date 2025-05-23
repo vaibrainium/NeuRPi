@@ -143,12 +143,13 @@ class HardwareManager(BaseHWManager):
 		Arguments:
 			direction (int): -1: 'Left', 1: 'Right' or 0: 'Center'
 		"""
+		dummy = 100
 		if direction == -1:
-			self.hardware["Primary"].write("toggle_led_left,0\n")
+			self.hardware["Primary"].write(f"toggle_led_left,{dummy}\n")
 		elif direction == 1:
-			self.hardware["Primary"].write("toggle_led_right,0\n")
+			self.hardware["Primary"].write(f"toggle_led_right,{dummy}\n")
 		elif direction == 0:
-			self.hardware["Primary"].write("toggle_led_center,0\n")
+			self.hardware["Primary"].write(f"toggle_led_center,,{dummy}\n")
 		else:
 			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
 
