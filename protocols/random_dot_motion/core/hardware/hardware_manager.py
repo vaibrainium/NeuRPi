@@ -94,8 +94,6 @@ class HardwareManager(BaseHWManager):
 			self.hardware["Primary"].write(f"toggle_reward_left,{dummy}\n")
 		elif spout == "Right":
 			self.hardware["Primary"].write(f"toggle_reward_right,{dummy}\n")
-		elif spout == "Center":
-			self.hardware["Primary"].write(f"toggle_reward_center,{dummy}\n")
 		else:
 			raise Exception(
 				"Incorrect spout provided. Please provide from the following list:\n"
@@ -149,7 +147,7 @@ class HardwareManager(BaseHWManager):
 		elif direction == 1:
 			self.hardware["Primary"].write(f"toggle_led_right,{dummy}\n")
 		elif direction == 0:
-			self.hardware["Primary"].write(f"toggle_led_center,,{dummy}\n")
+			self.hardware["Primary"].write(f"toggle_led_center,{dummy}\n")
 		else:
 			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
 

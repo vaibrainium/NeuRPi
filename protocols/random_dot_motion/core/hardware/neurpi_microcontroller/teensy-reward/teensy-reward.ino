@@ -12,24 +12,19 @@ String command;
 int value = 0;
 
 // States
-bool left_valve_on = false;
-bool right_valve_on = false;
-bool left_led_on = false;
-bool right_led_on = false;
-bool center_led_on = false;
+bool left_valve_on = false, right_valve_on = false;
+bool left_led_on = false, right_led_on = false, center_led_on = false;
+
+// Manual control flags
+bool left_valve_manual = false, right_valve_manual = false;
+bool left_led_manual = false, right_led_manual = false, center_led_manual = false;
 
 // Flash timers and durations
-unsigned long left_valve_start = 0;
-unsigned long right_valve_start = 0;
-unsigned long left_led_start = 0;
-unsigned long right_led_start = 0;
-unsigned long center_led_start = 0;
+unsigned long left_valve_start = 0, right_valve_start = 0;
+unsigned long left_led_start = 0, right_led_start = 0, center_led_start = 0;
 
-unsigned long left_valve_duration = 0;
-unsigned long right_valve_duration = 0;
-unsigned long left_led_duration = 0;
-unsigned long right_led_duration = 0;
-unsigned long center_led_duration = 0;
+unsigned long left_valve_duration = 0, right_valve_duration = 0;
+unsigned long left_led_duration = 0, right_led_duration = 0, center_led_duration = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -70,9 +65,8 @@ void handleMessage() {
 
   String valueStr = input.substring(commaIdx + 1);
   valueStr.trim();
-
-  // Parse duration value safely
   value = valueStr.toInt();
+
   if (valueStr.length() == 0 || (!isDigit(valueStr[0]) && value != 0)) {
     Serial1.print("ERROR: Invalid duration value: '");
     Serial1.print(valueStr);
@@ -87,39 +81,49 @@ void handleMessage() {
     left_led_on = true;
     left_led_start = now;
     left_led_duration = value;
+    left_led_manual = false;
   } else if (command == "flash_led_center") {
     digitalWrite(center_led, HIGH);
     center_led_on = true;
     center_led_start = now;
     center_led_duration = value;
+    center_led_manual = false;
   } else if (command == "flash_led_right") {
     digitalWrite(right_led, HIGH);
     right_led_on = true;
     right_led_start = now;
     right_led_duration = value;
+    right_led_manual = false;
   } else if (command == "toggle_led_left") {
     toggleOutput(left_led_on, left_led);
+    left_led_manual = true;
   } else if (command == "toggle_led_center") {
     toggleOutput(center_led_on, center_led);
+    center_led_manual = true;
   } else if (command == "toggle_led_right") {
     toggleOutput(right_led_on, right_led);
+    right_led_manual = true;
   } else if (command == "reward_left") {
     digitalWrite(left_valve_pin, HIGH);
     digitalWrite(led, HIGH);
     left_valve_on = true;
     left_valve_start = now;
     left_valve_duration = value;
+    left_valve_manual = false;
   } else if (command == "reward_right") {
     digitalWrite(right_valve_pin, HIGH);
     digitalWrite(led, HIGH);
     right_valve_on = true;
     right_valve_start = now;
     right_valve_duration = value;
+    right_valve_manual = false;
   } else if (command == "toggle_reward_left") {
     toggleOutput(left_valve_on, left_valve_pin);
+    left_valve_manual = true;
     digitalWrite(led, left_valve_on ? HIGH : LOW);
   } else if (command == "toggle_reward_right") {
     toggleOutput(right_valve_on, right_valve_pin);
+    right_valve_manual = true;
     digitalWrite(led, right_valve_on ? HIGH : LOW);
   } else {
     Serial1.print("ERROR: Unknown command '");
@@ -137,30 +141,29 @@ void loop() {
 
   unsigned long now = millis();
 
-  // Handle auto-off for flash commands
-  if (left_valve_on && (now - left_valve_start >= left_valve_duration)) {
+  if (!left_valve_manual && left_valve_on && (now - left_valve_start >= left_valve_duration)) {
     digitalWrite(left_valve_pin, LOW);
     digitalWrite(led, LOW);
     left_valve_on = false;
   }
 
-  if (right_valve_on && (now - right_valve_start >= right_valve_duration)) {
+  if (!right_valve_manual && right_valve_on && (now - right_valve_start >= right_valve_duration)) {
     digitalWrite(right_valve_pin, LOW);
     digitalWrite(led, LOW);
     right_valve_on = false;
   }
 
-  if (left_led_on && (now - left_led_start >= left_led_duration)) {
+  if (!left_led_manual && left_led_on && (now - left_led_start >= left_led_duration)) {
     digitalWrite(left_led, LOW);
     left_led_on = false;
   }
 
-  if (right_led_on && (now - right_led_start >= right_led_duration)) {
+  if (!right_led_manual && right_led_on && (now - right_led_start >= right_led_duration)) {
     digitalWrite(right_led, LOW);
     right_led_on = false;
   }
 
-  if (center_led_on && (now - center_led_start >= center_led_duration)) {
+  if (!center_led_manual && center_led_on && (now - center_led_start >= center_led_duration)) {
     digitalWrite(center_led, LOW);
     center_led_on = false;
   }
