@@ -174,7 +174,7 @@ class MustRespond(TrialConstruct):
 		data["TRIAL_END"] = True
 
 		threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
-		self.stage_block.set()
+		self.stage_block.wait()
 		return data
 
 
