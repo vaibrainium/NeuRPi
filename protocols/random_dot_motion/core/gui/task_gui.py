@@ -221,11 +221,11 @@ class TaskGUI(rigclass):
 
 	def hardware(self, message: str):
 		if "reward" in message:
-			value_dict = {"key": message, "value": self.rig.reward_volume.value()},
+			value_dict = {"key": message, "value": self.rig.reward_volume.value()}
 		elif "flash_led" in message:
-			value_dict = {"key": message, "value": None},
+			value_dict = {"key": message, "value": None}
 		elif "toggle" in message:
-			value_dict = {"key": message, "value": None},
+			value_dict = {"key": message, "value": None}
 
 		self.forward_signal(
 			{
