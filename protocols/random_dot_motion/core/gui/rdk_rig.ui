@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1060</width>
-    <height>894</height>
+    <height>871</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>20</x>
      <y>130</y>
      <width>1021</width>
-     <height>751</height>
+     <height>731</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -32,7 +32,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>500</y>
+      <y>470</y>
       <width>161</width>
       <height>231</height>
      </rect>
@@ -243,7 +243,7 @@
     <property name="geometry">
      <rect>
       <x>730</x>
-      <y>500</y>
+      <y>470</y>
       <width>151</width>
       <height>251</height>
      </rect>
@@ -379,7 +379,7 @@
     <property name="geometry">
      <rect>
       <x>900</x>
-      <y>590</y>
+      <y>570</y>
       <width>101</width>
       <height>131</height>
      </rect>
@@ -478,7 +478,7 @@ color: rgb(255, 255, 255);</string>
     <property name="geometry">
      <rect>
       <x>1</x>
-      <y>21</y>
+      <y>0</y>
       <width>1001</width>
       <height>451</height>
      </rect>
@@ -639,7 +639,7 @@ color: rgb(255, 255, 255);</string>
     <property name="geometry">
      <rect>
       <x>400</x>
-      <y>500</y>
+      <y>470</y>
       <width>151</width>
       <height>251</height>
      </rect>
@@ -719,7 +719,7 @@ color: rgb(255, 255, 255);</string>
     <property name="geometry">
      <rect>
       <x>210</x>
-      <y>500</y>
+      <y>470</y>
       <width>171</width>
       <height>201</height>
      </rect>
@@ -862,7 +862,7 @@ color: rgb(255, 255, 255);</string>
     <property name="geometry">
      <rect>
       <x>570</x>
-      <y>560</y>
+      <y>520</y>
       <width>151</width>
       <height>141</height>
      </rect>
@@ -881,7 +881,7 @@ color: rgb(255, 255, 255);</string>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="led_and_reward_left_2">
+        <widget class="QPushButton" name="led_and_reward_right">
          <property name="text">
           <string>Right LED + Reward</string>
          </property>
@@ -1132,7 +1132,7 @@ color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>140</y>
+     <y>110</y>
      <width>950</width>
      <height>23</height>
     </rect>
