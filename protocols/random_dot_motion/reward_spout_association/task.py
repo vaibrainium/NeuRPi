@@ -9,12 +9,12 @@ from pathlib import Path
 from NeuRPi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
 from protocols.random_dot_motion.core.hardware.hardware_manager import \
-    HardwareManager
+	HardwareManager
 from protocols.random_dot_motion.core.task.must_respond import MustRespond
 from protocols.random_dot_motion.reward_spout_association.session_manager import \
-    SessionManager
+	SessionManager
 from protocols.random_dot_motion.reward_spout_association.stimulus_manager import \
-    StimulusManager
+	StimulusManager
 
 
 class Task:
