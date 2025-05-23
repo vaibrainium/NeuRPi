@@ -91,11 +91,11 @@ class HardwareManager(BaseHWManager):
 		"""
 		dummy = 100
 		if spout == "Left":
-			self.hardware["Primary"].write(f"toggle_left_reward,{dummy}\n")
+			self.hardware["Primary"].write(f"toggle_reward_left,{dummy}\n")
 		elif spout == "Right":
-			self.hardware["Primary"].write(f"toggle_right_reward,{dummy}\n")
+			self.hardware["Primary"].write(f"toggle_reward_right,{dummy}\n")
 		elif spout == "Center":
-			self.hardware["Primary"].write(f"toggle_center_reward,{dummy}\n")
+			self.hardware["Primary"].write(f"toggle_reward_center,{dummy}\n")
 		else:
 			raise Exception(
 				"Incorrect spout provided. Please provide from the following list:\n"
@@ -129,11 +129,26 @@ class HardwareManager(BaseHWManager):
 		"""
 		duration = int(duration * 1000)  # Convert to milliseconds
 		if direction == -1:
-			self.hardware["Primary"].write(f"flash_left_led,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_left,{duration}\n")
 		elif direction == 1:
-			self.hardware["Primary"].write(f"flash_right_led,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_right,{duration}\n")
 		elif direction == 0:
-			self.hardware["Primary"].write(f"flash_center_led,{duration}\n")
+			self.hardware["Primary"].write(f"flash_led_center,{duration}\n")
+		else:
+			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
+
+	def toggle_led(self, direction):
+		"""
+		Toggle LED
+		Arguments:
+			direction (int): -1: 'Left', 1: 'Right' or 0: 'Center'
+		"""
+		if direction == -1:
+			self.hardware["Primary"].write("toggle_led_left,0\n")
+		elif direction == 1:
+			self.hardware["Primary"].write("toggle_led_right,0\n")
+		elif direction == 0:
+			self.hardware["Primary"].write("toggle_led_center,0\n")
 		else:
 			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
 

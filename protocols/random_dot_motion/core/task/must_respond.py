@@ -168,13 +168,13 @@ class MustRespond(TrialConstruct):
 			self.managers["hardware"].reward_right(task_args["trial_reward"])
 			self.managers["session"].total_reward += task_args["trial_reward"]
 
+		threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
+		self.stage_block.wait()
+
 		data = self.managers["session"].end_of_trial_updates()
 		data["DC_timestamp"] = datetime.datetime.now().isoformat()
 		data["trial_stage"] = "intertrial_stage"
 		data["TRIAL_END"] = True
-
-		threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
-		self.stage_block.wait()
 		return data
 
 

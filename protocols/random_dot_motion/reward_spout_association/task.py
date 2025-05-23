@@ -99,41 +99,78 @@ class Task:
 
 		return init_successful
 
-	# Reward management from GUI
 	def handle_terminal_request(self, message: dict):
-		"""Handle hardware request from terminal based on received message"""
-		# Reward related changes
-		if message["key"] == "reward_left":
-			self.managers["hardware"].flash_led(-1, self.managers["session"].knowledge_of_results_duration)
-			self.managers["hardware"].reward_left(message["value"])
-			self.managers["session"].total_reward += message["value"]
-		elif message["key"] == "reward_right":
-			self.managers["hardware"].flash_led(1, self.managers["session"].knowledge_of_results_duration)
-			self.managers["hardware"].reward_right(message["value"])
-			self.managers["session"].total_reward += message["value"]
-		elif message["key"] == "toggle_left_reward":
+		"""Handle hardware request from terminal based on received message."""
+		key = message.get("key")
+		value = message.get("value")
+
+		# Reward-related
+		if key == "reward_left":
+			self.managers["hardware"].reward_left(value)
+			self.managers["session"].total_reward += value
+
+		elif key == "reward_right":
+			self.managers["hardware"].reward_right(value)
+			self.managers["session"].total_reward += value
+
+		elif key == "toggle_left_reward":
 			self.managers["hardware"].toggle_reward("Left")
-		elif message["key"] == "toggle_right_reward":
+
+		elif key == "toggle_right_reward":
 			self.managers["hardware"].toggle_reward("Right")
-		elif message["key"] == "update_reward":
-			self.managers["session"].full_reward_volume = message["value"]
-			print(f"NEW REWARD VALUE IS {self.managers['session'].full_reward_volume}")
-		elif message["key"] == "calibrate_reward":
-			if self.config.SUBJECT["name"] in ["XXX", "xxx"]:
+
+		elif key == "update_reward":
+			self.managers["session"].full_reward_volume = value
+			print(f"[INFO] Updated full reward volume to {value}")
+
+		elif key == "calibrate_reward":
+			if self.config.SUBJECT["name"].lower() == "xxx":
 				self.managers["hardware"].start_calibration_sequence()
 
-		# Lick related changes
-		elif message["key"] == "reset_lick_sensor":
+		# LED-related
+		elif key == "flash_led_left":
+			duration = self.managers["session"].knowledge_of_results_duration
+			self.managers["hardware"].flash_led(-1, duration)
+
+		elif key == "flash_led_right":
+			duration = self.managers["session"].knowledge_of_results_duration
+			self.managers["hardware"].flash_led(1, duration)
+
+		elif key == "toggle_led_left":
+			self.managers["hardware"].toggle_led(-1)
+
+		elif key == "toggle_led_right":
+			self.managers["hardware"].toggle_led(1)
+
+		# Combined LED and Reward
+		elif key == "led_and_reward_left":
+			duration = self.managers["session"].knowledge_of_results_duration
+			self.managers["hardware"].flash_led(-1, duration)
+			self.managers["hardware"].reward_left(value)
+			self.managers["session"].total_reward += value
+
+		elif key == "led_and_reward_right":
+			duration = self.managers["session"].knowledge_of_results_duration
+			self.managers["hardware"].flash_led(1, duration)
+			self.managers["hardware"].reward_right(value)
+			self.managers["session"].total_reward += value
+
+		# Lick-related
+		elif key == "reset_lick_sensor":
 			self.managers["hardware"].reset_lick_sensor()
-			print("RESETTING LICK SENSOR")
-		elif message["key"] == "update_lick_threshold_left":
-			self.managers["hardware"].lick_threshold_left = message["value"]
-			print(f'UPDATED LEFT LICK THRESHOLD with {message["value"]}')
-			print(self.managers["hardware"].lick_threshold_left)
-		elif message["key"] == "update_lick_threshold_right":
-			self.managers["hardware"].lick_threshold_right = message["value"]
-			print(f'UPDATED RIGHT LICK THRESHOLD with {message["value"]}')
-			print(self.managers["hardware"].lick_threshold_right)
+			print("[INFO] Resetting lick sensor.")
+
+		elif key == "update_lick_threshold_left":
+			self.managers["hardware"].lick_threshold_left = value
+			print(f"[INFO] Updated LEFT lick threshold to {value}")
+
+		elif key == "update_lick_threshold_right":
+			self.managers["hardware"].lick_threshold_right = value
+			print(f"[INFO] Updated RIGHT lick threshold to {value}")
+
+		else:
+			print(f"[WARNING] Unknown terminal command received: {key}")
+
 
 	def prepare_session_files(self):
 		self.config.FILES = {}
