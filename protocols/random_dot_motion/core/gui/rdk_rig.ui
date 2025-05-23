@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1044</width>
-    <height>880</height>
+    <width>1060</width>
+    <height>894</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>110</y>
-     <width>1041</width>
-     <height>761</height>
+     <y>130</y>
+     <width>1021</width>
+     <height>751</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -33,206 +33,13 @@
      <rect>
       <x>30</x>
       <y>500</y>
-      <width>461</width>
+      <width>161</width>
       <height>231</height>
      </rect>
     </property>
     <property name="title">
      <string>Trial Structure</string>
     </property>
-    <widget class="QLabel" name="label_131">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>50</y>
-       <width>81</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Fixation Time</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_132">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>80</y>
-       <width>81</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Stimulus Time</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_133">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>140</y>
-       <width>61</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="text">
-      <string>Correct</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="trial_timer">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>10</y>
-       <width>41</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>0</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_134">
-     <property name="geometry">
-      <rect>
-       <x>220</x>
-       <y>10</y>
-       <width>47</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Trial Time</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_135">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>140</y>
-       <width>61</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Incorrect</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="stimulus_time">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>80</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="decimals">
-      <number>0</number>
-     </property>
-     <property name="minimum">
-      <double>1.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>60.000000000000000</double>
-     </property>
-     <property name="value">
-      <double>60.000000000000000</double>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="fixation_time">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>50</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="accelerated">
-      <bool>false</bool>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>2.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.050000000000000</double>
-     </property>
-     <property name="value">
-      <double>1.000000000000000</double>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="correct_delay">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>160</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="decimals">
-      <number>2</number>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>30.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="incorrect_delay">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>160</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="suffix">
-      <string/>
-     </property>
-     <property name="decimals">
-      <number>2</number>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>30.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
-    </widget>
     <widget class="QWidget" name="layoutWidget_56">
      <property name="geometry">
       <rect>
@@ -367,7 +174,7 @@
     <widget class="QLabel" name="label_140">
      <property name="geometry">
       <rect>
-       <x>60</x>
+       <x>10</x>
        <y>20</y>
        <width>51</width>
        <height>16</height>
@@ -380,7 +187,7 @@
     <widget class="QLabel" name="current_stimulus">
      <property name="geometry">
       <rect>
-       <x>120</x>
+       <x>70</x>
        <y>20</y>
        <width>47</width>
        <height>13</height>
@@ -430,101 +237,6 @@
        </widget>
       </item>
      </layout>
-    </widget>
-    <widget class="QLabel" name="label_142">
-     <property name="geometry">
-      <rect>
-       <x>170</x>
-       <y>110</y>
-       <width>61</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>ITI Duration</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="iti">
-     <property name="geometry">
-      <rect>
-       <x>250</x>
-       <y>110</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="accelerated">
-      <bool>false</bool>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>10.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.050000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.250000000000000</double>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_143">
-     <property name="geometry">
-      <rect>
-       <x>160</x>
-       <y>160</y>
-       <width>71</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="text">
-      <string>Delay Duration</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_150">
-     <property name="geometry">
-      <rect>
-       <x>380</x>
-       <y>140</y>
-       <width>71</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>No Response</string>
-     </property>
-    </widget>
-    <widget class="QDoubleSpinBox" name="no_response_delay">
-     <property name="geometry">
-      <rect>
-       <x>390</x>
-       <y>160</y>
-       <width>51</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="suffix">
-      <string/>
-     </property>
-     <property name="decimals">
-      <number>2</number>
-     </property>
-     <property name="minimum">
-      <double>0.000000000000000</double>
-     </property>
-     <property name="maximum">
-      <double>30.000000000000000</double>
-     </property>
-     <property name="singleStep">
-      <double>0.010000000000000</double>
-     </property>
-     <property name="value">
-      <double>0.000000000000000</double>
-     </property>
     </widget>
    </widget>
    <widget class="QGroupBox" name="RewardBox">
@@ -579,7 +291,7 @@
           <double>1.500000000000000</double>
          </property>
          <property name="maximum">
-          <double>10.00000000000000</double>
+          <double>10.000000000000000</double>
          </property>
          <property name="singleStep">
           <double>0.100000000000000</double>
@@ -710,6 +422,12 @@ color: rgb(255, 255, 255);</string>
        </property>
        <property name="text">
         <string>Pause</string>
+       </property>
+       <property name="default">
+        <bool>false</bool>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
        </property>
       </widget>
      </item>
@@ -917,157 +635,270 @@ color: rgb(255, 255, 255);</string>
      </item>
     </layout>
    </widget>
-  </widget>
-  <widget class="QGroupBox" name="LickSensor">
-   <property name="geometry">
-    <rect>
-     <x>550</x>
-     <y>610</y>
-     <width>171</width>
-     <height>201</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Lick Sensor</string>
-   </property>
-   <layout class="QGridLayout" name="gridLayout_10">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout_19">
-      <item>
-       <widget class="QLabel" name="label_149">
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_146">
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Left Threshold</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="lick_threshold_left">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-        <property name="suffix">
-         <string/>
-        </property>
-        <property name="decimals">
-         <number>0</number>
-        </property>
-        <property name="minimum">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>255.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>12.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="label_147">
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string>Rigt Threshold</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="lick_threshold_right">
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-        <property name="suffix">
-         <string/>
-        </property>
-        <property name="decimals">
-         <number>0</number>
-        </property>
-        <property name="minimum">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>255.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>1.000000000000000</double>
-        </property>
-        <property name="value">
-         <double>12.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item row="1" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout_20">
-      <item>
-       <widget class="QLabel" name="label_148">
-        <property name="layoutDirection">
-         <enum>Qt::LeftToRight</enum>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="reset_lick_sensor">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Reset Lick Sensor</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-   </layout>
+   <widget class="QGroupBox" name="LED">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>500</y>
+      <width>151</width>
+      <height>251</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>LED</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_11">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_21">
+       <item>
+        <widget class="QPushButton" name="flash_led_left">
+         <property name="text">
+          <string>Flash Left LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="flash_led_center">
+         <property name="text">
+          <string>Flash Center LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="flash_led_right">
+         <property name="text">
+          <string>Flash Right LED</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_22">
+       <item>
+        <widget class="QPushButton" name="toggle_led_left">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Toggle Left LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="toggle_led_center">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Toggle Center LED</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="toggle_led_right">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Toggle Right LED</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="LickSensor">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>500</y>
+      <width>171</width>
+      <height>201</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Lick Sensor</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_10">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_19">
+       <item>
+        <widget class="QLabel" name="label_149">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_146">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>Left Threshold</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="lick_threshold_left">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="suffix">
+          <string/>
+         </property>
+         <property name="decimals">
+          <number>0</number>
+         </property>
+         <property name="minimum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>255.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>12.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_147">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string>Rigt Threshold</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QDoubleSpinBox" name="lick_threshold_right">
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="suffix">
+          <string/>
+         </property>
+         <property name="decimals">
+          <number>0</number>
+         </property>
+         <property name="minimum">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="maximum">
+          <double>255.000000000000000</double>
+         </property>
+         <property name="singleStep">
+          <double>1.000000000000000</double>
+         </property>
+         <property name="value">
+          <double>12.000000000000000</double>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_20">
+       <item>
+        <widget class="QLabel" name="label_148">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="reset_lick_sensor">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Reset Lick Sensor</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QGroupBox" name="RewardBox_2">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>560</y>
+      <width>151</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>LED  +  Reward</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_12">
+     <item row="0" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_23">
+       <item>
+        <widget class="QPushButton" name="led_and_reward_left">
+         <property name="text">
+          <string>Left LED + Reward</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="led_and_reward_left_2">
+         <property name="text">
+          <string>Right LED + Reward</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
      <x>20</x>
      <y>10</y>
-     <width>1001</width>
-     <height>91</height>
+     <width>1021</width>
+     <height>111</height>
     </rect>
    </property>
    <property name="font">
@@ -1084,212 +915,224 @@ color: rgb(255, 255, 255);</string>
    <property name="flat">
     <bool>false</bool>
    </property>
-   <widget class="QLabel" name="label">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>30</y>
-      <width>81</width>
-      <height>31</height>
+      <x>20</x>
+      <y>20</y>
+      <width>991</width>
+      <height>81</height>
      </rect>
     </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Subject ID:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>550</x>
-      <y>30</y>
-      <width>61</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Protocol:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="experiment">
-    <property name="geometry">
-     <rect>
-      <x>730</x>
-      <y>60</y>
-      <width>231</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <underline>true</underline>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>800</x>
-      <y>30</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Experiment:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="subject_id">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>60</y>
-      <width>91</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <underline>true</underline>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="protocol">
-    <property name="geometry">
-     <rect>
-      <x>480</x>
-      <y>60</y>
-      <width>211</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <underline>true</underline>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>310</x>
-      <y>30</y>
-      <width>131</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>% Baseline Weight:</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="baseline_weight">
-    <property name="geometry">
-     <rect>
-      <x>320</x>
-      <y>60</y>
-      <width>111</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <underline>true</underline>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>170</x>
-      <y>30</y>
-      <width>101</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="text">
-     <string>Age (Weeks):</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="age">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>60</y>
-      <width>111</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>11</pointsize>
-      <underline>true</underline>
-     </font>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
+    <layout class="QVBoxLayout" name="verticalLayout_2">
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Age (Weeks):</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="age">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <item>
+          <widget class="QLabel" name="label">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Subject ID:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="subject_id">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QLabel" name="label_4">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>% Baseline Weight:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="baseline_weight">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Experiment:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="experiment">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Protocol:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="protocol">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <item>
+          <widget class="QLabel" name="label_11">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Configuration</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="configuration">
+           <property name="font">
+            <font>
+             <pointsize>11</pointsize>
+             <underline>true</underline>
+            </font>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="Line" name="line">
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>100</y>
+     <y>140</y>
      <width>950</width>
      <height>23</height>
     </rect>

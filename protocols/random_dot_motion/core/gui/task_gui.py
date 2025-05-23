@@ -96,11 +96,22 @@ class TaskGUI(rigclass):
         self.tabActiveStateChanged.connect(self.handleTabActiveStateChange)
 
         self.comm_to_taskgui.connect(self.update_gui)
-        self.rig.reward_left.clicked.connect(lambda: self.reward("reward_left"))
-        self.rig.reward_right.clicked.connect(lambda: self.reward("reward_right"))
-        self.rig.reward_volume.valueChanged.connect(lambda: self.reward("update_reward"))
-        self.rig.toggle_left_reward.clicked.connect(lambda: self.reward("toggle_left_reward"))
-        self.rig.toggle_right_reward.clicked.connect(lambda: self.reward("toggle_right_reward"))
+        self.rig.reward_left.clicked.connect(lambda: self.hardware("reward_left"))
+        self.rig.reward_right.clicked.connect(lambda: self.hardware("reward_right"))
+        self.rig.reward_volume.valueChanged.connect(lambda: self.hardware("update_reward"))
+        self.rig.toggle_left_reward.clicked.connect(lambda: self.hardware("toggle_left_reward"))
+        self.rig.toggle_right_reward.clicked.connect(lambda: self.hardware("toggle_right_reward"))
+
+        self.rig.flash_led_left.clicked.connect(lambda: self.hardware("flash_led_left"))
+        self.rig.flash_led_center.clicked.connect(lambda: self.hardware("flash_led_center"))
+        self.rig.flash_led_right.clicked.connect(lambda: self.hardware("flash_led_right"))
+        self.rig.toggle_led_left.clicked.connect(lambda: self.hardware("toggle_led_left"))
+        self.rig.toggle_led_right.clicked.connect(lambda: self.hardware("toggle_led_right"))
+
+
+        self.rig.led_and_reward_left.clicked.connect(lambda: self.hardware("led_and_reward_left"))
+        self.rig.led_and_reward_right.clicked.connect(lambda: self.hardware("led_and_reward_right"))
+
         self.rig.lick_threshold_left.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_left"))
         self.rig.lick_threshold_right.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_right"))
         self.rig.reset_lick_sensor.clicked.connect(lambda: self.lick_sensor("reset_lick_sensor"))
@@ -208,14 +219,21 @@ class TaskGUI(rigclass):
     def update_video_image(self):
         pass
 
-    def reward(self, message: str):
+    def hardware(self, message: str):
+        if "reward" in message:
+            value_dict = {"key": message, "value": self.rig.reward_volume.value()},
+		elif "flash_led" in message:
+			value_dict = {"key": message, "value": None},
+		elif "toggle" in message:
+			value_dict = {"key": message, "value": None},
+
         self.forward_signal(
             {
                 "to": self.rig_id,
                 "key": "EVENT",
                 "value": {
                     "key": "HARDWARE",
-                    "value": {"key": message, "value": self.rig.reward_volume.value()},
+                    "value": value_dict,
                 },
             }
         )

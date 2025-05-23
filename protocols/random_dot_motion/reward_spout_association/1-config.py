@@ -18,7 +18,7 @@ TASK = {
         "threshold": 0.5,
     },
     "intertrial": {
-        "duration": 0.6,
+        "duration": 1,
 	}
 }
 
