@@ -104,11 +104,11 @@ class Task:
 		"""Handle hardware request from terminal based on received message"""
 		# Reward related changes
 		if message["key"] == "reward_left":
-			self.managers["hardware"].flash_led(-1, self.managers["session"]["knowledge_of_results_duration"])
+			self.managers["hardware"].flash_led(-1, self.managers["session"].knowledge_of_results_duration)
 			self.managers["hardware"].reward_left(message["value"])
 			self.managers["session"].total_reward += message["value"]
 		elif message["key"] == "reward_right":
-			self.managers["hardware"].flash_led(1, self.managers["session"]["knowledge_of_results_duration"])
+			self.managers["hardware"].flash_led(1, self.managers["session"].knowledge_of_results_duration)
 			self.managers["hardware"].reward_right(message["value"])
 			self.managers["session"].total_reward += message["value"]
 		elif message["key"] == "toggle_left_reward":
