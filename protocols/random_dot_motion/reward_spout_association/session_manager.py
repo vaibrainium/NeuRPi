@@ -71,6 +71,7 @@ class SessionManager:
 			"trial_counters": self.trial_counters,
 			"choice": self.choice,
 			"reward_volume": self.trial_reward,
+			"total_reward": self.total_reward,
 		}
 
 		return trial_data
@@ -80,6 +81,8 @@ class SessionManager:
 			"idx_attempt": self.trial_counters["attempt"],
 			"choice": self.choice,
 			"trial_reward": self.trial_reward,
+			"intertrial_duration": self.intertrial_duration,
+			"knowledge_of_results_duration": self.knowledge_of_results_duration,
 		}
 		with open(self.config.FILES["trial"], "a+", newline="") as file:
 			writer = csv.DictWriter(file, fieldnames=data.keys())
