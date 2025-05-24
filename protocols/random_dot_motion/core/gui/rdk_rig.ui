@@ -915,7 +915,7 @@ color: rgb(255, 255, 255);</string>
    <property name="flat">
     <bool>false</bool>
    </property>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -937,12 +937,12 @@ color: rgb(255, 255, 255);</string>
             </font>
            </property>
            <property name="text">
-            <string>Age (Weeks):</string>
+            <string>Subject ID:</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="age">
+          <widget class="QLabel" name="subject_id">
            <property name="font">
             <font>
              <pointsize>11</pointsize>
@@ -969,12 +969,12 @@ color: rgb(255, 255, 255);</string>
             </font>
            </property>
            <property name="text">
-            <string>Subject ID:</string>
+            <string>Age (Weeks):</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="subject_id">
+          <widget class="QLabel" name="age">
            <property name="font">
             <font>
              <pointsize>11</pointsize>

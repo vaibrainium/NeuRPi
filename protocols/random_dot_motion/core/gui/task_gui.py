@@ -38,6 +38,7 @@ class TaskGUI(rigclass):
 		self.subject = subject
 		self.protocol = session_info.protocol
 		self.experiment = session_info.experiment
+		self.configuration = session_info.configuration
 
 		self.summary_data = None
 
@@ -51,6 +52,7 @@ class TaskGUI(rigclass):
 			self.rig.baseline_weight.setText(str(self.subject.prct_weight))
 			self.rig.protocol.setText(code_to_str(self.protocol))
 			self.rig.experiment.setText(code_to_str(self.experiment))
+			self.rig.configuration.setText(code_to_str(self.configuration))
 		except Exception as e:
 			print(e)
 			print("Error: Could not load rig UI.")
