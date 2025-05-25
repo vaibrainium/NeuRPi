@@ -78,9 +78,9 @@ class SessionManager:
 			"running_accuracy": [],
 			"chose_right": {int(coh): 0 for coh in self.full_coherences},
 			"chose_left": {int(coh): 0 for coh in self.full_coherences},
-			"psych": {int(coh): np.NaN for coh in self.full_coherences},
+			"psych": {int(coh): np.nan for coh in self.full_coherences},
 			"trial_distribution": {int(coh): 0 for coh in self.full_coherences},
-			"response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
+			"response_time_distribution": {int(coh): np.nan for coh in self.full_coherences},
 		}
 
 		# list of all variables needed to be reset every trial
@@ -288,7 +288,7 @@ class SessionManager:
 		elif self.outcome == "incorrect":
 			self.outcome = 0
 		elif self.outcome == "noresponse" or self.outcome == "invalid":
-			self.outcome = np.NaN
+			self.outcome = np.nan
 
 		self.trial_counters["attempt"] += 1
 

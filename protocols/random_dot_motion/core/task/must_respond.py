@@ -136,7 +136,7 @@ class MustRespond(TrialConstruct):
 		Stage 1: Show stimulus and wait for response trigger on target/distractor input
 		Arguments:
 			duration (float): Max stimulus_rt phase duration in secs
-			targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+			targets (list): Possible responses. [-1: left, 0: center. 1: right, np.nan: Null]
 		"""
 		self.stage_block.clear()
 		print("Waiting for response")

@@ -92,7 +92,7 @@ class TrialConstruct:
 
             except queue.Empty:
                 response = 0
-                response_time = np.NaN
+                response_time = np.nan
                 break
 
         self.clear_queue()

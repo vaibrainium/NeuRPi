@@ -75,9 +75,9 @@ class SessionManager:
             "running_accuracy": [],
             "chose_right": {int(coh): 0 for coh in self.full_coherences},
             "chose_left": {int(coh): 0 for coh in self.full_coherences},
-            "psych": {int(coh): np.NaN for coh in self.full_coherences},
+            "psych": {int(coh): np.nan for coh in self.full_coherences},
             "trial_distribution": {int(coh): 0 for coh in self.full_coherences},
-            "response_time_distribution": {int(coh): np.NaN for coh in self.full_coherences},
+            "response_time_distribution": {int(coh): np.nan for coh in self.full_coherences},
         }
 
         # list of all variables needed to be reset every trial
@@ -194,7 +194,7 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
         self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
-        stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.NaN]}
+        stage_task_args = {"intertrial_duration": self.intertrial_duration, "response_to_check": [np.nan]}
         return stage_task_args, stage_stimulus_args
 
     ######################### trial-stage methods #########################
@@ -276,7 +276,7 @@ class SessionManager:
         elif self.outcome == "incorrect":
             self.outcome = 0
         elif self.outcome == "noresponse" or self.outcome == "invalid":
-            self.outcome = np.NaN
+            self.outcome = np.nan
 
         self.trial_counters["attempt"] += 1
 

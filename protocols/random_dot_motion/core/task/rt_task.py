@@ -114,8 +114,8 @@ class RTTask(TrialConstruct):
 		self.abort_trial = False
 
 		task_args, stimulus_args = {}, {}
-		self.choice = np.NaN
-		self.response_time = np.NaN
+		self.choice = np.nan
+		self.response_time = np.nan
 
 		# Determine stage parameters
 		task_args, stimulus_args = self.managers["session"].prepare_fixation_stage()
@@ -134,23 +134,15 @@ class RTTask(TrialConstruct):
 
 		if self.choice != 0:  # if subject broke fixation
 			self.abort_trial = True
-			self.choice = np.NaN
-			self.response_time = np.NaN
-
-		# data = {
-		#     "DC_timestamp": datetime.datetime.now().isoformat(),
-		#     "trial_stage": "fixation_stage",
-		#     "subject": self.config.SUBJECT["name"],
-		#     "coherence": task_args["signed_coherence"],
-		# }
-		# return data
+			self.choice = np.nan
+			self.response_time = np.nan
 
 	def stimulus_stage(self):
 		"""
 		Stage 1: Show stimulus and wait for response trigger on target/distractor input
 		Arguments:
 			duration (float): Max stimulus_rt phase duration in secs
-			targets (list): Possible responses. [-1: left, 0: center. 1: right, np.NaN: Null]
+			targets (list): Possible responses. [-1: left, 0: center. 1: right, np.nan: Null]
 		"""
 		self.stage_block.clear()
 		task_args, stimulus_args = {}, {}
