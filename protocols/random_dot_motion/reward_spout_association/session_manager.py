@@ -2,6 +2,7 @@ import csv
 import pickle
 
 import numpy as np
+from collections import deque
 
 
 class SessionManager:
@@ -27,9 +28,13 @@ class SessionManager:
 		self.trial_reward = self.config.TASK["reward"].get("volume", 4)
 		self.knowledge_of_results_duration = self.config.TASK["knowledge_of_results"]["duration"]
 		self.intertrial_duration = self.config.TASK["intertrial"]["duration"]
-		self.rolling_bias_index = 0
-		self.bias_window = self.config.TASK["bias_correction"]["window"]
-		self.rolling_bias = np.zeros(self.bias_window)
+
+		self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
+		self.rolling_bias = deque(maxlen=self.bias_window)
+		self.rolling_bias.extend([0] * self.bias_window)
+
+		# self.rolling_bias_index = 0
+		# self.rolling_bias = np.zeros(self.bias_window)
 		self.bias = 0
 		self.switch_threshold = self.config.TASK["bias_correction"]["threshold"]
 		self.responses_to_check = [-1, 1]
@@ -44,8 +49,7 @@ class SessionManager:
 
 	def prepare_reinforcement_stage(self, choice):
 		self.choice = choice
-		self.rolling_bias[self.rolling_bias_index] = choice
-		self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
+		self.rolling_bias.append(self.choice)
 
 		self.bias = np.nanmean(self.rolling_bias)
 		task_args = {
