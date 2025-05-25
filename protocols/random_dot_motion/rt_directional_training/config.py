@@ -1,4 +1,3 @@
-
 import numpy as np
 from scipy import stats
 
@@ -9,10 +8,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.25, scale=0.075)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 25,
+            "max_viewing": 15,
             "min_viewing": 0,
         },
         "reinforcement": {
@@ -21,26 +20,22 @@ TASK = {
                 "correct": lambda response_time: 0,
                 "incorrect": lambda response_time: 0,
                 "noresponse": lambda response_time: 0,
+                "invalid": lambda response_time: 0,
             },
-        },
-        "delay": {
-            "tag": "Delay epoch. Returns delay in stimulus display and delay screen duration (usually white).",
-            "duration": {
-                "correct": lambda response_time, coh: 0,
-                "incorrect": lambda response_time, coh: 0,
-                "noresponse": lambda response_time, coh: 0,
-            },
+            "knowledge_of_results": {
+				"duration": None,
+			},
         },
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
-                "incorrect": lambda response_time, coh: 5 + 20 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 25,
+                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
+                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
+                "noresponse": lambda response_time, coh: 3,
+                "invalid": lambda response_time, coh: 2,
             },
         },
     },
-
     "stimulus": {
         "coherences": {
             "tag": "List of all coherences used in study",
@@ -50,25 +45,32 @@ TASK = {
         "signed_coherences": {
             "tag": "List of all signed coherences",
             "type": "np.array",
-            "value": np.array([-100]),
+            "value": np.array([-100, 100]),
         },
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "np.array",
-            "value": np.array([4]),
+            "value": np.array([3, 3]),
         },
+        "schedule_structure": {
+			"tag": "How to structure block, interleaved or blocked",
+			"value": "interleaved"
+		}
     },
     "rolling_performance": {
         "rolling_window": 50,
-        "current_coherence_level": 2,
+        "current_coherence_level": 1,
         "reward_volume": 1.5,
     },
     "bias_correction": {
-        "repeat_threshold": {
-            "active": 100,
-            "passive": 100,
+        "bias_window": 20,
+        "passive": {
+            "coherence_threshold": 0,
+            },
+        "active": {
+            "abs_bias_threshold": 0.25, # absolute bias threshold for active trials range 0 to 1
+            "correction_strength": 0.75, # between 0 and 1. 0: no correction, 1: full correction block
         },
-        "bias_window": 10,
     },
     "training_type": {
         "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
@@ -78,6 +80,11 @@ TASK = {
         "tag": "Fixed reward ratio minimum streak",
         "value": 1000,
     },
+    "reward":{
+		"volume": 2,
+		"must_consume": True,
+	}
+
 }
 
 STIMULUS = {
@@ -96,13 +103,12 @@ STIMULUS = {
             },
         },
     },
-
     "required_functions": {
         "tag": "List of all functions required for this phase. Please note that any color passed as a list will have to be converted to tuple for better performance.",
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None, #"fixation_tone",
+                "audio": None,  # "fixation_tone",
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -111,21 +117,23 @@ STIMULUS = {
                     "dot_radius": 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
-                    "dot_vel": 200, #for 25 degrees/sec
+                    "dot_vel": 450,  # for 45 degrees/sec
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                        "8KHz": None, #"8KHz",
-                        "16KHz": None, #"16KHz",
-                }
+                    "onset_tone": "fixation_tone",
+                    "8KHz": None,  # "8KHz",
+                    "16KHz": None,  # "16KHz",
+                },
             },
             "update_stimulus": None,
             "initiate_reinforcement": {
                 "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": None, # "correct_tone",
-                    "incorrect": None, # "incorrect_tone",
+                    "correct": "correct_tone",
+                    "incorrect": None,  # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
+                    "invalid": None,  # "incorrect_tone",
                 },
             },
             "update_reinforcement": None,
@@ -138,7 +146,6 @@ STIMULUS = {
             "initiate_intertrial": {"background_color": (0, 0, 0)},
         },
     },
-
     "task_epochs": {
         "tag": """List of all epochs and their respective functions
             Format:
@@ -164,7 +171,7 @@ STIMULUS = {
             "delay_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_delay",
-                "update_func": None, #"update_delay", #None,
+                "update_func": None,  # "update_delay", #None,
             },
             "must_respond_epoch": {
                 "clear_queue": False,
