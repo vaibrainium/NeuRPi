@@ -408,6 +408,9 @@ class TaskGUI(rigclass):
 		if "trial_counters" in value.keys():
 			self.update_trials(value["trial_counters"])
 
+		if "block_number" in value.keys():
+			self.rig.block_number.setText(str(value["block_number"]))
+
 		if "coherence" in value.keys():
 			self.update_stimulus(value["coherence"])
 

@@ -44,7 +44,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>50</y>
+       <y>80</y>
        <width>111</width>
        <height>21</height>
       </rect>
@@ -76,7 +76,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>110</y>
        <width>111</width>
        <height>21</height>
       </rect>
@@ -108,7 +108,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>140</y>
        <width>111</width>
        <height>21</height>
       </rect>
@@ -140,7 +140,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>170</y>
        <width>112</width>
        <height>21</height>
       </rect>
@@ -210,7 +210,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>170</y>
+       <y>200</y>
        <width>111</width>
        <height>21</height>
       </rect>
@@ -231,6 +231,38 @@
       </item>
       <item>
        <widget class="QLabel" name="attempt_trials">
+        <property name="text">
+         <string>0</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="layoutWidget_62">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>50</y>
+       <width>111</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_75">
+      <item>
+       <widget class="QLabel" name="label_142">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Block Number:</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="block_number">
         <property name="text">
          <string>0</string>
         </property>
