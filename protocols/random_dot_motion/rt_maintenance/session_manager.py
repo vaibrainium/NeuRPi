@@ -1,8 +1,9 @@
 import csv
 import pickle
-
 import numpy as np
+from collections import deque
 
+from typing import Any, Dict, Optional, Tuple, Union, List
 
 class SessionManager:
 	"""
@@ -12,8 +13,7 @@ class SessionManager:
 	def __init__(self, config):
 		self.config = config
 
-		# initialize trial variables
-		# counters
+		# Trial counters initialization
 		self.trial_counters = {
 			"attempt": 0,
 			"valid": 0,
@@ -23,57 +23,66 @@ class SessionManager:
 			"correction": 0,
 		}
 
-		# trial parameters
-		self.random_generator_seed = None
-		self.is_correction_trial = False
-		self.is_repeat_trial = False
-		self.signed_coherence = None
-		self.target = None
-		self.choice = None
-		self.response_time = None
-		self.valid = None
-		self.outcome = None
-		self.full_reward_volume = self.config.SUBJECT["rolling_perf"]["reward_volume"]
+		# Trial parameters
+		self.random_generator_seed: Optional[int] = None
+		self.is_correction_trial: bool = False
+		self.is_repeat_trial: bool = False
+		self.signed_coherence: Optional[float] = None
+		self.target: Optional[int] = None
+		self.choice: Optional[int] = None
+		self.response_time: Optional[float] = None
+		self.valid: Optional[bool] = None
+		self.outcome: Optional[Union[str, int, float]] = None
+
+		self.reward_volume: Optional[float] = None
+		self.trial_reward: Optional[float] = None
+		self.total_reward: float = 0.0
 		self.update_reward_volume()
-		self.trial_reward = None  # reward given on current trial
-		self.total_reward = 0  # total reward given in session
-		self.fixation_duration = None
-		self.stimulus_duration = None
-		self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
-		self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
-		self.knowledge_of_results_duration = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["duration"]
-		self.reinforcement_duration = None
-		self.intertrial_duration = None
-		# stage onset variables
-		self.fixation_onset = None
-		self.stimulus_onset = None
-		self.response_onset = None
-		self.reinforcement_onset = None
-		self.intertrial_onset = None
-		# behavior dependent function
+
+		# Timing parameters
+		self.fixation_duration: Optional[float] = None
+		self.stimulus_duration: Optional[float] = None
+		self.minimum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
+		self.maximum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
+		self.knowledge_of_results_duration: Optional[float] = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["duration"]
+		self.reinforcement_duration: Optional[float] = None
+		self.intertrial_duration: Optional[float] = None
+
+		# Stage onset timestamps
+		self.fixation_onset: Optional[float] = None
+		self.stimulus_onset: Optional[float] = None
+		self.response_onset: Optional[float] = None
+		self.reinforcement_onset: Optional[float] = None
+		self.intertrial_onset: Optional[float] = None
+
+		# Behavioral timing functions
 		self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
 		self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
 		self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
-		self.must_consume_reward = self.config.TASK["reward"]["must_consume"]
-		# initialize session variables
+		self.must_consume_reward: bool = self.config.TASK["reward"]["must_consume"]
+
+		# Session variables
 		self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
-		self.active_coherences = self.full_coherences  # self.config.TASK["stimulus"]["active_coherences"]["value"]
-		self.active_coherence_indices = [np.where(self.full_coherences == value)[0][0] for value in self.active_coherences]
+		self.active_coherences = self.full_coherences  # Could be different subset
+		self.active_coherence_indices = [np.where(self.full_coherences == val)[0][0] for val in self.active_coherences]
 		self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
-		# trial block
-		self.block_schedule = []
-		self.trials_in_block = 0
-		self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
-		self.schedule_structure = self.config.TASK["stimulus"]["schedule_structure"]["value"]
-		# bias
-		self.rolling_bias_index = 0
+
+		# Block schedule and trials counter within block
+		self.block_schedule: deque = deque()
+		self.block_number: int = 0
+		self.repeats_per_block: int = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
+		self.schedule_structure: str = self.config.TASK["stimulus"]["schedule_structure"]["value"]
+
+		# Bias correction variables
 		self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
-		self.rolling_bias = np.zeros(self.bias_window)
+		self.rolling_bias = deque(maxlen=self.bias_window)
+		self.rolling_bias.extend([0] * self.bias_window)
 		self.passive_bias_correction_threshold = self.config.TASK["bias_correction"]["passive"]["coherence_threshold"]
-		self.in_active_bias_correction_block = False
+		self.in_active_bias_correction_block: bool = False
 		self.active_bias_correction_probability = self.config.TASK["bias_correction"]["active"]["correction_strength"]
 		self.active_bias_correction_threshold = self.config.TASK["bias_correction"]["active"]["abs_bias_threshold"]
-		# plot variables
+
+		# Plot variables for performance tracking
 		self.plot_vars = {
 			"running_accuracy": [],
 			"chose_right": {int(coh): 0 for coh in self.full_coherences},
@@ -83,60 +92,57 @@ class SessionManager:
 			"response_time_distribution": {int(coh): np.nan for coh in self.full_coherences},
 		}
 
-		# list of all variables needed to be reset every trial
-		self.trial_reset_variables = [
-			self.random_generator_seed,
-			self.signed_coherence,
-			self.target,
-			self.choice,
-			self.response_time,
-			self.valid,
-			self.outcome,
-			self.trial_reward,
-			# time related dynamic variables
-			self.fixation_duration,
-			self.stimulus_duration,
-			self.reinforcement_duration,
-			self.intertrial_duration,
-			# epoch onsets
-			self.fixation_onset,
-			self.stimulus_onset,
-			self.response_onset,
-			self.reinforcement_onset,
-			self.intertrial_onset,
-		]
-
 	####################### pre-session methods #######################
 	def update_reward_volume(self):
-		self.full_reward_volume = self.config.TASK["reward"].get("volume", 4)
+		self.reward_volume = self.config.TASK["reward"].get("volume", 2)
+
+	def reset_trial_variables(self):
+		"""Reset all trial variables to None or their initial state."""
+		self.random_generator_seed = None
+		self.signed_coherence = None
+		self.target = None
+		self.choice = None
+		self.response_time = None
+		self.valid = None
+		self.outcome = None
+		self.trial_reward = None
+		self.fixation_duration = None
+		self.stimulus_duration = None
+		self.reinforcement_duration = None
+		self.intertrial_duration = None
+		self.fixation_onset = None
+		self.stimulus_onset = None
+		self.response_onset = None
+		self.reinforcement_onset = None
+		self.intertrial_onset = None
 
 	####################### trial epoch methods #######################
-	def prepare_fixation_stage(self):
-		stage_task_args, stage_stimulus_args = {}, {}
-		# resetting trial variables
-		for var in self.trial_reset_variables:
-			var = None
-		# updating random generator seed
-		self.random_generator_seed = np.random.randint(0, 1000000)
-		# updating trial parameters
+	def prepare_fixation_stage(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+		"""
+		Prepare parameters for fixation stage.
+		"""
 		self.prepare_trial_variables()
-		# get fixation duration
+
 		self.fixation_duration = self.fixation_duration_function()
-		# prepare args
+		stage_task_args = {
+			"fixation_duration": self.fixation_duration,
+			"response_to_check": [-1, 1],
+			"signed_coherence": self.signed_coherence,
+		}
 		stage_stimulus_args = ({},)
-		stage_task_args = {"fixation_duration": self.fixation_duration, "response_to_check": [-1, 1], "signed_coherence": self.signed_coherence}
 		return stage_task_args, stage_stimulus_args
 
-	def prepare_stimulus_stage(self):
-		stage_task_args, stage_stimulus_args = {}, {}
+	def prepare_stimulus_stage(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+		"""
+		Prepare parameters for stimulus presentation stage.
+		"""
+		self.stimulus_duration = self.maximum_viewing_duration
+		response_to_check = [-1, 1]
 		stage_stimulus_args = {
 			"coherence": self.signed_coherence,
 			"seed": self.random_generator_seed,
 			"audio_stim": "onset_tone",
 		}
-		self.stimulus_duration = self.maximum_viewing_duration
-		response_to_check = [-1, 1]
-
 		stage_task_args = {
 			"coherence": self.signed_coherence,
 			"target": self.target,
@@ -146,119 +152,97 @@ class SessionManager:
 		}
 		return stage_task_args, stage_stimulus_args
 
-	def prepare_reinforcement_stage(self, choice, response_time):
+	def prepare_reinforcement_stage(self, choice: Optional[int], response_time: Optional[float]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
 		"""
-		Prepares the reinforcement stage based on the choice and response time.
-
-		Parameters:
-		- choice: The choice made during the trial.
-		- response_time: The time taken to make the response.
-
-		Returns:
-		- A tuple containing stage task arguments and stage stimulus arguments.
+		Prepare parameters for reinforcement stage based on choice and response time.
 		"""
-		# Initialize arguments
-		stage_task_args, stage_stimulus_args = {}, {}
 		self.choice = choice
 		self.response_time = response_time
+		stage_task_args, stage_stimulus_args = {}, {}
 
-		# Determine trial reward and reinforcement duration and set stage stimulus arguments
-		if np.isnan(self.choice):
-			self.outcome = "invalid"
-			self.trial_reward = 0
-			self.reinforcement_duration = self.reinforcement_duration_function["invalid"](self.response_time)
-			stage_stimulus_args["outcome"] = "invalid"
-		elif self.choice == 0:
-			self.outcome = "noresponse"
-			self.trial_reward = 0
-			self.reinforcement_duration = self.reinforcement_duration_function["noresponse"](self.response_time)
-			stage_stimulus_args["outcome"] = "noresponse"
-		elif self.choice == self.target:
-			self.outcome = "correct"
-			self.trial_reward = self.full_reward_volume
-			self.reinforcement_duration = self.reinforcement_duration_function["correct"](self.response_time)
-			stage_stimulus_args["outcome"] = "correct"
-		elif self.choice != self.target:
-			self.outcome = "incorrect"
-			self.trial_reward = 0
-			self.reinforcement_duration = self.reinforcement_duration_function["incorrect"](self.response_time)
-			stage_stimulus_args["outcome"] = "incorrect"
+		self.outcome, self.trial_reward = self._determine_outcome_and_reward(self.choice)
 
-		# Set stage task arguments
+		# Get reinforcement duration for this outcome
+		if self.outcome not in self.reinforcement_duration_function:
+			raise KeyError(f"Reinforcement duration function for outcome '{self.outcome}' is not defined.")
+		self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
+
+		stage_stimulus_args = {"outcome": self.outcome}
+		# Build task args
 		stage_task_args = {
 			"reinforcement_duration": self.reinforcement_duration,
 			"trial_reward": self.trial_reward,
 			"reward_side": self.target,
-			"FRR_reward": None,
 		}
+
 		if self.knowledge_of_results_duration:
 			stage_task_args["flash_led"] = {"direction": self.target, "duration": self.knowledge_of_results_duration}
 
 		if self.trial_reward > 0:
 			stage_task_args["wait_for_consumption"] = self.must_consume_reward
+
 		return stage_task_args, stage_stimulus_args
 
 	def prepare_intertrial_stage(self):
+		"""
+		Prepare parameters for intertrial stage.
+		"""
 		stage_task_args, stage_stimulus_args = {}, {}
 		self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
-		stage_task_args = {"intertrial_duration": self.intertrial_duration}
 
+		stage_task_args = {"intertrial_duration": self.intertrial_duration}
 		if self.trial_reward > 0:
 			stage_task_args["wait_for_consumption"] = self.must_consume_reward
+
 		return stage_task_args, stage_stimulus_args
 
 	######################### trial-stage methods #########################
+	def _start_active_bias_correction_block(self):
+		self.block_number += 1
+		self.in_active_bias_correction_block = True
+		correction_direction = -np.sign(np.nanmean(self.rolling_bias))
+		self.rolling_bias.extend([0] * self.bias_window)
+		self.generate_active_correction_block_schedule(correction_direction, prob=self.active_bias_correction_probability)
+		self.signed_coherence = self.block_schedule.popleft()
+		self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
+
+	def _handle_standard_block(self):
+		if self.trial_counters["attempt"] == 0 or len(self.block_schedule) == 0:
+			self.block_number += 1
+			self.in_active_bias_correction_block = False
+			self.generate_block_schedule()
+
+		self.signed_coherence = self.block_schedule.popleft()
+		self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
+		self.trial_counters["correction"] = 0
+
 	def prepare_trial_variables(self):
-		if (not self.is_correction_trial) & ((not self.in_active_bias_correction_block) & (np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold)):
-			self.in_active_bias_correction_block = True
-			correction_direction = -np.sign(np.nanmean(self.rolling_bias))
-			self.rolling_bias = np.zeros(self.bias_window)
-
-			self.trials_in_block = 0
-			self.generate_active_correction_block_schedule(correction_direction, prob=self.active_bias_correction_probability)
-			self.signed_coherence = self.block_schedule[self.trials_in_block]
-			self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
-			self.trials_in_block += 1  # incrementing within block counter
-
+		"""Prepare parameters for next trial based on current flags and bias."""
+		self.reset_trial_variables()
+		self.random_generator_seed = np.random.randint(0, 1_000_000)
+		if (not self.in_active_bias_correction_block and np.abs(np.mean(self.rolling_bias)) >= self.active_bias_correction_threshold):
+			self._start_active_bias_correction_block()
 		else:
-			if (not self.is_correction_trial) and (not self.is_repeat_trial):  # if not correction trial
-				# is this start of new trial block?
-				if self.trial_counters["attempt"] == 0 or self.trials_in_block == len(self.block_schedule):
-					self.in_active_bias_correction_block = False  # resetting active bias correction block
-					self.trials_in_block = 0
-					self.generate_block_schedule()
-				self.signed_coherence = self.block_schedule[self.trials_in_block]
-				self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
-				self.trials_in_block += 1  # incrementing within block counter
-				self.trial_counters["correction"] = 0  # resetting correction counter
-			else:
-				if self.is_repeat_trial:
-					# repeat same stimulus on repeat trial
-					pass
-				else:
-					if self.schedule_structure == "interleaved":
-						# drawing repeat trial with direction from a normal distribution with mean of against rolling bias
-						self.target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
-						# Repeat probability to opposite side of bias
-						self.signed_coherence = self.target * np.abs(self.signed_coherence)
-						print(f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \n" f"Passive bias correction with: {self.signed_coherence}")
-						# increment correction trial counter
-						self.trial_counters["correction"] += 1
+			self._handle_standard_block()
 
 	def generate_block_schedule(self):
-		self.block_schedule = np.repeat(self.active_coherences, self.repeats_per_block)
+		schedule = np.repeat(self.active_coherences, self.repeats_per_block)
 		if self.schedule_structure == "interleaved":
-			self.block_schedule = self.shuffle_seq(self.block_schedule)
+			schedule = self.shuffle_seq(schedule)
+		self.block_schedule = deque(schedule)
 
 	def generate_active_correction_block_schedule(self, correction_direction, prob):
-		""" Generate a block of trials with a mix of correction and non-correction trials with 100% coherence"""
 		block_length = self.get_active_trial_block_length()
 
 		correction_coherence = 100
 		num_correction = int(block_length * prob)
 		num_noncorrection = block_length - num_correction
-		self.block_schedule = correction_coherence * np.concatenate([np.full(num_correction, correction_direction), np.full(num_noncorrection, -correction_direction)])
-		np.random.shuffle(self.block_schedule)
+		schedule = correction_coherence * np.concatenate([
+			np.full(num_correction, correction_direction),
+			np.full(num_noncorrection, -correction_direction)
+		])
+		np.random.shuffle(schedule)
+		self.block_schedule = deque(schedule)
 
 	def get_active_trial_block_length(self):
 		values = np.arange(7,14)
@@ -268,117 +252,156 @@ class SessionManager:
 		chosen_value = np.random.choice(values, p=probabilities)
 		return chosen_value
 
-	def shuffle_seq(self, sequence, max_repeat=3):
+	def shuffle_seq(self, sequence: Union[np.ndarray, List[float]], max_repeat: int = 3) -> np.ndarray:
 		"""Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
+		sequence = np.array(sequence)
 		for i in range(len(sequence) - max_repeat + 1):
-			subsequence = sequence[i : i + max_repeat]
-			if len(set(np.sign(subsequence))) == 1:
-				temp_block = sequence[i:]
+			subseq = sequence[i:i + max_repeat]
+			if len(np.unique(np.sign(subseq))) == 1:  # all same sign
+				temp_block = sequence[i:].copy()
 				np.random.shuffle(temp_block)
 				sequence[i:] = temp_block
 		return sequence
 
+	def _determine_outcome_and_reward(self, choice):
+		if choice is None or np.isnan(choice):
+			return "invalid", 0
+		elif choice == 0:
+			return "noresponse", 0
+		elif choice == self.target:
+			return "correct", self.reward_volume
+		else:
+			return "incorrect", 0
+
 	####################### between-trial methods #######################
+	def _handle_correct_trial(self):
+		self.valid = True
+		self.trial_counters["valid"] += 1
+		self.trial_counters["correct"] += 1
+
+	def _handle_incorrect_trial(self):
+		self.valid = True
+		self.trial_counters["valid"] += 1
+		self.trial_counters["incorrect"] += 1
+
+
+	def _handle_noresponse_or_invalid(self, next_trial_vars):
+		self.valid = False
+		if self.is_correction_trial:
+			next_trial_vars["is_correction_trial"] = True
+
+		if self.choice == 0:
+			self.trial_counters["noresponse"] += 1
+			if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
+				next_trial_vars["is_correction_trial"] = True
+				next_trial_vars["is_repeat_trial"] = True
+		else:
+			next_trial_vars["is_repeat_trial"] = True
+
+	def _update_post_trial_stats(self):
+		# Update rolling bias circular buffer
+		self.rolling_bias.append(self.choice)
+		print(f"Rolling Bias: {self.rolling_bias}")
+		signed_coh = self.signed_coherence
+
+
+		# Update choice counts for psychometric plotting
+		chose_left = self.plot_vars["chose_left"]
+		chose_right = self.plot_vars["chose_right"]
+		if self.choice == -1:
+			chose_left[signed_coh] += 1
+		elif self.choice == 1:
+			chose_right[signed_coh] += 1
+
+		tot_trials = chose_left[signed_coh] + chose_right[signed_coh]
+
+		# Update running accuracy if valid trials exist
+		valid_trials = self.trial_counters.get("valid", 0)
+		if valid_trials > 0:
+			correct_trials = self.trial_counters.get("correct", 0)
+			accuracy = round(correct_trials / valid_trials * 100, 2)
+			self.plot_vars["running_accuracy"] = [valid_trials, accuracy, self.outcome]
+
+		# Update psychometric function (fraction choosing right)
+		if tot_trials > 0:
+			psych_val = round(chose_right[signed_coh] / tot_trials, 2)
+		else:
+			psych_val = 0.0
+		self.plot_vars["psych"][signed_coh] = psych_val
+
+		# Update trial distribution count
+		self.plot_vars["trial_distribution"][signed_coh] += 1
+
+		# Helper function to update running average
+		def running_avg(old_avg, new_val, n):
+			return (old_avg * (n - 1) + new_val) / n
+
+		# Update response time running average for the signed coherence
+		rt_dist = self.plot_vars["response_time_distribution"]
+		current_rt = rt_dist[signed_coh]
+
+		if np.isnan(current_rt):
+			rt_dist[signed_coh] = round(self.response_time, 2)
+		else:
+			new_rt = running_avg(current_rt, self.response_time, tot_trials)
+			rt_dist[signed_coh] = round(new_rt, 2)
+
 
 	def end_of_trial_updates(self):
-		"""function to finalize current trial and set parameters for next trial"""
-		# codify trial outcome
-		if self.outcome == "correct":
-			self.outcome = 1
-		elif self.outcome == "incorrect":
-			self.outcome = 0
-		elif self.outcome == "noresponse" or self.outcome == "invalid":
-			self.outcome = np.nan
+		"""Finalize current trial and prepare flags for next trial."""
+
+		# Map string outcome to numeric
+		outcome_map = {"correct": 1, "incorrect": 0, "noresponse": np.nan, "invalid": np.nan}
+		self.outcome = outcome_map.get(self.outcome, np.nan)
 
 		self.trial_counters["attempt"] += 1
 
-		# function to finalize current trial and set parameters for next trial
+		# Prepare next trial flags
 		next_trial_vars = {"is_correction_trial": False, "is_repeat_trial": False}
+
 		if self.in_active_bias_correction_block:
 			self.valid = False
-			next_trial_vars["is_correction_trial"] = False
-			if self.outcome != 1:
-				next_trial_vars["is_repeat_trial"] = True
+			# Repeat trial if outcome not correct
+			next_trial_vars["is_repeat_trial"] = (self.outcome != 1)
 
 		else:
 			if self.outcome == 1:
-				if not self.is_correction_trial:
-					self.valid = True
-					self.trial_counters["valid"] += 1
-					self.trial_counters["correct"] += 1
-				else:
-					self.valid = False
+				self._handle_correct_trial()
 				next_trial_vars["is_correction_trial"] = False
 
 			elif self.outcome == 0:
-				if not self.is_correction_trial:
-					self.valid = True
-					self.trial_counters["valid"] += 1
-					self.trial_counters["incorrect"] += 1
-				else:
-					self.valid = False
-				# Determine if a correction trial is needed based on signed coherence
-				next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
+				self._handle_incorrect_trial()
+				# Correction trial if signed coherence above threshold
+				next_trial_vars["is_correction_trial"] = (np.abs(self.signed_coherence) > self.passive_bias_correction_threshold)
 
-			elif np.isnan(self.outcome):
-				self.valid = False
-				if self.is_correction_trial:
-					next_trial_vars["is_correction_trial"] = True
-
-				if self.choice == 0:
-					self.trial_counters["noresponse"] += 1
-					if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
-						next_trial_vars["is_correction_trial"] = True
-						next_trial_vars["is_repeat_trial"] = True
-				else:
-					next_trial_vars["is_repeat_trial"] = True
+			else:  # NaN outcome
+				self._handle_noresponse_or_invalid(next_trial_vars)
 
 		# write trial data to file
 		self.write_trial_data_to_file()
-		self.is_correction_trial = next_trial_vars["is_correction_trial"]
+
+		# Handle next trial variables based on previous trial outcome
+		self.is_correction_trial = False #next_trial_vars["is_correction_trial"]
 		self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
+		if next_trial_vars["is_correction_trial"]:
+			if self.schedule_structure == "interleaved":
+				new_target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
+				self.block_schedule.append(new_target * np.abs(self.signed_coherence))
+			elif self.schedule_structure == "blocked":
+				self.block_schedule.append(self.signed_coherence)
+		if next_trial_vars["is_repeat_trial"]:
+			self.block_schedule.appendleft(self.signed_coherence)
+
 
 		# if valid update trial variables and send data to terminal
 		if self.valid:
-			# update rolling bias
-			self.rolling_bias[self.rolling_bias_index] = self.choice
-			self.rolling_bias_index = (self.rolling_bias_index + 1) % self.bias_window
-			# update plot parameters
-			if self.choice == -1:
-				# computing left choices coherence-wise
-				self.plot_vars["chose_left"][self.signed_coherence] += 1
-			elif self.choice == 1:
-				# computing right choices coherence-wise
-				self.plot_vars["chose_right"][self.signed_coherence] += 1
-
-			tot_trials_in_coh = self.plot_vars["chose_left"][self.signed_coherence] + self.plot_vars["chose_right"][self.signed_coherence]
-
-			# update running accuracy
-			if self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0:
-				self.plot_vars["running_accuracy"] = [
-					self.trial_counters["valid"],
-					round(self.trial_counters["correct"] / self.trial_counters["valid"] * 100, 2),
-					self.outcome,
-				]
-			# update psychometric array
-			self.plot_vars["psych"][self.signed_coherence] = round(self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh, 2)
-
-			# update total trial array
-			self.plot_vars["trial_distribution"][self.signed_coherence] += 1
-
-			# update reaction time array
-			if np.isnan(self.plot_vars["response_time_distribution"][self.signed_coherence]):
-				self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
-			else:
-				self.plot_vars["response_time_distribution"][self.signed_coherence] = round(
-					(((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh,
-					2,
-				)
+			self._update_post_trial_stats()
 
 		trial_data = {
 			"is_valid": self.valid,
 			"trial_counters": self.trial_counters,
-			"reward_volume": round(self.full_reward_volume, 2),
+			"block_number": self.block_number,
+			"reward_volume": round(self.reward_volume, 2),
 			"trial_reward": round(self.trial_reward, 2) if self.trial_reward is not None else None,
 			"total_reward": round(self.total_reward, 2),
 			"plots": {
@@ -394,6 +417,7 @@ class SessionManager:
 		data = {
 			"idx_attempt": self.trial_counters["attempt"],
 			"idx_valid": self.trial_counters["valid"],
+			"block_number": self.block_number,
 			"idx_correction": self.trial_counters["correction"],
 			"is_correction_trial": self.is_correction_trial,
 			"is_repeat_trial": self.is_repeat_trial,
@@ -416,14 +440,15 @@ class SessionManager:
 			"intertrial_onset": self.intertrial_onset,
 			"stimulus_seed": self.random_generator_seed,
 		}
-		with open(self.config.FILES["trial"], "a+", newline="") as file:
+		with open(self.config.FILES["trial"], "a", newline="") as file:
 			writer = csv.DictWriter(file, fieldnames=data.keys())
 			if file.tell() == 0:
 				writer.writeheader()
 			writer.writerow(data)
 
+
 	def end_of_session_updates(self):
-		self.config.SUBJECT["rolling_perf"]["reward_volume"] = self.full_reward_volume
+		self.config.SUBJECT["rolling_perf"]["reward_volume"] = self.reward_volume
 		self.config.SUBJECT["rolling_perf"]["total_attempts"] = self.trial_counters["attempt"]
 		self.config.SUBJECT["rolling_perf"]["total_reward"] = self.total_reward
 		with open(self.config.FILES["rolling_perf_after"], "wb") as file:
@@ -431,52 +456,3 @@ class SessionManager:
 		with open(self.config.FILES["rolling_perf"], "wb") as file:
 			pickle.dump(self.config.SUBJECT["rolling_perf"], file)
 		print("SAVING EOS FILES")
-
-
-if __name__ == "__main__":
-	import config
-
-	full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
-	reward_volume = config.TASK["rolling_performance"]["reward_volume"]
-	rolling_window = config.TASK["rolling_performance"]["rolling_window"]
-	rolling_perf = {
-		"rolling_window": rolling_window,
-		"history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
-		"history_indices": {int(coh): 49 for coh in full_coherences},
-		"accuracy": {int(coh): 0 for coh in full_coherences},
-		# "current_coherence_level": current_coherence_level,
-		"trials_in_current_level": 0,
-		"total_attempts": 0,
-		"total_reward": 0,
-		"reward_volume": reward_volume,
-	}
-
-	config.SUBJECT = {
-		# Subject and task identification
-		"name": "test",
-		"baseline_weight": 20,
-		"start_weight": 19,
-		"prct_weight": 95,
-		"protocol": "random_dot_motion",
-		"experiment": "rt_directional_training",
-		"session": "1_1",
-		"session_uuid": "XXXX",
-		"rolling_perf": rolling_perf,
-	}
-
-	sm = SessionManager(config)
-
-	sm.prepare_fixation_stage()
-	print(sm.block_schedule)
-
-	sm.prepare_stimulus_stage()
-	sm.prepare_reinforcement_stage(1, 3)
-	print(f"Outcome: {sm.outcome}")
-
-	sm.prepare_intertrial_stage()
-
-	sm.end_of_trial_updates()
-	print(f"Outcome: {sm.outcome}")
-
-	sm.prepare_fixation_stage()
-	print(f"Is correction Trial: {sm.is_correction_trial}")
