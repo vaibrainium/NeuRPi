@@ -69,7 +69,7 @@ class SessionManager:
 
 		# Block schedule and trials counter within block
 		self.block_schedule: deque = deque()
-		self.trials_in_block: int = 0
+		self.block_number: int = 0
 		self.repeats_per_block: int = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
 		self.schedule_structure: str = self.config.TASK["stimulus"]["schedule_structure"]["value"]
 
@@ -198,6 +198,7 @@ class SessionManager:
 
 	######################### trial-stage methods #########################
 	def _start_active_bias_correction_block(self):
+		self.block_number += 1
 		self.in_active_bias_correction_block = True
 		correction_direction = -np.sign(np.nanmean(self.rolling_bias))
 		self.rolling_bias.extend([0] * self.bias_window)
@@ -207,6 +208,7 @@ class SessionManager:
 
 	def _handle_standard_block(self):
 		if self.trial_counters["attempt"] == 0 or len(self.block_schedule) == 0:
+			self.block_number += 1
 			self.in_active_bias_correction_block = False
 			self.generate_block_schedule()
 
@@ -261,8 +263,6 @@ class SessionManager:
 				sequence[i:] = temp_block
 		return sequence
 
-
-
 	def _determine_outcome_and_reward(self, choice):
 		if choice is None or np.isnan(choice):
 			return "invalid", 0
@@ -275,20 +275,15 @@ class SessionManager:
 
 	####################### between-trial methods #######################
 	def _handle_correct_trial(self):
-		if not self.is_correction_trial:
-			self.valid = True
-			self.trial_counters["valid"] += 1
-			self.trial_counters["correct"] += 1
-		else:
-			self.valid = False
+		self.valid = True
+		self.trial_counters["valid"] += 1
+		self.trial_counters["correct"] += 1
 
 	def _handle_incorrect_trial(self):
-		if not self.is_correction_trial:
-			self.valid = True
-			self.trial_counters["valid"] += 1
-			self.trial_counters["incorrect"] += 1
-		else:
-			self.valid = False
+		self.valid = True
+		self.trial_counters["valid"] += 1
+		self.trial_counters["incorrect"] += 1
+
 
 	def _handle_noresponse_or_invalid(self, next_trial_vars):
 		self.valid = False
@@ -306,7 +301,9 @@ class SessionManager:
 	def _update_post_trial_stats(self):
 		# Update rolling bias circular buffer
 		self.rolling_bias.append(self.choice)
+		print(f"Rolling Bias: {self.rolling_bias}")
 		signed_coh = self.signed_coherence
+
 
 		# Update choice counts for psychometric plotting
 		chose_left = self.plot_vars["chose_left"]
@@ -384,7 +381,7 @@ class SessionManager:
 		self.write_trial_data_to_file()
 
 		# Handle next trial variables based on previous trial outcome
-		self.is_correction_trial = next_trial_vars["is_correction_trial"]
+		self.is_correction_trial = False #next_trial_vars["is_correction_trial"]
 		self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
 		if next_trial_vars["is_correction_trial"]:
 			if self.schedule_structure == "interleaved":
@@ -403,6 +400,7 @@ class SessionManager:
 		trial_data = {
 			"is_valid": self.valid,
 			"trial_counters": self.trial_counters,
+			"block_number": self.block_number,
 			"reward_volume": round(self.reward_volume, 2),
 			"trial_reward": round(self.trial_reward, 2) if self.trial_reward is not None else None,
 			"total_reward": round(self.total_reward, 2),
@@ -419,6 +417,7 @@ class SessionManager:
 		data = {
 			"idx_attempt": self.trial_counters["attempt"],
 			"idx_valid": self.trial_counters["valid"],
+			"block_number": self.block_number,
 			"idx_correction": self.trial_counters["correction"],
 			"is_correction_trial": self.is_correction_trial,
 			"is_repeat_trial": self.is_repeat_trial,
