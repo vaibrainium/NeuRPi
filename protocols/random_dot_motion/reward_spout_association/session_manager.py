@@ -33,8 +33,6 @@ class SessionManager:
 		self.rolling_bias = deque(maxlen=self.bias_window)
 		self.rolling_bias.extend([0] * self.bias_window)
 
-		# self.rolling_bias_index = 0
-		# self.rolling_bias = np.zeros(self.bias_window)
 		self.bias = 0
 		self.switch_threshold = self.config.TASK["bias_correction"]["threshold"]
 		self.responses_to_check = [-1, 1]
@@ -69,7 +67,6 @@ class SessionManager:
 		# write trial data to file
 		self.write_trial_data_to_file()
 
-		# if valid update trial variables and send data to terminal
 
 		trial_data = {
 			"trial_counters": self.trial_counters,
