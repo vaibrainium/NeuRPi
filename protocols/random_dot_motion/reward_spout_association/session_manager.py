@@ -29,7 +29,7 @@ class SessionManager:
 		self.knowledge_of_results_duration = self.config.TASK["knowledge_of_results"]["duration"]
 		self.intertrial_duration = self.config.TASK["intertrial"]["duration"]
 
-		self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
+		self.bias_window = self.config.TASK["bias_correction"]["window"]
 		self.rolling_bias = deque(maxlen=self.bias_window)
 		self.rolling_bias.extend([0] * self.bias_window)
 
