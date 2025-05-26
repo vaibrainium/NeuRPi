@@ -24,7 +24,7 @@ class SessionManager:
 		}
 
 		# Trial parameters
-		self.random_generator_seed: Optional[int] = None
+		self.trial_seed: Optional[int] = None
 		self.is_correction_trial: bool = False
 		self.is_repeat_trial: bool = False
 		self.signed_coherence: Optional[float] = None
@@ -98,7 +98,7 @@ class SessionManager:
 
 	def reset_trial_variables(self):
 		"""Reset all trial variables to None or their initial state."""
-		self.random_generator_seed = None
+		self.trial_seed = None
 		self.signed_coherence = None
 		self.target = None
 		self.choice = None
@@ -140,7 +140,7 @@ class SessionManager:
 		response_to_check = [-1, 1]
 		stage_stimulus_args = {
 			"coherence": self.signed_coherence,
-			"seed": self.random_generator_seed,
+			"seed": self.trial_seed,
 			"audio_stim": "onset_tone",
 		}
 		stage_task_args = {
@@ -203,7 +203,7 @@ class SessionManager:
 		correction_direction = -np.sign(np.nanmean(self.rolling_bias))
 		self.rolling_bias.extend([0] * self.bias_window)
 		self.generate_active_correction_block_schedule(correction_direction, prob=self.active_bias_correction_probability)
-		self.signed_coherence = self.block_schedule.popleft()
+		self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
 		self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
 
 	def _handle_standard_block(self):
@@ -212,15 +212,14 @@ class SessionManager:
 			self.in_active_bias_correction_block = False
 			self.generate_block_schedule()
 
-		self.signed_coherence = self.block_schedule.popleft()
+		self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
 		self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
 		self.trial_counters["correction"] = 0
 
 	def prepare_trial_variables(self):
 		"""Prepare parameters for next trial based on current flags and bias."""
 		self.reset_trial_variables()
-		self.random_generator_seed = np.random.randint(0, 1_000_000)
-		if (not self.in_active_bias_correction_block and np.abs(np.mean(self.rolling_bias)) >= self.active_bias_correction_threshold):
+		if (not self.in_active_bias_correction_block and np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold):
 			self._start_active_bias_correction_block()
 		else:
 			self._handle_standard_block()
@@ -229,7 +228,8 @@ class SessionManager:
 		schedule = np.repeat(self.active_coherences, self.repeats_per_block)
 		if self.schedule_structure == "interleaved":
 			schedule = self.shuffle_seq(schedule)
-		self.block_schedule = deque(schedule)
+		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
+		self.block_schedule = deque(seed_schedule)
 
 	def generate_active_correction_block_schedule(self, correction_direction, prob):
 		block_length = self.get_active_trial_block_length()
@@ -241,8 +241,8 @@ class SessionManager:
 			np.full(num_correction, correction_direction),
 			np.full(num_noncorrection, -correction_direction)
 		])
-		np.random.shuffle(schedule)
-		self.block_schedule = deque(schedule)
+		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
+		self.block_schedule = deque(seed_schedule)
 
 	def get_active_trial_block_length(self):
 		values = np.arange(7,14)
@@ -355,15 +355,11 @@ class SessionManager:
 		self.outcome = outcome_map.get(self.outcome, np.nan)
 
 		self.trial_counters["attempt"] += 1
-
-		# Prepare next trial flags
 		next_trial_vars = {"is_correction_trial": False, "is_repeat_trial": False}
 
 		if self.in_active_bias_correction_block:
 			self.valid = False
-			# Repeat trial if outcome not correct
 			next_trial_vars["is_repeat_trial"] = (self.outcome != 1)
-
 		else:
 			if self.outcome == 1:
 				self._handle_correct_trial()
@@ -385,12 +381,13 @@ class SessionManager:
 		self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
 		if next_trial_vars["is_correction_trial"]:
 			if self.schedule_structure == "interleaved":
-				new_target = int(np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)))
-				self.block_schedule.append(new_target * np.abs(self.signed_coherence))
+				new_target = int(np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4)))
+				new_signed_coh = new_target * np.abs(self.signed_coherence)
+				self.block_schedule.append((np.random.randint(0, 1_000_000), new_signed_coh))
 			elif self.schedule_structure == "blocked":
-				self.block_schedule.append(self.signed_coherence)
+				self.block_schedule.append((np.random.randint(0, 1_000_000), self.signed_coherence))
 		if next_trial_vars["is_repeat_trial"]:
-			self.block_schedule.appendleft(self.signed_coherence)
+			self.block_schedule.appendleft((self.trial_seed, self.signed_coherence))
 
 
 		# if valid update trial variables and send data to terminal
@@ -438,7 +435,7 @@ class SessionManager:
 			"response_onset": self.response_onset,
 			"reinforcement_onset": self.reinforcement_onset,
 			"intertrial_onset": self.intertrial_onset,
-			"stimulus_seed": self.random_generator_seed,
+			"stimulus_seed": self.trial_seed,
 		}
 		with open(self.config.FILES["trial"], "a", newline="") as file:
 			writer = csv.DictWriter(file, fieldnames=data.keys())
