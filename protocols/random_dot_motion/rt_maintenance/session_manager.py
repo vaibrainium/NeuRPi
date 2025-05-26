@@ -234,13 +234,22 @@ class SessionManager:
 	def generate_active_correction_block_schedule(self, correction_direction, prob):
 		block_length = self.get_active_trial_block_length()
 
-		correction_coherence = 100
+		# Randomly select coherence values (100 or 72) for active bias correction
+		correction_coherences = np.random.choice([100, 72], size=block_length)
+
+		# Determine how many trials are correction vs non-correction
 		num_correction = int(block_length * prob)
 		num_noncorrection = block_length - num_correction
-		schedule = correction_coherence * np.concatenate([
+		# Create direction schedule (e.g., +1 or -1)
+		directions = np.concatenate([
 			np.full(num_correction, correction_direction),
 			np.full(num_noncorrection, -correction_direction)
 		])
+
+		# Shuffle both directions and coherence values together
+		np.random.shuffle(directions)  # Ensures mixed correction/non-correction
+		schedule = correction_coherences * directions
+
 		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
 		self.block_schedule = deque(seed_schedule)
 
