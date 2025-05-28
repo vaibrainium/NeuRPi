@@ -1,14 +1,13 @@
 import csv
 import pickle
-import numpy as np
 from collections import deque
+from typing import Any, Optional, Union
 
-from typing import Any, Dict, Optional, Tuple, Union, List
+import numpy as np
+
 
 class SessionManager:
-	"""
-	Class for managing session structure i.e., trial sequence, graduation, and session level summary.
-	"""
+	"""Class for managing session structure i.e., trial sequence, graduation, and session level summary."""
 
 	def __init__(self, config):
 		self.config = config
@@ -117,10 +116,8 @@ class SessionManager:
 		self.intertrial_onset = None
 
 	####################### trial epoch methods #######################
-	def prepare_fixation_stage(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-		"""
-		Prepare parameters for fixation stage.
-		"""
+	def prepare_fixation_stage(self) -> tuple[dict[str, Any], dict[str, Any]]:
+		"""Prepare parameters for fixation stage."""
 		self.prepare_trial_variables()
 
 		self.fixation_duration = self.fixation_duration_function()
@@ -132,10 +129,8 @@ class SessionManager:
 		stage_stimulus_args = ({},)
 		return stage_task_args, stage_stimulus_args
 
-	def prepare_stimulus_stage(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-		"""
-		Prepare parameters for stimulus presentation stage.
-		"""
+	def prepare_stimulus_stage(self) -> tuple[dict[str, Any], dict[str, Any]]:
+		"""Prepare parameters for stimulus presentation stage."""
 		self.stimulus_duration = self.maximum_viewing_duration
 		response_to_check = [-1, 1]
 		stage_stimulus_args = {
@@ -152,10 +147,8 @@ class SessionManager:
 		}
 		return stage_task_args, stage_stimulus_args
 
-	def prepare_reinforcement_stage(self, choice: Optional[int], response_time: Optional[float]) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-		"""
-		Prepare parameters for reinforcement stage based on choice and response time.
-		"""
+	def prepare_reinforcement_stage(self, choice: Optional[int], response_time: Optional[float]) -> tuple[dict[str, Any], dict[str, Any]]:
+		"""Prepare parameters for reinforcement stage based on choice and response time."""
 		self.choice = choice
 		self.response_time = response_time
 		stage_task_args, stage_stimulus_args = {}, {}
@@ -164,7 +157,8 @@ class SessionManager:
 
 		# Get reinforcement duration for this outcome
 		if self.outcome not in self.reinforcement_duration_function:
-			raise KeyError(f"Reinforcement duration function for outcome '{self.outcome}' is not defined.")
+			msg = f"Reinforcement duration function for outcome '{self.outcome}' is not defined."
+			raise KeyError(msg)
 		self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
 
 		stage_stimulus_args = {"outcome": self.outcome}
@@ -184,9 +178,7 @@ class SessionManager:
 		return stage_task_args, stage_stimulus_args
 
 	def prepare_intertrial_stage(self):
-		"""
-		Prepare parameters for intertrial stage.
-		"""
+		"""Prepare parameters for intertrial stage."""
 		stage_task_args, stage_stimulus_args = {}, {}
 		self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
@@ -239,7 +231,7 @@ class SessionManager:
 		num_noncorrection = block_length - num_correction
 		schedule = correction_coherence * np.concatenate([
 			np.full(num_correction, correction_direction),
-			np.full(num_noncorrection, -correction_direction)
+			np.full(num_noncorrection, -correction_direction),
 		])
 		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
 		self.block_schedule = deque(seed_schedule)
@@ -252,8 +244,8 @@ class SessionManager:
 		chosen_value = np.random.choice(values, p=probabilities)
 		return chosen_value
 
-	def shuffle_seq(self, sequence: Union[np.ndarray, List[float]], max_repeat: int = 3) -> np.ndarray:
-		"""Shuffle sequence so that no more than max_repeat consecutive elements have same sign"""
+	def shuffle_seq(self, sequence: Union[np.ndarray, list[float]], max_repeat: int = 3) -> np.ndarray:
+		"""Shuffle sequence so that no more than max_repeat consecutive elements have same sign."""
 		sequence = np.array(sequence)
 		for i in range(len(sequence) - max_repeat + 1):
 			subseq = sequence[i:i + max_repeat]
@@ -266,12 +258,11 @@ class SessionManager:
 	def _determine_outcome_and_reward(self, choice):
 		if choice is None or np.isnan(choice):
 			return "invalid", 0
-		elif choice == 0:
+		if choice == 0:
 			return "noresponse", 0
-		elif choice == self.target:
+		if choice == self.target:
 			return "correct", self.reward_volume
-		else:
-			return "incorrect", 0
+		return "incorrect", 0
 
 	####################### between-trial methods #######################
 	def _handle_correct_trial(self):
@@ -323,10 +314,7 @@ class SessionManager:
 			self.plot_vars["running_accuracy"] = [valid_trials, accuracy, self.outcome]
 
 		# Update psychometric function (fraction choosing right)
-		if tot_trials > 0:
-			psych_val = round(chose_right[signed_coh] / tot_trials, 2)
-		else:
-			psych_val = 0.0
+		psych_val = round(chose_right[signed_coh] / tot_trials, 2) if tot_trials > 0 else 0.0
 		self.plot_vars["psych"][signed_coh] = psych_val
 
 		# Update trial distribution count
@@ -349,7 +337,6 @@ class SessionManager:
 
 	def end_of_trial_updates(self):
 		"""Finalize current trial and prepare flags for next trial."""
-
 		# Map string outcome to numeric
 		outcome_map = {"correct": 1, "incorrect": 0, "noresponse": np.nan, "invalid": np.nan}
 		self.outcome = outcome_map.get(self.outcome, np.nan)
@@ -360,18 +347,17 @@ class SessionManager:
 		if self.in_active_bias_correction_block:
 			self.valid = False
 			next_trial_vars["is_repeat_trial"] = (self.outcome != 1)
-		else:
-			if self.outcome == 1:
-				self._handle_correct_trial()
-				next_trial_vars["is_correction_trial"] = False
+		elif self.outcome == 1:
+			self._handle_correct_trial()
+			next_trial_vars["is_correction_trial"] = False
 
-			elif self.outcome == 0:
-				self._handle_incorrect_trial()
-				# Correction trial if signed coherence above threshold
-				next_trial_vars["is_correction_trial"] = (np.abs(self.signed_coherence) > self.passive_bias_correction_threshold)
+		elif self.outcome == 0:
+			self._handle_incorrect_trial()
+			# Correction trial if signed coherence above threshold
+			next_trial_vars["is_correction_trial"] = (np.abs(self.signed_coherence) > self.passive_bias_correction_threshold)
 
-			else:  # NaN outcome
-				self._handle_noresponse_or_invalid(next_trial_vars)
+		else:  # NaN outcome
+			self._handle_noresponse_or_invalid(next_trial_vars)
 
 		# write trial data to file
 		self.write_trial_data_to_file()
