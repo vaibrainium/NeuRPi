@@ -310,11 +310,11 @@ class TaskGUI(rigclass):
 
     def hide_summary(self):
         """Hide summary window after validating weights."""
-        if any(
+        if any([
             self.summary.baseline_weight.toPlainText() == "",
             self.summary.start_weight.toPlainText() == "",
             self.summary.end_weight.toPlainText() == "",
-        ):
+        ]):
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Critical)
             msg.setText("Forgot to Enter one of the weights")
