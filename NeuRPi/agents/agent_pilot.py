@@ -72,8 +72,7 @@ class Pilot:
             self.handshake()
             self.logger.debug("Handshake sent")
         else:
-            msg = "Hardware is not connected. Check connectivity and try again."
-            raise TimeoutError(msg)
+            raise TimeoutError("Hardware is not connected. Check connectivity and try again.")
 
     def _verify_hardware_connectivity(self):
         """Check if all required hardware is connected."""
@@ -86,7 +85,6 @@ class Pilot:
 
         Args:
             plugin_module_names (list): List of plugin module names as strings.
-
         """
         for module_name in plugin_module_names:
             try:
@@ -121,11 +119,9 @@ class Pilot:
         Args:
             key (str): The message type to listen for.
             handler (callable): A callable that will handle the message.
-
         """
         if not callable(handler):
-            msg = f"Handler for '{key}' must be a callable."
-            raise ValueError(msg)
+            raise ValueError(f"Handler for '{key}' must be a callable.")
         self.listens[key] = handler
         self.logger.debug(f"Handler registered for message type: '{key}'")
 
@@ -168,6 +164,7 @@ class Pilot:
     def l_param(self, value):
         """Handle parameter update from terminal."""
         # TODO: Placeholder for handling parameter updates
+        pass
 
     def l_event(self, value):
         """Handle events sent from the terminal."""
@@ -185,7 +182,9 @@ class Pilot:
 
     ############################### SECONDARY FUNCTIONS ########################################
     def convert_str_to_module(self, module_string):
-        """Convert string to module."""
+        """
+        Convert string to module
+        """
         module_name = "session_config"
         session_config = types.ModuleType(module_name)
         exec(module_string, session_config.__dict__)
@@ -199,20 +198,16 @@ class Pilot:
 
     def run_task(self, value):
         """
-        Start running task under new thread
+        start running task under new thread
         initiate the task, and progress through each stage of task with `task.stages.next`
         send data to terminal after every stage
-        waits for the task to clear `stage_block` between stages.
+        waits for the task to clear `stage_block` between stages
+
         """
         self.logger.debug("Starting task loop")
-        # self.state = "RUNNING"
-        # self.running.set()
-        # self.update_state()
-
-        self.state = "IDLE"
-        self.running.clear()
+        self.state = "RUNNING"
+        self.running.set()
         self.update_state()
-
 
         try:
             while True:
@@ -226,8 +221,9 @@ class Pilot:
                         if self.stopping.is_set():
                             self._finalize_task()
                             break
-                        self.logger.debug("Task paused; waiting for running event.")
-                        self.running.wait()
+                        else:
+                            self.logger.debug("Task paused; waiting for running event.")
+                            self.running.wait()
 
                 except StopIteration:
                     self.logger.debug("Task stages exhausted; ending task.")
@@ -253,7 +249,7 @@ class Pilot:
 
     def _did_trial_end(self, data):
         """Check if the trial has ended."""
-        return isinstance(data, dict) and "TRIAL_END" in data
+        return isinstance(data, dict) and "TRIAL_END" in data.keys()
 
     def _finalize_task(self):
         """Finalize the task and send session files."""
