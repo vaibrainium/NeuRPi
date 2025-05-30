@@ -54,7 +54,7 @@ TASK = {
         },
         "schedule_structure": {
 			"tag": "How to structure block, interleaved or blocked",
-			"value": "interleaved"
+			"value": "blocked"
 		}
     },
     "rolling_performance": {
