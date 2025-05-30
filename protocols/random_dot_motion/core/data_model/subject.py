@@ -210,18 +210,9 @@ class Subject(BaseSubject):
                         file.write(file_content)
                 elif file_name in ["summary"]:
                     with open(self.files[file_name], "a", newline="") as file:
-                        existing_fields = file_content.keys()
-                        writer = csv.DictWriter(file, fieldnames=existing_fields)
+                        writer = csv.DictWriter(file, fieldnames=file_content.keys())
                         if file.tell() == 0:
                             writer.writeheader()
-                        else:
-                            # Extend fieldnames if needed
-                            file.seek(0)
-                            reader = csv.DictReader(file)
-                            current_fields = reader.fieldnames or []
-                            all_fields = list(set(current_fields) | set(file_content.keys()))
-                            writer = csv.DictWriter(file, fieldnames=all_fields)
-                            file.seek(0, 2)
                         writer.writerow(file_content)
                 elif file_name in [
                     "rolling_perf",

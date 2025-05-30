@@ -1,36 +1,45 @@
 import sys
 import time
+
+# import cv2
 import numpy as np
 import pyqtgraph as pg
 from PyQt5 import QtCore, QtWidgets, uic
 from pyqtgraph import exporters
-from typing import Any, Dict, Optional
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
 Ui_summary, summaryclass = uic.loadUiType("protocols/random_dot_motion/core/gui/summary.ui")
 camera_index = 0
 
-def code_to_str(var: str) -> str:
-    """Convert code variable to display string."""
-    return str.title(var.replace("_", " "))
 
-def str_to_code(var: str) -> str:
-    """Convert display string to code variable."""
-    return var.replace(" ", "_").lower()
+def code_to_str(var: str):
+    display_var = var.replace("_", " ")
+    display_var = str.title(display_var)
+    return display_var
+
+
+def str_to_code(var: str):
+    code_var = var.replace(" ", "_")
+    code_var = code_var.lower()
+    return code_var
+
 
 class TaskGUI(rigclass):
     tabActiveStateChanged = QtCore.pyqtSignal(bool)
+
     comm_to_taskgui = QtCore.pyqtSignal(dict)
     comm_from_taskgui = QtCore.pyqtSignal(dict)
 
     def __init__(self, rig_id=None, session_info=None, subject=None):
         super().__init__()
         self.rig_gui_active = False
+        # Load GUIs
         self.rig_id = rig_id
         self.subject = subject
         self.protocol = session_info.protocol
         self.experiment = session_info.experiment
         self.configuration = session_info.configuration
+
         self.summary_data = None
 
         # main rig window
@@ -55,7 +64,8 @@ class TaskGUI(rigclass):
         self.summary.setupUi(self.summary_window)
         self.summary_window.raise_()
         self.summary.close.hide()
-
+        # Camera
+        # self.video_device = cv2.VideoCapture(camera_index)
         # Rig parameter variables
         self.session_clock = {
             "start": 0,
@@ -70,7 +80,7 @@ class TaskGUI(rigclass):
         self.session_pause_time = 0
         self.session_timer = QtCore.QTimer()
         self.trial_timer = QtCore.QTimer()
-        self.video_device = None
+        self.video_device = None  # cv2.VideoCapture(camera_index)
         self.camera_timer = QtCore.QTimer()
         self.trial_clock = None
         self.stopped = False
@@ -84,21 +94,26 @@ class TaskGUI(rigclass):
 
         self.initialize_plots()
 
-        # GUI interaction connections
+        # Setting up gui intearaction connections
         self.tabActiveStateChanged.connect(self.handleTabActiveStateChange)
+
         self.comm_to_taskgui.connect(self.update_gui)
         self.rig.reward_left.clicked.connect(lambda: self.hardware("reward_left"))
         self.rig.reward_right.clicked.connect(lambda: self.hardware("reward_right"))
         self.rig.reward_volume.valueChanged.connect(lambda: self.hardware("update_reward"))
         self.rig.toggle_left_reward.clicked.connect(lambda: self.hardware("toggle_left_reward"))
         self.rig.toggle_right_reward.clicked.connect(lambda: self.hardware("toggle_right_reward"))
+
         self.rig.flash_led_left.clicked.connect(lambda: self.hardware("flash_led_left"))
         self.rig.flash_led_center.clicked.connect(lambda: self.hardware("flash_led_center"))
         self.rig.flash_led_right.clicked.connect(lambda: self.hardware("flash_led_right"))
         self.rig.toggle_led_left.clicked.connect(lambda: self.hardware("toggle_led_left"))
         self.rig.toggle_led_right.clicked.connect(lambda: self.hardware("toggle_led_right"))
+
+
         self.rig.led_and_reward_left.clicked.connect(lambda: self.hardware("led_and_reward_left"))
         self.rig.led_and_reward_right.clicked.connect(lambda: self.hardware("led_and_reward_right"))
+
         self.rig.lick_threshold_left.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_left"))
         self.rig.lick_threshold_right.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_right"))
         self.rig.reset_lick_sensor.clicked.connect(lambda: self.lick_sensor("reset_lick_sensor"))
@@ -108,27 +123,28 @@ class TaskGUI(rigclass):
         self.summary.okay.clicked.connect(self.hide_summary)
         self.summary.close.clicked.connect(self.close_summary)
 
-    # --- GUI Functions ---
-
-    def handleTabActiveStateChange(self, isActive: bool):
-        """Handle tab activation state change."""
-        self.rig_gui_active = isActive
+    ###################################################################################################
+    # GUI Functions
+    def handleTabActiveStateChange(self, isActive):
+        # This method will be called when the tab's activation state changes
         if isActive:
+            self.rig_gui_active = True
             self.start_active_gui_methods()
+            # print(f"Tab {self.rig_id} is now active.")
         else:
+            self.rig_gui_active = False
             self.stop_active_gui_methods()
+            # print(f"Tab {self.rig_id} is now inactive.")
 
-    def set_rig_configuration(self, prefs: dict = {}):
-        """Set rig configuration from preferences."""
+    def set_rig_configuration(self, prefs={}):
         try:
             hardware = prefs.get("HARDWARE")
             self.rig.lick_threshold_left.setValue(hardware.Arduino.Primary.lick.threshold_left)
             self.rig.lick_threshold_right.setValue(hardware.Arduino.Primary.lick.threshold_right)
-        except (AttributeError, EOFError):
+        except EOFError:
             pass
 
     def initialize_plots(self):
-        """Initialize all plots."""
         # Accuracy plots
         self.rig.accuracy_plot.setTitle("Accuracy Plot", color="r", size="10pt")
         self.rig.accuracy_plot.setYRange(0, 100)
@@ -159,6 +175,7 @@ class TaskGUI(rigclass):
         self.rig.trial_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         self.trial_distribution_plot = self.rig.trial_distribution.plot()
         # Reaction Time Plot
+        self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
         self.rig.rt_distribution.setTitle("Reaction Times", color="r", size="10pt")
         self.rig.rt_distribution.setXRange(-100, 100)
         self.rig.rt_distribution.setInteractive(False)
@@ -169,8 +186,8 @@ class TaskGUI(rigclass):
         self.chronometric_plot = self.rig.rt_distribution.plot()
 
     def start_experiment(self):
-        """Start the experiment and session clock."""
         self.state = "RUNNING"
+        # starting session clock
         self.session_clock = {
             "start": time.time(),
             "display": 0,
@@ -178,60 +195,73 @@ class TaskGUI(rigclass):
             "timer": QtCore.QTimer(),
             "end": None,
         }
+        # self.session_timer.timeout.connect(lambda: self.update_session_clock())
+        # self.session_timer.start(1000)
 
     def start_active_gui_methods(self):
-        """Start timers and video if not stopped or idle."""
-        if self.state not in ("STOPPED", "IDLE"):
-            self.session_timer.timeout.connect(self.update_session_clock)
+        if self.state != "STOPPED" or self.state != "IDLE":
+            self.session_timer.timeout.connect(lambda: self.update_session_clock())
             self.session_timer.start(1000)
-        if self.video_device is not None and self.video_device.isOpened():
-            self.camera_timer.timeout.connect(self.update_video_image)
-            self.camera_timer.start(50)
+        if self.video_device is not None:
+            if self.video_device.isOpened():
+                self.camera_timer.timeout.connect(self.update_video_image)
+                self.camera_timer.start(50)
 
     def stop_active_gui_methods(self):
-        """Stop timers and video if not stopped or idle."""
-        if self.state not in ("STOPPED", "IDLE"):
+        # self.session_timer.timeout.disconnect()
+        if self.state != "STOPPED" or self.state != "IDLE":
             self.session_timer.stop()
         if self.video_device is not None:
             self.camera_timer.stop()
 
     def update_session_clock(self):
-        """Update the session clock display."""
         self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
         self.rig.session_timer.display(int(self.session_display_clock))
 
     def update_video_image(self):
-        """Update video image (stub)."""
         pass
 
     def hardware(self, message: str):
-        """Send hardware event."""
         if "reward" in message:
             value_dict = {"key": message, "value": self.rig.reward_volume.value()}
-        else:
+        elif "flash_led" in message:
             value_dict = {"key": message, "value": None}
-        self.forward_signal({
-            "to": self.rig_id,
-            "key": "EVENT",
-            "value": {"key": "HARDWARE", "value": value_dict},
-        })
+        elif "toggle" in message:
+            value_dict = {"key": message, "value": None}
+
+        self.forward_signal(
+            {
+                "to": self.rig_id,
+                "key": "EVENT",
+                "value": {
+                    "key": "HARDWARE",
+                    "value": value_dict,
+                },
+            }
+        )
 
     def lick_sensor(self, message: str):
-        """Send lick sensor event."""
         temp_val = None
         if message == "update_lick_threshold_left":
             temp_val = round(self.rig.lick_threshold_left.value(), 3)
         elif message == "update_lick_threshold_right":
             temp_val = round(self.rig.lick_threshold_right.value(), 3)
-        self.forward_signal({
-            "to": self.rig_id,
-            "key": "EVENT",
-            "value": {"key": "HARDWARE", "value": {"key": message, "value": temp_val}},
-        })
+
+        self.forward_signal(
+            {
+                "to": self.rig_id,
+                "key": "EVENT",
+                "value": {
+                    "key": "HARDWARE",
+                    "value": {"key": message, "value": temp_val},
+                },
+            }
+        )
 
     def pause_experiment(self):
         """
-        Pause or resume the experiment and update GUI accordingly.
+        If session is not paused, pause it and send the signal to terminal.
+        If session is paused, resume it and send the corresponding singal to termianl.
         """
         if self.state == "RUNNING":
             self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}})
@@ -239,6 +269,7 @@ class TaskGUI(rigclass):
             self.rig.pause_experiment.setText("Resume")
             self.state = "PAUSED"
             self.pause_time = time.time()
+            # hide end button
             self.rig.stop_experiment.hide()
         elif self.state == "PAUSED":
             self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}})
@@ -246,107 +277,103 @@ class TaskGUI(rigclass):
             self.rig.pause_experiment.setText("Pause")
             self.state = "RUNNING"
             self.session_clock["pause"] = time.time() - self.pause_time
+            # show end button
             self.rig.stop_experiment.show()
 
     def stop_experiment(self):
-        """End task after current trial finishes."""
+        """End task after current trial finishes"""
         self.forward_signal({"to": self.rig_id, "key": "STOP", "value": None})
         self.state = "STOPPED"
         self.stop_active_gui_methods()
 
-    def create_summary_data(self, value: dict):
-        """Create summary data from session values."""
+    def create_summary_data(self, value):
         self.summary_data = {
             "date": time.strftime("%b-%d-%Y", time.localtime(self.session_clock["start"])),
             "experiment": self.experiment,
             "session": self.subject.session,
+            "configuration_used": self.configuration,
             "session_uuid": self.subject.session_uuid,
-            "configuration": self.configuration,
             "start_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["start"])),
             "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
         }
-        # Optional session variables
+        # Following variables need not occur in every session
         try:
-            tc = value["trial_counters"]
-            plots = value["plots"]
-            self.summary_data.update({
-                "total_attempt": tc.get("attempt"),
-                "total_valid": tc.get("valid"),
-                "total_correct": tc.get("correct"),
-                "total_incorrect": tc.get("incorrect"),
-                "total_noresponse": tc.get("noresponse"),
-                "total_accuracy": plots.get("running_accuracy", [None, None])[1],
-                "trial_distribution": plots.get("trial_distribution"),
-                "psychometric_function": plots.get("psychometric_function"),
-                "response_time_distribution": plots.get("response_time_distribution"),
-            })
-        except Exception as e:
-            # Set all optional fields to None if missing
-            for key in [
-                "total_attempt", "total_valid", "total_correct", "total_incorrect",
-                "total_noresponse", "total_accuracy", "trial_distribution",
-                "psychometric_function", "response_time_distribution"
-            ]:
-                self.summary_data[key] = None
+            self.summary_data["total_attempt"] = value["trial_counters"]["attempt"]
+            self.summary_data["total_valid"] = value["trial_counters"]["valid"]
+            self.summary_data["total_correct"] = value["trial_counters"]["correct"]
+            self.summary_data["total_incorrect"] = value["trial_counters"]["incorrect"]
+            self.summary_data["total_noresponse"] = value["trial_counters"]["noresponse"]
+            self.summary_data["total_accuracy"] = value["plots"]["running_accuracy"][1]
+            self.summary_data["trial_distribution"] = value["plots"]["trial_distribution"]
+            self.summary_data["psychometric_function"] = value["plots"]["psychometric_function"]
+            self.summary_data["response_time_distribution"] = value["plots"]["response_time_distribution"]
+        except:
+            # Make them none
+            self.summary_data["total_attempt"] = None
+            self.summary_data["total_valid"] = None
+            self.summary_data["total_correct"] = None
+            self.summary_data["total_incorrect"] = None
+            self.summary_data["total_noresponse"] = None
+            self.summary_data["total_accuracy"] = None
+            self.summary_data["trial_distribution"] = None
+            self.summary_data["psychometric_function"] = None
+            self.summary_data["response_time_distribution"] = None
 
-    def show_summary_window(self, value: Optional[dict] = None):
-        """Show summary window with summarized data."""
-        s = self.summary_data
+    def show_summary_window(self, value=None):
+        """Show summary window with summarized data"""
+
         summary_string = (
             f"{time.ctime(self.session_clock['start'])} \n\n"
             f"{time.ctime(self.session_clock['end'])} \n\n"
-            f"{s['total_valid']} {s['trial_distribution']} \n\n"
-            f"{s['total_accuracy']}% {s['psychometric_function']} \n\n"
-            f"{s['response_time_distribution']} \n\n"
-            f"{s['total_incorrect']}/{s['total_attempt']}; {s['total_noresponse']}/{s['total_attempt']} \n\n"
-            f"{s['total_reward']} ul @ {s['reward_rate']} ul"
+            f"{self.summary_data['total_valid']} {self.summary_data['trial_distribution']} \n\n"
+            f"{self.summary_data['total_accuracy']}% {self.summary_data['psychometric_function']} \n\n"
+            f"{self.summary_data['response_time_distribution']} \n\n"
+            f"{self.summary_data['total_incorrect']}/{self.summary_data['total_attempt']}; {self.summary_data['total_noresponse']}/{self.summary_data['total_attempt']} \n\n"
+            f"{self.summary_data['total_reward']} ul @ {self.summary_data['reward_rate']} ul"
         )
+
         self.summary.baseline_weight.setText(str(self.subject.baseline_weight))
         self.summary.start_weight.setText(str(self.subject.start_weight))
         self.summary.summary_data.setText(summary_string)
         self.summary_window.show()
 
     def hide_summary(self):
-        """Hide summary window after validating weights."""
-        if any([
-            self.summary.baseline_weight.toPlainText() == "",
-            self.summary.start_weight.toPlainText() == "",
-            self.summary.end_weight.toPlainText() == "",
-        ]):
+        if (
+            self.summary.baseline_weight.toPlainText() == ""
+            or self.summary.start_weight.toPlainText() == ""
+            or self.summary.end_weight.toPlainText() == ""
+        ):
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Critical)
             msg.setText("Forgot to Enter one of the weights")
             msg.setWindowTitle("Error")
             msg.exec_()
-            return
-        self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
-        self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
-        self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
-        self.subject.end_weight = self.summary_data["end_weight"]
-        self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
-        self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
-        self.summary_data["comments"] = self.summary.comments.toPlainText()
-        self.check_water_requirement()
-        self.summary.close.show()
+        else:
+            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
+            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
+            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
+            self.subject.end_weight = self.summary_data["end_weight"]
+            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["comments"] = self.summary.comments.toPlainText()
+            self.check_water_requirement()
+            self.summary.close.show()
 
     def close_summary(self):
-        """Close the summary window and update comments."""
-        self.summary_data["comments"] = self.summary.comments.toPlainText()
+        self.summary_data["comments"] = self.summary.comments.toPlainText()  # update comments
         self.summary_window.hide()
         self.rig.close_experiment.show()
 
-    def check_water_requirement(self) -> bool:
-        """Check if water requirement is met and show message if not."""
+    def check_water_requirement(self):
         received_water = self.subject.get_today_received_water() + self.summary_data["total_reward"]
         additional_water = 0
         if received_water < 600:
             additional_water = max(additional_water, 600 - received_water)
         if self.summary_data["end_weight_prct"] < 85:
             additional_water = max(
-                additional_water,
-                ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000
+                additional_water, ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000
             )
         if additional_water > 0:
             msg = QtWidgets.QMessageBox()
@@ -358,58 +385,58 @@ class TaskGUI(rigclass):
         return False
 
     def close_experiment(self):
-        """Task has ended but waiting for trial to end to close session."""
+        """Task has ended but waiting to trial to end to close session"""
         try:
             self.video_device.release()
             self.video_device.destroyAllWindows()
-        except Exception:
+        except:
             pass
         self.forward_signal({"to": "main_gui", "key": "KILL", "value": None})
 
-    # --- Outgoing communication ---
-
-    def forward_signal(self, message: dict):
-        """Emit a message from the task GUI."""
+    ###################################################################################################
+    # Outgoing communication
+    def forward_signal(self, message):
         message["rig_id"] = self.rig_id
         self.comm_from_taskgui.emit(message)
 
-    # --- Incoming communication ---
-
-    def update_gui(self, value: dict):
-        """Update GUI based on incoming values."""
-        if "state" in value:
+    ###################################################################################################
+    # Incoming communication
+    def update_gui(self, value):
+        if "state" in value.keys():
             if value["state"] == "RUNNING":
                 pass
 
-        if "trial_counters" in value:
+        if "trial_counters" in value.keys():
             self.update_trials(value["trial_counters"])
 
-        if "block_number" in value:
+        if "block_number" in value.keys():
             self.rig.block_number.setText(str(value["block_number"]))
 
-        if "coherence" in value:
+        if "coherence" in value.keys():
             self.update_stimulus(value["coherence"])
 
-        if "plots" in value and value.get("is_valid", False):
-            self.update_plots(value["plots"])
+        if "plots" in value.keys():
+            if value["is_valid"]:
+                self.update_plots(value["plots"])
 
-        if "reward_volume" in value:
+        if "reward_volume" in value.keys():
             self.rig.reward_volume.setValue(value["reward_volume"])
 
-        if "total_reward" in value:
+        if "total_reward" in value.keys():
             self.rig.total_reward.setText(str(round(value["total_reward"], 2)))
 
         # Close session and Task GUI
-        if "TRIAL_END" in value and self.state == "STOPPED":
+        if "TRIAL_END" in value.keys() and self.state == "STOPPED":
             self.session_clock["end"] = time.time()
             self.session_clock["timer"].stop()
             self.create_summary_data(value)
 
-        if "session_files" in value:
+        if "session_files" in value.keys():
             self.show_summary_window(value)
             while not self.rig.close_experiment.isVisible():
                 QtWidgets.QApplication.processEvents()
                 time.sleep(0.01)
+
             value["session_files"]["summary"] = self.summary_data
             self.subject.save_files(value["session_files"])
             self.subject.save_history(
@@ -421,7 +448,6 @@ class TaskGUI(rigclass):
             self.save_plots()
 
     def save_plots(self):
-        """Save all plots as images."""
         # accuracy plot
         self.rig.TaskMonitor.setCurrentIndex(0)
         exporter = exporters.ImageExporter(self.rig.accuracy_plot.scene())
@@ -445,20 +471,17 @@ class TaskGUI(rigclass):
         # resetting plot index
         self.rig.TaskMonitor.setCurrentIndex(0)
 
-    def update_trials(self, value: dict):
-        """Update trial counters in the GUI."""
+    def update_trials(self, value):
         self.rig.attempt_trials.setText(str(value["attempt"]))
         self.rig.valid_trials.setText(str(value["valid"]))
         self.rig.correct_trials.setText(str(value["correct"]))
         self.rig.incorrect_trials.setText(str(value["incorrect"]))
         self.rig.noresponse_trials.setText(str(value["noresponse"]))
 
-    def update_stimulus(self, coherence: Any):
-        """Update current stimulus display."""
+    def update_stimulus(self, coherence):
         self.rig.current_stimulus.setText(str(coherence))
 
-    def update_plots(self, value: dict):
-        """Update all plots with new data."""
+    def update_plots(self, value):
         # updating running accuracy
         try:
             self.valid_trial_vector = np.append(self.valid_trial_vector, value["running_accuracy"][0])
@@ -486,14 +509,14 @@ class TaskGUI(rigclass):
                     symbolBrush=0.2,
                     name="Incorrect",
                 )
-        except Exception:
+        except:
             pass
 
         # updating psychometric function
         try:
-            pf = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
-            if pf:
-                coherences, psych = zip(*sorted(pf.items()))
+            value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
+            coherences, psych = zip(*sorted(value["psychometric_function"].items()))
+            if len(coherences) > 0:
                 self.psychometric_plot.setData(
                     x=coherences,
                     y=psych,
@@ -504,14 +527,14 @@ class TaskGUI(rigclass):
                     name="Psych",
                     clear=True,
                 )
-        except Exception:
+        except:
             pass
         # updating total distribution
         try:
-            td = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
+            value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
+            coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
-            if td:
-                coherences, trials = zip(*sorted(td.items()))
+            if len(coherences) > 0:
                 bargraph = pg.BarGraphItem(
                     x=list(coherences),
                     height=list(trials),
@@ -519,13 +542,13 @@ class TaskGUI(rigclass):
                     brush="w",
                 )
                 self.rig.trial_distribution.addItem(bargraph)
-        except Exception:
+        except:
             pass
         # updating reaction time distribution
         try:
-            rtd = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
-            if rtd:
-                coherences, rt_dist = zip(*sorted(rtd.items()))
+            value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
+            coherences, rt_dist = zip(*sorted(value["response_time_distribution"].items()))
+            if len(coherences) > 0:
                 self.chronometric_plot.setData(
                     x=coherences,
                     y=rt_dist,
@@ -536,8 +559,9 @@ class TaskGUI(rigclass):
                     name="RT",
                     clear=True,
                 )
-        except Exception:
+        except:
             pass
+
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
@@ -545,6 +569,7 @@ if __name__ == "__main__":
 
     session_info = {"protocol": "rdk", "experiment": "rdk"}
     session_info = OmegaConf.create(session_info)
+
     subject = {"name": "test", "session": 1, "session_uuid": "test", "prct_weight": 10}
     subject = OmegaConf.create(subject)
     window = TaskGUI(rig_id="Test", session_info=session_info, subject=subject)
