@@ -127,7 +127,7 @@ class Subject(BaseSubject):
         """
         # If first session, creating
         if self.session == "1_1":
-            if self.experiment not in ["reward_spout_association"]:
+            if self.experiment not in ["reward_spout_stimulus_association"]:
                 full_coherences = self.session_config.TASK["stimulus"]["signed_coherences"]["value"]
                 current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
                 reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]

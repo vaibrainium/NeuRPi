@@ -8,10 +8,12 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "reward": {
         "volume": 2,
+        "must_consume": True,  # Ensure the reward is consumed
 	},
     "knowledge_of_results": {
 		"tag": "Knowledge of results epoch",
 		"duration": 0.5,
+        "mode": ["LED"],  # Use LED for feedback
 	},
     "bias_correction": {
         "window": 20,
@@ -99,6 +101,11 @@ STIMULUS = {
                 "update_func": None,
             },
             "reinforcement_epoch": {
+                "clear_queue": True,
+                "init_func": "initiate_fixation",
+                "update_func": None,
+            },
+            "intertrial_epoch": {
                 "clear_queue": True,
                 "init_func": "initiate_fixation",
                 "update_func": None,
