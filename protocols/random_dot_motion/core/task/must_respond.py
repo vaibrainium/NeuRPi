@@ -3,7 +3,6 @@ import itertools
 import queue
 import threading
 
-
 from NeuRPi.tasks.trial_construct import TrialConstruct
 
 
@@ -27,6 +26,7 @@ class MustRespond(TrialConstruct):
 		discrim_playiong (bool): In the stimulus playing?
 		bailed (0, 1): Invalid trial
 		current_stage (int): As each is reached, update for asynchronous event reference
+
 	"""
 
 	def __init__(
@@ -124,6 +124,7 @@ class MustRespond(TrialConstruct):
 	def fixation_stage(self):
 		# Clear stage block
 		self.stage_block.clear()
+
 		self.managers["session"].prepare_trial_vars()
 		self.timers["trial"] = datetime.datetime.now()
 		self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
@@ -158,9 +159,17 @@ class MustRespond(TrialConstruct):
 		"""
 		# Clear stage block
 		self.stage_block.clear()
-		task_args = self.managers["session"].prepare_reinforcement_stage(self.choice)
+		task_args, stim_args = self.managers["session"].prepare_reinforcement_stage(self.choice)
 
-		self.managers["hardware"].flash_led(self.choice, task_args["knowledge_of_results_duration"])
+		# if stim arg is not empty
+		if "LED" in task_args.get("reinforcer_mode", None):
+				self.managers["hardware"].flash_led(task_args["reinforcer_direction"], task_args["duration"])
+		if "SCREEN" in task_args.get("reinforcer_mode", None):
+			self.msg_to_stimulus.put(("kor_epoch", stim_args))
+			if task_args.get("duration", None) is not None:
+				threading.Timer(task_args["duration"], lambda: self.msg_to_stimulus.put(("intertrial_epoch", {}))).start()
+
+
 		if self.choice == -1:  # left
 			self.managers["hardware"].reward_left(task_args["trial_reward"])
 			self.managers["session"].total_reward += task_args["trial_reward"]

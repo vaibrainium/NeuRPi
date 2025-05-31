@@ -6,18 +6,20 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "reward": {
         "volume": 2,
+        "must_consume": True,  # Ensure the reward is consumed
 	},
     "knowledge_of_results": {
 		"tag": "Knowledge of results epoch",
 		"duration": 0.5,
+        "mode": ["LED", "SCREEN"],  # Use LED for feedback
 	},
     "bias_correction": {
-        "window": 20,
-        "threshold": 0.5,
+        "window": 10,
+        "threshold": 0.20,
     },
     "intertrial": {
-        "duration": 0.6,
-	}
+        "duration": 1,
+	},
 }
 
 STIMULUS = {
@@ -76,7 +78,25 @@ STIMULUS = {
             "update_delay": None,
             "initiate_must_respond": None,
             "update_must_respond": None,
-            "initiate_intertrial": {"background_color": (0, 0, 0)},
+            "initiate_intertrial": {"background_color": (0, 0, 0),
+            },
+            "initiate_kor": {
+                "stimulus_size": (1280, 720),
+                "background_color": (0, 0, 0),
+                "dots": {
+                    "dot_radius": 17,
+                    "dot_color": (255, 255, 255),
+                    "dot_fill": 15,
+                    "dot_vel": 450,  # for 45 degrees/sec
+                    "dot_lifetime": 60,
+                },
+                "audio": {
+                    "onset_tone": None, #"fixation_tone",
+                    "8KHz": None,  # "8KHz",
+                    "16KHz": None,  # "16KHz",
+                },
+            },
+            "update_kor": None,
         },
     },
     "task_epochs": {
@@ -100,6 +120,16 @@ STIMULUS = {
                 "clear_queue": True,
                 "init_func": "initiate_fixation",
                 "update_func": None,
+            },
+            "intertrial_epoch": {
+                "clear_queue": True,
+                "init_func": "initiate_fixation",
+                "update_func": None,
+            },
+            "kor_epoch": {
+                "clear_queue": True,
+                "init_func": "initiate_kor",
+                "update_func": "update_kor",
             },
         },
     },

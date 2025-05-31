@@ -5,16 +5,16 @@ import pickle
 import threading
 from pathlib import Path
 
-
 from NeuRPi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
-from protocols.random_dot_motion.core.hardware.hardware_manager import \
-	HardwareManager
+from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.task.must_respond import MustRespond
-from protocols.random_dot_motion.reward_spout_association.session_manager import \
-	SessionManager
-from protocols.random_dot_motion.reward_spout_association.stimulus_manager import \
-	StimulusManager
+from protocols.random_dot_motion.reward_spout_stimulus_association.session_manager import (
+	SessionManager,
+)
+from protocols.random_dot_motion.reward_spout_stimulus_association.stimulus_manager import (
+	StimulusManager,
+)
 
 
 class Task:
@@ -89,8 +89,7 @@ class Task:
 			if message != "display_connected":
 				raise TimeoutError("Display did not start in time")
 				init_successful = False
-			else:
-				print("Display started")
+			print("Display started")
 
 		except Exception as e:
 			print(f"Error in starting processes: {e}")
@@ -216,7 +215,7 @@ class Task:
 
 if __name__ == "__main__":
 
-	import protocols.random_dot_motion.reward_spout_association.config as config
+	from protocols.random_dot_motion.reward_spout_association import config
 
 	config.SUBJECT = {
 		# Subject and task identification

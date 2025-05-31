@@ -24,7 +24,8 @@ class SessionManager:
 
 		# trial parameters
 		self.trial_reward = self.config.TASK["reward"].get("volume", 4)
-		self.knowledge_of_results_duration = self.config.TASK["knowledge_of_results"]["duration"]
+		self.kor_duration = self.config.TASK["knowledge_of_results"]["duration"]
+		self.kor_mode = self.config.TASK["knowledge_of_results"]["mode"]
 		self.intertrial_duration = self.config.TASK["intertrial"]["duration"]
 
 		self.bias_window = self.config.TASK["bias_correction"]["window"]
@@ -48,12 +49,15 @@ class SessionManager:
 		self.rolling_bias.append(self.choice)
 
 		self.bias = np.nanmean(self.rolling_bias)
-		task_args = {
+		stage_task_args = {
 			"trial_reward": self.trial_reward,
-			"knowledge_of_results_duration": self.knowledge_of_results_duration,
 			"intertrial_duration": self.intertrial_duration,
+			"reinforcer_mode": self.kor_mode,
+			"reinforcer_direction": self.choice,
+			"duration": self.kor_duration,
 		}
-		return task_args
+		stage_stimulus_args = {"coherence": self.choice*100}
+		return stage_task_args, stage_stimulus_args
 
 	####################### between-trial methods #######################
 
@@ -81,7 +85,7 @@ class SessionManager:
 			"choice": self.choice,
 			"trial_reward": self.trial_reward,
 			"intertrial_duration": self.intertrial_duration,
-			"knowledge_of_results_duration": self.knowledge_of_results_duration,
+			"kor_duration": self.kor_duration,
 		}
 		with open(self.config.FILES["trial"], "a+", newline="") as file:
 			writer = csv.DictWriter(file, fieldnames=data.keys())
