@@ -36,6 +36,7 @@ class SessionManager:
 		self.reward_volume: Optional[float] = None
 		self.trial_reward: Optional[float] = None
 		self.total_reward: float = 0.0
+		self.must_consume_reward: bool = self.config.TASK["reward"]["must_consume"]
 		self.update_reward_volume()
 
 		# Timing parameters
@@ -58,7 +59,6 @@ class SessionManager:
 		self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
 		self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
 		self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
-		self.must_consume_reward: bool = self.config.TASK["reward"]["must_consume"]
 
 		# Session variables
 		self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
