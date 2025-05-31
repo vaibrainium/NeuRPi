@@ -46,6 +46,7 @@ data
 # ignore logs directory
 logs/*
 */logs/*
+*.log
 
 # Configuration files
 */config/config_pilot.yaml
