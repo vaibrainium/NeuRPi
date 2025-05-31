@@ -36,6 +36,7 @@ class SessionManager:
 		self.switch_threshold = self.config.TASK["bias_correction"]["threshold"]
 		self.responses_to_check = [-1, 1]
 		self.total_reward = 0
+		self.must_consume_reward: bool = self.config.TASK["reward"]["must_consume"]
 
 
 	####################### trial epoch methods #######################
@@ -51,12 +52,24 @@ class SessionManager:
 		self.bias = np.nanmean(self.rolling_bias)
 		stage_task_args = {
 			"trial_reward": self.trial_reward,
+			"wait_for_consumption": self.must_consume_reward,
 			"intertrial_duration": self.intertrial_duration,
 			"reinforcer_mode": self.kor_mode,
 			"reinforcer_direction": self.choice,
 			"duration": self.kor_duration,
 		}
 		stage_stimulus_args = {"coherence": self.choice*100}
+		return stage_task_args, stage_stimulus_args
+
+	def prepare_intertrial_stage(self):
+		"""Prepare parameters for intertrial stage."""
+		stage_task_args, stage_stimulus_args = {}, {}
+		self.intertrial_duration = self.intertrial_duration
+
+		stage_task_args = {"intertrial_duration": self.intertrial_duration}
+		if self.trial_reward > 0:
+			stage_task_args["wait_for_consumption"] = self.must_consume_reward
+
 		return stage_task_args, stage_stimulus_args
 
 	####################### between-trial methods #######################

@@ -84,6 +84,7 @@ class MustRespond(TrialConstruct):
 			self.fixation_stage,
 			self.must_respond_stage,
 			self.reinforcement_stage,
+			self.intertrial_stage,
 		]
 		self.num_stages = len(stage_list)
 		self.stages = itertools.cycle(stage_list)
@@ -169,7 +170,6 @@ class MustRespond(TrialConstruct):
 			if task_args.get("duration", None) is not None:
 				threading.Timer(task_args["duration"], lambda: self.msg_to_stimulus.put(("intertrial_epoch", {}))).start()
 
-
 		if self.choice == -1:  # left
 			self.managers["hardware"].reward_left(task_args["trial_reward"])
 			self.managers["session"].total_reward += task_args["trial_reward"]
@@ -177,7 +177,42 @@ class MustRespond(TrialConstruct):
 			self.managers["hardware"].reward_right(task_args["trial_reward"])
 			self.managers["session"].total_reward += task_args["trial_reward"]
 
-		threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
+		if task_args.get("wait_for_consumption", False):
+			self.trigger = {
+				"type": "MUST_RESPOND",
+				"targets": [task_args["reward_side"]],
+				"duration": None,
+			}
+			self.response_block.set()
+		self.stage_block.set()
+
+
+	def intertrial_stage(self, *args, **kwargs):
+		# Clear stage block
+		self.stage_block.clear()
+		task_args, stimulus_args = {}, {}
+
+
+		task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
+
+		print(f'ITI stage started: {task_args["intertrial_duration"]} secs')
+		if task_args["intertrial_duration"] > 0:
+			# start delay epoch
+			self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
+			# wait for delay duration then send message to stimulus manager
+			threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
+		else:
+			self.stage_block.set()
+		self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
+
+		if task_args.get("wait_for_consumption", False):
+			print("[intertrial_stage] Waiting for must_respond_block")
+			self.must_respond_block.wait()
+
+		# reset must_respond_block
+		self.must_respond_block.set()
+		self.must_respond_block.clear()
+
 		self.stage_block.wait()
 
 		data = self.managers["session"].end_of_trial_updates()
