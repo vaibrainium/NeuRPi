@@ -167,7 +167,7 @@ class MustRespond(TrialConstruct):
 				self.managers["hardware"].flash_led(task_args["reinforcer_direction"], task_args["duration"])
 		if "SCREEN" in task_args.get("reinforcer_mode", None):
 			self.msg_to_stimulus.put(("kor_epoch", stim_args))
-			if task_args.get("duration", None) is not None:
+			if task_args.get("duration", None):
 				threading.Timer(task_args["duration"], lambda: self.msg_to_stimulus.put(("intertrial_epoch", {}))).start()
 
 		if self.choice == -1:  # left
@@ -180,7 +180,7 @@ class MustRespond(TrialConstruct):
 		if task_args.get("wait_for_consumption", False):
 			self.trigger = {
 				"type": "MUST_RESPOND",
-				"targets": [task_args["reward_side"]],
+				"targets": [task_args["reinforcer_direction"]],
 				"duration": None,
 			}
 			self.response_block.set()
@@ -198,7 +198,8 @@ class MustRespond(TrialConstruct):
 		print(f'ITI stage started: {task_args["intertrial_duration"]} secs')
 		if task_args["intertrial_duration"] > 0:
 			# start delay epoch
-			self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
+			if stimulus_args:
+				self.msg_to_stimulus.put(("intertrial_epoch", stimulus_args))
 			# wait for delay duration then send message to stimulus manager
 			threading.Timer(task_args["intertrial_duration"], self.stage_block.set).start()
 		else:
