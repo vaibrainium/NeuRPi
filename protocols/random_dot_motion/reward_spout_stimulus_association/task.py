@@ -128,15 +128,15 @@ class Task:
 
 		# LED-related
 		elif key == "flash_led_left":
-			duration = self.managers["session"].knowledge_of_results_duration
+			duration = self.managers["session"].kor_duration
 			self.managers["hardware"].flash_led(-1, duration)
 
 		elif key == "flash_led_center":
-			duration = self.managers["session"].knowledge_of_results_duration
+			duration = self.managers["session"].kor_duration
 			self.managers["hardware"].flash_led(0, duration)
 
 		elif key == "flash_led_right":
-			duration = self.managers["session"].knowledge_of_results_duration
+			duration = self.managers["session"].kor_duration
 			self.managers["hardware"].flash_led(1, duration)
 
 		elif key == "toggle_led_left":
@@ -150,13 +150,13 @@ class Task:
 
 		# Combined LED and Reward
 		elif key == "led_and_reward_left":
-			duration = self.managers["session"].knowledge_of_results_duration
+			duration = self.managers["session"].kor_duration
 			self.managers["hardware"].flash_led(-1, duration)
 			self.managers["hardware"].reward_left(value)
 			self.managers["session"].total_reward += value
 
 		elif key == "led_and_reward_right":
-			duration = self.managers["session"].knowledge_of_results_duration
+			duration = self.managers["session"].kor_duration
 			self.managers["hardware"].flash_led(1, duration)
 			self.managers["hardware"].reward_right(value)
 			self.managers["session"].total_reward += value
