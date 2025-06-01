@@ -54,11 +54,9 @@ class HardwareManager(BaseHWManager):
 	def reset_wheel_sensor(self):
 		self.hardware["Primary"].write("reset_wheel,0\n")
 
-	def start_session(self, session_id=0, filename="session"):
-		# Send start_session with session_id and filename
+	def start_session(self, session_id=0):
+		# Send start_session with session_id
 		self.hardware["Primary"].write(f"start_session,{session_id}\n")
-		time.sleep(0.05)
-		self.hardware["Primary"].write(f"{filename}\n")
 
 	def end_session(self, return_file=0):
 		self.hardware["Primary"].write(f"end_session,{return_file}\n")
@@ -86,8 +84,10 @@ class HardwareManager(BaseHWManager):
 	def toggle_reward(self, spout):
 		"""
 		Toggle reward spout.
+
 		Arguments:
 			spout (str): 'Left', 'Right' or 'Center'
+
 		"""
 		dummy = 100
 		if spout == "Left":
@@ -99,7 +99,7 @@ class HardwareManager(BaseHWManager):
 				"Incorrect spout provided. Please provide from the following list:\n"
 				"'Left': For left spout\n"
 				"'Right': For right spout\n"
-				"'Center': For center spout"
+				"'Center': For center spout",
 			)
 
 	def read_licks(self):
@@ -133,7 +133,7 @@ class HardwareManager(BaseHWManager):
 		elif direction == 0:
 			self.hardware["Primary"].write(f"flash_led_center,{duration}\n")
 		else:
-			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
+			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED \n 'Right': For right LED \n 'Center': For center LED")
 
 	def toggle_led(self, direction):
 		"""
@@ -149,7 +149,7 @@ class HardwareManager(BaseHWManager):
 		elif direction == 0:
 			self.hardware["Primary"].write(f"toggle_led_center,{dummy}\n")
 		else:
-			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED" " \n 'Right': For right LED \n 'Center': For center LED")
+			raise Exception("Incorrect LED provided. Please provide from the following list: \n 'Left': For left LED \n 'Right': For right LED \n 'Center': For center LED")
 
 	def start_calibration_sequence(self, num_pulses=50, volume=1):
 		"""

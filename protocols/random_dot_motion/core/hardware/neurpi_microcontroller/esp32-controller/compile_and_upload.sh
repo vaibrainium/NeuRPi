@@ -41,10 +41,16 @@ echo "⬆️  Uploading to board..."
 if ! arduino-cli upload -p "$PORT" --fqbn "$FQBN" "$SKETCH_PATH" > /dev/null 2>&1; then
   error_exit "Upload failed. Check BOOT/RESET if needed."
 fi
+
 # === STEP 3: Monitor ===
-echo "🖥️  Opening serial monitor. Press Ctrl+C to exit."
-if ! arduino-cli monitor -p "$PORT" -b "$FQBN" -c baudrate=115200; then
-  error_exit "Serial monitor failed."
+read -p "Open serial monitor on $PORT? [y/N]: " answer
+if [[ "$answer" =~ ^[Yy]$ ]]; then
+    echo "🖥️  Opening serial monitor. Press Ctrl+C to exit."
+    if ! arduino-cli monitor -p "$PORT" -b "$FQBN" -c baudrate=115200; then
+      error_exit "Serial monitor failed."
+    fi
+else
+  echo "Serial monitor skipped."
 fi
 
 echo "✅ Done."

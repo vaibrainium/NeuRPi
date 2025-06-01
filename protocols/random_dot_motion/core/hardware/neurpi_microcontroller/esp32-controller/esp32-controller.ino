@@ -11,7 +11,6 @@ MPR121 mpr121;
 #define rightTouchPin 11
 #define encoderPinA 25
 #define encoderPinB 26
-#define BUFFER_SIZE (228976 / (3 * sizeof(DataUnion)))
 
 File DataFile;
 
@@ -32,6 +31,7 @@ union DataUnion {
   } data;
 };
 
+#define BUFFER_SIZE (228976 / (3 * sizeof(DataUnion)))
 DataUnion sdWriteBuffer[BUFFER_SIZE];
 uint32_t bufferCounter = 0;
 
@@ -67,10 +67,34 @@ void setup() {
 
   pinMode(2, INPUT_PULLUP);
 
+  // Initialize SD card with more detailed error reporting
+  Serial.println("Initializing_SD_card...");
   if (!SD_MMC.begin("/sdcard", ONE_BIT_MODE)) {
     Serial.println("Card_Mount_Failed");
     return;
   }
+
+  uint8_t cardType = SD_MMC.cardType();
+  if (cardType == CARD_NONE) {
+    Serial.println("No_SD_card_attached");
+    return;
+  }
+
+  Serial.print("SD_Card_Type: ");
+  if (cardType == CARD_MMC) {
+    Serial.println("MMC");
+  } else if (cardType == CARD_SD) {
+    Serial.println("SDSC");
+  } else if (cardType == CARD_SDHC) {
+    Serial.println("SDHC");
+  } else {
+    Serial.println("UNKNOWN");
+  }
+
+  uint64_t cardSize = SD_MMC.cardSize() / (1024 * 1024);
+  Serial.printf("SD_Card_Size: %lluMB\n", cardSize);
+
+  Serial.println("SD_card_ready");
 }
 
 void mpr121_init() {
@@ -90,32 +114,78 @@ void resetTouchSensor() {
   mpr121_init();
 }
 
-void startSession(int msgInt, const String& filename) {
+void startSession(int sessionId) {
   startTime = millis();
   resetTouchSensor();
   encoderPosCount = 0;
   photodiodeState = 0;
 
-  String fullPath = "/" + (filename.length() > 0 ? filename : "Data") + ".dat";
+  // Use sessionId as filename if not zero, otherwise don't record
+  if (sessionId == 0) {
+    // Don't record if sessionId is 0
+    isLogging = false;
+    sendMessage("session_started_no_recording");
+    return;
+  }
+
+  // Check if SD card is still mounted
+  if (!SD_MMC.cardType()) {
+    Serial.println("SD_card_not_detected");
+    // Try to remount
+    if (!SD_MMC.begin("/sdcard", ONE_BIT_MODE)) {
+      Serial.println("SD_remount_failed");
+      return;
+    }
+  }
+
+  String filename = String(sessionId);
+  String fullPath = "/" + filename + ".dat";
+
+  // Try to open file for writing
   DataFile = SD_MMC.open(fullPath.c_str(), FILE_WRITE);
   if (!DataFile) {
-    Serial.println("Failed_to_open_file_for_writing");
-    return;
+    // Try alternative approach - check if directory exists
+    Serial.print("Failed_to_open: ");
+    Serial.println(fullPath);
+
+    // Try without leading slash
+    String altPath = filename + ".dat";
+    DataFile = SD_MMC.open(altPath.c_str(), FILE_WRITE);
+    if (!DataFile) {
+      Serial.println("Failed_both_paths");
+      return;
+    } else {
+      Serial.print("Opened_alternative_path: ");
+      Serial.println(altPath);
+    }
+  } else {
+    Serial.print("File_opened: ");
+    Serial.println(fullPath);
   }
 
   isLogging = true;
   currentTime = micros();
   DataFile.seek(0);
   dataPos = 0;
+  bufferCounter = 0;  // Reset buffer counter
   sendMessage("session_started");
 }
 
 void endSession(int logNeeded) {
-  logCurrentData();
+  if (isLogging && bufferCounter > 0) {
+    // Write remaining buffer data before closing
+    DataFile.write((byte*)sdWriteBuffer, bufferCounter * sizeof(DataUnion));
+    dataPos += bufferCounter;
+    bufferCounter = 0;
+  }
+
   isLogging = false;
-  DataFile.flush();
+  if (DataFile) {
+    DataFile.flush();
+  }
 
   if (logNeeded == 1 && DataFile) {
+    DataFile.seek(0);  // Go to beginning to read
     while (DataFile.available()) {
       Serial.write(DataFile.read());
     }
@@ -123,7 +193,9 @@ void endSession(int logNeeded) {
   }
 
   dataPos = 0;
-  DataFile.close();
+  if (DataFile) {
+    DataFile.close();
+  }
 }
 
 void logCurrentData() {
@@ -212,8 +284,7 @@ void checkMessage() {
         int value = inputLine.substring(commaIndex + 1).toInt();
 
         if (msg == "start_session") {
-          String filename = Serial.readStringUntil('\n');
-          startSession(value, filename);
+          startSession(value);
         } else if (msg == "reset_licks") {
           resetTouchSensor();
         } else if (msg == "reset_wheel") {

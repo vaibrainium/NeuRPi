@@ -54,7 +54,7 @@ class Task:
 		# Preparing Managers
 		self.managers = {}
 		self.managers["hardware"] = HardwareManager()
-		self.managers["hardware"].start_session(session_id=self.config.SUBJECT["session_uuid"])
+		self.managers["hardware"].start_session()
 		self.managers["session"] = SessionManager(config=self.config)
 		self.managers["trial"] = MustRespond(
 			stage_block=self.stage_block,

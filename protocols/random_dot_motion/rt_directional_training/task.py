@@ -11,8 +11,12 @@ from NeuRPi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
 from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-from protocols.random_dot_motion.rt_directional_training.session_manager import SessionManager
-from protocols.random_dot_motion.rt_directional_training.stimulus_manager import StimulusManager
+from protocols.random_dot_motion.rt_directional_training.session_manager import (
+	SessionManager,
+)
+from protocols.random_dot_motion.rt_directional_training.stimulus_manager import (
+	StimulusManager,
+)
 
 # TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 # TODO: 5. Make sure graduation is working properly
@@ -74,7 +78,7 @@ class Task:
 		# Preparing Managers
 		self.managers = {}
 		self.managers["hardware"] = HardwareManager()
-		self.managers["hardware"].start_session(session_id=self.config.SUBJECT["session_uuid"])
+		self.managers["hardware"].start_session()
 		self.managers["session"] = SessionManager(config=self.config)
 		self.managers["trial"] = RTTask(
 			stage_block=self.stage_block,
@@ -109,8 +113,7 @@ class Task:
 			if message != "display_connected":
 				raise TimeoutError("Display did not start in time")
 				init_successful = False
-			else:
-				print("Display started")
+			print("Display started")
 
 		except Exception as e:
 			print(f"Error in starting processes: {e}")
@@ -237,7 +240,7 @@ class Task:
 
 if __name__ == "__main__":
 
-	import protocols.random_dot_motion.rt_directional_training.config as config
+	from protocols.random_dot_motion.rt_directional_training import config
 
 	full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
 	# current_coherence_level = config.TASK["rolling_performance"]["current_coherence_level"]
