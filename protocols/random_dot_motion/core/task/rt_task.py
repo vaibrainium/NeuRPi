@@ -28,6 +28,7 @@ class RTTask(TrialConstruct):
 		discrim_playiong (bool): In the stimulus playing?
 		bailed (0, 1): Invalid trial
 		current_stage (int): As each is reached, update for asynchronous event reference
+
 	"""
 
 	def __init__(
@@ -60,6 +61,7 @@ class RTTask(TrialConstruct):
 			bias_threshold (float): If using a bias correction mode, what threshold should bias be corrected for?
 			stim_light (bool): Should the LED be turned blue while the stimulus is playing?
 			**kwargs:
+
 		"""
 		super(RTTask, self).__init__(
 			stage_block=stage_block,
@@ -132,7 +134,7 @@ class RTTask(TrialConstruct):
 		self.response_block.set()
 		self.stage_block.wait()
 
-		if self.choice != 0:  # if subject broke fixation
+		if self.choice in task_args["response_to_check"]:  # if subject broke fixation
 			self.abort_trial = True
 			self.choice = np.nan
 			self.response_time = np.nan
@@ -197,7 +199,7 @@ class RTTask(TrialConstruct):
 				self.managers["hardware"].reward_right(task_args["trial_reward"])
 				self.managers["session"].total_reward += task_args["trial_reward"]
 
-			if task_args.get('wait_for_consumption') is not None:
+			if task_args.get("wait_for_consumption") is not None:
 				self.trigger = {
 					"type": "MUST_RESPOND",
 					"targets": [task_args["reward_side"]],
@@ -247,7 +249,7 @@ class RTTask(TrialConstruct):
 			self.stage_block.set()
 		self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
 
-		if task_args.get('wait_for_consumption', False):
+		if task_args.get("wait_for_consumption", False):
 			print("[intertrial_stage] Waiting for must_respond_block")
 			self.must_respond_block.wait()
 
