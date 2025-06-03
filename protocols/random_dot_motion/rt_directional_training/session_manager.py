@@ -204,28 +204,41 @@ class SessionManager:
 			self.in_active_bias_correction_block = False
 			self.generate_block_schedule()
 
+		self.reset_trial_variables()
 		self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
 		self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
 		self.trial_counters["correction"] = 0
 
 	def prepare_trial_variables(self):
 		"""Prepare parameters for next trial based on current flags and bias."""
-		self.reset_trial_variables()
 		if (not self.in_active_bias_correction_block and np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold):
 			self._start_active_bias_correction_block()
 		else:
 			self._handle_standard_block()
 
 	def generate_block_schedule(self):
-		schedule = np.repeat(self.active_coherences, self.repeats_per_block)
 		if self.schedule_structure == "interleaved":
+			schedule = np.repeat(self.active_coherences, self.repeats_per_block)
 			schedule = self.shuffle_seq(schedule)
+
+		elif self.schedule_structure == "blocked":
+			repeats_per_block = self.get_variable_trial_block_length(np.arange(self.repeats_per_block[0]-2, self.repeats_per_block[0]+2))
+			if self.signed_coherence is not None:
+				current_coh_sign = np.sign(self.signed_coherence)
+			else:
+				current_coh_sign = float(np.random.choice([-1, 1]))
+			new_block_coherence = [-current_coh_sign * 100]
+			schedule = np.repeat(new_block_coherence, repeats_per_block)
+		else:
+			raise ValueError(f"Unknown schedule_structure: {self.schedule_structure}")
+
+		print(f"Generated block schedule: {schedule}")
 		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
 		self.block_schedule = deque(seed_schedule)
 
-	def generate_active_correction_block_schedule(self, correction_direction, prob):
-		block_length = self.get_active_trial_block_length()
 
+	def generate_active_correction_block_schedule(self, correction_direction, prob):
+		block_length = self.get_variable_trial_block_length()
 		correction_coherence = 100
 		num_correction = int(block_length * prob)
 		num_noncorrection = block_length - num_correction
@@ -236,8 +249,9 @@ class SessionManager:
 		seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
 		self.block_schedule = deque(seed_schedule)
 
-	def get_active_trial_block_length(self):
-		values = np.arange(7,14)
+	def get_variable_trial_block_length(self, values=None):
+		if values is None:
+			values = np.arange(7,14)
 		lambda_val = 1.0
 		probabilities = np.exp(-lambda_val * (values - 4))
 		probabilities /= probabilities.sum()
