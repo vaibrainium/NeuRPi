@@ -524,11 +524,16 @@ color: rgb(255, 255, 255);</string>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="font">
+        <font>
+         <pointsize>8</pointsize>
+        </font>
+       </property>
        <property name="autoFillBackground">
         <bool>true</bool>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <property name="iconSize">
         <size>
@@ -539,6 +544,33 @@ color: rgb(255, 255, 255);</string>
        <property name="elideMode">
         <enum>Qt::ElideLeft</enum>
        </property>
+       <widget class="QWidget" name="tab_26">
+        <attribute name="title">
+         <string>Notes</string>
+        </attribute>
+        <widget class="QTextEdit" name="notes">
+         <property name="geometry">
+          <rect>
+           <x>10</x>
+           <y>10</y>
+           <width>471</width>
+           <height>401</height>
+          </rect>
+         </property>
+         <property name="font">
+          <font>
+           <pointsize>15</pointsize>
+          </font>
+         </property>
+         <property name="html">
+          <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:15pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8.25pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+        </widget>
+       </widget>
        <widget class="QWidget" name="tab_25">
         <attribute name="title">
          <string>Video Monitor</string>
@@ -557,21 +589,6 @@ color: rgb(255, 255, 255);</string>
          </property>
         </widget>
        </widget>
-       <widget class="QWidget" name="tab_26">
-        <attribute name="title">
-         <string>Wheel Tracker</string>
-        </attribute>
-        <widget class="QGraphicsView" name="graphicsView_9">
-         <property name="geometry">
-          <rect>
-           <x>0</x>
-           <y>0</y>
-           <width>451</width>
-           <height>410</height>
-          </rect>
-         </property>
-        </widget>
-       </widget>
       </widget>
      </item>
      <item>
@@ -581,6 +598,11 @@ color: rgb(255, 255, 255);</string>
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>9</pointsize>
+        </font>
        </property>
        <property name="focusPolicy">
         <enum>Qt::TabFocus</enum>

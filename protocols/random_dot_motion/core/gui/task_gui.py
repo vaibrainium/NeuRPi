@@ -337,6 +337,7 @@ class TaskGUI(rigclass):
         self.summary.baseline_weight.setText(str(self.subject.baseline_weight))
         self.summary.start_weight.setText(str(self.subject.start_weight))
         self.summary.summary_data.setText(summary_string)
+        self.summary.comments.setText(self.rig.notes.toPlainText())
         self.summary_window.show()
 
     def hide_summary(self):
