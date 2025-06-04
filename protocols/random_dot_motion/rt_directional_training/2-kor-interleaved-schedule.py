@@ -8,10 +8,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
+        "fixation": {"tag": "Fixation epoch", "duration": lambda: 0},#stats.expon.rvs(loc=0.5, scale=1 / 5)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 15,
+            "max_viewing": 3,
             "min_viewing": 0,
         },
         "reinforcement": {
@@ -50,7 +50,7 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "np.array",
-            "value": np.array([3, 3]),
+            "value": np.array([6, 6]),
         },
         "schedule_structure": {
 			"tag": "How to structure block, interleaved or blocked",
@@ -65,11 +65,11 @@ TASK = {
     "bias_correction": {
         "bias_window": 20,
         "passive": {
-            "coherence_threshold": 0,
+            "coherence_threshold": 40,
             },
         "active": {
-            "abs_bias_threshold": 0.25, # absolute bias threshold for active trials range 0 to 1
-            "correction_strength": 0.75, # between 0 and 1. 0: no correction, 1: full correction block
+            "abs_bias_threshold": 1.1, # absolute bias threshold for active trials range 0 to 1
+            "correction_strength": 1, # between 0 and 1. 0: no correction, 1: full correction block
         },
     },
     "training_type": {
@@ -108,7 +108,7 @@ STIMULUS = {
         "value": {
             "initiate_fixation": {
                 "background_color": (0, 0, 0),
-                "audio": None,  # "fixation_tone",
+                "audio": None,
             },
             "initiate_stimulus": {
                 "stimulus_size": (1280, 720),
@@ -121,7 +121,7 @@ STIMULUS = {
                     "dot_lifetime": 60,
                 },
                 "audio": {
-                    "onset_tone": "fixation_tone",
+                    "onset_tone": None, #"fixation_tone",
                     "8KHz": None,  # "8KHz",
                     "16KHz": None,  # "16KHz",
                 },
@@ -130,7 +130,7 @@ STIMULUS = {
             "initiate_reinforcement": {
                 "background_color": (0, 0, 0),
                 "audio": {
-                    "correct": "correct_tone",
+                    "correct": None, #"correct_tone",
                     "incorrect": None,  # "incorrect_tone",
                     "noresponse": None,  # "incorrect_tone",
                     "invalid": None,  # "incorrect_tone",
