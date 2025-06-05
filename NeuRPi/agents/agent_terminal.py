@@ -322,9 +322,7 @@ class Terminal(Application):
                     key="START",
                     value={
                         "session_info": session_info,
-                        # python object cannot be sent over network, so converting to string and will convert back to module on rig
-                        # "session_config": string_session_config,
-                        "session_config": inspect.getsource(session_config),
+                        "session_config": string_session_config,
                         "subject_config": subject_config,
                     },
                     flags={"NOLOG": True},
