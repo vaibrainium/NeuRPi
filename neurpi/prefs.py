@@ -22,7 +22,9 @@ class Prefs:
         self._prefs: dict[str, Any] = {}
         self._initialized = False
         self._lock = Lock()
-        self.run()    def import_configuration(self) -> DictConfig:
+        self.run()
+
+    def import_configuration(self) -> DictConfig:
         """Import saved config file."""
         # Determine config file based on mode if filename not provided
         if not self.filename and self.mode:

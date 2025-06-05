@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import platform
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +15,8 @@ sys.path.insert(0, str(project_root))
 
 # Import and configure prefs
 from neurpi.prefs import configure_prefs
+
+from .setup import setup
 
 console = Console()
 
@@ -78,6 +81,36 @@ def run_agent(mode):
         sys.exit(1)
 
 
+def run_agent_direct(mode, no_gui=False, name=None):
+    """Run the specified agent directly by importing and executing it."""
+    # Configure prefs for the specific mode
+    configure_prefs(mode)
+
+    if mode == "server":
+        config_file = project_root / "neurpi" / "config" / "config_terminal.yaml"
+        try:
+            # Import and run the terminal agent
+            from neurpi.agents.agent_terminal import main as terminal_main
+
+            terminal_main()
+        except ImportError as e:
+            console.print(f"[red]Failed to import terminal agent: {e}[/red]")
+            sys.exit(1)
+    elif mode == "rig":
+        config_file = project_root / "neurpi" / "config" / "config_pilot.yaml"
+        try:
+            # Import and run the pilot agent
+            from neurpi.agents.agent_pilot import main as pilot_main
+
+            pilot_main()
+        except ImportError as e:
+            console.print(f"[red]Failed to import pilot agent: {e}[/red]")
+            sys.exit(1)
+    else:
+        console.print(f"[red]Unknown agent type: {mode}[/red]")
+        sys.exit(1)
+
+
 @click.group()
 def cli():
     """NeuRPi CLI - Run agents with specified configuration."""
@@ -120,6 +153,10 @@ def status():
     # For now, just show that the CLI is working
     console.print("[green]NeuRPi CLI is operational[/green]")
     console.print("[blue]Use 'neurpi.cli terminal' or 'neurpi.cli pilot' to start agents[/blue]")
+
+
+# Import setup command from separate module
+cli.add_command(setup)
 
 
 # Legacy command for backward compatibility
