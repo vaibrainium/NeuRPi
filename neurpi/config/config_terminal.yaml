@@ -1,22 +1,16 @@
-# Path for data directory. Intentionally kept in another directory to avoid accidental deletion
-DATADIR: 'C:/Users/Trach_McGee/Desktop/Data/'
-# Path relative to home
-BASEDIR: 'C:/Users/Trach_McGee/Documents/NeuRPi/'
-# Path relative to package
+DATADIR: C:/Users/Trach_McGee/Desktop/Data/
+BASEDIR: C:/Users/Trach_McGee/Documents/NeuRPi/
 PROTOCOLDIR: protocols/
-VENVDIR: venv/
-LOGDIR:  logs/
-
-LOGLEVEL: WARNING  # Choices [DEBUG, INFO, WARNING, ERROR]
+VENVDIR: .venv/
+LOGDIR: logs/
+LOGLEVEL: WARNING
 LOGSIZE: 5000000.0
 LOGNUM: 4
-
 NAME: T
 MSGPORT: 11000
 TERMINALIP: 10.155.204.229
 PUSHPORT: 11000
-
-LINEAGE: NONE # Choices [NONE, PARENT, CHILD]
+LINEAGE: NONE
 CHILDID: NONE
 PARENTID: NONE
 PARENTIP: NONE

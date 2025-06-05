@@ -1,145 +1,138 @@
+from __future__ import annotations
+
 from pathlib import Path
 from threading import Lock
+from typing import Any
 
-import hydra
-from omegaconf import OmegaConf
-
-global _PREF_MANAGER
-global _PREFS
-global _INITIALIZED
-global _LOCK
+from omegaconf import DictConfig, OmegaConf
 
 
 class Prefs:
-    """
-    Class to manage configuration files
-    """
+    """Class to manage configuration files."""
 
-    def __init__(self, directory=None, filename=None) -> None:
-
-        self.using_manager = False
-        self.initialized = False
+    def __init__(
+        self,
+        directory: Path | None = None,
+        filename: str | None = None,
+        mode: str | None = None,
+    ) -> None:
         self.directory = directory
         self.filename = filename
-        self.init_manager()
-        self.run()
+        self.mode = mode
+        self._prefs: dict[str, Any] = {}
+        self._initialized = False
+        self._lock = Lock()
+        self.run()    def import_configuration(self) -> DictConfig:
+        """Import saved config file."""
+        # Determine config file based on mode if filename not provided
+        if not self.filename and self.mode:
+            if self.mode in ["server", "terminal"]:
+                self.filename = "config_terminal.yaml"
+            elif self.mode in ["rig", "pilot"]:
+                self.filename = "config_pilot.yaml"
+            else:
+                # Default to terminal config
+                self.filename = "config_terminal.yaml"
 
-    def init_manager(self):
-        global _PREF_MANAGER
-        global _PREFS
-        global _INITIALIZED
-        global _LOCK
+        if self.directory and self.filename:
+            config_path = Path(self.directory) / self.filename
+            if config_path.exists():
+                config = OmegaConf.load(config_path)
+                # Ensure we return a DictConfig, not ListConfig
+                if isinstance(config, DictConfig):
+                    return config
+                # If it's a ListConfig, wrap it in a dict
+                return OmegaConf.create({"data": config})
 
-        # try:
-        #     _PREF_MANAGER = (
-        #         mp.Manager()
-        #     )  # initializing multiprocess.Manager to store sync variable across processes
+        # If file doesn't exist or no directory/filename specified, return empty config
+        return OmegaConf.create({})
 
-        #     _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
-
-        #     _INITIALIZED = mp.Value(
-        #         c_bool, False
-        #     )  #  Boolean flag to indicate whether prefs have been initialzied from file
-
-        #     _LOCK = mp.Lock()  # threading lock to control prefs file access
-        #     self.using_manager = True
-
-        # except (EOFError, FileNotFoundError):
-        #     # can't use mp.Manager in ipython and other interactive contexts
-        #     # fallback to just regular old dict
-        #     print("NOT WORKING")
-        _PREF_MANAGER = None
-        _PREFS = {}
-        _INITIALIZED = False
-        _LOCK = Lock()
-
-    def import_configuration(self):
-        """
-        Import saved config file
-        """
-        hydra.initialize(version_base="1.2", config_path=self.directory)
-        return hydra.compose(self.filename, overrides=[])
-
-    def get(self, key=None):
-        """
-        Get parameter value
-        """
+    def get(self, key: str | None = None) -> Any:
+        """Get parameter value."""
         if key is None:
             # if no key provided, return whole dictionary
-            if self.using_manager:
-                return globals()["_PREFS"]._getvalue()
-            else:
-                return globals()["_PREFS"].copy()
-        else:
-            # try to get value from prefs manager
-            return globals()["_PREFS"][key]
+            return self._prefs.copy()
+        return self._prefs[key]
 
-    def set(self, key: str, val):
+    def set(self, key: str, val: Any) -> None:
         """
-        Change parameter value
+        Change parameter value.
+
         Args:
-        key: Dictionary key that needs to be changed
-        val: updated value of the key parameter
-        session_time: timestamp of session
+            key: Dictionary key that needs to be changed
+            val: updated value of the key parameter
+
         """
-        temp_dict_holder = globals()["_PREFS"][key]
-        temp_dict_holder["default"] = val
-        globals()["_PREFS"][key] = temp_dict_holder
-
-        if self.using_manager:
-            initialized = globals()["_INITIALIZED"].value
+        if (
+            key in self._prefs
+            and isinstance(self._prefs[key], dict)
+            and "default" in self._prefs[key]
+        ):
+            # Preserve existing structure if it has a 'default' field
+            temp_dict_holder = self._prefs[key].copy()
+            temp_dict_holder["default"] = val
+            self._prefs[key] = temp_dict_holder
         else:
-            initialized = globals()["_INITIALIZED"]
+            # Simple value assignment
+            self._prefs[key] = val
 
-        if initialized:
+        if self._initialized:
             self.save_prefs()
 
-    def save_prefs(self, prefs_filename: str = None):
-        """
-        Saves preferences to ``prefs_filename`` .json
-        """
-
+    def save_prefs(self, prefs_filename: str | None = None) -> None:
+        """Save preferences to file."""
         if not prefs_filename:
-            prefs_filename = Path(".").resolve() / "NeuRPi/config" / self.filename
-            #  Path(self.directory / self.filename)
+            if self.filename:
+                prefs_filename = str(Path.cwd() / "neurpi" / "config" / self.filename)
+            else:
+                msg = "No filename specified for saving preferences"
+                raise ValueError(msg)
 
-        with globals()["_LOCK"]:
-            with open(prefs_filename, "w") as f:
-                if self.using_manager:
-                    temp_prefs = globals()["_PREFS"]._getvalue()
-                else:
-                    temp_prefs = globals()["_PREFS"].copy
-                OmegaConf.save(temp_prefs, f)
+        with self._lock:
+            Path(prefs_filename).parent.mkdir(parents=True, exist_ok=True)
+            with Path(prefs_filename).open("w", encoding="utf-8") as f:
+                OmegaConf.save(self._prefs, f)
 
-    def run(self):
-        """
-        Run to Initialize global parameters
-        """
-        config = self.import_configuration()
-        global _PREFS
+    def run(self) -> None:
+        """Initialize configuration from file."""
+        try:
+            config = self.import_configuration()
+            self._prefs.update(config)
+            self._initialized = True
+        except (FileNotFoundError, OSError, ValueError) as e:
+            print(f"Warning: Could not load configuration: {e}")
+            self._initialized = True
+    def clear(self) -> None:
+        """Clear loaded prefs (for testing)."""
+        self._prefs.clear()
 
-        for k, v in config.items():
-            # globals()[k] = v
-            _PREFS[k] = v
-
-        if self.using_manager:
-            self.initialized = globals()["_INITIALIZED"].value = True
-        else:
-            self.initialized = globals()["_INITIALIZED"] = True
-
-    def clear(self):
-        """
-        Mostly for use in testing, clear loaded prefs (without deleting prefs.json)
-        (though you will probably overwrite prefs.json if you clear and then set another pref so don't use this except in testing probably)
-        """
-        global _PREFS
-        global _PREF_MANAGER
-        if self.using_manager:
-            _PREFS = _PREF_MANAGER.dict()
-        else:
-            _PREFS = {}
+    def set_mode(self, mode: str) -> None:
+        """Set the mode and reload configuration if needed."""
+        if self.mode != mode:
+            self.mode = mode
+            self.filename = None  # Reset filename to let import_configuration determine it
+            config = self.import_configuration()
+            self._prefs.clear()
+            self._prefs.update(config)
 
 
-global prefs
-directory, filename = Path("./config"), "config_terminal.yaml"
-prefs = Prefs(directory=directory, filename=filename)
+# Global instance for backward compatibility
+# Use absolute path based on the location of this file
+_neurpi_dir = Path(__file__).parent
+prefs = Prefs(directory=_neurpi_dir / "config")
+
+
+def configure_prefs(mode: str = None) -> Prefs:
+    """
+    Configure the global prefs instance for a specific mode.
+
+    Args:
+        mode: The mode to configure for ('server'/'terminal' or 'rig'/'pilot')
+
+    Returns:
+        The configured prefs instance
+    """
+    global prefs
+    if mode:
+        prefs.set_mode(mode)
+    return prefs
