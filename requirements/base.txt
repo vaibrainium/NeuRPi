@@ -1,24 +1,24 @@
-# Core dependencies
-numpy>=1.24.0
-scipy>=1.10.0
-matplotlib>=3.7.0
-pyserial>=3.5
-pygame>=2.1.2
-omegaconf>=2.2.2
-setuptools>=65.0.0
-tables>=3.8.0
-rich>=13.0.0
-blosc2>=2.0.0
-pyzmq>=25.0.0
-tornado>=6.0.0
-pandas>=2.0.0
-h5py>=3.8.0
-sounddevice>=0.4.6
-click>=8.0.0
+# Core dependencies - versions tested and working
+numpy==1.24.4
+scipy==1.13.1
+matplotlib==3.9.4
+pyserial==3.5
+pygame==2.6.1
+omegaconf==2.3.0
+setuptools==80.9.0
+tables==3.9.2
+rich==14.0.0
+blosc2==2.5.1
+pyzmq==26.4.0
+tornado==6.5.1
+pandas==2.2.3
+h5py==3.13.0
+sounddevice==0.5.2
+click==8.1.8
 
-# GUI dependencies (PyQt5 compatible versions)
-pyqtgraph>=0.13.0
-opencv-python>=4.8.0
+# GUI dependencies - versions tested and working
+pyqtgraph==0.13.7
+opencv-python==4.11.0.86
 PyQt5>=5.15.0
 pyqt5-tools>=5.15.1.2
 pyqt5-plugins>=5.15.1.1
