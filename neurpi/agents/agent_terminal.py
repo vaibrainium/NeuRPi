@@ -1,7 +1,11 @@
 import importlib
 import inspect
+import os
+import signal
+import sys
 import threading
 import time
+import typing
 from collections import OrderedDict as odict
 from pathlib import Path
 
@@ -29,9 +33,7 @@ class Terminal(Application):
         # networking
         self.node = None
         self.networking = None
-        self.heartbeat_dur = (
-            10  # check every n seconds whether our pis are still around
-        )
+        self.heartbeat_dur = 10  # check every n seconds whether our pis are still around
 
         # data
         self.subjects = {}  # Dict of our open subject objects
@@ -89,8 +91,8 @@ class Terminal(Application):
 
         Returns:
             dict: like ``self.pilots['pilot_id'] = {'subjects': ['subject_0', 'subject_1'], 'ip': '192.168.0.101'}``
-
         """
+
         # try to load, if none exists make one
         if self._pilots is None:
             # TODO: get pilot file with GUI
@@ -100,9 +102,9 @@ class Terminal(Application):
 
     def new_pilot(
         self,
-        name: str | None = None,
+        name: typing.Optional[str] = None,
         ip: str = "",
-        pilot_prefs: dict | None = None,
+        pilot_prefs: typing.Optional[dict] = None,
     ):
         """
         Make a new entry in :attr:`.Terminal.pilots`
@@ -151,7 +153,6 @@ class Terminal(Application):
 
         Args:
             value (dict): dict containing `state` .
-
         """
         # update the pilot button
         self.logger.debug(f"updating pilot state: {value}")
@@ -174,8 +175,8 @@ class Terminal(Application):
 
         Args:
             value (dict): dict containing `ip` and `state`
-
         """
+
         print("HANDSHAKE RECEIVED from")
         print(value["pilot"])
         if value["pilot"] in self.pilots.keys():
@@ -212,6 +213,7 @@ class Terminal(Application):
         `value` should have `subject` and `pilot` field added to dictionary for identification.
 
         """
+        pass
         # try:
         #     self.message_to_taskgui(value)
         # except:
@@ -259,31 +261,39 @@ class Terminal(Application):
 
     ############################ start experiment functions ############################
     def prepare_session_config(self, session_info):
-        """
-        _summary_
+        """_summary_
 
         Args:
             session_info (dict): Takes user defined information from GUI and prepares a configuration dictionary to pass to rig
 
         Returns:
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
-
         """
-        # module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.config"
-        module_path = f"protocols.{session_info.protocol}.{session_info.experiment}.{session_info.configuration}"
-        session_config = importlib.import_module(module_path)
-
-        session_config = importlib.import_module(
-            f"protocols.{session_info.protocol}.{session_info.experiment}.{session_info.configuration}",
-        )
-        file_path = Path(
+        # Import the configuration file directly using file path instead of module import
+        config_file_path = Path(
             Path.cwd(),
-            Path(
-                f"protocols/{session_info.protocol}/{session_info.experiment}/{session_info.configuration}.py",
-            ),
+            "protocols",
+            session_info.protocol,
+            session_info.experiment,
+            "config",
+            f"{session_info.configuration}.py"
         )
-        with open(file_path) as f:
+
+        # Read the configuration file as a string
+        with open(config_file_path, "r") as f:
             string_session_config = f.read()
+
+        # Execute the configuration file to get the module-like object
+        config_namespace = {}
+        exec(string_session_config, config_namespace)
+
+        # Create a module-like object from the namespace
+        import types
+        session_config = types.ModuleType("session_config")
+        for key, value in config_namespace.items():
+            if not key.startswith('__'):
+                setattr(session_config, key, value)
+
         return session_config, string_session_config
 
     def initiate_subject(self, session_info, session_config):
@@ -297,9 +307,7 @@ class Terminal(Application):
             subject (Subject): Subject object
 
         """
-        subject_module = importlib.import_module(
-            f"protocols.{session_info.protocol}.core.data_model.subject",
-        )
+        subject_module = importlib.import_module(f"protocols.{session_info.protocol}.core.data_model.subject")
         self.subjects[session_info.subject_name] = subject_module.Subject(
             session_info=session_info,
             session_config=session_config,
@@ -312,15 +320,14 @@ class Terminal(Application):
         Before starting the task, verify that all the hardware requirements to run the task as met
         """
         # TODO: Implement hardware verification on the rig
+        pass
 
     def start_experiment(self):
         session_info = self.verify_session_info()
         if session_info:
             if self.pilots[session_info.rig_id]["state"] == "IDLE":
                 # Gathering session configuration
-                session_config, string_session_config = self.prepare_session_config(
-                    session_info,
-                )
+                session_config, string_session_config = self.prepare_session_config(session_info)
                 # Initializing subject
                 subject_config = self.initiate_subject(session_info, session_config)
 
@@ -333,26 +340,21 @@ class Terminal(Application):
                     value={
                         "session_info": session_info,
                         # python object cannot be sent over network, so converting to string and will convert back to module on rig
-                        # "session_config": string_session_config,
-                        "session_config": inspect.getsource(session_config),
+                        "session_config": string_session_config,
                         "subject_config": subject_config,
                     },
                     flags={"NOLOG": True},
                 )
 
                 # Start Task GUI and updating parameters from rig preferences
-                gui_module = importlib.import_module(
-                    f"protocols.{session_info.protocol}.core.gui.task_gui",
-                )
+                gui_module = importlib.import_module(f"protocols.{session_info.protocol}.core.gui.task_gui")
                 self.add_new_rig(
                     id=session_info.rig_id,
                     task_gui=gui_module.TaskGUI,
                     session_info=session_info,
                     subject=self.subjects[session_info.subject_name],
                 )
-                self.rigs_gui[session_info.rig_id].set_rig_configuration(
-                    self.pilots[session_info.rig_id]["prefs"],
-                )
+                self.rigs_gui[session_info.rig_id].set_rig_configuration(self.pilots[session_info.rig_id]["prefs"])
 
                 # # Waiting for rig to initiate hardware and start session
                 # while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
@@ -381,8 +383,7 @@ class Terminal(Application):
                 m.stop_run()
 
         # Stop networking
-        # send message to kill networking process
-        self.node.send(key="KILL")
+        # send message to kill networking process        self.node.send(key="KILL")
         time.sleep(0.5)
         self.node.release()
         self.logger.debug("Released net node and sent kill message to station")
@@ -390,15 +391,65 @@ class Terminal(Application):
         event.accept()
 
 
+def signal_handler(sig, frame):
+    """Handle SIGINT (Ctrl+C) to gracefully exit the application"""
+    print("\nReceived Ctrl+C, shutting down gracefully...")
+
+    # Get the global terminal instance if it exists
+    global _TERMINAL
+    if _TERMINAL is not None:
+        try:
+            # Close all subjects files
+            for m in _TERMINAL.subjects.values():
+                if hasattr(m, 'running') and m.running is True:
+                    if hasattr(m, 'stop_run'):
+                        m.stop_run()
+
+            # Stop networking
+            if hasattr(_TERMINAL, 'node') and _TERMINAL.node is not None:
+                _TERMINAL.node.send(key="KILL")
+                time.sleep(0.5)
+                _TERMINAL.node.release()
+        except Exception as e:
+            print(f"Error during shutdown: {e}")
+
+    # Exit the application
+    QtWidgets.QApplication.quit()
+    sys.exit(0)
+
+
 def main():
+    # Set virtual environment using relative path
+    script_dir = Path(__file__).parent
+    venv_path = script_dir.parent.parent / ".venv"  # Go up to NeuRPi root, then to .venv
+
+    if venv_path.exists():
+        os.environ['VIRTUAL_ENV'] = str(venv_path)
+        os.environ['PATH'] = str(venv_path / "Scripts") + os.pathsep + os.environ.get('PATH', '')
+        sys.path.insert(0, str(venv_path / "Lib" / "site-packages"))
+
+    # Add the parent directory to Python path if needed
+    sys.path.insert(0, str(Path(__file__).parent.parent))    # Set the package attribute on the current module when running as __main__
+    import __main__
+    if not hasattr(__main__, '__package__') or __main__.__package__ is None:
+        __main__.__package__ = 'neurpi.agents'
+
+    # Set up signal handler for Ctrl+C
+    signal.signal(signal.SIGINT, signal_handler)
+
     app = QtWidgets.QApplication(sys.argv)
-    b = Terminal()
+
+    # Store the terminal instance globally for signal handler access
+    global _TERMINAL
+    _TERMINAL = Terminal()
+
     sys.exit(app.exec_())
 
 
 if __name__ == "__main__":
     import sys
 
+
     _TERMINAL = None
 
-    # main()
+    main()

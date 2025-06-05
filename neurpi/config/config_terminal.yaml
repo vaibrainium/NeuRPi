@@ -1,7 +1,7 @@
 # Path for data directory. Intentionally kept in another directory to avoid accidental deletion
 DATADIR: 'C:/Users/Trach_McGee/Desktop/Data/'
 # Path relative to home
-BASEDIR: 'C:/Users/Trach_McGee/Desktop/NeuRPi/'
+BASEDIR: 'C:/Users/Trach_McGee/Documents/NeuRPi/'
 # Path relative to package
 PROTOCOLDIR: protocols/
 VENVDIR: venv/

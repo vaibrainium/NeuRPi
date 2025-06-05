@@ -3,6 +3,7 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import yaml
@@ -28,13 +29,12 @@ class Subject:
         name (str): Subject ID
         dir (str): Path to data file
         running (bool): Indicator if subject is currently running or not
-
     """
 
     def __init__(
         self,
         name: str,
-        dir: Path | None = None,
+        dir: Optional[Path] = None,
     ):
         self.name = name
         self._info = None
@@ -54,9 +54,7 @@ class Subject:
         except FileNotFoundError:
             raise FileNotFoundError("Subject or root files not found")
 
-        self.age = (
-            datetime.now() - datetime.strptime(self.info["subject_dob"], "%Y-%m-%d")
-        ).days // 7
+        self.age = (datetime.now() - datetime.strptime(self.info["subject_dob"], "%Y-%m-%d")).days // 7
 
     ############################ context manager for files ############################
     @contextmanager
@@ -70,7 +68,6 @@ class Subject:
 
         Returns:
             file: Open file
-
         """
         with open(Path(self.dir, file_name), mode) as file:
             yield file
@@ -108,12 +105,9 @@ class Subject:
         Args:
             hist_dict (dict): Dictionary containing session information.
                 must contain keys: baseline_weight, start_weight, end_weight, protocol, experiment, session, session_uuid (optional)
-
         """
         try:
-            hist_dict["date"] = hist_dict.get(
-                "date", time.strftime("%Y-%m-%d %H:%M:%S")
-            )
+            hist_dict["date"] = hist_dict.get("date", time.strftime("%Y-%m-%d %H:%M:%S"))
             hist_dict["session_uuid"] = hist_dict.get("session_uuid", self.session_uuid)
 
             new_row = pd.DataFrame([hist_dict]).reindex(columns=self.history.columns)
@@ -123,9 +117,7 @@ class Subject:
                     # self._history.to_csv(file, index=False, lineterminator=None)
                     self._history.to_csv(file, index=False)
             else:
-                raise ValueError(
-                    "History dict does not contain all required keys from history file"
-                )
+                raise ValueError("History dict does not contain all required keys from history file")
         except AttributeError:
             raise AttributeError("Subject history could not be updated")
 

@@ -5,7 +5,7 @@ import typing
 from collections import deque
 from copy import copy
 from itertools import count
-from typing import Optional
+from typing import Optional, Union
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -16,7 +16,7 @@ from neurpi.networking.message import Message
 from neurpi.prefs import prefs
 
 
-class Net_Node:
+class Net_Node(object):
     """
     Drop in networking object to be given to any sub-object
     behind some external-facing :class:`.Station` object.
@@ -67,7 +67,6 @@ class Net_Node:
         logger (:class:`logging.Logger`): Used to log messages and network events.
         msg_counter (:class:`itertools.count`): counter to index our sent messages
         loop_thread (:class:`threading.Thread`): Thread that holds our loop. initialized with `daemon=True`
-
     """
 
     repeat_interval = 5  # how many seconds to wait before trying to repeat a message
@@ -77,13 +76,14 @@ class Net_Node:
         id: str,
         upstream: str,
         port: int,
-        listens: dict[str, typing.Callable],
+        listens: typing.Dict[str, typing.Callable],
         instance: bool = True,
         upstream_ip: str = "localhost",
-        router_port: int | None = None,
+        router_port: Optional[int] = None,
         daemon: bool = True,
         expand_on_receive: bool = True,
     ):
+
         if instance:
             self.context = zmq.Context.instance()  # type: zmq.Context
             self.loop = IOLoop.current()  # type: IOLoop
@@ -146,7 +146,7 @@ class Net_Node:
         # self.sock.probe_router = 1
 
         # connect our dealer socket to "push" messages upstream
-        self.sock.connect(f"tcp://{self.upstream_ip}:{self.port}")
+        self.sock.connect("tcp://{}:{}".format(self.upstream_ip, self.port))
         self.sock = ZMQStream(self.sock, self.loop)
         self.sock.on_recv(self.handle_listen)
 
@@ -154,7 +154,7 @@ class Net_Node:
         if self.router_port is not None:
             self.router = self.context.socket(zmq.ROUTER)
             self.router.setsockopt_string(zmq.IDENTITY, self.id)
-            self.router.bind(f"tcp://*:{self.router_port}")
+            self.router.bind("tcp://*:{}".format(self.router_port))
             self.router = ZMQStream(self.router, self.loop)
             self.router.on_recv(self.handle_listen)
 
@@ -170,6 +170,7 @@ class Net_Node:
         is already started (ie. running in another thread),
         breaks.
         """
+
         while not self.closing.is_set():
             try:
                 self.loop.start()
@@ -177,7 +178,7 @@ class Net_Node:
                 # loop already started
                 break
 
-    def handle_listen(self, msg: list[bytes]):
+    def handle_listen(self, msg: typing.List[bytes]):
         """
         Upon receiving a message, call the appropriate listen method
         in a new thread and send confirmation it was received.
@@ -189,7 +190,6 @@ class Net_Node:
 
         Args:
             msg (list): JSON :meth:`.Message.serialize` d message.
-
         """
         self.msgs_received += 1
 
@@ -205,7 +205,7 @@ class Net_Node:
         # Check if our listen was sent properly
         if not msg.validate():
             if self.logger:
-                self.logger.error(f"Message failed to validate:\n{msg!s}")
+                self.logger.error("Message failed to validate:\n{}".format(str(msg)))
             return
 
         # unnest any list if it was a multihop message
@@ -224,9 +224,7 @@ class Net_Node:
                 except Exception as e:
                     self.logger.exception(e)
 
-            self.logger.exception(
-                f"MSG ID {msg.id} - No listen function found for key: {msg.key}",
-            )
+            self.logger.exception("MSG ID {} - No listen function found for key: {}".format(msg.id, msg.key))
 
         if (msg.key != "CONFIRM") and ("NOREPEAT" not in msg.flags.keys()):
             # send confirmation
@@ -237,11 +235,11 @@ class Net_Node:
             log_this = False
 
         if self.logger and log_this:
-            self.logger.debug(f"RECEIVED: {msg!s}")
+            self.logger.debug("RECEIVED: {}".format(str(msg)))
 
     def send(
         self,
-        to: str | list | None = None,
+        to: Optional[Union[str, list]] = None,
         key: str = None,
         value: typing.Any = None,
         msg: Optional["Message"] = None,
@@ -290,7 +288,6 @@ class Net_Node:
             force_to (bool): If we really really want to use the 'to' field to address messages
                 (eg. node being used for direct communication), overrides default behavior of sending to upstream.
             blosc (bool): Tell the message to compress its serialized contents with blosc
-
         """
         if (key is None) and (msg is None):
             if self.logger:
@@ -322,7 +319,7 @@ class Net_Node:
         # encode message
         msg_enc = msg.serialize()
         if not msg_enc:
-            self.logger.error(f"Message could not be encoded:\n{msg!s}")
+            self.logger.error("Message could not be encoded:\n{}".format(str(msg)))
             return
 
         if isinstance(to, list):
@@ -344,7 +341,7 @@ class Net_Node:
             self.sock.send_multipart(multipart)
 
         if self.logger and log_this:
-            self.logger.debug(f"MESSAGE SENT - {msg!s}")
+            self.logger.debug("MESSAGE SENT - {}".format(str(msg)))
 
         if repeat and not msg.key == "CONFIRM":
             # add to outbox and spawn timer to resend
@@ -365,26 +362,23 @@ class Net_Node:
             if len(outbox) > 0:
                 for id in outbox.keys():
                     if outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            f"PUBLISH FAILED {id} - {outbox[id][1]!s}",
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(outbox[id][1])))
                         try:
                             del self.outbox[id]
                         except KeyError:
                             # fine, already deleted
                             pass
-                    # if we didn't just put this message in the outbox...
-                    elif (time.time() - outbox[id][0]) > (self.repeat_interval * 2):
-                        self.logger.debug(
-                            f"REPUBLISH {id} - {outbox[id][1]!s}",
-                        )
-                        self.sock.send_multipart(
-                            [
-                                self.upstream.encode("utf-8"),
-                                outbox[id][1].serialize(),
-                            ],
-                        )
-                        self.outbox[id][1].ttl -= 1
+                    else:
+                        # if we didn't just put this message in the outbox...
+                        if (time.time() - outbox[id][0]) > (self.repeat_interval * 2):
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(outbox[id][1])))
+                            self.sock.send_multipart(
+                                [
+                                    self.upstream.encode("utf-8"),
+                                    outbox[id][1].serialize(),
+                                ]
+                            )
+                            self.outbox[id][1].ttl -= 1
 
             # wait to do it again
             time.sleep(self.repeat_interval)
@@ -395,7 +389,6 @@ class Net_Node:
 
         Args:
             value (str): The ID of the message we are confirming.
-
         """
         # delete message from outbox if we still have it
         # msg.value should contain the if of the message that was confirmed
@@ -411,7 +404,7 @@ class Net_Node:
         #     self.timers[value].cancel()
         #     del self.timers[value]
 
-        self.logger.debug(f"CONFIRMED MESSAGE {value}")
+        self.logger.debug("CONFIRMED MESSAGE {}".format(value))
 
     def l_stream(self, msg):
         """
@@ -422,7 +415,6 @@ class Net_Node:
 
         Args:
             msg (dict): Compressed stream sent by :meth:`Net_Node._stream`
-
         """
         listen_fn = self.listens[msg.value["inner_key"]]
         old_value = copy(msg.value)
@@ -455,7 +447,6 @@ class Net_Node:
             value: Any information this message should contain. Can be any type, but
                 must be JSON serializable.
             blosc (bool): Whether or not the message should be compressed with blosc
-
         """
         msg = Message()
 
@@ -480,7 +471,7 @@ class Net_Node:
         msg.blosc = blosc
 
         msg_num = next(self.msg_counter)
-        msg.id = f"{self.id}_{msg_num}"
+        msg.id = "{}_{}".format(self.id, msg_num)
 
         if not repeat:
             msg.flags["NOREPEAT"] = True
@@ -500,13 +491,12 @@ class Net_Node:
         port=None,
         ip=None,
         subject=None,
-        q_size: int | None = None,
+        q_size: Optional[int] = None,
     ):
         """
 
         Make a queue that another object can dump data into that sends on its own socket.
         Smarter handling of continuous data than just hitting 'send' a shitload of times.
-
         Returns:
             Queue: Place to dump ur data
 
@@ -540,27 +530,30 @@ class Net_Node:
         self.streams[id] = stream_thread
 
         self.logger.info(
-            "Stream started with configuration:\n"
-            + "ID: {}\n".format(self.id + "_" + id)
-            + f"Key: {key}\n"
-            + f"Min Chunk Size: {min_size}\n"
-            + f"Upstream ID: {upstream}\n"
-            + f"Port: {port}\n"
-            + f"IP: {ip}\n"
-            + f"Subject: {subject}\n",
+            (
+                "Stream started with configuration:\n"
+                + "ID: {}\n".format(self.id + "_" + id)
+                + "Key: {}\n".format(key)
+                + "Min Chunk Size: {}\n".format(min_size)
+                + "Upstream ID: {}\n".format(upstream)
+                + "Port: {}\n".format(port)
+                + "IP: {}\n".format(ip)
+                + "Subject: {}\n".format(subject)
+            )
         )
 
         return q
 
     def _stream(self, id, msg_key, min_size, upstream, port, ip, subject, q):
+
         # create a new context and socket
         # context = zmq.Context()
         # loop = IOLoop()
         socket = self.context.socket(zmq.DEALER)
-        socket_id = f"{self.id}_{id}"
+        socket_id = "{}_{}".format(self.id, id)
         # socket.identity = socket_id
         socket.setsockopt_string(zmq.IDENTITY, socket_id)
-        socket.connect(f"tcp://{ip}:{port}")
+        socket.connect("tcp://{}:{}".format(ip, port))
 
         socket = ZMQStream(socket, self.loop)
 
@@ -586,6 +579,7 @@ class Net_Node:
         pending_data = []
 
         if min_size > 1:
+
             while True:
                 try:
                     data = q.popleft()
@@ -613,22 +607,13 @@ class Net_Node:
                             },
                             "payload": pending_data,
                         },
-                        id=f"{id}_{next(msg_counter)}",
+                        id="{}_{}".format(id, next(msg_counter)),
                         flags={"NOREPEAT": True, "MINPRINT": True},
                         sender=socket_id,
                     ).serialize()
-                    last_msg = socket.send_multipart(
-                        (upstream, upstream, msg),
-                        track=True,
-                        copy=True,
-                    )
+                    last_msg = socket.send_multipart((upstream, upstream, msg), track=True, copy=True)
 
-                    self.logger.debug(
-                        "STREAM {}: Sent {} items".format(
-                            self.id + "_" + id,
-                            len(pending_data),
-                        ),
-                    )
+                    self.logger.debug("STREAM {}: Sent {} items".format(self.id + "_" + id, len(pending_data)))
                     pending_data = []
         else:
             # just send like normal messags
@@ -654,14 +639,10 @@ class Net_Node:
                     continuous=True,
                     value=data,
                     flags={"NOREPEAT": True, "MINPRINT": True},
-                    id=f"{id}_{next(msg_counter)}",
+                    id="{}_{}".format(id, next(msg_counter)),
                     sender=socket_id,
                 ).serialize()
-                socket.send_multipart(
-                    (upstream, upstream, msg),
-                    track=False,
-                    copy=False,
-                )
+                socket.send_multipart((upstream, upstream, msg), track=False, copy=False)
 
                 self.logger.debug("STREAM {}: Sent 1 item".format(self.id + "_" + id))
 
@@ -676,28 +657,21 @@ class Net_Node:
 
         returns (str): our IPv4 address.
         """
+
         # shamelessly stolen from https://www.w3resource.com/python-exercises/python-basic-exercise-55.php
         # variables are badly named because this is just a rough unwrapping of what was a monstrous one-liner
         # (and i don't really understand how it works)
 
         if self._ip is None:
+
             # get ips that aren't the loopback
-            unwrap00 = [
-                ip
-                for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-                if not ip.startswith("127.")
-            ][:1]
+            unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
             # ??? truly dk
             unwrap01 = [
-                [
-                    (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
-                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
-                ][0][1],
+                [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]
             ]
 
-            self._ip = [
-                list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip
-            ][0][0]
+            self._ip = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
 
         return self._ip
 

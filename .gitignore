@@ -13,3 +13,55 @@ doc
 examples
 .venv
 # .gitignore
+
+
+
+
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*/__pycache__/*
+*.py[cod]
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+# #git
+# .gitignore
+# .gitattributes
+# #docker
+# .dockerignore
+#jupyter
+*/.ipynb_checkpoints/*
+.ipynb_checkpoints
+build
+.vscode/
+
+# Package
+
+data
+logs
+.env
+venv
+.venv
+*/config/config_pilot.yaml
+*/config/config_terminal.yaml
+
+.pre-commit-config.yaml
+/commitlint.config.js
+node_modules/
+ruff.toml

@@ -1,3 +1,3 @@
-__all__ = ["NeuRPi"]
+__all__ = ["neurpi"]
 
-import NeuRPi
+import neurpi

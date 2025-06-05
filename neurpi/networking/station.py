@@ -7,6 +7,7 @@ import time
 import typing
 from copy import copy
 from itertools import count
+from typing import Optional
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -50,13 +51,13 @@ class Station(multiprocessing.Process):
 
     def __init__(
         self,
-        id: str | None = None,
+        id: Optional[str] = None,
         pusher: bool = False,
-        push_id: str | None = None,
-        push_ip: str | None = None,
-        push_port: str | None = None,
-        listen_port: int | None = None,
-        listens: dict[str, typing.Callable] | None = None,
+        push_id: Optional[str] = None,
+        push_ip: Optional[str] = None,
+        push_port: Optional[str] = None,
+        listen_port: Optional[int] = None,
+        listens: Optional[typing.Dict[str, typing.Callable]] = None,
     ):
         super(Station, self).__init__()
         self.id = id
@@ -85,7 +86,7 @@ class Station(multiprocessing.Process):
         try:
             self.ip = self.get_ip()
         except Exception as e:
-            Warning(f"Couldn't get IP: {e}")
+            Warning("Couldn't get IP: {}".format(e))
             self.ip = ""
 
         self.file_block = multiprocessing.Event()  # to wait for file transfer
@@ -97,9 +98,7 @@ class Station(multiprocessing.Process):
         if listens is None:
             listens = {}
         self.listens = listens
-        self.listens.update(
-            {"CONFIRM": self.l_confirm, "STREAM": self.l_stream, "KILL": self.l_kill},
-        )
+        self.listens.update({"CONFIRM": self.l_confirm, "STREAM": self.l_stream, "KILL": self.l_kill})
 
         # closing event signal
         self.closing = multiprocessing.Event()
@@ -113,21 +112,19 @@ class Station(multiprocessing.Process):
 
     def get_ip(self):
         """
-        Find the local machine's IPv4 address.
-
-        Returns:
-            str: The local IPv4 address.
-
+        Find our IP address
+        returns (str): our IPv4 address.
         """
-        try:
-            # Create a UDP socket and connect to an external server (Google's DNS)
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.connect(("8.8.8.8", 53))
-                local_ip = s.getsockname()[0]  # Extract the IP address
+        # shamelessly stolen from https://www.w3resource.com/python-exercises/python-basic-exercise-55.php
+        # variables are badly named because this is just a rough unwrapping of what was a monstrous one-liner
+        # (and i don't really understand how it works)
 
-            return local_ip
-        except Exception as e:
-            return f"Error retrieving IP: {e}"
+        # get ips that aren't the loopback
+        unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("10.")][:1]
+        # ??? truly dk
+        unwrap01 = [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]
+        unwrap2 = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
+        return unwrap2
 
     def prepare_message(self, to, key, value, repeat=True, flags=None):
         """
@@ -139,8 +136,8 @@ class Station(multiprocessing.Process):
             to (str): Identity of receiving socket
             key (str): Type of message - indicating which process receiver should use to process the message
             value: Massesge, must be in JSON serializable format
-
         """
+
         msg = Message()
         msg.sender = self.id
         msg.value = value
@@ -155,7 +152,7 @@ class Station(multiprocessing.Process):
             msg.key = key
 
         msg_num = next(self.msg_counter)
-        msg.id = f"{self.id}_{msg_num}"
+        msg.id = "{}_{}".format(self.id, msg_num)
 
         if not repeat:
             msg.flags["NOREPEAT"] = True
@@ -180,12 +177,14 @@ class Station(multiprocessing.Process):
             value: Massesge, must be in JSON serializable format
             msg: prepared message
             repeat (bool): Should we resend this message if confirmation not received?
-
         """
+
         if not msg and not all([to, key]):
             self.logger.exception(
-                f"Need either a message or 'to' and 'key' fields.\
-                Got\nto: {to}\nkey: {key}\nvalue: {value}\nmsg: {msg}",
+                "Need either a message or 'to' and 'key' fields.\
+                Got\nto: {}\nkey: {}\nvalue: {}\nmsg: {}".format(
+                    to, key, value, msg
+                )
             )
             return
 
@@ -205,25 +204,26 @@ class Station(multiprocessing.Process):
 
         # Make sure msg has all required fields
         if not msg.validate():
-            self.logger.exception(f"Message Invalid:\n{msg!s}")
+            self.logger.exception("Message Invalid:\n{}".format(str(msg)))
 
         # Encode message
         msg_enc = msg.serialize()
 
         if not msg_enc:
-            self.logger.exception(f"Message could not be encoded:\n{msg!s}")
+            self.logger.exception("Message could not be encoded:\n{}".format(str(msg)))
             return
 
         if manual_to:
             self.listener.send_multipart([to.encode("utf-8"), msg_enc])
-        elif isinstance(msg.to, list):
-            self.listener.send_multipart(
-                [*[hop.encode("utf-8") for hop in to], msg_enc],
-            )
         else:
-            self.listener.send_multipart([msg.to.encode("utf-8"), msg_enc])
 
-        self.logger.debug(f"MESSAGE SENT - {msg!s}")
+            if isinstance(msg.to, list):
+
+                self.listener.send_multipart([*[hop.encode("utf-8") for hop in to], msg_enc])
+            else:
+                self.listener.send_multipart([msg.to.encode("utf-8"), msg_enc])
+
+        self.logger.debug("MESSAGE SENT - {}".format(str(msg)))
 
         if repeat and not msg.key == "CONFIRM":
             # add to outbox and spawn timer to resend
@@ -243,12 +243,14 @@ class Station(multiprocessing.Process):
             value: Massesge, must be in JSON serializable format
             msg: prepared message
             repeat (bool): Should we resend this message if confirmation not received?
-
         """
+
         if not msg and not all([to, key]):
             self.logger.exception(
-                f"Need either a message or 'to' and 'key' fields.\
-                Got\nto: {to}\nkey: {key}\nvalue: {value}\nmsg: {msg}",
+                "Need either a message or 'to' and 'key' fields.\
+                Got\nto: {}\nkey: {}\nvalue: {}\nmsg: {}".format(
+                    to, key, value, msg
+                )
             )
             return
 
@@ -266,23 +268,21 @@ class Station(multiprocessing.Process):
 
         # Make sure msg has all required fields
         if not msg.validate():
-            self.logger.exception(f"Message Invalid:\n{msg!s}")
+            self.logger.exception("Message Invalid:\n{}".format(str(msg)))
 
         # Encode message
         msg_enc = msg.serialize()
 
         if not msg_enc:
-            self.logger.exception(f"Message could not be encoded:\n{msg!s}")
+            self.logger.exception("Message could not be encoded:\n{}".format(str(msg)))
             return
 
         # Even if the message is not to our upstream node, we still send it
         # upstream because presumably our target is upstream.
-        self.pusher.send_multipart(
-            [self.push_id, bytes(msg.to, encoding="utf-8"), msg_enc],
-        )
+        self.pusher.send_multipart([self.push_id, bytes(msg.to, encoding="utf-8"), msg_enc])
 
         if not (msg.key == "CONFIRM") and log_this:
-            self.logger.debug(f"MESSAGE PUSHED - {msg!s}")
+            self.logger.debug("MESSAGE PUSHED - {}".format(str(msg)))
 
         if repeat and not msg.key == "CONFIRM":
             # add to outbox and spawn timer to resend
@@ -294,7 +294,6 @@ class Station(multiprocessing.Process):
 
         Args:
             msg(:class:`.Message`): A confirmation message with it's unique ID. The value of the message contains the ID of the message that is being confirmed
-
         """
         # value should be the id of message to be confirmed
 
@@ -308,8 +307,8 @@ class Station(multiprocessing.Process):
             pass
 
         # if this is a message to our internal net_node, make sure it gets the memo that it was confirmed too
-        if msg.to == f"_{self.id}":
-            self.send(f"_{self.id}", "CONFIRM", msg.value)
+        if msg.to == "_{}".format(self.id):
+            self.send("_{}".format(self.id), "CONFIRM", msg.value)
 
     def l_stream(self, msg):
         """
@@ -319,7 +318,6 @@ class Station(multiprocessing.Process):
 
         Args:
             msg (dict): Compressed stream sent by :meth:`Net_Node._stream`
-
         """
         listen_fn = self.listens[msg.value["inner_key"]]
         old_value = copy(msg.value)
@@ -362,7 +360,7 @@ class Station(multiprocessing.Process):
         sock = ctx.socket(zmq.DEALER)
         sock.setsockopt_string(zmq.IDENTITY, f"{self.id}/closer")
         sock.connect(f"tcp://localhost:{self.listen_port}")
-        sock.send_multipart([self.id.encode("utf-8", b"CLOSING")])
+        sock.send_multipart([self.id.encode("utf-8", "CLOSING".encode("utf-8"))])
         sock.close()
         # Terminate mulitiprocess.Process()
         self.terminate()
@@ -389,48 +387,42 @@ class Station(multiprocessing.Process):
             if len(push_outbox) > 0:
                 for id in push_outbox.keys():
                     if push_outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            f"PUBLISH FAILED {id} - {push_outbox[id][1]!s}",
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(push_outbox[id][1])))
                         try:
                             del self.push_outbox[id]
                         except KeyError:
                             # fine, already deleted
                             pass
-                    # if we didn't just put this message in our outbox
-                    elif (time.time() - push_outbox[id][0]) > self.repeat_interval * 2:
-                        self.logger.debug(
-                            f"REPUBLISH {id} - {push_outbox[id][1]!s}",
-                        )
-                        self.pusher.send_multipart(
-                            [self.push_id, push_outbox[id][1].serialize()],
-                        )
-                        self.push_outbox[id][1].ttl -= 1
+                    else:
+                        # if we didn't just put this message in our outbox
+                        if (time.time() - push_outbox[id][0]) > self.repeat_interval * 2:
+
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(push_outbox[id][1])))
+                            self.pusher.send_multipart([self.push_id, push_outbox[id][1].serialize()])
+                            self.push_outbox[id][1].ttl -= 1
 
             if len(send_outbox) > 0:
                 for id in send_outbox.keys():
                     if send_outbox[id][1].ttl <= 0:
-                        self.logger.warning(
-                            f"PUBLISH FAILED {id} - {send_outbox[id][1]!s}",
-                        )
+                        self.logger.warning("PUBLISH FAILED {} - {}".format(id, str(send_outbox[id][1])))
                         try:
                             del self.send_outbox[id]
                         except KeyError:
                             # fine, already deleted
                             pass
 
-                    # if we didn't just put this message in our outbox
-                    elif (time.time() - send_outbox[id][0]) > self.repeat_interval * 2:
-                        self.logger.debug(
-                            f"REPUBLISH {id} - {send_outbox[id][1]!s}",
-                        )
-                        self.listener.send_multipart(
-                            [
-                                bytes(send_outbox[id][1].to, encoding="utf-8"),
-                                send_outbox[id][1].serialize(),
-                            ],
-                        )
-                        self.send_outbox[id][1].ttl -= 1
+                    else:
+                        # if we didn't just put this message in our outbox
+                        if (time.time() - send_outbox[id][0]) > self.repeat_interval * 2:
+
+                            self.logger.debug("REPUBLISH {} - {}".format(id, str(send_outbox[id][1])))
+                            self.listener.send_multipart(
+                                [
+                                    bytes(send_outbox[id][1].to, encoding="utf-8"),
+                                    send_outbox[id][1].serialize(),
+                                ]
+                            )
+                            self.send_outbox[id][1].ttl -= 1
 
             # wait to do it again
             time.sleep(self.repeat_interval)
@@ -456,14 +448,14 @@ class Station(multiprocessing.Process):
             # connects it with its antecedents.
             self.listener = self.context.socket(zmq.ROUTER)
             self.listener.setsockopt_string(zmq.IDENTITY, self.id)
-            self.listener.bind(f"tcp://*:{self.listen_port}")
+            self.listener.bind("tcp://*:{}".format(self.listen_port))
             self.listener = ZMQStream(self.listener, self.loop)
             self.listener.on_recv(self.handle_listen)
 
             if self.pusher is True:
                 self.pusher = self.context.socket(zmq.DEALER)
                 self.pusher.setsockopt_string(zmq.IDENTITY, self.id)
-                self.pusher.connect(f"tcp://{self.push_ip}:{self.push_port}")
+                self.pusher.connect("tcp://{}:{}".format(self.push_ip, self.push_port))
                 self.pusher = ZMQStream(self.pusher, self.loop)
                 self.pusher.on_recv(self.handle_listen)
                 # TODO: Make sure handle_listen knows how to handle ID-less messages
@@ -478,13 +470,14 @@ class Station(multiprocessing.Process):
         except KeyboardInterrupt:
             # normal quitting behavior
             self.logger.debug("Stopped with KeyboardInterrupt")
+            pass
         finally:
             self.context.destroy()
             self.loop.close()
             self.logger.debug("Reached finally, closing Station")
             # self.release()
 
-    def handle_listen(self, msg: list[bytes]):
+    def handle_listen(self, msg: typing.List[bytes]):
         """
         Upon receiving a message, call the appropriate listen method
         in a new thread.
@@ -495,7 +488,6 @@ class Station(multiprocessing.Process):
 
         Args:
             msg (str): JSON :meth:`.Message.serialize` d message.
-
         """
         # TODO: This check is v. fragile, pyzmq has a way of sending the stream along with the message
         #####################33
@@ -536,7 +528,7 @@ class Station(multiprocessing.Process):
             # if this message wasn't to us, forward without deserializing
             # the second to last should always be the intended recipient
             unserialized_to = msg[-2]
-            if unserialized_to.decode("utf-8") not in [self.id, f"_{self.id}"]:
+            if unserialized_to.decode("utf-8") not in [self.id, "_{}".format(self.id)]:
                 # forward it!
                 if len(msg) > 4:
                     # multihop message, just determine whether the next hop is through
@@ -547,16 +539,17 @@ class Station(multiprocessing.Process):
                     else:
                         self.listener.send_multipart(msg[2:])
                         self.logger.debug(f"FORWARDING (multihop router): {msg}")
-                elif unserialized_to not in self.senders.keys() and self.pusher:
-                    # if we don't know who they are and we have a pusher, try to push it
-                    self.pusher.send_multipart([self.push_id, *msg[2:]])
-                    self.logger.debug(f"FORWARDING (dealer): {msg}")
                 else:
-                    # if we know who they are or not, try to send it through router anyway.
-                    # send everything but the first two frames, which should be the ID of
-                    # the sender and us
-                    self.listener.send_multipart(msg[2:])
-                    self.logger.debug(f"FORWARDING (router): {msg}")
+                    if unserialized_to not in self.senders.keys() and self.pusher:
+                        # if we don't know who they are and we have a pusher, try to push it
+                        self.pusher.send_multipart([self.push_id, *msg[2:]])
+                        self.logger.debug(f"FORWARDING (dealer): {msg}")
+                    else:
+                        # if we know who they are or not, try to send it through router anyway.
+                        # send everything but the first two frames, which should be the ID of
+                        # the sender and us
+                        self.listener.send_multipart(msg[2:])
+                        self.logger.debug(f"FORWARDING (router): {msg}")
 
                 return
 
@@ -568,7 +561,7 @@ class Station(multiprocessing.Process):
                 self.senders["_" + msg["sender"]] = ""
 
         else:
-            self.logger.error(f"Dont know what this message is:{msg}")
+            self.logger.error("Dont know what this message is:{}".format(msg))
             return
 
         ###################################
@@ -580,18 +573,16 @@ class Station(multiprocessing.Process):
                 msg.to = msg.to[0]
 
         # if this message is to us, just handle it and return
-        if msg.to in [self.id, f"_{self.id}"]:
+        if msg.to in [self.id, "_{}".format(self.id)]:
             if msg.key != "CONFIRM":
-                self.logger.debug(f"RECEIVED: {msg!s}")
+                self.logger.debug("RECEIVED: {}".format(str(msg)))
             # Log and spawn thread to respond to listen
             try:
                 listen_funk = self.listens[msg.key]
                 listen_thread = threading.Thread(target=listen_funk, args=(msg,))
                 listen_thread.start()
             except KeyError:
-                self.logger.exception(
-                    f"No function could be found for msg id {msg.id} with key: {msg.key}",
-                )
+                self.logger.exception("No function could be found for msg id {} with key: {}".format(msg.id, msg.key))
 
             # send a return message that confirms even if we except
             # don't confirm confirmations
@@ -601,13 +592,11 @@ class Station(multiprocessing.Process):
                 elif send_type == "dealer":
                     self.push(msg.sender, "CONFIRM", msg.id)
             return
-        if self.child and (msg.to == "T"):
+        elif self.child and (msg.to == "T"):
             # FIXME UGLY HACK
             self.push(msg=msg)
         else:
-            self.logger.exception(
-                f"Message not to us, but wasnt forwarded previously in handling method, message must be misformatted: {msg}",
-            )
+            self.logger.exception(f"Message not to us, but wasnt forwarded previously in handling method, message must be misformatted: {msg}")
 
 
 class Terminal_Station(Station):
@@ -651,7 +640,6 @@ class Terminal_Station(Station):
         """
         Args:
             pilots (dict): All node pilot dictionary
-
         """
         super(Terminal_Station, self).__init__()
 
@@ -674,7 +662,7 @@ class Terminal_Station(Station):
                 "HANDSHAKE": self.l_handshake,  # initial connection with some initial info
                 "FILE": self.l_file,  # The pi needs some file from us
                 "SESSION_FILES": self.l_session_files,  # The pi needs some file from us
-            },
+            }
         )
 
         # dictionary that keep tracks of pilots
@@ -715,7 +703,6 @@ class Terminal_Station(Station):
 
         Args:
             msg
-
         """
         # respond with blank sice terminal doesn't have states
         self.send(msg.sender, "STATE", flags={"NOLOG": True})
@@ -728,7 +715,6 @@ class Terminal_Station(Station):
 
         Args:
             msg
-
         """
         # Ping all pis that we are expecting given our pilot db
         # Responses will be handled with l_state so not much needed here
@@ -738,13 +724,12 @@ class Terminal_Station(Station):
 
     def l_change(self, msg: Message):
         """
-        Change a parameter on the Pi
+        Received change of parameter from the Pi
 
         Warning:
             Not Implemented
         Args:
             msg:
-
         """
         # Send through to terminal
         self.send(to="_T", msg=msg)
@@ -762,7 +747,7 @@ class Terminal_Station(Station):
         # let all the pilots and plot objects know that they should stop
         for p in self.pilots.keys():
             self.send(p, "STOP")
-            self.send(f"P_{p}", "STOP")
+            self.send("P_{}".format(p), "STOP")
 
     def l_data(self, msg: Message):
         """
@@ -770,10 +755,8 @@ class Terminal_Station(Station):
 
         Just forward this along to the internal terminal object ('_T')
         and a copy to the relevant plot.
-
         Args:
             msg:
-
         """
         # Send through to terminal
         # self.send('_T', 'DATA', msg.value, flags=msg.flags)
@@ -818,7 +801,6 @@ class Terminal_Station(Station):
 
         Args:
             msg:
-
         """
         if msg.sender not in self.pilots.keys():
             self.pilots[msg.sender] = {}
@@ -834,7 +816,7 @@ class Terminal_Station(Station):
         self.send("_T", "STATE", state)
 
         # Tell the plot
-        self.send(f"P_{msg.sender}", "STATE", msg.value)
+        self.send("P_{}".format(msg.sender), "STATE", msg.value)
 
         self.senders[msg.sender] = msg.value
 
@@ -852,15 +834,12 @@ class Terminal_Station(Station):
         """
         A Pilot needs some file from us.
         Send it back after :meth:`base64.b64encode` ing it.
-
-        Todo:
+        TODO:
             Split large files into multiple messages...
-
         Args:
             msg (:class:`.Message`): The value field of the message should contain some
                 relative path to a file contained within `prefs.get('SOUNDDIR')` . eg.
                 `'/songs/sadone.wav'` would return `'os.path.join(prefs.get('SOUNDDIR')/songs.sadone.wav'`
-
         """
         # The <target> pi has requested some file <value> from us, let's send it back
         # This assumes the file is small, if this starts crashing we'll have to split the message...
@@ -927,7 +906,7 @@ class Pilot_Station(Station):
             #     f"pilot NAME in prefs.json cannot be blank, got {self.id}"
             # )
             raise ValueError(f"pilot NAME in prefs.json cannot be blank, got {self.id}")
-        self.pi_id = f"_{self.id}"
+        self.pi_id = "_{}".format(self.id)
         self.subject = None  # Store current subject ID
         self.state = "IDLE"  # store current pi state
         self.child = False  # Are we acting as a child right now?
@@ -941,7 +920,6 @@ class Pilot_Station(Station):
                 "START": self.l_start,  # We are being sent a task to start
                 "STOP": self.l_stop,  # We are being told to stop the current task
                 "PARAM": self.l_change,  # The Terminal is changing some task parameter
-                "EVENT": self.l_event,  # The Terminal is sending some task event from GUI
                 "FILE": self.l_file,  # We are receiving a file
                 "CONTINUOUS": self.l_continuous,  # we are sending continuous data to the terminal
                 "CHILD": self.l_child,
@@ -950,7 +928,7 @@ class Pilot_Station(Station):
                 "CALIBRATE_RESULT": self.l_forward,
                 "BANDWIDTH": self.l_forward,
                 "STREAM_VIDEO": self.l_forward,
-            },
+            }
         )
 
         # ping back our status to the terminal every so often
@@ -970,7 +948,6 @@ class Pilot_Station(Station):
         Calls its own timer to replace it
 
         Returns:
-
         """
         # before .run is called, pusher is a boolean flag telling us to make one when it is
         # not great and should be changed, but these modules are not long for this world
@@ -996,7 +973,6 @@ class Pilot_Station(Station):
 
         Args:
             msg (:class:`.Message`):
-
         """
         # Save locally so we can respond to queries on our own, then push 'er on through
         # Value will just have the state, we want to add our name
@@ -1012,15 +988,14 @@ class Pilot_Station(Station):
         Args:
             msg (:class:`.Message`):
         """
+        pass
 
     def l_ping(self, msg: Message = None):
         """
         The Terminal wants to know our status
         Push back our current state.
-
         Args:
             msg (:class:`.Message`):
-
         """
         # The terminal wants to know if we are alive, respond with our name and IP
         # don't bother the pi
@@ -1035,19 +1010,59 @@ class Pilot_Station(Station):
             msg (:class:`.Message`):
         """
         # TODO: Changing some task parameter from the Terminal
-        self.send(self.pi_id, "PARAM", msg.value)
+        pass
 
     def l_start(self, msg: Message):
         """
         We are being sent a task to start
         If we need any files, request them.
         Then send along to the pilot.
-
         Args:
             msg (:class:`.Message`): value will contain a dictionary containing a task
                 description.
-
         """
+        self.subject = msg.value["subject"]
+
+        # TODO: Refactor into a general preflight check.
+        # First make sure we have any sound files that we need
+        # TODO: stim managers need to be able to return list of stimuli and this is a prime reason why
+        if "stim" in msg.value.keys():
+            if "sounds" in msg.value["stim"].keys():
+
+                # nested list comprehension to get value['sounds']['L/R'][0-n]
+                f_sounds = [sound for sounds in msg.value["stim"]["sounds"].values() for sound in sounds if sound["type"] in ["File", "Speech"]]
+            elif "manager" in msg.value["stim"].keys():
+                # we have a manager
+                if msg.value["stim"]["type"] == "sounds":
+                    f_sounds = []
+                    for group in msg.value["stim"]["groups"]:
+                        f_sounds.extend([sound for sounds in group["sounds"].values() for sound in sounds if sound["type"] in ["File", "Speech"]])
+            else:
+                f_sounds = []
+
+            if len(f_sounds) > 0:
+                # check to see if we have these files, if not, request them
+                for sound in f_sounds:
+                    full_path = os.path.join(prefs.get("SOUNDDIR"), sound["path"])
+                    if not os.path.exists(full_path):
+                        # We ask the terminal to send us the file and then wait.
+                        self.logger.info("REQUESTING SOUND {}".format(sound["path"]))
+                        self.push(key="FILE", value=sound["path"])
+                        # wait here to get the sound,
+                        # the receiving thread will set() when we get it.
+                        self.file_block.clear()
+                        self.file_block.wait()
+
+        # If we're starting the task as a child, stash relevant params
+        if "child" in msg.value.keys():
+            self.child = True
+            self.parent_id = msg.value["child"]["parent"]
+            self.subject = msg.value["child"]["subject"]
+
+        else:
+            self.child = False
+
+        # once we make sure we have everything, tell the Pilot to start.
         self.send(self.pi_id, "START", msg.value)
 
     def l_stop(self, msg: Message):
@@ -1058,24 +1073,14 @@ class Pilot_Station(Station):
         """
         self.send(self.pi_id, "STOP")
 
-    def l_event(self, msg: Message):
-        """
-        Forward the event to pilot
-        Args:
-            msg (:class:`.Message`):
-        """
-        self.send(self.pi_id, "EVENT", msg.value)
-
     def l_file(self, msg: Message):
         """
         We are receiving a file.
         Decode from b64 and save. Set the file_block.
-
         Args:
             msg (:class:`.Message`): value will have 'path' and 'file',
                 where the path determines where in `prefs.get('SOUNDDIR')` the
                 b64 encoded 'file' will be saved.
-
         """
         # The file should be of the structure {'path':path, 'file':contents}
         full_path = os.path.join(prefs.get("SOUNDDIR"), msg.value["path"])
@@ -1098,10 +1103,8 @@ class Pilot_Station(Station):
         """
         Forwards continuous data sent by children back to terminal.
         Continuous data sources from this pilot should be streamed directly to the terminal.
-
         Args:
             msg (:class:`Message`): Continuous data message
-
         """
         if self.child:
             msg.value["pilot"] = self.parent_id
@@ -1112,7 +1115,7 @@ class Pilot_Station(Station):
             self.logger.warning(
                 "Received continuous data but no child found, \
                                 continuous data should be streamed directly to terminal \
-                                from pilot",
+                                from pilot"
             )
 
     def l_child(self, msg: Message):
@@ -1124,13 +1127,10 @@ class Pilot_Station(Station):
         This checks the pref `CHILDID` to get the names of one or more children.
         If that pref is a string, sends the message to just that child.
         If that pref is a list, sends the message to each child in the list.
-
         Args:
             msg (): A message to send to the child or children.
-
         Returns:
             nothing
-
         """
         # Take `KEY` from msg.value['KEY'] if available
         # Otherwise, use 'START'

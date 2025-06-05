@@ -1,5 +1,3 @@
-import multiprocessing as mp
-from ctypes import c_bool
 from pathlib import Path
 from threading import Lock
 
@@ -32,24 +30,28 @@ class Prefs:
         global _INITIALIZED
         global _LOCK
 
-        try:
-            _PREF_MANAGER = mp.Manager()  # initializing multiprocess.Manager to store sync variable across processes
+        # try:
+        #     _PREF_MANAGER = (
+        #         mp.Manager()
+        #     )  # initializing multiprocess.Manager to store sync variable across processes
 
-            _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
+        #     _PREFS = _PREF_MANAGER.dict()  # initialize sync dict
 
-            _INITIALIZED = mp.Value(c_bool, False)  #  Boolean flag to indicate whether prefs have been initialzied from file
+        #     _INITIALIZED = mp.Value(
+        #         c_bool, False
+        #     )  #  Boolean flag to indicate whether prefs have been initialzied from file
 
-            _LOCK = mp.Lock()  # threading lock to control prefs file access
-            self.using_manager = True
+        #     _LOCK = mp.Lock()  # threading lock to control prefs file access
+        #     self.using_manager = True
 
-        except (EOFError, FileNotFoundError):
-            # can't use mp.Manager in ipython and other interactive contexts
-            # fallback to just regular old dict
-            print("NOT WORKING")
-            _PREF_MANAGER = None
-            _PREFS = {}
-            _INITIALIZED = False
-            _LOCK = Lock()
+        # except (EOFError, FileNotFoundError):
+        #     # can't use mp.Manager in ipython and other interactive contexts
+        #     # fallback to just regular old dict
+        #     print("NOT WORKING")
+        _PREF_MANAGER = None
+        _PREFS = {}
+        _INITIALIZED = False
+        _LOCK = Lock()
 
     def import_configuration(self):
         """
@@ -80,9 +82,9 @@ class Prefs:
         val: updated value of the key parameter
         session_time: timestamp of session
         """
-        # temp_dict_holder = globals()["_PREFS"][key]
-        # temp_dict_holder["default"] = val
-        globals()["_PREFS"][key] = val  # temp_dict_holder
+        temp_dict_holder = globals()["_PREFS"][key]
+        temp_dict_holder["default"] = val
+        globals()["_PREFS"][key] = temp_dict_holder
 
         if self.using_manager:
             initialized = globals()["_INITIALIZED"].value
@@ -139,5 +141,5 @@ class Prefs:
 
 
 global prefs
-directory, filename = Path("./config"), "config_pilot.yaml"
+directory, filename = Path("./config"), "config_terminal.yaml"
 prefs = Prefs(directory=directory, filename=filename)

@@ -89,11 +89,13 @@ class Application(mainclass):
         self.main_gui.configuration.clear()
         list_configurations = ["SELECT"]
         self.main_gui.configuration.setCurrentIndex(0)
-        for x in Path(Path.cwd(), "protocols", protocol, experiment).iterdir():
-            if not x.is_dir() and x.name not in ["__pycache__", "core"]:
-                # list_configurations.append(code_to_str(x.name))
-                list_configurations.append(code_to_str(x.stem))
-        self.main_gui.configuration.addItems(list_configurations)
+        config_path = Path(Path.cwd(), "protocols", protocol, experiment, "config")
+        if config_path.exists() and any(config_path.iterdir()):
+            for x in config_path.iterdir():
+                if not x.is_dir() and x.name not in ["__pycache__", "core"]:
+                    # list_configurations.append(code_to_str(x.name))
+                    list_configurations.append(code_to_str(x.stem))
+            self.main_gui.configuration.addItems(list_configurations)
 
     def critical_message(self, message):
         msg = QtWidgets.QMessageBox()

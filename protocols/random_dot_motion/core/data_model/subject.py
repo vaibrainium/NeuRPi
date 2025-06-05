@@ -29,8 +29,7 @@ class Subject(BaseSubject):
     |                |--- parameters
     |                |--- session_#1
     |                |       |--- trial_data
-    |                |       |--- continuous_data
-    |                |--- session_#2
+    |                |       |--- continuous_data    |                |--- session_#2
     |                |--- ...
     |
     """
@@ -42,6 +41,7 @@ class Subject(BaseSubject):
     ) -> None:
         super().__init__(session_info.subject_name)
         self.session_config = session_config
+        self.running = False  # Initialize running state
 
         # Initializing subject specific configuration
         self.rig_id = session_info.rig_id
@@ -260,8 +260,7 @@ class Subject(BaseSubject):
                 elif file_name in [
                     "rolling_perf",
                     "rolling_perf_before",
-                    "rolling_perf_after",
-                ]:
+                    "rolling_perf_after",                ]:
                     file_content = pickle.loads(file_content)
                     with open(self.files[file_name], "wb") as file:
                         pickle.dump(file_content, file)
@@ -272,7 +271,14 @@ class Subject(BaseSubject):
             print(e)
 
         finally:
-            session_config_content = inspect.getsource(self.session_config)
+            try:
+                session_config_content = inspect.getsource(self.session_config)
+            except (OSError, TypeError) as e:
+                # Fallback for dynamically created modules or objects without source
+                session_config_content = f"# Session config could not be retrieved as source code\n# Error: {e}\n# Config object: {self.session_config}\n"
+                if hasattr(self.session_config, '__dict__'):
+                    session_config_content += f"# Config attributes: {vars(self.session_config)}\n"
+
             with open(self.files["config"], "w") as file:
                 file.write(session_config_content)
 
