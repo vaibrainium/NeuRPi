@@ -50,7 +50,7 @@ TASK = {
         "repeats_per_block": {
             "tag": "Number of repeats of each coherences per block",
             "type": "np.array",
-            "value": np.array([6, 6]),
+            "value": np.array([3, 3]),
         },
         "schedule_structure": {
 			"tag": "How to structure block, interleaved or blocked",
