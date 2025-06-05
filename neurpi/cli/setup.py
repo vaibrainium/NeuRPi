@@ -37,6 +37,65 @@ sys.path.insert(0, str(project_root))
 console = Console()
 
 
+def create_launcher(project_root, python_exe):
+    """Create OS-specific launcher file for running neurpi commands."""
+    try:
+        if platform.system() == "Windows":
+            # Create neurpi.bat for Windows
+            launcher_file = project_root / "neurpi.bat"
+            bat_content = f'''@echo off
+REM NeuRPi Launcher for Windows
+REM Automatically uses virtual environment Python
+
+set "NEURPI_ROOT=%~dp0"
+set "NEURPI_PYTHON={python_exe}"
+
+if not exist "%NEURPI_PYTHON%" (
+    echo Error: Virtual environment Python not found at %NEURPI_PYTHON%
+    echo Please run setup first: python neurpi/cli/setup.py
+    exit /b 1
+)
+
+"%NEURPI_PYTHON%" -m neurpi %*
+'''
+            
+            with open(launcher_file, 'w') as f:
+                f.write(bat_content)
+            
+            console.print(f"[green]✓ Created Windows launcher: {launcher_file.name}[/green]")
+            
+        else:
+            # Create neurpi shell script for Unix-like systems (Linux/macOS)
+            launcher_file = project_root / "neurpi"
+            shell_content = f'''#!/bin/bash
+# NeuRPi Launcher for Unix-like systems
+# Automatically uses virtual environment Python
+
+NEURPI_ROOT="$(cd "$(dirname "${{BASH_SOURCE[0]}}")" && pwd)"
+NEURPI_PYTHON="{python_exe}"
+
+if [ ! -f "$NEURPI_PYTHON" ]; then
+    echo "❌ Error: Virtual environment Python not found at $NEURPI_PYTHON"
+    echo "🔧 Please run setup first: python neurpi/cli/setup.py"
+    exit 1
+fi
+
+"$NEURPI_PYTHON" -m neurpi "$@"
+'''
+            
+            with open(launcher_file, 'w') as f:
+                f.write(shell_content)
+            
+            # Make the shell script executable
+            import stat
+            launcher_file.chmod(launcher_file.stat().st_mode | stat.S_IEXEC)
+            
+            console.print(f"[green]✓ Created Unix launcher: {launcher_file.name}[/green]")
+            
+    except Exception as e:
+        console.print(f"[yellow]Warning: Failed to create launcher: {e}[/yellow]")
+
+
 @click.command()
 def setup():
     """Set up NeuRPi development environment."""
@@ -168,7 +227,11 @@ def setup():
             console.print(f"[yellow]Warning: Failed to install NeuRPi in editable mode: {e}[/yellow]")
             console.print("[yellow]You may need to install it manually with: pip install -e .[/yellow]")
 
-        # Step 7: Success message with instructions
+        # Step 7: Create OS-specific launcher
+        console.print("[green]Creating OS-specific launcher...[/green]")
+        create_launcher(project_root, python_exe)
+
+        # Step 8: Success message with instructions
         console.print("\n[bold green]✓ Setup completed![/bold green]")
 
         if not pandas_success or gui_failed:
@@ -186,7 +249,17 @@ def setup():
         else:
             console.print(f"[cyan]  source .venv/bin/activate[/cyan]")
 
-        console.print("\n[bold blue]Then you can run:[/bold blue]")
+        console.print("\n[bold blue]Or use the launcher (no need to activate venv):[/bold blue]")
+        if platform.system() == "Windows":
+            console.print("[cyan]  neurpi.bat terminal  # Start terminal agent[/cyan]")
+            console.print("[cyan]  neurpi.bat pilot     # Start pilot agent[/cyan]")
+            console.print("[cyan]  neurpi.bat status    # Check status[/cyan]")
+        else:
+            console.print("[cyan]  ./neurpi terminal    # Start terminal agent[/cyan]")
+            console.print("[cyan]  ./neurpi pilot       # Start pilot agent[/cyan]")
+            console.print("[cyan]  ./neurpi status      # Check status[/cyan]")
+
+        console.print("\n[bold blue]Or with activated venv:[/bold blue]")
         console.print("[cyan]  neurpi terminal  # Start terminal agent[/cyan]")
         console.print("[cyan]  neurpi pilot     # Start pilot agent[/cyan]")
         console.print("[cyan]  neurpi status    # Check status[/cyan]")
