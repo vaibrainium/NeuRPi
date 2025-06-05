@@ -5,6 +5,28 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Function to install required packages for this script
+def install_script_dependencies():
+    """Install packages needed to run this setup script."""
+    required_packages = ['click', 'rich']
+
+    for package in required_packages:
+        try:
+            __import__(package)
+        except ImportError:
+            print(f"Installing {package}...")
+            try:
+                subprocess.run([sys.executable, "-m", "pip", "install", package],
+                             check=True, capture_output=True, text=True)
+                print(f"✓ {package} installed successfully")
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to install {package}: {e}")
+                print("Please install manually with: pip install click rich")
+                sys.exit(1)
+
+# Install script dependencies first
+install_script_dependencies()
+
 import click
 from rich.console import Console
 
