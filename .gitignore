@@ -52,7 +52,6 @@ build
 .vscode/
 
 # Package
-
 data
 logs
 .env
@@ -65,3 +64,7 @@ venv
 /commitlint.config.js
 node_modules/
 ruff.toml
+
+neurpi.bat
+neurpi.sh
+__main__.py

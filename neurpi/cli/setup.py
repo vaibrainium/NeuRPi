@@ -89,11 +89,35 @@ fi
             # Make the shell script executable
             import stat
             launcher_file.chmod(launcher_file.stat().st_mode | stat.S_IEXEC)
-            
             console.print(f"[green]✓ Created Unix launcher: {launcher_file.name}[/green]")
             
     except Exception as e:
         console.print(f"[yellow]Warning: Failed to create launcher: {e}[/yellow]")
+
+
+def create_main_module(project_root):
+    """Create __main__.py file in neurpi package to enable 'python -m neurpi' execution."""
+    try:
+        neurpi_package = project_root / "neurpi"
+        main_file = neurpi_package / "__main__.py"
+        
+        main_content = '''#!/usr/bin/env python3
+"""
+Entry point for running neurpi as a module: python -m neurpi
+"""
+
+if __name__ == "__main__":
+    from neurpi.cli.main import main
+    main()
+'''
+        
+        with open(main_file, 'w') as f:
+            f.write(main_content)
+        
+        console.print(f"[green]✓ Created module entry point: {main_file.name}[/green]")
+        
+    except Exception as e:
+        console.print(f"[yellow]Warning: Failed to create __main__.py: {e}[/yellow]")
 
 
 @click.command()
@@ -215,15 +239,12 @@ def setup():
 
         if gui_failed:
             console.print(f"[yellow]Some GUI dependencies failed: {', '.join(gui_failed)}[/yellow]")
-            console.print("[yellow]You may need to install them manually later[/yellow]")
-
-        # Step 6: Install the package in editable mode
+            console.print("[yellow]You may need to install them manually later[/yellow]")        # Step 6: Install the package in editable mode
         console.print("[green]Installing NeuRPi in editable mode...[/green]")
         try:
             subprocess.run([str(pip_exe), "install", "-e", str(project_root)], check=True)
             console.print("[green]✓ NeuRPi installed in editable mode[/green]")
         except subprocess.CalledProcessError as e:
-            console.print(f"[yellow]Warning: Failed to install NeuRPi in editable mode: {e}[/yellow]")
             console.print(f"[yellow]Warning: Failed to install NeuRPi in editable mode: {e}[/yellow]")
             console.print("[yellow]You may need to install it manually with: pip install -e .[/yellow]")
 
@@ -231,7 +252,11 @@ def setup():
         console.print("[green]Creating OS-specific launcher...[/green]")
         create_launcher(project_root, python_exe)
 
-        # Step 8: Success message with instructions
+        # Step 8: Create module entry point (__main__.py)
+        console.print("[green]Creating module entry point...[/green]")
+        create_main_module(project_root)
+
+        # Step 9: Success message with instructions
         console.print("\n[bold green]✓ Setup completed![/bold green]")
 
         if not pandas_success or gui_failed:
