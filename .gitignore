@@ -36,6 +36,7 @@ data
 logs
 .env
 venv
+.venv
 */config/config_pilot.yaml
 */config/config_terminal.yaml
 
