@@ -1,0 +1,15 @@
+old_codes
+neurpi_new
+protocols_new
+tests
+start_new.bat
+# Added by cargo
+
+/target
+*__pycache__
+*.py[cod]
+logs
+doc
+examples
+.venv
+# .gitignore
