@@ -7,7 +7,7 @@ import time
 import typing
 from copy import copy
 from itertools import count
-from typing import Optional
+from typing import Optional, Union
 
 import zmq
 from tornado.ioloop import IOLoop
@@ -422,9 +422,7 @@ class Station(multiprocessing.Process):
                                     send_outbox[id][1].serialize(),
                                 ]
                             )
-                            self.send_outbox[id][1].ttl -= 1
-
-            # wait to do it again
+                            self.send_outbox[id][1].ttl -= 1            # wait to do it again
             time.sleep(self.repeat_interval)
 
     def run(self):
@@ -436,6 +434,16 @@ class Station(multiprocessing.Process):
         The process is kept open by the :class:`tornado.IOLoop` .
         """
         try:
+            # Configure preferences for this process - determine mode based on station type
+            from neurpi.prefs import configure_prefs
+            if 'Terminal' in self.__class__.__name__:
+                configure_prefs("server")
+            elif 'Pilot' in self.__class__.__name__:
+                configure_prefs("rig")
+            else:
+                # Default to server mode
+                configure_prefs("server")
+
             self.logger = init_logger(self)
             # init zmq objects
             self.context = zmq.Context()
