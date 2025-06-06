@@ -12,7 +12,7 @@ python neurpi/cli/setup.py [OPTIONS]
 Options:
   --minimal              Install only core dependencies (15 packages)
   --gui                  Install core + GUI dependencies (22 packages)
-  --hardware             Install core + hardware dependencies (19 packages)  
+  --hardware             Install core + hardware dependencies (19 packages)
   --dev                  Install core + development dependencies (23 packages)
   --full                 Install all dependencies (34 packages) [DEFAULT]
   --python-version TEXT  Python version to use (default: 3.9.13)
@@ -94,7 +94,7 @@ source .venv/bin/activate
 
 # Add additional dependency groups
 pip install ".[gui]"       # Add GUI dependencies
-pip install ".[hardware]"  # Add hardware dependencies  
+pip install ".[hardware]"  # Add hardware dependencies
 pip install ".[dev]"       # Add development tools
 pip install ".[full]"      # Install everything
 ```
