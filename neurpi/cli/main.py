@@ -16,8 +16,6 @@ sys.path.insert(0, str(project_root))
 # Import and configure prefs
 from neurpi.prefs import configure_prefs
 
-from .setup import setup
-
 console = Console()
 
 
@@ -119,11 +117,11 @@ def cli():
 
 @cli.command()
 @click.option("--no-gui", is_flag=True, help="Run without GUI")
-def terminal(no_gui):
-    """Run as Terminal (controller/interface)."""
+def server(no_gui):
+    """Run as Server (controller/interface)."""
     mode = "server"
     configure_prefs(mode)
-    console.print(f"[green]Starting terminal agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]")
+    console.print(f"[green]Starting server agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]")
 
     try:
         run_agent_direct(mode, no_gui)
@@ -133,12 +131,12 @@ def terminal(no_gui):
 
 
 @cli.command()
-@click.option("--name", help="Pilot name")
-def pilot(name):
-    """Run as Pilot (experiment execution)."""
+@click.option("--name", help="Rig name")
+def rig(name):
+    """Run as Rig (experiment execution)."""
     mode = "rig"
     configure_prefs(mode)
-    console.print(f"[green]Starting pilot agent{f' ({name})' if name else ''}...[/green]")
+    console.print(f"[green]Starting rig agent{f' ({name})' if name else ''}...[/green]")
 
     try:
         run_agent_direct(mode, False, name)
@@ -152,29 +150,7 @@ def status():
     """Show system status."""
     # For now, just show that the CLI is working
     console.print("[green]NeuRPi CLI is operational[/green]")
-    console.print("[blue]Use 'neurpi.cli terminal' or 'neurpi.cli pilot' to start agents[/blue]")
-
-
-# Import setup command from separate module
-cli.add_command(setup)
-
-
-# Legacy command for backward compatibility
-@cli.command()
-@click.option(
-    "--mode",
-    type=click.Choice(["server", "rig"]),
-    required=True,
-    help="Agent type to run (server or rig)",
-)
-def legacy(mode):
-    """Legacy mode command (use terminal/pilot commands instead)."""
-    configure_prefs(mode)
-    try:
-        run_agent_direct(mode, False)
-    except KeyboardInterrupt:
-        console.print("\n[yellow]Operation cancelled by user[/yellow]")
-        sys.exit(130)
+    console.print("[blue]Use 'neurpi server' or 'neurpi rig' to start agents[/blue]")
 
 
 def main():

@@ -64,6 +64,6 @@ venv
 node_modules/
 ruff.toml
 
-neurpi.bat
-neurpi.sh
+start.bat
+start.sh
 __main__.py
