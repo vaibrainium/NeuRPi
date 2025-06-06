@@ -1,6 +1,6 @@
 BASEDIR: NeuRPi/
 PROTOCOLDIR: protocols/
-VENVDIR: venv/
+VENVDIR: .venv/
 DATADIR: /home/pi1/temp_data/
 LOGDIR: logs/
 LOGLEVEL: DEBUG
