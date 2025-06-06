@@ -1,12 +1,26 @@
 #!/usr/bin/env python3
 
-import os
 import platform
 import shutil
-import stat
 import subprocess
 import sys
 from pathlib import Path
+
+
+def check_uv_available():
+    """Check if uv is available and return the executable path."""
+    uv_path = shutil.which("uv")
+    if uv_path:
+        return uv_path
+
+    print("uv not found. Installing uv...")
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "uv"],
+                      check=True, capture_output=True)
+        return shutil.which("uv")
+    except subprocess.CalledProcessError:
+        print("Failed to install uv. Falling back to pip.")
+        return None
 
 
 def read_requirements_from_toml(group_name):
@@ -35,10 +49,8 @@ def read_requirements_from_toml(group_name):
         project_config = config.get("project", {})
 
         if group_name == "core":
-            # Core dependencies are in the main dependencies list
             return project_config.get("dependencies", [])
         else:
-            # Optional dependencies
             optional_deps = project_config.get("optional-dependencies", {})
             return optional_deps.get(group_name, [])
 
@@ -73,7 +85,7 @@ def ensure_click_rich():
                 sys.exit(1)
 
 
-def install_dependencies(python_exe, group_name, use_uv=False, uv_executable=None):
+def install_dependencies(python_exe, group_name, use_uv=True, uv_executable=None):
     """Install dependencies from a dependency group (core, gui, dev, hardware)."""
     requirements = read_requirements_from_toml(group_name)
     if not requirements:
@@ -112,6 +124,15 @@ def setup_neurpi(minimal=False, gui=False, hardware=False, dev=False, full=False
     from rich.console import Console
     console = Console()
 
+    # Check for uv availability
+    uv_executable = check_uv_available()
+    use_uv = uv_executable is not None
+
+    if use_uv:
+        console.print("[green]✓ Using uv package manager[/green]")
+    else:
+        console.print("[yellow]Using pip package manager[/yellow]")
+
     # Determine which dependency groups to install
     dependency_groups = []
 
@@ -145,7 +166,10 @@ def setup_neurpi(minimal=False, gui=False, hardware=False, dev=False, full=False
         # Step 1: Create virtual environment
         if not venv_path.exists():
             console.print(f"[green]Creating virtual environment with Python {python_version}...[/green]")
-            subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
+            if use_uv:
+                subprocess.run([uv_executable, "venv", str(venv_path), "--python", python_version], check=True)
+            else:
+                subprocess.run([sys.executable, "-m", "venv", str(venv_path)], check=True)
             console.print("[green]✓ Virtual environment created[/green]")
         else:
             console.print("[yellow]Virtual environment already exists[/yellow]")
@@ -153,27 +177,39 @@ def setup_neurpi(minimal=False, gui=False, hardware=False, dev=False, full=False
         # Step 2: Determine python executable path
         python_exe = venv_path / ("Scripts/python.exe" if platform.system() == "Windows" else "bin/python")
 
+        # Step 2.5: Ensure pip is available in the virtual environment
+        if not use_uv:
+            console.print("[green]Ensuring pip is available in virtual environment...[/green]")
+            try:
+                subprocess.run([str(python_exe), "-m", "ensurepip", "--upgrade"],
+                             check=True, capture_output=True)
+                console.print("[green]✓ pip is available[/green]")
+            except subprocess.CalledProcessError:
+                console.print("[yellow]Warning: Could not ensure pip availability[/yellow]")
+
         # Step 3: Install selected dependency groups
         console.print("[green]Installing selected dependencies...[/green]")
 
         all_failed_packages = []
-        pandas_success = True
 
         for group in dependency_groups:
             console.print(f"Installing {group} dependencies...")
-            success, failed_packages = install_dependencies(python_exe, group)
+            success, failed_packages = install_dependencies(python_exe, group, use_uv, uv_executable)
             all_failed_packages.extend(failed_packages)
-
-            if group == 'core' and not success:
-                pandas_success = False
 
         # Step 4: Install the package in editable mode
         console.print("[green]Installing NeuRPi in editable mode...[/green]")
         try:
-            subprocess.run([str(python_exe), "-m", "pip", "install", "-e", str(project_root)], check=True)
+            if use_uv:
+                subprocess.run([uv_executable, "pip", "install", "-e", str(project_root), "--python", str(python_exe)],
+                             check=True)
+            else:
+                subprocess.run([str(python_exe), "-m", "pip", "install", "-e", str(project_root)],
+                             check=True)
             console.print("[green]✓ NeuRPi installed in editable mode[/green]")
         except subprocess.CalledProcessError as e:
             console.print(f"[yellow]Warning: Failed to install NeuRPi in editable mode: {e}[/yellow]")
+            console.print("[cyan]This might be due to deprecated setup.py. Consider using modern packaging.[/cyan]")
 
         # Step 5: Success message
         console.print(f"\n[bold green]✓ Setup completed![/bold green]")
@@ -196,25 +232,27 @@ def setup_neurpi(minimal=False, gui=False, hardware=False, dev=False, full=False
         sys.exit(1)
 
 
+# Create the setup command for CLI integration
+ensure_click_rich()
+import click
+
+
+@click.command()
+@click.option('--minimal', is_flag=True, help='Install only core dependencies')
+@click.option('--gui', is_flag=True, help='Install core + GUI dependencies')
+@click.option('--hardware', is_flag=True, help='Install core + hardware dependencies')
+@click.option('--dev', is_flag=True, help='Install core + development dependencies')
+@click.option('--full', is_flag=True, help='Install all dependencies (default)')
+@click.option('--python-version', default='3.9.13', help='Python version to use (default: 3.9.13)')
+def setup(minimal, gui, hardware, dev, full, python_version):
+    """Set up NeuRPi development environment with selective dependency installation."""
+    setup_neurpi(minimal, gui, hardware, dev, full, python_version)
+
+
 def main():
     """Main CLI entry point."""
-    ensure_click_rich()
-
-    import click
-
-    @click.command()
-    @click.option('--minimal', is_flag=True, help='Install only core dependencies')
-    @click.option('--gui', is_flag=True, help='Install core + GUI dependencies')
-    @click.option('--hardware', is_flag=True, help='Install core + hardware dependencies')
-    @click.option('--dev', is_flag=True, help='Install core + development dependencies')
-    @click.option('--full', is_flag=True, help='Install all dependencies (default)')
-    @click.option('--python-version', default='3.9.13', help='Python version to use (default: 3.9.13)')
-    def cli(minimal, gui, hardware, dev, full, python_version):
-        """Set up NeuRPi development environment with selective dependency installation."""
-        setup_neurpi(minimal, gui, hardware, dev, full, python_version)
-
     try:
-        cli()
+        setup()
     except KeyboardInterrupt:
         print("\nOperation cancelled by user")
         sys.exit(130)
