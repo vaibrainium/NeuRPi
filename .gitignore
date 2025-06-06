@@ -9,7 +9,6 @@ start_new.bat
 *__pycache__
 *.py[cod]
 logs
-doc
 examples
 .venv
 # .gitignore
