@@ -218,7 +218,7 @@ def install_dependencies(python_exe, group_name, use_uv=True, uv_executable=None
 
 
 
-def setup_neurpi(server=False, rig=False, dev=False, full=False, python_version="3.10"):
+def setup_neurpi(server=False, rig=False, dev=False, full=False, python_version="3.11"):
     """Set up NeuRPi development environment with selective dependency installation."""
 
     # First, ensure essential dependencies are installed
@@ -390,7 +390,7 @@ except ImportError:
 @click.option('--rig', is_flag=True, help='Install code + hardwar dependencies')
 @click.option('--dev', is_flag=True, help='Install core + development dependencies')
 @click.option('--full', is_flag=True, help='Install all dependencies (default)')
-@click.option('--python-version', default='3.10', help='Python version to use (default: 3.10)')
+@click.option('--python-version', default='3.11', help='Python version to use (default: 3.11)')
 def setup_cli(server, rig, dev, full, python_version):
     """Set up NeuRPi development environment with selective dependency installation."""
     setup_neurpi(server=server, rig=rig, dev=dev, full=full, python_version=python_version)
