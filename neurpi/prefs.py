@@ -44,17 +44,17 @@ class Prefs:
                 if isinstance(config, DictConfig):
                     return config
                 # If it's a ListConfig, wrap it in a dict
-                return OmegaConf.create({"data": config})
-
-        # If file doesn't exist or no directory/filename specified, return empty config
+                return OmegaConf.create(
+                    {"data": config}
+                )  # If file doesn't exist or no directory/filename specified, return empty config
         return OmegaConf.create({})
 
-    def get(self, key: str | None = None) -> Any:
+    def get(self, key: str | None = None, default: Any = None) -> Any:
         """Get parameter value."""
         if key is None:
             # if no key provided, return whole dictionary
             return self._prefs.copy()
-        return self._prefs[key]
+        return self._prefs.get(key, default)
 
     def set(self, key: str, val: Any) -> None:
         """
@@ -104,6 +104,7 @@ class Prefs:
         except (FileNotFoundError, OSError, ValueError) as e:
             print(f"Warning: Could not load configuration: {e}")
             self._initialized = True
+
     def clear(self) -> None:
         """Clear loaded prefs (for testing)."""
         self._prefs.clear()
@@ -112,7 +113,9 @@ class Prefs:
         """Set the mode and reload configuration if needed."""
         if self.mode != mode:
             self.mode = mode
-            self.filename = None  # Reset filename to let import_configuration determine it
+            self.filename = (
+                None  # Reset filename to let import_configuration determine it
+            )
             config = self.import_configuration()
             self._prefs.clear()
             self._prefs.update(config)
@@ -133,6 +136,7 @@ def configure_prefs(mode: str = None) -> Prefs:
 
     Returns:
         The configured prefs instance
+
     """
     global prefs
     if mode:

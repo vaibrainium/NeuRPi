@@ -192,7 +192,7 @@ class Application(mainclass):
 
         if not Path(Path(prefs.get("DATADIR"), subject_name)).exists():
             self.critical_message(
-                f"'{subject_name}' does not exist. Please create new subject."
+                f"'{subject_name}' does not exist. Please create new subject.",
             )
             self.clear_variables()
             return None

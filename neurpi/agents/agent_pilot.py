@@ -293,17 +293,17 @@ class Pilot:
 
 
 def main():
+    # Configure prefs for pilot mode
+    from neurpi.prefs import configure_prefs
+
+    configure_prefs(mode="pilot")
+
     quitting = threading.Event()
     quitting.clear()
     try:
         pi = Pilot()
         pi.handshake()
 
-        msg = {
-            "subjectID": "XXX",
-            "protocol": "rt_dynamic_training",
-            "experiment": "4",
-        }
         quitting.wait()
 
     except KeyboardInterrupt:
