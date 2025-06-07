@@ -225,10 +225,10 @@ class Subject(BaseSubject):
         # Ensure the 'date' column is in datetime format (if it's a string, it will be converted)
         history["date"] = pd.to_datetime(history["date"], errors="coerce")
         # Get today's date (ensure it's in the same format)
-        today_date = datetime.today().strftime("%Y-%m-%d")  # Format as "YYYY-MM-DD"
+        today = datetime.today().date()  # Format as "YYYY-MM-DD"
 
         # Filter rows where 'date' is today's date
-        today_rows = history[history["date"].dt.strftime("%Y-%m-%d") == today_date]
+        today_rows = history[history["date"].dt.date == today]
         if today_rows.empty:
             return 0
 

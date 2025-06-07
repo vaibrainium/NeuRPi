@@ -79,7 +79,7 @@ python neurpi/cli/setup.py --dev --python-version 3.10
 | Group | Packages | Use Case |
 |-------|----------|----------|
 | **Core** | 15 | Basic NeuRPi functionality, required for all installations |
-| **GUI** | +7 | PyQt5, matplotlib, opencv for graphical interfaces |
+| **GUI** | +7 | PyQt6, matplotlib, opencv for graphical interfaces |
 | **Hardware** | +4 | Raspberry Pi GPIO, motor control, platform-specific |
 | **Dev** | +8 | Testing, code quality, documentation tools |
 | **Full** | 34 total | Complete development and production environment |

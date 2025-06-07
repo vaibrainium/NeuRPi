@@ -50,10 +50,9 @@ gui = [
     "matplotlib>=3.7.0",
     "pyqtgraph>=0.13.0",
     "opencv-python>=4.8.0",
-    "PyQt5>=5.15.11",
-    "pyqt5-tools>=5.15.9.3.3",
-    "pyqt5-plugins>=5.15.9.2.3",
-    "PyQt5-sip>=12.17.0",
+    "PyQt6>=6.9.0",
+    "PyQt6-Qt6>=6.9.0",
+    "PyQt6-sip>=13.6.0",
 ]
 
 # Hardware-specific dependencies (Raspberry Pi)

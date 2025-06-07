@@ -8,7 +8,7 @@ import typing
 from collections import OrderedDict as odict
 from pathlib import Path
 
-from PyQt5 import QtWidgets
+from PyQt6 import QtWidgets
 
 from neurpi.gui.main_gui import Application
 from neurpi.loggers.logger import init_logger
@@ -227,8 +227,6 @@ class Terminal(Application):
         `value` should have `subject` and `pilot` field added to dictionary for identification.
 
         """
-        # with open("lick.csv", "wb") as writer:
-        #     writer.write(value["lick"])
         try:
             self.message_to_taskgui(value)
         except Exception as e:
@@ -448,7 +446,7 @@ def main():
         0,
         str(Path(__file__).parent.parent),
     )  # Set the package attribute on the current module when running as __main__
-    
+
     # Add the project root to the path to ensure protocols can be imported
     project_root = Path(__file__).parent.parent.parent
     sys.path.insert(0, str(project_root))
@@ -469,7 +467,7 @@ def main():
     global _TERMINAL
     _TERMINAL = Terminal()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

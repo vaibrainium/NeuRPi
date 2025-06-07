@@ -7,7 +7,7 @@ import time
 import typing
 from copy import copy
 from itertools import count
-from typing import Optional, Union
+from typing import Optional
 
 import zmq
 from tornado.ioloop import IOLoop

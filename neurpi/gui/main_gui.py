@@ -4,7 +4,7 @@ from pathlib import Path
 
 import yaml
 from omegaconf import OmegaConf
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 
 from neurpi.prefs import prefs
 
@@ -51,11 +51,9 @@ class Application(mainclass):
             if x.is_dir() and x.name != "__pycache__"
         ]
         self.main_gui.protocol.addItems(list_protocols)
-        self.main_gui.protocol.setCurrentIndex(0)
-
-        # all connect signals
-        self.main_gui.protocol.activated[str].connect(self.add_experiments)
-        self.main_gui.experiment.activated[str].connect(self.add_configurations)
+        self.main_gui.protocol.setCurrentIndex(0)        # all connect signals
+        self.main_gui.protocol.currentTextChanged.connect(self.add_experiments)
+        self.main_gui.experiment.currentTextChanged.connect(self.add_configurations)
         self.main_gui.start_experiment.clicked.connect(self.start_experiment)
         self.main_gui.create_new_subject.clicked.connect(self.show_subject_form)
         self.new_subject_form.create_button.clicked.connect(self.create_new_subject)
@@ -79,11 +77,6 @@ class Application(mainclass):
         self.main_gui.experiment.addItems(list_experiments)
 
     def add_configurations(self):
-        if self.main_gui.experiment.currentText() == "SELECT":
-            self.main_gui.rig_id.clear()
-            self.main_gui.rig_id.addItem("SELECT")
-            self.main_gui.rig_id.setCurrentIndex(0)
-            return
         protocol = str_to_code(self.main_gui.protocol.currentText())
         experiment = str_to_code(self.main_gui.experiment.currentText())
         self.main_gui.configuration.clear()
@@ -99,10 +92,10 @@ class Application(mainclass):
 
     def critical_message(self, message):
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Critical)
+        msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
         msg.setText(message)
         msg.setWindowTitle("Error")
-        msg.exec_()
+        msg.exec()
 
     ##################### rig functions #####################
     def handleTabActivationChange(self, tab_index):
@@ -281,14 +274,12 @@ class Application(mainclass):
         ]
         with open(Path(subject_dir, "history.csv"), "w") as file:
             writer = csv.writer(file)
-            writer.writerow(header)
-
-        # let user know subject was created
+            writer.writerow(header)        # let user know subject was created
         msg = QtWidgets.QMessageBox()
-        msg.setIcon(QtWidgets.QMessageBox.Information)
+        msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
         msg.setText(f"{subject_name} created!")
         msg.setWindowTitle("Success")
-        msg.exec_()
+        msg.exec()
 
         # clear subject window
         self.new_subject_form.name.clear()
@@ -306,4 +297,4 @@ if __name__ == "__main__":
     window = Application()
     window.show()
     window.add_new_rig(id="rig_test", task_gui=TaskGUI)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

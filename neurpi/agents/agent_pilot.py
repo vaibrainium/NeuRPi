@@ -296,13 +296,11 @@ def main():
     # Configure prefs for pilot mode
     from neurpi.prefs import configure_prefs
 
-    configure_prefs(mode="pilot")
-
-    quitting = threading.Event()
+    configure_prefs(mode="pilot")    quitting = threading.Event()
     quitting.clear()
     try:
         pi = Pilot()
-        pi.handshake()
+        # handshake is already called during Pilot initialization
 
         quitting.wait()
 

@@ -179,9 +179,9 @@ pip install -r requirements/base.txt
 
 #### Optional Dependencies
 
-**GUI Components (PyQt5):**
+**GUI Components (PyQt6):**
 ```bash
-uv pip install PyQt5>=5.15.0 pyqtgraph>=0.13.0
+uv pip install PyQt6>=6.9.0 pyqtgraph>=0.13.0
 ```
 
 **Hardware Support (Raspberry Pi):**
@@ -278,7 +278,7 @@ start_new.bat test  # Windows
 # Start Terminal with GUI
 uv run python -m neurpi.cli terminal
 
-# Should open PyQt5 interface
+# Should open PyQt6 interface
 ```
 
 ### Test Networking
@@ -321,17 +321,17 @@ pyenv global 3.13.0
 # Or use alternative installation method
 ```
 
-#### 4. PyQt5 Installation Issues
+#### 4. PyQt6 Installation Issues
 ```bash
 # Ubuntu/Debian:
-sudo apt-get install python3-pyqt5 python3-pyqt5-dev
+sudo apt-get install python3-pyqt6 python3-pyqt6-dev
 
 # macOS:
-brew install pyqt5
+brew install pyqt6
 
 # Windows: Usually works with pip, try:
 pip install --upgrade pip setuptools wheel
-pip install PyQt5
+pip install PyQt6
 ```
 
 #### 5. Network Connection Issues

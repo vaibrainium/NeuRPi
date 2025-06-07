@@ -328,7 +328,7 @@ class Task:
             init_successful = False
             # Cleanup on failure
             self.parallel_manager.stop_all_processes()
-                        raise e
+            raise e
 
         return init_successful
 
@@ -381,7 +381,9 @@ class Task:
             print(f'UPDATED RIGHT LICK THRESHOLD with {value}')
             print(self.managers["hardware"].lick_threshold_right)
             return True
-        return False    def prepare_session_files(self):
+        return False
+
+    def prepare_session_files(self):
         """Prepare session files and directories."""
         self.config.FILES = {}
         data_path = Path(

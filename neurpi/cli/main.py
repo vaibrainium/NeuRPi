@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import platform
 import subprocess
 import sys
 from pathlib import Path

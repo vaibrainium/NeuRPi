@@ -4,7 +4,7 @@ import time
 # import cv2
 import numpy as np
 import pyqtgraph as pg
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 from pyqtgraph import exporters
 
 Ui_rig, rigclass = uic.loadUiType("protocols/random_dot_motion/core/gui/rdk_rig.ui")
@@ -100,23 +100,46 @@ class TaskGUI(rigclass):
         self.comm_to_taskgui.connect(self.update_gui)
         self.rig.reward_left.clicked.connect(lambda: self.hardware("reward_left"))
         self.rig.reward_right.clicked.connect(lambda: self.hardware("reward_right"))
-        self.rig.reward_volume.valueChanged.connect(lambda: self.hardware("update_reward"))
-        self.rig.toggle_left_reward.clicked.connect(lambda: self.hardware("toggle_left_reward"))
-        self.rig.toggle_right_reward.clicked.connect(lambda: self.hardware("toggle_right_reward"))
+        self.rig.reward_volume.valueChanged.connect(
+            lambda: self.hardware("update_reward")
+        )
+        self.rig.toggle_left_reward.clicked.connect(
+            lambda: self.hardware("toggle_left_reward")
+        )
+        self.rig.toggle_right_reward.clicked.connect(
+            lambda: self.hardware("toggle_right_reward")
+        )
 
         self.rig.flash_led_left.clicked.connect(lambda: self.hardware("flash_led_left"))
-        self.rig.flash_led_center.clicked.connect(lambda: self.hardware("flash_led_center"))
-        self.rig.flash_led_right.clicked.connect(lambda: self.hardware("flash_led_right"))
-        self.rig.toggle_led_left.clicked.connect(lambda: self.hardware("toggle_led_left"))
-        self.rig.toggle_led_right.clicked.connect(lambda: self.hardware("toggle_led_right"))
+        self.rig.flash_led_center.clicked.connect(
+            lambda: self.hardware("flash_led_center")
+        )
+        self.rig.flash_led_right.clicked.connect(
+            lambda: self.hardware("flash_led_right")
+        )
+        self.rig.toggle_led_left.clicked.connect(
+            lambda: self.hardware("toggle_led_left")
+        )
+        self.rig.toggle_led_right.clicked.connect(
+            lambda: self.hardware("toggle_led_right")
+        )
 
+        self.rig.led_and_reward_left.clicked.connect(
+            lambda: self.hardware("led_and_reward_left")
+        )
+        self.rig.led_and_reward_right.clicked.connect(
+            lambda: self.hardware("led_and_reward_right")
+        )
 
-        self.rig.led_and_reward_left.clicked.connect(lambda: self.hardware("led_and_reward_left"))
-        self.rig.led_and_reward_right.clicked.connect(lambda: self.hardware("led_and_reward_right"))
-
-        self.rig.lick_threshold_left.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_left"))
-        self.rig.lick_threshold_right.valueChanged.connect(lambda: self.lick_sensor("update_lick_threshold_right"))
-        self.rig.reset_lick_sensor.clicked.connect(lambda: self.lick_sensor("reset_lick_sensor"))
+        self.rig.lick_threshold_left.valueChanged.connect(
+            lambda: self.lick_sensor("update_lick_threshold_left")
+        )
+        self.rig.lick_threshold_right.valueChanged.connect(
+            lambda: self.lick_sensor("update_lick_threshold_right")
+        )
+        self.rig.reset_lick_sensor.clicked.connect(
+            lambda: self.lick_sensor("reset_lick_sensor")
+        )
         self.rig.pause_experiment.clicked.connect(self.pause_experiment)
         self.rig.stop_experiment.clicked.connect(self.stop_experiment)
         self.rig.close_experiment.clicked.connect(self.close_experiment)
@@ -139,8 +162,12 @@ class TaskGUI(rigclass):
     def set_rig_configuration(self, prefs={}):
         try:
             hardware = prefs.get("HARDWARE")
-            self.rig.lick_threshold_left.setValue(hardware.Arduino.Primary.lick.threshold_left)
-            self.rig.lick_threshold_right.setValue(hardware.Arduino.Primary.lick.threshold_right)
+            self.rig.lick_threshold_left.setValue(
+                hardware.Arduino.Primary.lick.threshold_left
+            )
+            self.rig.lick_threshold_right.setValue(
+                hardware.Arduino.Primary.lick.threshold_right
+            )
         except EOFError:
             pass
 
@@ -156,14 +183,18 @@ class TaskGUI(rigclass):
         self.correct_trace_plot = self.rig.accuracy_plot.plot()
         self.incorrect_trace_plot = self.rig.accuracy_plot.plot()
         # Psychometric plots
-        self.rig.psychometric_plot.setTitle("Psychometric Function", color="r", size="10pt")
+        self.rig.psychometric_plot.setTitle(
+            "Psychometric Function", color="r", size="10pt"
+        )
         self.rig.psychometric_plot.setXRange(-100, 100)
         self.rig.psychometric_plot.setYRange(0, 1)
         self.rig.psychometric_plot.setInteractive(False)
         self.rig.psychometric_plot.setLabel("left", "Proportion of Right Choices")
         self.rig.psychometric_plot.setLabel("bottom", "Coherence")
         self.rig.psychometric_plot.showGrid(x=False, y=True, alpha=0.6)
-        self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.rig.psychometric_plot.getAxis("bottom").setTicks(
+            [[(v, str(v)) for v in self.coherences]]
+        )
         self.psychometric_plot = self.rig.psychometric_plot.plot()
         # Total Trial Plot
         self.rig.trial_distribution.setTitle("Total Trials", color="r", size="10pt")
@@ -172,17 +203,23 @@ class TaskGUI(rigclass):
         self.rig.trial_distribution.setLabel("left", "Trials")
         self.rig.trial_distribution.setLabel("bottom", "Coherence")
         self.rig.trial_distribution.showGrid(x=False, y=True, alpha=0.6)
-        self.rig.trial_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.rig.trial_distribution.getAxis("bottom").setTicks(
+            [[(v, str(v)) for v in self.coherences]]
+        )
         self.trial_distribution_plot = self.rig.trial_distribution.plot()
         # Reaction Time Plot
-        self.rig.psychometric_plot.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.rig.psychometric_plot.getAxis("bottom").setTicks(
+            [[(v, str(v)) for v in self.coherences]]
+        )
         self.rig.rt_distribution.setTitle("Reaction Times", color="r", size="10pt")
         self.rig.rt_distribution.setXRange(-100, 100)
         self.rig.rt_distribution.setInteractive(False)
         self.rig.rt_distribution.setLabel("left", "Reaction Time")
         self.rig.rt_distribution.setLabel("bottom", "Coherence")
         self.rig.rt_distribution.showGrid(x=False, y=True, alpha=0.6)
-        self.rig.rt_distribution.getAxis("bottom").setTicks([[(v, str(v)) for v in self.coherences]])
+        self.rig.rt_distribution.getAxis("bottom").setTicks(
+            [[(v, str(v)) for v in self.coherences]]
+        )
         self.chronometric_plot = self.rig.rt_distribution.plot()
 
     def start_experiment(self):
@@ -215,7 +252,9 @@ class TaskGUI(rigclass):
             self.camera_timer.stop()
 
     def update_session_clock(self):
-        self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
+        self.session_display_clock = (
+            time.time() - self.session_clock["start"] - self.session_clock["pause"]
+        )
         self.rig.session_timer.display(int(self.session_display_clock))
 
     def update_video_image(self):
@@ -264,7 +303,9 @@ class TaskGUI(rigclass):
         If session is paused, resume it and send the corresponding singal to termianl.
         """
         if self.state == "RUNNING":
-            self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}})
+            self.forward_signal(
+                {"to": self.rig_id, "key": "EVENT", "value": {"key": "PAUSE"}}
+            )
             self.rig.pause_experiment.setStyleSheet("background-color: green")
             self.rig.pause_experiment.setText("Resume")
             self.state = "PAUSED"
@@ -272,7 +313,9 @@ class TaskGUI(rigclass):
             # hide end button
             self.rig.stop_experiment.hide()
         elif self.state == "PAUSED":
-            self.forward_signal({"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}})
+            self.forward_signal(
+                {"to": self.rig_id, "key": "EVENT", "value": {"key": "RESUME"}}
+            )
             self.rig.pause_experiment.setStyleSheet("background-color: rgb(255,170,0)")
             self.rig.pause_experiment.setText("Pause")
             self.state = "RUNNING"
@@ -288,13 +331,19 @@ class TaskGUI(rigclass):
 
     def create_summary_data(self, value):
         self.summary_data = {
-            "date": time.strftime("%b-%d-%Y", time.localtime(self.session_clock["start"])),
+            "date": time.strftime(
+                "%b-%d-%Y", time.localtime(self.session_clock["start"])
+            ),
             "experiment": self.experiment,
             "session": self.subject.session,
             "configuration_used": self.configuration,
             "session_uuid": self.subject.session_uuid,
-            "start_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["start"])),
-            "end_time": time.strftime("%H:%M:%S", time.localtime(self.session_clock["end"])),
+            "start_time": time.strftime(
+                "%H:%M:%S", time.localtime(self.session_clock["start"])
+            ),
+            "end_time": time.strftime(
+                "%H:%M:%S", time.localtime(self.session_clock["end"])
+            ),
             "total_reward": int(float(self.rig.total_reward.text())),
             "reward_rate": self.rig.reward_volume.value(),
         }
@@ -304,11 +353,19 @@ class TaskGUI(rigclass):
             self.summary_data["total_valid"] = value["trial_counters"]["valid"]
             self.summary_data["total_correct"] = value["trial_counters"]["correct"]
             self.summary_data["total_incorrect"] = value["trial_counters"]["incorrect"]
-            self.summary_data["total_noresponse"] = value["trial_counters"]["noresponse"]
+            self.summary_data["total_noresponse"] = value["trial_counters"][
+                "noresponse"
+            ]
             self.summary_data["total_accuracy"] = value["plots"]["running_accuracy"][1]
-            self.summary_data["trial_distribution"] = value["plots"]["trial_distribution"]
-            self.summary_data["psychometric_function"] = value["plots"]["psychometric_function"]
-            self.summary_data["response_time_distribution"] = value["plots"]["response_time_distribution"]
+            self.summary_data["trial_distribution"] = value["plots"][
+                "trial_distribution"
+            ]
+            self.summary_data["psychometric_function"] = value["plots"][
+                "psychometric_function"
+            ]
+            self.summary_data["response_time_distribution"] = value["plots"][
+                "response_time_distribution"
+            ]
         except:
             # Make them none
             self.summary_data["total_attempt"] = None
@@ -347,41 +404,66 @@ class TaskGUI(rigclass):
             or self.summary.end_weight.toPlainText() == ""
         ):
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setText("Forgot to Enter one of the weights")
             msg.setWindowTitle("Error")
-            msg.exec_()
+            msg.exec()
         else:
-            self.summary_data["baseline_weight"] = float(self.summary.baseline_weight.toPlainText())
-            self.summary_data["start_weight"] = float(self.summary.start_weight.toPlainText())
-            self.summary_data["end_weight"] = float(self.summary.end_weight.toPlainText())
+            self.summary_data["baseline_weight"] = float(
+                self.summary.baseline_weight.toPlainText()
+            )
+            self.summary_data["start_weight"] = float(
+                self.summary.start_weight.toPlainText()
+            )
+            self.summary_data["end_weight"] = float(
+                self.summary.end_weight.toPlainText()
+            )
             self.subject.end_weight = self.summary_data["end_weight"]
-            self.summary_data["start_weight_prct"] = round(100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"], 2)
-            self.summary_data["end_weight_prct"] = round(100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"], 2)
+            self.summary_data["start_weight_prct"] = round(
+                100
+                * self.summary_data["start_weight"]
+                / self.summary_data["baseline_weight"],
+                2,
+            )
+            self.summary_data["end_weight_prct"] = round(
+                100
+                * self.summary_data["end_weight"]
+                / self.summary_data["baseline_weight"],
+                2,
+            )
             self.summary_data["comments"] = self.summary.comments.toPlainText()
             self.check_water_requirement()
             self.summary.close.show()
 
     def close_summary(self):
-        self.summary_data["comments"] = self.summary.comments.toPlainText()  # update comments
+        self.summary_data["comments"] = (
+            self.summary.comments.toPlainText()
+        )  # update comments
         self.summary_window.hide()
         self.rig.close_experiment.show()
 
     def check_water_requirement(self):
-        received_water = self.subject.get_today_received_water() + self.summary_data["total_reward"]
+        received_water = (
+            self.subject.get_today_received_water() + self.summary_data["total_reward"]
+        )
         additional_water = 0
         if received_water < 600:
             additional_water = max(additional_water, 600 - received_water)
         if self.summary_data["end_weight_prct"] < 85:
             additional_water = max(
-                additional_water, ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000
+                additional_water,
+                ((85 - self.summary_data["end_weight_prct"]) / 100)
+                * self.summary_data["baseline_weight"]
+                * 1000,
             )
         if additional_water > 0:
             msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Critical)
-            msg.setText(f"Did not meet water requirement. Please provide {int(additional_water)} ul of water")
+            msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
+            msg.setText(
+                f"Did not meet water requirement. Please provide {int(additional_water)} ul of water"
+            )
             msg.setWindowTitle("Additional Water")
-            msg.exec_()
+            msg.exec()
         self.summary_data["additional_water"] = int(additional_water)
         return False
 
@@ -485,9 +567,15 @@ class TaskGUI(rigclass):
     def update_plots(self, value):
         # updating running accuracy
         try:
-            self.valid_trial_vector = np.append(self.valid_trial_vector, value["running_accuracy"][0])
-            self.accuracy_vector = np.append(self.accuracy_vector, value["running_accuracy"][1])
-            self.outcome_vector = np.append(self.outcome_vector, value["running_accuracy"][2])
+            self.valid_trial_vector = np.append(
+                self.valid_trial_vector, value["running_accuracy"][0]
+            )
+            self.accuracy_vector = np.append(
+                self.accuracy_vector, value["running_accuracy"][1]
+            )
+            self.outcome_vector = np.append(
+                self.outcome_vector, value["running_accuracy"][2]
+            )
             correct_idx = np.squeeze(np.argwhere(self.outcome_vector == 1), axis=1)
             if correct_idx.size > 0:
                 self.correct_trace_plot.setData(
@@ -515,7 +603,11 @@ class TaskGUI(rigclass):
 
         # updating psychometric function
         try:
-            value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
+            value["psychometric_function"] = {
+                float(k): v
+                for k, v in value["psychometric_function"].items()
+                if not np.isnan(v)
+            }
             coherences, psych = zip(*sorted(value["psychometric_function"].items()))
             if len(coherences) > 0:
                 self.psychometric_plot.setData(
@@ -532,7 +624,11 @@ class TaskGUI(rigclass):
             pass
         # updating total distribution
         try:
-            value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
+            value["trial_distribution"] = {
+                float(k): v
+                for k, v in value["trial_distribution"].items()
+                if not np.isnan(v)
+            }
             coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
             if len(coherences) > 0:
@@ -547,8 +643,14 @@ class TaskGUI(rigclass):
             pass
         # updating reaction time distribution
         try:
-            value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
-            coherences, rt_dist = zip(*sorted(value["response_time_distribution"].items()))
+            value["response_time_distribution"] = {
+                float(k): v
+                for k, v in value["response_time_distribution"].items()
+                if not np.isnan(v)
+            }
+            coherences, rt_dist = zip(
+                *sorted(value["response_time_distribution"].items())
+            )
             if len(coherences) > 0:
                 self.chronometric_plot.setData(
                     x=coherences,
@@ -584,4 +686,4 @@ if __name__ == "__main__":
 
     window.show()
     window.start_experiment()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
