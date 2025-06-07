@@ -28,7 +28,7 @@ classifiers = [
 # Core dependencies (base requirements)
 dependencies = [
     "blosc2>=2.5.0",
-    "numpy<=2.0.0",
+    "numpy<2.0.0",
     "click>=8.0.0",
     "rich>=13.0.0",
     "omegaconf>=2.2.2",
@@ -93,7 +93,7 @@ neurpi-deploy = "neurpi.cli.deploy:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["neurpi*"]
+include = ["neurpi*", "protocols*"]
 
 [tool.setuptools.package-data]
 neurpi = ["config/*.yaml"]
