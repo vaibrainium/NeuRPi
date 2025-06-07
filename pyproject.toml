@@ -27,7 +27,8 @@ classifiers = [
 
 # Core dependencies (base requirements)
 dependencies = [
-    "numpy>=1.24.0",
+    "blosc2>=2.5.0",
+    "numpy<=2.0.0",
     "click>=8.0.0",
     "rich>=13.0.0",
     "omegaconf>=2.2.2",
@@ -35,7 +36,6 @@ dependencies = [
     "pyzmq>=25.0.0",
     "tornado>=6.0.0",
     "h5py>=3.8.0",
-    "blosc2>=3.0.0",
     "sounddevice>=0.4.6",
     "tables>=3.8.0",
     "pyyaml>=6.0.0",
