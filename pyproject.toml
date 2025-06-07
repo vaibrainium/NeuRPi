@@ -58,6 +58,7 @@ gui = [
 
 # Hardware-specific dependencies (Raspberry Pi)
 hardware = [
+    "pigpio>=1.78",
     "RPi.GPIO>=0.7.1; sys_platform == 'linux'",
     "gpiozero>=1.6.2; sys_platform == 'linux'",
     "adafruit-circuitpython-motor>=3.4.0",

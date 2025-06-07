@@ -448,6 +448,10 @@ def main():
         0,
         str(Path(__file__).parent.parent),
     )  # Set the package attribute on the current module when running as __main__
+    
+    # Add the project root to the path to ensure protocols can be imported
+    project_root = Path(__file__).parent.parent.parent
+    sys.path.insert(0, str(project_root))
     import __main__
 
     if not hasattr(__main__, "__package__") or __main__.__package__ is None:
