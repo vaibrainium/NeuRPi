@@ -66,4 +66,3 @@ ruff.toml
 
 start.bat
 start.sh
-__main__.py
