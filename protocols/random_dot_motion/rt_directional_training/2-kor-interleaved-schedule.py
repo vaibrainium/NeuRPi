@@ -11,7 +11,7 @@ TASK = {
         "fixation": {"tag": "Fixation epoch", "duration": lambda: 0},#stats.expon.rvs(loc=0.5, scale=1 / 5)},
         "stimulus": {
             "tag": "Stimulus epoch",
-            "max_viewing": 3,
+            "max_viewing": 10,
             "min_viewing": 0,
         },
         "reinforcement": {
@@ -29,10 +29,10 @@ TASK = {
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
-                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                "noresponse": lambda response_time, coh: 3,
-                "invalid": lambda response_time, coh: 2,
+                "correct": lambda response_time, coh: stats.expon.rvs(loc=5, scale=1 / 5),
+                "incorrect": lambda response_time, coh: 6 + 4 * (np.exp(-3 * response_time)),
+                "noresponse": lambda response_time, coh: 6,
+                "invalid": lambda response_time, coh: 5,
             },
         },
     },
@@ -114,7 +114,7 @@ STIMULUS = {
                 "stimulus_size": (1280, 720),
                 "background_color": (0, 0, 0),
                 "dots": {
-                    "dot_radius": 17,
+                    "dot_radius":  9, # 2 degrees,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 450,  # for 45 degrees/sec
