@@ -1,457 +1,507 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MainWindow</class>
- <widget class="QMainWindow" name="MainWindow">
+ <class>MainWindow</class> <widget class="QMainWindow" name="MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1065</width>
-    <height>901</height>
+    <width>1400</width>
+    <height>900</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
+  <property name="minimumSize">
+   <size>
+    <width>1200</width>
+    <height>800</height>
+   </size>
   </property>
+  <property name="windowTitle">
+   <string>NeuRPi - Experiment Control Interface</string>
+  </property>
+  <!-- <property name="windowFlags">
+   <set>Qt::FramelessWindowHint</set>
+  </property> -->
   <widget class="QWidget" name="centralwidget">
-   <widget class="QTabWidget" name="tabs">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>10</y>
-      <width>1051</width>
-      <height>880</height>
-     </rect>
-    </property>
-    <property name="currentIndex">
-     <number>0</number>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>16</width>
-      <height>16</height>
-     </size>
-    </property>
-    <property name="tabBarAutoHide">
-     <bool>false</bool>
-    </property>
-    <widget class="QWidget" name="control_panel">
-     <attribute name="title">
-      <string>Control Panel</string>
-     </attribute>
-     <widget class="QPushButton" name="start_experiment">
-      <property name="enabled">
-       <bool>true</bool>
+   <layout class="QVBoxLayout" name="centralwidget_layout">
+    <item>
+     <widget class="QTabWidget" name="tabs">
+      <property name="currentIndex">
+       <number>0</number>
       </property>
-      <property name="geometry">
-       <rect>
-        <x>410</x>
-        <y>680</y>
-        <width>231</width>
-        <height>61</height>
-       </rect>
+      <property name="tabBarAutoHide">
+       <bool>false</bool>
       </property>
-      <property name="font">
-       <font>
-        <pointsize>21</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Start</string>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label_5">
-      <property name="geometry">
-       <rect>
-        <x>650</x>
-        <y>125</y>
-        <width>123</width>
-        <height>47</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Segoe Print</family>
-        <pointsize>20</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Weight</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_2">
-      <property name="geometry">
-       <rect>
-        <x>240</x>
-        <y>300</y>
-        <width>541</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_5">
-       <item>
-        <widget class="QLabel" name="label_7">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Rig ID</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="rig_id">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="accessibleName">
-          <string>0</string>
-         </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <property name="maxVisibleItems">
-          <number>15</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>SELECT</string>
+      <widget class="QWidget" name="control_panel">
+       <attribute name="title">
+        <string>Control Panel</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="control_panel_layout">
+        <item>
+         <widget class="QSplitter" name="main_splitter">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
           </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
+
+          <!-- Left Panel: Experiment Setup -->
+          <widget class="QWidget" name="experiment_panel">
+           <layout class="QVBoxLayout" name="experiment_panel_layout">
+
+            <!-- Protocol Setup Group -->
+            <item>
+             <widget class="QGroupBox" name="protocol_setup_group">
+              <property name="title">
+               <string>Protocol Setup</string>
+              </property>              <layout class="QGridLayout" name="protocol_setup_layout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="rig_id_label">
+                 <property name="text">
+                  <string>Rig ID:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QComboBox" name="rig_id">
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>SELECT</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="protocol_label">
+                 <property name="text">
+                  <string>Protocol:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="protocol">
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>SELECT</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="experiment_label">
+                 <property name="text">
+                  <string>Experiment:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="experiment">
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>SELECT</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="configuration_label">
+                 <property name="text">
+                  <string>Configuration:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="QComboBox" name="configuration">
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>SELECT</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="response_mode_label">
+                 <property name="text">
+                  <string>Response Mode:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="1">
+                <widget class="QComboBox" name="response_mode">
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string>SELECT</string>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+
+            <!-- Subject Setup Group -->
+            <item>
+             <widget class="QGroupBox" name="subject_setup_group">
+              <property name="title">
+               <string>Subject Setup</string>
+              </property>
+              <layout class="QGridLayout" name="subject_setup_layout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="subject_name_label">
+                 <property name="text">
+                  <string>Subject Name:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QTextEdit" name="subject_name">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <property name="inputMethodHints">
+                  <set>Qt::ImhUppercaseOnly</set>
+                 </property>
+                 <property name="tabChangesFocus">
+                  <bool>true</bool>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
+                <widget class="QPushButton" name="create_new_subject">
+                 <property name="text">
+                  <string>New Subject</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="subject_weight_label">
+                 <property name="text">
+                  <string>Subject Weight:</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>12</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QTextEdit" name="subject_weight">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>11</pointsize>
+                  </font>
+                 </property>
+                 <property name="tabChangesFocus">
+                  <bool>true</bool>
+                 </property>
+                 <property name="placeholderText">
+                  <string>00.0</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+
+            <!-- Session Control Group -->
+            <item>
+             <widget class="QGroupBox" name="session_control_group">
+              <property name="title">
+               <string>Session Control</string>
+              </property>
+              <layout class="QHBoxLayout" name="session_control_layout">
+               <item>
+                <widget class="QPushButton" name="start_experiment">
+                 <property name="text">
+                  <string>Start Experiment</string>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <pointsize>14</pointsize>
+                   <weight>75</weight>
+                   <bold>true</bold>
+                  </font>
+                 </property>
+                 <property name="minimumSize">
+                  <size>
+                   <width>150</width>
+                   <height>50</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string>QPushButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+}
+QPushButton:hover {
+    background-color: #45a049;
+}
+QPushButton:pressed {
+    background-color: #3d8b40;
+}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+
+            <!-- Spacer to push groups to top -->
+            <item>
+             <spacer name="verticalSpacer">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+
+           </layout>
+          </widget>
+
+          <!-- Right Panel: Status and Information -->
+          <widget class="QWidget" name="status_panel">
+           <layout class="QVBoxLayout" name="status_panel_layout">
+
+            <!-- Session Information Group -->
+            <item>
+             <widget class="QGroupBox" name="session_info_group">
+              <property name="title">
+               <string>Session Information</string>
+              </property>
+              <layout class="QVBoxLayout" name="session_info_layout">
+               <item>
+                <widget class="QTextEdit" name="session_info_display">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Consolas</family>
+                   <pointsize>10</pointsize>
+                  </font>
+                 </property>
+                 <property name="placeholderText">
+                  <string>Session information will appear here...</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+
+            <!-- Active Rigs Group -->
+            <item>
+             <widget class="QGroupBox" name="active_rigs_group">
+              <property name="title">
+               <string>Active Rigs</string>
+              </property>
+              <layout class="QVBoxLayout" name="active_rigs_layout">
+               <item>
+                <widget class="QListWidget" name="active_rigs_list">
+                 <property name="maximumSize">
+                  <size>
+                   <width>16777215</width>
+                   <height>150</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+
+            <!-- Log Output Group -->
+            <item>
+             <widget class="QGroupBox" name="log_group">
+              <property name="title">
+               <string>System Log</string>
+              </property>
+              <layout class="QVBoxLayout" name="log_layout">
+               <item>
+                <widget class="QTextEdit" name="log_display">
+                 <property name="readOnly">
+                  <bool>true</bool>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Consolas</family>
+                   <pointsize>9</pointsize>
+                  </font>
+                 </property>
+                 <property name="placeholderText">
+                  <string>System messages and logs will appear here...</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="log_controls_layout">
+                 <item>
+                  <spacer name="log_spacer">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="clear_log_btn">
+                   <property name="text">
+                    <string>Clear Log</string>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>30</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>           </layout>
+          </widget>
+
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
-     <widget class="QWidget" name="layoutWidget_3">
-      <property name="geometry">
-       <rect>
-        <x>240</x>
-        <y>580</y>
-        <width>541</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Response Mode</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="response_mode">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="currentIndex">
-          <number>0</number>
-         </property>
-         <property name="maxVisibleItems">
-          <number>15</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>Lick Port</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Wheel</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_5">
-      <property name="geometry">
-       <rect>
-        <x>240</x>
-        <y>440</y>
-        <width>541</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
-       <item>
-        <widget class="QLabel" name="label_2">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Experiment</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="experiment">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="maxVisibleItems">
-          <number>15</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>SELECT</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QTextEdit" name="subject_weight">
-      <property name="geometry">
-       <rect>
-        <x>640</x>
-        <y>180</y>
-        <width>141</width>
-        <height>71</height>
-       </rect>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>32</pointsize>
-       </font>
-      </property>
-      <property name="inputMethodHints">
-       <set>Qt::ImhUppercaseOnly</set>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Panel</enum>
-      </property>
-      <property name="tabChangesFocus">
-       <bool>true</bool>
-      </property>
-      <property name="html">
-       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:32pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="placeholderText">
-       <string>00.0</string>
-      </property>
-      <property name="markdown" stdset="0">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QLabel" name="label">
-      <property name="geometry">
-       <rect>
-        <x>350</x>
-        <y>125</y>
-        <width>201</width>
-        <height>47</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Segoe Print</family>
-        <pointsize>20</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Subject Name</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-     <widget class="QTextEdit" name="subject_name">
-      <property name="geometry">
-       <rect>
-        <x>242</x>
-        <y>180</y>
-        <width>381</width>
-        <height>71</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>36</pointsize>
-       </font>
-      </property>
-      <property name="inputMethodHints">
-       <set>Qt::ImhUppercaseOnly</set>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::Panel</enum>
-      </property>
-      <property name="tabChangesFocus">
-       <bool>true</bool>
-      </property>
-      <property name="html">
-       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:36pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p align=&quot;center&quot; style=&quot;-qt-paragraph-type:empty; margin-top:24px; margin-bottom:24px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-      </property>
-      <property name="markdown" stdset="0">
-       <string/>
-      </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_6">
-      <property name="geometry">
-       <rect>
-        <x>242</x>
-        <y>375</y>
-        <width>541</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
-       <item>
-        <widget class="QLabel" name="label_3">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Protocol</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="protocol">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="maxVisibleItems">
-          <number>15</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>SELECT</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QPushButton" name="calibrate_reward">
-      <property name="geometry">
-       <rect>
-        <x>870</x>
-        <y>60</y>
-        <width>161</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Calibrate Reward</string>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="create_new_subject">
-      <property name="geometry">
-       <rect>
-        <x>870</x>
-        <y>10</y>
-        <width>161</width>
-        <height>41</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>10</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string>Create New Subject</string>
-      </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_7">
-      <property name="geometry">
-       <rect>
-        <x>240</x>
-        <y>510</y>
-        <width>541</width>
-        <height>31</height>
-       </rect>
-      </property>
-      <layout class="QHBoxLayout" name="horizontalLayout_7">
-       <item>
-        <widget class="QLabel" name="label_8">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
-         <property name="text">
-          <string>Configuration</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="configuration">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-          </font>
-         </property>
-         <property name="maxVisibleItems">
-          <number>15</number>
-         </property>
-         <item>
-          <property name="text">
-           <string>SELECT</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-    </widget>
-   </widget>
-  </widget>
+    </item>
+   </layout>
+  </widget>  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
-  <tabstop>subject_name</tabstop>
-  <tabstop>subject_weight</tabstop>
-  <tabstop>rig_id</tabstop>
   <tabstop>protocol</tabstop>
   <tabstop>experiment</tabstop>
   <tabstop>configuration</tabstop>
+  <tabstop>rig_id</tabstop>
   <tabstop>response_mode</tabstop>
-  <tabstop>start_experiment</tabstop>
+  <tabstop>subject_name</tabstop>
   <tabstop>create_new_subject</tabstop>
-  <tabstop>calibrate_reward</tabstop>
-  <tabstop>tabs</tabstop>
+  <tabstop>subject_weight</tabstop>
+  <tabstop>start_experiment</tabstop>
+  <tabstop>clear_log_btn</tabstop>
  </tabstops>
  <resources/>
  <connections/>
