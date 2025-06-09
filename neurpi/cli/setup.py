@@ -5,6 +5,8 @@ import shutil
 import stat
 import subprocess
 import sys
+import tempfile
+import urllib.request
 from pathlib import Path
 
 
@@ -141,19 +143,230 @@ python -m neurpi "$@"
 
 def ensure_essential_dependencies():
     """Ensure essential dependencies (tomli, click, rich) are available before any operations."""
-    print("Upgrading pip to latest version...")
+    import sys
+    # First, ensure pip is available
+    print("Checking pip availability...")
+    pip_available = False
+
     try:
         subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "pip"],
+            [sys.executable, "-m", "pip", "--version"],
             check=True,
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=30
         )
-        print("✓ pip upgraded successfully")
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-        print(f"Warning: Failed to upgrade pip: {e}")
-        print("Continuing with existing pip version")
+        print("✓ pip is available")
+        pip_available = True
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        print("pip not found. Installing pip...")
+
+        # Try multiple installation methods
+        pip_installed = False
+        current_platform = platform.system()
+
+        # Method 1: Try ensurepip first (available on all platforms with Python 3.4+)
+        try:
+            print("Trying ensurepip...")
+            subprocess.run(
+                [sys.executable, "-m", "ensurepip", "--upgrade"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            print("✓ pip installed successfully using ensurepip")
+            pip_installed = True
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            print("ensurepip failed, trying alternative methods...")
+
+        # Method 2: Platform-specific package managers
+        if not pip_installed:
+            if current_platform == "Linux":
+                # Try different Linux package managers
+                if shutil.which("apt-get"):
+                    try:
+                        print("Trying to install python3-pip using apt...")
+                        subprocess.run(
+                            ["sudo", "apt-get", "update", "-qq"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=60
+                        )
+                        subprocess.run(
+                            ["sudo", "apt-get", "install", "-y", "python3-pip"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=120
+                        )
+                        print("✓ pip installed successfully using apt")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("apt installation failed...")
+
+                elif shutil.which("yum"):
+                    try:
+                        print("Trying to install python3-pip using yum...")
+                        subprocess.run(
+                            ["sudo", "yum", "install", "-y", "python3-pip"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=120
+                        )
+                        print("✓ pip installed successfully using yum")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("yum installation failed...")
+
+                elif shutil.which("dnf"):
+                    try:
+                        print("Trying to install python3-pip using dnf...")
+                        subprocess.run(
+                            ["sudo", "dnf", "install", "-y", "python3-pip"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=120
+                        )
+                        print("✓ pip installed successfully using dnf")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("dnf installation failed...")
+
+                elif shutil.which("pacman"):
+                    try:
+                        print("Trying to install python-pip using pacman...")
+                        subprocess.run(
+                            ["sudo", "pacman", "-S", "--noconfirm", "python-pip"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=120
+                        )
+                        print("✓ pip installed successfully using pacman")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("pacman installation failed...")
+
+            elif current_platform == "Darwin":  # macOS
+                if shutil.which("brew"):
+                    try:
+                        print("Trying to install python with pip using brew...")
+                        subprocess.run(
+                            ["brew", "install", "python"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=300
+                        )
+                        print("✓ pip installed successfully using brew")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("brew installation failed...")
+
+                elif shutil.which("port"):
+                    try:
+                        print("Trying to install python with pip using MacPorts...")
+                        subprocess.run(
+                            ["sudo", "port", "install", "python39", "+universal"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=300
+                        )
+                        print("✓ pip installed successfully using MacPorts")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("MacPorts installation failed...")
+
+            elif current_platform == "Windows":
+                # Windows should have pip bundled with Python from python.org
+                # Try chocolatey as fallback
+                if shutil.which("choco"):
+                    try:
+                        print("Trying to install python with pip using chocolatey...")
+                        subprocess.run(
+                            ["choco", "install", "python", "-y"],
+                            check=True,
+                            capture_output=True,
+                            text=True,
+                            timeout=300
+                        )
+                        print("✓ pip installed successfully using chocolatey")
+                        pip_installed = True
+                    except subprocess.CalledProcessError:
+                        print("chocolatey installation failed...")
+
+        # Method 3: Download and install get-pip.py directly (works on all platforms)
+        if not pip_installed:
+            try:
+                print("Downloading get-pip.py...")
+                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.py') as f:
+                    urllib.request.urlretrieve('https://bootstrap.pypa.io/get-pip.py', f.name)
+                    get_pip_path = f.name
+
+                print("Installing pip using get-pip.py...")
+                subprocess.run(
+                    [sys.executable, get_pip_path],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+
+                # Clean up
+                Path(get_pip_path).unlink(missing_ok=True)
+                print("✓ pip installed successfully using get-pip.py")
+                pip_installed = True
+
+            except Exception as e:
+                print(f"get-pip.py installation failed: {e}")
+
+        if not pip_installed:
+            print(f"\n❌ All pip installation methods failed on {current_platform}!")
+            print("Please install pip manually using one of these methods:")
+
+            if current_platform == "Linux":
+                print("  Linux:")
+                print("    • sudo apt-get install python3-pip  (Debian/Ubuntu)")
+                print("    • sudo yum install python3-pip     (CentOS/RHEL)")
+                print("    • sudo dnf install python3-pip     (Fedora)")
+                print("    • sudo pacman -S python-pip        (Arch Linux)")
+            elif current_platform == "Darwin":
+                print("  macOS:")
+                print("    • brew install python")
+                print("    • sudo port install python39 +universal  (MacPorts)")
+                print("    • Download Python from https://www.python.org/downloads/")
+            elif current_platform == "Windows":
+                print("  Windows:")
+                print("    • Download Python from https://www.python.org/downloads/")
+                print("    • choco install python  (if you have Chocolatey)")
+
+            print("  Universal method:")
+            print("    • Download get-pip.py from https://bootstrap.pypa.io/get-pip.py")
+            print(f"    • Run: {sys.executable} get-pip.py")
+            sys.exit(1)
+
+        pip_available = True
+
+    # Now upgrade pip to latest version if it's available
+    if pip_available:
+        print("Upgrading pip to latest version...")
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "--upgrade", "pip"],
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            print("✓ pip upgraded successfully")
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            print(f"Warning: Failed to upgrade pip: {e}")
+            print("Continuing with existing pip version")
 
     missing = []
 
@@ -210,6 +423,38 @@ def ensure_essential_dependencies():
                         f"Failed to install {package} with pip and uv not available: {e}"
                     )
                     sys.exit(1)
+
+        # Clear import cache and verify installations
+        print("Verifying installations...")
+        import importlib
+        import sys
+
+        # Clear module cache for the packages we just installed
+        modules_to_clear = []
+        for package in missing:
+            module_name = package.split('>=')[0].split('==')[0].split('[')[0]
+            modules_to_clear.append(module_name)
+
+        for module_name in modules_to_clear:
+            if module_name in sys.modules:
+                del sys.modules[module_name]
+
+        # Re-verify that packages are now available
+        verification_failed = []
+        for package in missing:
+            module_name = package.split('>=')[0].split('==')[0].split('[')[0]
+            try:
+                importlib.import_module(module_name)
+                print(f"✓ {module_name} verified successfully")
+            except ImportError:
+                verification_failed.append(package)
+
+        if verification_failed:
+            print(f"❌ Failed to verify these packages: {', '.join(verification_failed)}")
+            print("Try restarting the script or install manually.")
+            sys.exit(1)
+        else:
+            print("✓ All essential dependencies verified successfully")
 
 
 def install_dependencies(python_exe, group_name, use_uv=True, uv_executable=None):
@@ -535,11 +780,8 @@ def setup_neurpi(server=False, rig=False, dev=False, full=False, python_version=
 # Create the setup command for CLI integration
 ensure_essential_dependencies()
 
-try:
-    import click
-except ImportError:
-    print("Click not available. Please install it first.")
-    sys.exit(1)
+# Now we can safely import click since it's been verified
+import click
 
 
 @click.command()
