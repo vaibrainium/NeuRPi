@@ -183,11 +183,11 @@ class Subject(BaseSubject):
 
         # Ensure the 'date' column is in datetime format (if it's a string, it will be converted)
         history["date"] = pd.to_datetime(history["date"], errors="coerce")
-        # Get today's date (ensure it's in the same format)
-        today = datetime.today().date()  # Format as "YYYY-MM-DD"
+        # Get today's date as a pandas Timestamp for comparison
+        today = pd.Timestamp.now().normalize()
 
         # Filter rows where 'date' is today's date
-        today_rows = history[history["date"].dt.date == today]
+        today_rows = history[history["date"].dt.normalize() == today]
         if today_rows.empty:
             return 0
 
