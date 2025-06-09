@@ -98,7 +98,7 @@ STIMULUS = {
                 "stimulus_size": (1280, 720),
                 "background_color": (0, 0, 0),
                 "dots": {
-                    "dot_radius": 17,
+                    "dot_radius": 9, #17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 450,  # for 45 degrees/sec
