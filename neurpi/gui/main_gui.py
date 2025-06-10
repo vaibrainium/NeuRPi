@@ -2,7 +2,6 @@ import csv
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import yaml
 from omegaconf import OmegaConf
@@ -50,7 +49,7 @@ class Application(mainclass):
         """Setup the main user interface."""
         self.main_gui = Ui_Main()
         self.main_gui.setupUi(self)
-        self.show()        # Setup initial UI state
+        self.show()  # Setup initial UI state
         self._setup_initial_controls()
 
     def _setup_initial_controls(self):
@@ -93,7 +92,7 @@ class Application(mainclass):
             self.main_gui.protocol.addItems(list_protocols)
             self.main_gui.protocol.setCurrentIndex(0)
 
-            self._log_message(f"Loaded {len(list_protocols)-1} protocols")
+            self._log_message(f"Loaded {len(list_protocols) - 1} protocols")
         except Exception as e:
             self._log_message(f"Error loading protocols: {e}")
 
@@ -113,7 +112,7 @@ class Application(mainclass):
         self.main_gui.tabs.currentChanged.connect(self.handleTabActivationChange)
 
         # Log controls
-        if hasattr(self.main_gui, 'clear_log_btn'):
+        if hasattr(self.main_gui, "clear_log_btn"):
             self.main_gui.clear_log_btn.clicked.connect(self._clear_log)
 
     # ==================== Protocol/Experiment Management ====================
@@ -161,7 +160,9 @@ class Application(mainclass):
             self.main_gui.experiment.addItems(list_experiments)
             self.main_gui.experiment.setCurrentIndex(0)
 
-            self._log_message(f"Loaded {len(list_experiments)-1} experiments for protocol '{self.main_gui.protocol.currentText()}'")
+            self._log_message(
+                f"Loaded {len(list_experiments) - 1} experiments for protocol '{self.main_gui.protocol.currentText()}'"
+            )
         except Exception as e:
             self._log_message(f"Error loading experiments: {e}")
 
@@ -189,7 +190,9 @@ class Application(mainclass):
             self.main_gui.configuration.addItems(list_configurations)
             self.main_gui.configuration.setCurrentIndex(0)
 
-            self._log_message(f"Loaded {len(list_configurations)-1} configurations for experiment '{self.main_gui.experiment.currentText()}'")
+            self._log_message(
+                f"Loaded {len(list_configurations) - 1} configurations for experiment '{self.main_gui.experiment.currentText()}'"
+            )
         except Exception as e:
             self._log_message(f"Error loading configurations: {e}")
 
@@ -220,7 +223,7 @@ class Application(mainclass):
 
         if not Path(Path(prefs.get("DATADIR", "data"), subject_name)).exists():
             self.critical_message(
-                f"'{subject_name}' does not exist. Please create new subject."
+                f"'{subject_name}' does not exist. Please create new subject.",
             )
             self.clear_variables()
             return None
@@ -255,15 +258,17 @@ class Application(mainclass):
             return None
 
         # Create session info
-        session_info = OmegaConf.create({
-            "subject_name": subject_name,
-            "subject_weight": weight_value,
-            "rig_id": str_to_code(rig_id),
-            "protocol": str_to_code(protocol),
-            "experiment": str_to_code(experiment),
-            "configuration": str_to_code(configuration),
-            "start_time": datetime.now().isoformat(),
-        })
+        session_info = OmegaConf.create(
+            {
+                "subject_name": subject_name,
+                "subject_weight": weight_value,
+                "rig_id": str_to_code(rig_id),
+                "protocol": str_to_code(protocol),
+                "experiment": str_to_code(experiment),
+                "configuration": str_to_code(configuration),
+                "start_time": datetime.now().isoformat(),
+            }
+        )
 
         return session_info
 
@@ -282,12 +287,12 @@ class Application(mainclass):
         self.main_gui.response_mode.setCurrentIndex(0)
 
         # Clear session display
-        if hasattr(self.main_gui, 'session_info_display'):
+        if hasattr(self.main_gui, "session_info_display"):
             self.main_gui.session_info_display.clear()
 
     def _update_session_display(self, session_info):
         """Update the session information display."""
-        if hasattr(self.main_gui, 'session_info_display'):
+        if hasattr(self.main_gui, "session_info_display"):
             display_text = f"""Current Session:
 Subject: {session_info.subject_name}
 Weight: {session_info.subject_weight}g
@@ -318,7 +323,9 @@ Start Time: {session_info.start_time}"""
                 return index
         return None
 
-    def add_new_rig(self, id: str = "rig_", task_gui=None, session_info=None, subject=None):
+    def add_new_rig(
+        self, id: str = "rig_", task_gui=None, session_info=None, subject=None
+    ):
         """Add a new rig tab with task GUI."""
         try:
             display_name = code_to_str(id)
@@ -355,7 +362,7 @@ Start Time: {session_info.start_time}"""
 
     def _update_active_rigs_display(self):
         """Update the active rigs list display."""
-        if hasattr(self.main_gui, 'active_rigs_list'):
+        if hasattr(self.main_gui, "active_rigs_list"):
             self.main_gui.active_rigs_list.clear()
             for rig_id in self.rigs_gui.keys():
                 self.main_gui.active_rigs_list.addItem(code_to_str(rig_id))
@@ -381,9 +388,13 @@ Start Time: {session_info.start_time}"""
         """Create a new subject with the provided information."""
         try:
             subject_name = self.new_subject_form.name.toPlainText().strip().upper()
-            subject_identification = self.new_subject_form.identification.toPlainText().strip()
+            subject_identification = (
+                self.new_subject_form.identification.toPlainText().strip()
+            )
             subject_housing = self.new_subject_form.housing.toPlainText().strip()
-            subject_dob = self.new_subject_form.dob.selectedDate().toString("yyyy-MM-dd")
+            subject_dob = self.new_subject_form.dob.selectedDate().toString(
+                "yyyy-MM-dd"
+            )
 
             if subject_name == "":
                 self.critical_message("Please Enter Subject ID")
@@ -405,7 +416,9 @@ Start Time: {session_info.start_time}"""
             # Create subject info file
             info_dict = {
                 "Name": subject_name,
-                "Identification": "N/A" if subject_identification == "" else subject_identification,
+                "Identification": "N/A"
+                if subject_identification == ""
+                else subject_identification,
                 "subject_dob": subject_dob,
                 "subject_housing": "N/A" if subject_housing == "" else subject_housing,
                 "created_date": datetime.now().isoformat(),
@@ -416,12 +429,19 @@ Start Time: {session_info.start_time}"""
 
             # Create subject history file
             header = [
-                "date", "baseline_weight", "start_weight", "end_weight",
-                "water_received", "rig_id", "protocol", "experiment",
-                "session", "session_uuid"
+                "date",
+                "baseline_weight",
+                "start_weight",
+                "end_weight",
+                "water_received",
+                "rig_id",
+                "protocol",
+                "experiment",
+                "session",
+                "session_uuid",
             ]
 
-            with open(Path(subject_dir, "history.csv"), "w", newline='') as file:
+            with open(Path(subject_dir, "history.csv"), "w", newline="") as file:
                 writer = csv.writer(file)
                 writer.writerow(header)
 
@@ -458,7 +478,7 @@ Start Time: {session_info.start_time}"""
 
     def _log_message(self, message: str):
         """Add a message to the log display."""
-        if hasattr(self.main_gui, 'log_display'):
+        if hasattr(self.main_gui, "log_display"):
             timestamp = datetime.now().strftime("%H:%M:%S")
             formatted_message = f"[{timestamp}] {message}"
             self.main_gui.log_display.append(formatted_message)
@@ -470,7 +490,7 @@ Start Time: {session_info.start_time}"""
 
     def _clear_log(self):
         """Clear the log display."""
-        if hasattr(self.main_gui, 'log_display'):
+        if hasattr(self.main_gui, "log_display"):
             self.main_gui.log_display.clear()
             self._log_message("Log cleared")
 
@@ -479,11 +499,12 @@ Start Time: {session_info.start_time}"""
     def closeEvent(self, event):
         """Handle application close event."""
         reply = QtWidgets.QMessageBox.question(
-            self, 'Exit Application',
-            'Are you sure you want to exit?',
-            QtWidgets.QMessageBox.StandardButton.Yes |
+            self,
+            "Exit Application",
+            "Are you sure you want to exit?",
+            QtWidgets.QMessageBox.StandardButton.Yes
+            | QtWidgets.QMessageBox.StandardButton.No,
             QtWidgets.QMessageBox.StandardButton.No,
-            QtWidgets.QMessageBox.StandardButton.No
         )
 
         if reply == QtWidgets.QMessageBox.StandardButton.Yes:

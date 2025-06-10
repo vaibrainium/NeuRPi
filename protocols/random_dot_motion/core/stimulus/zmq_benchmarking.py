@@ -24,7 +24,7 @@ def receiver_ipc(queue, num_messages):
 
     total_latency = 0
     for i in range(num_messages):
-        received_message = receiver_socket.recv()
+        receiver_socket.recv()
         end_time = time.time()
         start_time = queue.get()
         latency = (end_time - start_time) * 1000  # in milliseconds
@@ -56,7 +56,7 @@ def receiver_tcp(queue, num_messages):
 
     total_latency = 0
     for i in range(num_messages):
-        received_message = receiver_socket.recv()
+        receiver_socket.recv()
         end_time = time.time()
         start_time = queue.get()
         latency = (end_time - start_time) * 1000  # in milliseconds

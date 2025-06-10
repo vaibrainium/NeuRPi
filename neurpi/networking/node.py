@@ -611,7 +611,7 @@ class Net_Node(object):
                         flags={"NOREPEAT": True, "MINPRINT": True},
                         sender=socket_id,
                     ).serialize()
-                    last_msg = socket.send_multipart((upstream, upstream, msg), track=True, copy=True)
+                    socket.send_multipart((upstream, upstream, msg), track=True, copy=True)
 
                     self.logger.debug("STREAM {}: Sent {} items".format(self.id + "_" + id, len(pending_data)))
                     pending_data = []

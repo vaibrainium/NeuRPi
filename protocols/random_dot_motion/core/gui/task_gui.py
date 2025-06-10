@@ -6,7 +6,6 @@ import numpy as np
 import pyqtgraph as pg
 from PyQt6 import QtCore, QtWidgets, uic
 from pyqtgraph import exporters
-import os
 from pathlib import Path
 
 # Get the absolute path to the UI files

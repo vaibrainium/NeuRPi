@@ -84,7 +84,6 @@ def run_agent_direct(mode, no_gui=False, name=None):
     configure_prefs(mode)
 
     if mode == "server":
-        config_file = project_root / "neurpi" / "config" / "config_terminal.yaml"
         try:
             # Import and run the terminal agent
             from neurpi.agents.agent_terminal import main as terminal_main
@@ -94,7 +93,6 @@ def run_agent_direct(mode, no_gui=False, name=None):
             console.print(f"[red]Failed to import terminal agent: {e}[/red]")
             sys.exit(1)
     elif mode == "rig":
-        config_file = project_root / "neurpi" / "config" / "config_pilot.yaml"
         try:
             # Import and run the pilot agent
             from neurpi.agents.agent_pilot import main as pilot_main
@@ -111,7 +109,6 @@ def run_agent_direct(mode, no_gui=False, name=None):
 @click.group()
 def cli():
     """NeuRPi CLI - Run agents with specified configuration."""
-    pass
 
 
 @cli.command()
@@ -120,7 +117,9 @@ def server(no_gui):
     """Run as Server (controller/interface)."""
     mode = "server"
     configure_prefs(mode)
-    console.print(f"[green]Starting server agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]")
+    console.print(
+        f"[green]Starting server agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]"
+    )
 
     try:
         run_agent_direct(mode, no_gui)
