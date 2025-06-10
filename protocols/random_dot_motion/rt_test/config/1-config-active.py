@@ -8,7 +8,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
+        "fixation": {
+            "tag": "Fixation epoch",
+            "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5),
+        },
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 15,
@@ -26,8 +29,12 @@ TASK = {
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
-                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
+                "correct": lambda response_time, coh: stats.expon.rvs(
+                    loc=0.75,
+                    scale=1 / 5,
+                ),
+                "incorrect": lambda response_time, coh: 3
+                + 4 * (np.exp(-3 * response_time)),
                 "noresponse": lambda response_time, coh: 3,
                 "invalid": lambda response_time, coh: 2,
             },
@@ -59,10 +66,10 @@ TASK = {
         "bias_window": 20,
         "passive": {
             "coherence_threshold": 101,
-            },
+        },
         "active": {
-            "abs_bias_threshold": 1.01, # absolute bias threshold for active trials range 0 to 1
-            "correction_strength": 0, # between 0 and 1. 0: no correction, 1: full correction block
+            "abs_bias_threshold": 1.01,  # absolute bias threshold for active trials range 0 to 1
+            "correction_strength": 0,  # between 0 and 1. 0: no correction, 1: full correction block
         },
     },
     "training_type": {
@@ -98,7 +105,7 @@ STIMULUS = {
                 "stimulus_size": (1280, 720),
                 "background_color": (0, 0, 0),
                 "dots": {
-                    "dot_radius": 17,
+                    "dot_radius": 9,  # 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 450,  # for 45 degrees/sec

@@ -8,7 +8,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5)},
+        "fixation": {
+            "tag": "Fixation epoch",
+            "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5),
+        },
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 15,
@@ -23,14 +26,18 @@ TASK = {
                 "invalid": lambda response_time: 0,
             },
             "knowledge_of_results": {
-				"duration": 0.5,
-			},
+                "duration": 0.5,
+            },
         },
         "intertrial": {
             "tag": "Intertrial epoch",
             "duration": {
-                "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
-                "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
+                "correct": lambda response_time, coh: stats.expon.rvs(
+                    loc=0.75,
+                    scale=1 / 5,
+                ),
+                "incorrect": lambda response_time, coh: 3
+                + 4 * (np.exp(-3 * response_time)),
                 "noresponse": lambda response_time, coh: 3,
                 "invalid": lambda response_time, coh: 2,
             },
@@ -53,9 +60,9 @@ TASK = {
             "value": np.array([3, 3, 3, 3]),
         },
         "schedule_structure": {
-			"tag": "How to structure block, interleaved or blocked",
-			"value": "interleaved"
-		}
+            "tag": "How to structure block, interleaved or blocked",
+            "value": "interleaved",
+        },
     },
     "rolling_performance": {
         "rolling_window": 50,
@@ -66,10 +73,10 @@ TASK = {
         "bias_window": 20,
         "passive": {
             "coherence_threshold": 0,
-            },
+        },
         "active": {
-            "abs_bias_threshold": 0.25, # absolute bias threshold for active trials range 0 to 1
-            "correction_strength": 0.75, # between 0 and 1. 0: no correction, 1: full correction block
+            "abs_bias_threshold": 0.25,  # absolute bias threshold for active trials range 0 to 1
+            "correction_strength": 0.75,  # between 0 and 1. 0: no correction, 1: full correction block
         },
     },
     "training_type": {
@@ -80,11 +87,10 @@ TASK = {
         "tag": "Fixed reward ratio minimum streak",
         "value": 1000,
     },
-    "reward":{
-		"volume": 2,
-		"must_consume": True,
-	}
-
+    "reward": {
+        "volume": 2,
+        "must_consume": True,
+    },
 }
 
 STIMULUS = {
@@ -114,7 +120,7 @@ STIMULUS = {
                 "stimulus_size": (1280, 720),
                 "background_color": (0, 0, 0),
                 "dots": {
-                    "dot_radius": 17,
+                    "dot_radius": 9,  # 17,
                     "dot_color": (255, 255, 255),
                     "dot_fill": 15,
                     "dot_vel": 450,  # for 45 degrees/sec

@@ -66,41 +66,41 @@ class Subject(BaseSubject):
             "rolling_perf": str(Path(self.experiment_dir, "rolling_performance.pkl")),
             # within session
             "config": str(
-                Path(self.experiment_dir, self.session, self.name + "_config.txt")
+                Path(self.experiment_dir, self.session, self.name + "_config.txt"),
             ),
             "trial": str(
-                Path(self.experiment_dir, self.session, self.name + "_trial.csv")
+                Path(self.experiment_dir, self.session, self.name + "_trial.csv"),
             ),
             "event": str(
-                Path(self.experiment_dir, self.session, self.name + "_event.csv")
+                Path(self.experiment_dir, self.session, self.name + "_event.csv"),
             ),
             "lick": str(
-                Path(self.experiment_dir, self.session, self.name + "_lick.csv")
+                Path(self.experiment_dir, self.session, self.name + "_lick.csv"),
             ),
             "rolling_perf_before": str(
-                Path(self.experiment_dir, self.session, "rolling_perf_before.pkl")
+                Path(self.experiment_dir, self.session, "rolling_perf_before.pkl"),
             ),
             "rolling_perf_after": str(
-                Path(self.experiment_dir, self.session, "rolling_perf_after.pkl")
+                Path(self.experiment_dir, self.session, "rolling_perf_after.pkl"),
             ),
         }
 
         self.plots = {
             "accuracy": str(Path(self.experiment_dir, self.session, "accuracy.png")),
             "psychometric": str(
-                Path(self.experiment_dir, self.session, "psychometric.png")
+                Path(self.experiment_dir, self.session, "psychometric.png"),
             ),
             "trials_distribution": str(
-                Path(self.experiment_dir, self.session, "trials_distribution.png")
+                Path(self.experiment_dir, self.session, "trials_distribution.png"),
             ),
             "rt_distribution": str(
-                Path(self.experiment_dir, self.session, "rt_distribution.png")
+                Path(self.experiment_dir, self.session, "rt_distribution.png"),
             ),
             # summary plots
             "accu_vs_training": str(Path(self.experiment_dir, "accu_vs_training.png")),
             "accu_vs_weight": str(Path(self.experiment_dir, "accu_vs_weight.png")),
             "attmpt_vs_training": str(
-                Path(self.experiment_dir, "attmpt_vs_training.png")
+                Path(self.experiment_dir, "attmpt_vs_training.png"),
             ),
             "attmpt_vs_weight": str(Path(self.experiment_dir, "attmpt_vs_weight.png")),
         }
@@ -222,20 +222,17 @@ class Subject(BaseSubject):
     def get_today_received_water(self):
         history = pd.read_csv(Path(self.dir, "history.csv"))
 
-        # Ensure the 'date' column is in datetime format (if it's a string, it will be converted)
-        history["date"] = pd.to_datetime(history["date"], errors="coerce")
-        # Get today's date (ensure it's in the same format)
-        today = datetime.today().date()  # Format as "YYYY-MM-DD"
-
-        # Filter rows where 'date' is today's date
+        history["date"] = pd.to_datetime(history["date"], format="mixed")
+        today = datetime.today().date()
         today_rows = history[history["date"].dt.date == today]
+
         if today_rows.empty:
             return 0
 
         today_received_water = pd.to_numeric(
-            today_rows["water_received"], errors="coerce"
+            today_rows["water_received"],
+            errors="coerce",
         ).sum()
-
         return today_received_water
 
     def save_files(self, file_dict):
@@ -260,7 +257,8 @@ class Subject(BaseSubject):
                 elif file_name in [
                     "rolling_perf",
                     "rolling_perf_before",
-                    "rolling_perf_after",                ]:
+                    "rolling_perf_after",
+                ]:
                     file_content = pickle.loads(file_content)
                     with open(self.files[file_name], "wb") as file:
                         pickle.dump(file_content, file)
@@ -276,8 +274,10 @@ class Subject(BaseSubject):
             except (OSError, TypeError) as e:
                 # Fallback for dynamically created modules or objects without source
                 session_config_content = f"# Session config could not be retrieved as source code\n# Error: {e}\n# Config object: {self.session_config}\n"
-                if hasattr(self.session_config, '__dict__'):
-                    session_config_content += f"# Config attributes: {vars(self.session_config)}\n"
+                if hasattr(self.session_config, "__dict__"):
+                    session_config_content += (
+                        f"# Config attributes: {vars(self.session_config)}\n"
+                    )
 
             with open(self.files["config"], "w") as file:
                 file.write(session_config_content)

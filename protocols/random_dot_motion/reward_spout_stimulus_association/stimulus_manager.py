@@ -31,7 +31,12 @@ class StimulusManager(core_StimulusManager):
         in_queue=None,
         out_queue=None,
     ):
-        super().__init__(stimulus, stimulus_configuration, in_queue=in_queue, out_queue=out_queue)
+        super().__init__(
+            stimulus,
+            stimulus_configuration,
+            in_queue=in_queue,
+            out_queue=out_queue,
+        )
 
     def initiate_kor(self, args):
         self.frame_counter = 0
@@ -41,7 +46,11 @@ class StimulusManager(core_StimulusManager):
         audio_volume = args.get("audio_volume", 1)
         audio_loops = args.get("audio_loops", 0)
         if audio_stim and self.initiate_stimulus_config["audio"][audio_stim]:
-            self.play_audio(self.initiate_stimulus_config["audio"][audio_stim], loops=audio_loops, volume=audio_volume)
+            self.play_audio(
+                self.initiate_stimulus_config["audio"][audio_stim],
+                loops=audio_loops,
+                volume=audio_volume,
+            )
 
     def update_kor(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate

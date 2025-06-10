@@ -1,4 +1,3 @@
-
 REQUIRED_HARDWARE = ["Arduino", "Display"]
 
 REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
@@ -7,19 +6,19 @@ TASK = {
     "reward": {
         "volume": 2,
         "must_consume": True,  # Ensure the reward is consumed
-	},
+    },
     "knowledge_of_results": {
-		"tag": "Knowledge of results epoch",
-		"duration": 0.5,
+        "tag": "Knowledge of results epoch",
+        "duration": 0.5,
         "mode": ["LED"],  # Use LED for feedback
-	},
+    },
     "bias_correction": {
         "window": 10,
         "threshold": 0.20,
     },
     "intertrial": {
         "duration": 1,
-	}
+    },
 }
 
 STIMULUS = {
