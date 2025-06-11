@@ -38,14 +38,16 @@ class TrialConstruct:
             stage_block (threading.Event): Managing stage
             stim_handler (queue.Queue): Queue for sending message to stim_manager
             response_queue (queue.Queue): Queue for checking if response has been made
-        """
 
+        """
         # Task Variables
         self.choice = None
         self.response_time = None
         self.response_queue = response_queue
-        self.stage_block = stage_block  # threading.Event used by the Task to manage stage transitions
-        self.response_block = response_block  # threading.Event used by the pilot to manage stage transitions
+        self.stage_block = (
+            stage_block  # threading.Event used by the Task to manage stage transitions
+        )
+        self.response_block = response_block  # threading.Event used by the rig to manage stage transitions
         self.response_block.clear()
         self.trigger = {}
         self.must_respond_block = threading.Event()
@@ -83,12 +85,13 @@ class TrialConstruct:
         remaining_duration = monitor_duration - (time.time() - start)
         while remaining_duration > 0:
             try:
-                response = self.response_queue.get(block=True, timeout=remaining_duration)
+                response = self.response_queue.get(
+                    block=True, timeout=remaining_duration
+                )
                 if response in target:
                     response_time = time.time() - start
                     break
-                else:
-                    remaining_duration = monitor_duration - (time.time() - start)
+                remaining_duration = monitor_duration - (time.time() - start)
 
             except queue.Empty:
                 response = 0
@@ -125,18 +128,24 @@ class TrialConstruct:
             self.response_block.wait()
             try:
                 if self.trigger["type"] == "FIXATE":
-                    self.fixation_monitor(self.trigger["targets"], self.trigger["duration"])
+                    self.fixation_monitor(
+                        self.trigger["targets"], self.trigger["duration"]
+                    )
                     # self.choice, self.response_time = self.choice_monitor(self.trigger["targets"], self.trigger["duration"])
                     self.stage_block.set()
                 elif self.trigger["type"] == "GO":
-                    self.choice, self.response_time = self.choice_monitor(self.trigger["targets"], self.trigger["duration"])
+                    self.choice, self.response_time = self.choice_monitor(
+                        self.trigger["targets"], self.trigger["duration"]
+                    )
                     self.stage_block.set()
                 elif self.trigger["type"] == "MUST_RESPOND":
                     self.must_respond_monitor(self.trigger["targets"])
                     self.must_respond_block.set()
             except Exception as e:
                 print(e)
-                raise Warning(f"Problem with response monitoring for {self.trigger['type']}")
+                raise Warning(
+                    f"Problem with response monitoring for {self.trigger['type']}"
+                )
 
     def clear_queue(self):
         while not self.response_queue.empty():

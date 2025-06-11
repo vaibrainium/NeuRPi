@@ -29,10 +29,6 @@ def init_logger(
     # --------------------------------------------------
 
     if instance is not None:
-        # get name of module_name without prefixed autopilot
-        # eg passed autopilot.hardware.gpio.Digital_In -> hardware.gpio
-        # filtering leading 'autopilot' from string
-
         module_name = instance.__module__
         if "__main__" in module_name:
             # awkward workaround to get module name of __main__ run objects
@@ -175,14 +171,3 @@ def _file_handler(base_filename: Path) -> RotatingFileHandler:
                 + "-" * 20,
             )
     return fh
-
-
-# def _file_handler(base_filename: Path) -> RotatingFileHandler:
-#     # if directory doesn't exist, try to make it
-#     if not base_filename.parent.exists():
-#         base_filename.parent.mkdir(parents=True, exist_ok=True)
-
-#     fh = RotatingFileHandler(
-#         str(base_filename), mode="a", maxBytes=int(20 * (2**20)), backupCount=int(4)
-#     )
-#     return fh

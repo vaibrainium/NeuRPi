@@ -177,7 +177,9 @@ class SessionManager:
         return stage_task_args, stage_stimulus_args
 
     def prepare_reinforcement_stage(
-        self, choice: Optional[int], response_time: Optional[float]
+        self,
+        choice: Optional[int],
+        response_time: Optional[float],
     ) -> tuple[dict[str, Any], dict[str, Any]]:
         """Prepare parameters for reinforcement stage based on choice and response time."""
         self.choice = choice
@@ -185,7 +187,7 @@ class SessionManager:
         stage_task_args, stage_stimulus_args = {}, {}
 
         self.outcome, self.trial_reward = self._determine_outcome_and_reward(
-            self.choice
+            self.choice,
         )
 
         # Get reinforcement duration for this outcome
@@ -219,7 +221,8 @@ class SessionManager:
         """Prepare parameters for intertrial stage."""
         stage_task_args, stage_stimulus_args = {}, {}
         self.intertrial_duration = self.intertrial_duration_function[self.outcome](
-            self.response_time, self.signed_coherence
+            self.response_time,
+            self.signed_coherence,
         )
 
         stage_task_args = {"intertrial_duration": self.intertrial_duration}
@@ -235,11 +238,12 @@ class SessionManager:
         correction_direction = -np.sign(np.nanmean(self.rolling_bias))
         self.rolling_bias.extend([0] * self.bias_window)
         self.generate_active_correction_block_schedule(
-            correction_direction, prob=self.active_bias_correction_probability
+            correction_direction,
+            prob=self.active_bias_correction_probability,
         )
         self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
         self.target = int(
-            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
+            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])),
         )
 
     def _handle_standard_block(self):
@@ -251,7 +255,7 @@ class SessionManager:
         self.reset_trial_variables()
         self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
         self.target = int(
-            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
+            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])),
         )
         self.trial_counters["correction"] = 0
         print(self.block_schedule)
@@ -274,7 +278,7 @@ class SessionManager:
 
         elif self.schedule_structure == "blocked":
             repeats_per_block = self.get_variable_trial_block_length(
-                np.arange(self.repeats_per_block[0] - 2, self.repeats_per_block[0] + 2)
+                np.arange(self.repeats_per_block[0] - 2, self.repeats_per_block[0] + 2),
             )
             if self.signed_coherence is not None:
                 current_coh_sign = np.sign(self.signed_coherence)
@@ -297,7 +301,7 @@ class SessionManager:
             [
                 np.full(num_correction, correction_direction),
                 np.full(num_noncorrection, -correction_direction),
-            ]
+            ],
         )
         seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
         self.block_schedule = deque(seed_schedule)
@@ -312,7 +316,9 @@ class SessionManager:
         return chosen_value
 
     def shuffle_seq(
-        self, sequence: Union[np.ndarray, list[float]], max_repeat: int = 3
+        self,
+        sequence: Union[np.ndarray, list[float]],
+        max_repeat: int = 3,
     ) -> np.ndarray:
         """Shuffle sequence so that no more than max_repeat consecutive elements have same sign."""
         sequence = np.array(sequence)
@@ -346,7 +352,7 @@ class SessionManager:
         if np.abs(self.signed_coherence) > self.passive_bias_correction_threshold:
             if self.schedule_structure == "interleaved":
                 new_target = int(
-                    np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4))
+                    np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4)),
                 )
                 coherence = new_target * np.abs(self.signed_coherence)
             elif self.schedule_structure == "blocked":
@@ -442,7 +448,7 @@ class SessionManager:
         # write trial data to file
         self.write_trial_data_to_file()
 
-        # if valid update trial variables and send data to terminal
+        # if valid update trial variables and send data to controller
         if self.valid:
             self._update_post_trial_stats()
 

@@ -199,7 +199,7 @@ class Subject(BaseSubject):
     def initiate_config(self):
         """
         "
-        Initiating subject and session specific parameters. This dictionary will also be shared with terminal at the end of each trial to update GUI
+        Initiating subject and session specific parameters. This dictionary will also be shared with controller at the end of each trial to update GUI
 
         Arguments:
             full_coherences (list): array of all coherences included in the task

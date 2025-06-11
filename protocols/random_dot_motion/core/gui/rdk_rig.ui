@@ -580,26 +580,19 @@
                <string>Left Threshold:</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="lick_threshold_left">
-              <property name="suffix">
-               <string> V</string>
-              </property>
-              <property name="decimals">
-               <number>2</number>
-              </property>
+            </item>            <item>
+             <widget class="QSpinBox" name="lick_threshold_left">
               <property name="minimum">
-               <double>0.00</double>
+               <number>0</number>
               </property>
               <property name="maximum">
-               <double>5.00</double>
+               <number>50</number>
               </property>
               <property name="singleStep">
-               <double>0.01</double>
+               <number>1</number>
               </property>
               <property name="value">
-               <double>2.50</double>
+               <number>25</number>
               </property>
              </widget>
             </item>
@@ -613,26 +606,19 @@
                <string>Right Threshold:</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <widget class="QDoubleSpinBox" name="lick_threshold_right">
-              <property name="suffix">
-               <string> V</string>
-              </property>
-              <property name="decimals">
-               <number>2</number>
-              </property>
+            </item>            <item>
+             <widget class="QSpinBox" name="lick_threshold_right">
               <property name="minimum">
-               <double>0.00</double>
+               <number>0</number>
               </property>
               <property name="maximum">
-               <double>5.00</double>
+               <number>50</number>
               </property>
               <property name="singleStep">
-               <double>0.01</double>
+               <number>1</number>
               </property>
               <property name="value">
-               <double>2.50</double>
+               <number>25</number>
               </property>
              </widget>
             </item>
@@ -775,13 +761,14 @@
          </layout>
         </widget>
        </item>
-       <item>        <!-- Reward Control Group -->
+       <item>
+       <!-- Reward Control Group -->
         <widget class="QGroupBox" name="RewardBox">
          <property name="title">
           <string>Reward Control</string>
          </property>
          <property name="minimumWidth">
-          <number>220</number>
+          <number>280</number>
          </property>
          <layout class="QVBoxLayout" name="rewardLayout">
           <item>
@@ -918,7 +905,7 @@
           <string>LED + Reward</string>
          </property>
          <property name="minimumWidth">
-          <number>120</number>
+          <number>200</number>
          </property>
          <layout class="QVBoxLayout" name="combinedLayout">
           <item>
@@ -971,14 +958,13 @@
           </item>
          </layout>
         </widget>
-       </item>
-       <item>        <!-- Session Control Group -->
+       </item>       <item>        <!-- Session Control Group -->
         <widget class="QGroupBox" name="SessionControlBox">
          <property name="title">
           <string>Session Control</string>
          </property>
          <property name="minimumWidth">
-          <number>180</number>
+          <number>140</number>
          </property>
          <layout class="QVBoxLayout" name="sessionControlLayout">
           <item>

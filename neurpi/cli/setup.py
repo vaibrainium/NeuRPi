@@ -144,6 +144,7 @@ python -m neurpi "$@"
 def ensure_essential_dependencies():
     """Ensure essential dependencies (tomli, click, rich) are available before any operations."""
     import sys
+
     # First, ensure pip is available
     print("Checking pip availability...")
     pip_available = False
@@ -154,7 +155,7 @@ def ensure_essential_dependencies():
             check=True,
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
         print("✓ pip is available")
         pip_available = True
@@ -173,7 +174,7 @@ def ensure_essential_dependencies():
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
             print("✓ pip installed successfully using ensurepip")
             pip_installed = True
@@ -192,14 +193,14 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=60
+                            timeout=60,
                         )
                         subprocess.run(
                             ["sudo", "apt-get", "install", "-y", "python3-pip"],
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=120
+                            timeout=120,
                         )
                         print("✓ pip installed successfully using apt")
                         pip_installed = True
@@ -214,7 +215,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=120
+                            timeout=120,
                         )
                         print("✓ pip installed successfully using yum")
                         pip_installed = True
@@ -229,7 +230,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=120
+                            timeout=120,
                         )
                         print("✓ pip installed successfully using dnf")
                         pip_installed = True
@@ -244,7 +245,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=120
+                            timeout=120,
                         )
                         print("✓ pip installed successfully using pacman")
                         pip_installed = True
@@ -260,7 +261,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=300
+                            timeout=300,
                         )
                         print("✓ pip installed successfully using brew")
                         pip_installed = True
@@ -275,7 +276,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=300
+                            timeout=300,
                         )
                         print("✓ pip installed successfully using MacPorts")
                         pip_installed = True
@@ -293,7 +294,7 @@ def ensure_essential_dependencies():
                             check=True,
                             capture_output=True,
                             text=True,
-                            timeout=300
+                            timeout=300,
                         )
                         print("✓ pip installed successfully using chocolatey")
                         pip_installed = True
@@ -304,8 +305,12 @@ def ensure_essential_dependencies():
         if not pip_installed:
             try:
                 print("Downloading get-pip.py...")
-                with tempfile.NamedTemporaryFile(mode='w+b', delete=False, suffix='.py') as f:
-                    urllib.request.urlretrieve('https://bootstrap.pypa.io/get-pip.py', f.name)
+                with tempfile.NamedTemporaryFile(
+                    mode="w+b", delete=False, suffix=".py"
+                ) as f:
+                    urllib.request.urlretrieve(
+                        "https://bootstrap.pypa.io/get-pip.py", f.name
+                    )
                     get_pip_path = f.name
 
                 print("Installing pip using get-pip.py...")
@@ -314,7 +319,7 @@ def ensure_essential_dependencies():
                     check=True,
                     capture_output=True,
                     text=True,
-                    timeout=120
+                    timeout=120,
                 )
 
                 # Clean up
@@ -361,7 +366,7 @@ def ensure_essential_dependencies():
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=60
+                timeout=60,
             )
             print("✓ pip upgraded successfully")
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
@@ -432,7 +437,7 @@ def ensure_essential_dependencies():
         # Clear module cache for the packages we just installed
         modules_to_clear = []
         for package in missing:
-            module_name = package.split('>=')[0].split('==')[0].split('[')[0]
+            module_name = package.split(">=")[0].split("==")[0].split("[")[0]
             modules_to_clear.append(module_name)
 
         for module_name in modules_to_clear:
@@ -442,7 +447,7 @@ def ensure_essential_dependencies():
         # Re-verify that packages are now available
         verification_failed = []
         for package in missing:
-            module_name = package.split('>=')[0].split('==')[0].split('[')[0]
+            module_name = package.split(">=")[0].split("==")[0].split("[")[0]
             try:
                 importlib.import_module(module_name)
                 print(f"✓ {module_name} verified successfully")
@@ -450,7 +455,9 @@ def ensure_essential_dependencies():
                 verification_failed.append(package)
 
         if verification_failed:
-            print(f"❌ Failed to verify these packages: {', '.join(verification_failed)}")
+            print(
+                f"❌ Failed to verify these packages: {', '.join(verification_failed)}"
+            )
             print("Try restarting the script or install manually.")
             sys.exit(1)
         else:
@@ -533,7 +540,9 @@ def install_dependencies(python_exe, group_name, use_uv=True, uv_executable=None
     return success, failed_packages
 
 
-def setup_neurpi(server=False, rig=False, dev=False, full=False, python_version="3.11"):
+def setup_neurpi(
+    controller=False, rig=False, dev=False, full=False, python_version="3.11"
+):
     """Set up NeuRPi development environment with selective dependency installation."""
     # First, ensure essential dependencies are installed
     ensure_essential_dependencies()
@@ -556,10 +565,10 @@ def setup_neurpi(server=False, rig=False, dev=False, full=False, python_version=
     dependency_groups = []
 
     # If no flags specified, default to full installation
-    if not any([server, rig, dev, full]):
+    if not any([controller, rig, dev, full]):
         full = True
 
-    if server:
+    if controller:
         dependency_groups = ["core", "gui"]
         console.print(
             "[bold blue]Setting up NeuRPi with GUI dependencies...[/bold blue]"
@@ -785,17 +794,21 @@ import click
 
 
 @click.command()
-@click.option("--server", is_flag=True, help="Install core + GUI dependencies")
+@click.option("--controller", is_flag=True, help="Install core + GUI dependencies")
 @click.option("--rig", is_flag=True, help="Install code + hardwar dependencies")
 @click.option("--dev", is_flag=True, help="Install core + development dependencies")
 @click.option("--full", is_flag=True, help="Install all dependencies (default)")
 @click.option(
     "--python-version", default="3.11", help="Python version to use (default: 3.11)"
 )
-def setup_cli(server, rig, dev, full, python_version):
+def setup_cli(controller, rig, dev, full, python_version):
     """Set up NeuRPi development environment with selective dependency installation."""
     setup_neurpi(
-        server=server, rig=rig, dev=dev, full=full, python_version=python_version
+        controller=controller,
+        rig=rig,
+        dev=dev,
+        full=full,
+        python_version=python_version,
     )
 
 

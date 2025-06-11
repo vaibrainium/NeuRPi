@@ -33,12 +33,12 @@ def run_agent(mode):
     # Configure prefs for the specific mode
     configure_prefs(mode)
 
-    if mode == "server":
-        config_file = project_root / "neurpi" / "config" / "config_terminal.yaml"
-        agent_script = project_root / "neurpi" / "agents" / "agent_terminal.py"
+    if mode == "controller":
+        config_file = project_root / "neurpi" / "config" / "controller.yaml"
+        agent_script = project_root / "neurpi" / "agents" / "controller.py"
     elif mode == "rig":
-        config_file = project_root / "neurpi" / "config" / "config_pilot.yaml"
-        agent_script = project_root / "neurpi" / "agents" / "agent_pilot.py"
+        config_file = project_root / "neurpi" / "config" / "rig.yaml"
+        agent_script = project_root / "neurpi" / "agents" / "rig.py"
     else:
         console.print(f"[red]Unknown agent type: {mode}[/red]")
         sys.exit(1)
@@ -83,23 +83,23 @@ def run_agent_direct(mode, no_gui=False, name=None):
     # Configure prefs for the specific mode
     configure_prefs(mode)
 
-    if mode == "server":
+    if mode == "controller":
         try:
-            # Import and run the terminal agent
-            from neurpi.agents.agent_terminal import main as terminal_main
+            # Import and run the controller agent
+            from neurpi.agents.controller import main as controller_main
 
-            terminal_main()
+            controller_main()
         except ImportError as e:
-            console.print(f"[red]Failed to import terminal agent: {e}[/red]")
+            console.print(f"[red]Failed to import controller agent: {e}[/red]")
             sys.exit(1)
     elif mode == "rig":
         try:
-            # Import and run the pilot agent
-            from neurpi.agents.agent_pilot import main as pilot_main
+            # Import and run the rig agent
+            from neurpi.agents.rig import main as rig_main
 
-            pilot_main()
+            rig_main()
         except ImportError as e:
-            console.print(f"[red]Failed to import pilot agent: {e}[/red]")
+            console.print(f"[red]Failed to import rig agent: {e}[/red]")
             sys.exit(1)
     else:
         console.print(f"[red]Unknown agent type: {mode}[/red]")
@@ -113,12 +113,12 @@ def cli():
 
 @cli.command()
 @click.option("--no-gui", is_flag=True, help="Run without GUI")
-def server(no_gui):
-    """Run as Server (controller/interface)."""
-    mode = "server"
+def controller(no_gui):
+    """Run as Controller (controller/interface)."""
+    mode = "controller"
     configure_prefs(mode)
     console.print(
-        f"[green]Starting server agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]"
+        f"[green]Starting controller agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]",
     )
 
     try:
@@ -148,7 +148,9 @@ def status():
     """Show system status."""
     # For now, just show that the CLI is working
     console.print("[green]NeuRPi CLI is operational[/green]")
-    console.print("[blue]Use 'neurpi server' or 'neurpi rig' to start agents[/blue]")
+    console.print(
+        "[blue]Use 'neurpi controller' or 'neurpi rig' to start agents[/blue]",
+    )
 
 
 def main():

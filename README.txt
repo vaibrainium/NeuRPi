@@ -29,7 +29,7 @@ Purpose: Defines experimental protocols with standardized interfaces, parameter 
 ray_cluster.py: Ray cluster management and monitoring
 communication.py: Inter-node communication
 rig_worker.py: Worker node management
-server_coordinator.py: Distributed experiment coordination
+controller_coordinator.py: Distributed experiment coordination
 Purpose: Enables scalable distributed experiments across multiple nodes with load balancing and fault tolerance.
 
 5. Data Management Layer (data)

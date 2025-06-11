@@ -33,7 +33,9 @@ class Display:
 
         self.pygame = pygame
         self.frame_rate = self.stim_config.display.frame_rate
-        self.flags = eval(self.stim_config.display.flags)  # Converting flags from string to method name
+        self.flags = eval(
+            self.stim_config.display.flags
+        )  # Converting flags from string to method name
         self.vsync = self.stim_config.display.vsync
         self.clock = self.pygame.time.Clock()
         self.screen = {}
@@ -52,6 +54,7 @@ class Display:
         Arguments:
             directory (str): Path to configuration directory relative to root directory (as Protocols/../...)
             filename (str): Specific file name of the configuration file
+
         """
         path = "../../" + directory
         hydra.initialize(version_base=None, config_path=path)
@@ -74,19 +77,21 @@ class Display:
             self.screen[0].fill((0, 0, 0))
         else:
             for screen in range(self.stim_config.display.num_screens):
-                exec(f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)""")
+                exec(
+                    f"""self.screen[{screen}] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=screen, vsync=self.vsync)"""
+                )
                 exec(f"""self.screen[{screen}].fill((0,0,0))""")
         self.update()
 
         self.gather_media()
 
-        # Letting terminal agent know that display is ready
+        # Letting controller agent know that display is ready
         while True:
             if self.pygame.display.get_init():
                 self.courier.put(("info", "display_ready"))
                 break
 
-        # Waiting for terminal agent to send start signal
+        # Waiting for controller agent to send start signal
         while True:
             if not self.courier.empty():
                 (message, arguments) = self.courier.get()
@@ -149,7 +154,9 @@ class Display:
                     self.audio[key] = temp_list
 
     def courier_manager(self):
-        properties = OmegaConf.create({"visual": {"is_static": True, "need_update": True}})
+        properties = OmegaConf.create(
+            {"visual": {"is_static": True, "need_update": True}}
+        )
         while 1:
             if not self.courier.empty():
                 (message, arguments) = self.courier.get()
@@ -169,13 +176,14 @@ class Display:
 
             if properties.visual.is_static:
                 self.frame_queue.queue.clear()
-            else:
-                if not self.frame_queue.full():
-                    try:
-                        (func, pars, screen) = eval("self." + properties.visual.update_function)()
-                        self.frame_queue.put([func, pars, screen])
-                    except:
-                        raise Warning(f"Failed to update visual for {message}")
+            elif not self.frame_queue.full():
+                try:
+                    (func, pars, screen) = eval(
+                        "self." + properties.visual.update_function
+                    )()
+                    self.frame_queue.put([func, pars, screen])
+                except:
+                    raise Warning(f"Failed to update visual for {message}")
 
     def render_visual(self):
         self.render_block.set()
@@ -196,7 +204,9 @@ class Display:
             raise Warning(f"Rendering error: Unable to process {func}")
 
         if self.stim_config.display.show_fps:
-            fps = self.font.render(str(int(self.clock.get_fps())), 1, self.pygame.Color("coral"))
+            fps = self.font.render(
+                str(int(self.clock.get_fps())), 1, self.pygame.Color("coral")
+            )
             self.screen[screen].blit(fps, (1900, 1000))
         self.update()
 

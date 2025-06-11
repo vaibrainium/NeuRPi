@@ -235,7 +235,8 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         self.intertrial_duration = self.intertrial_duration_function[self.outcome](
-            self.response_time, self.signed_coherence
+            self.response_time,
+            self.signed_coherence,
         )
 
         stage_task_args = {
@@ -259,11 +260,12 @@ class SessionManager:
 
             self.trials_in_block = 0
             self.generate_active_correction_block_schedule(
-                correction_direction, prob=self.active_bias_correction_probability
+                correction_direction,
+                prob=self.active_bias_correction_probability,
             )
             self.signed_coherence = self.block_schedule[self.trials_in_block]
             self.target = int(
-                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
+                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])),
             )
             self.trials_in_block += 1  # incrementing within block counter
 
@@ -272,7 +274,7 @@ class SessionManager:
         ):  # if not correction trial
             # is this start of new trial block?
             if self.trial_counters["attempt"] == 0 or self.trials_in_block == len(
-                self.block_schedule
+                self.block_schedule,
             ):
                 self.in_active_bias_correction_block = (
                     False  # resetting active bias correction block
@@ -281,7 +283,7 @@ class SessionManager:
                 self.generate_block_schedule()
             self.signed_coherence = self.block_schedule[self.trials_in_block]
             self.target = int(
-                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
+                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])),
             )
             self.trials_in_block += 1  # incrementing within block counter
             self.trial_counters["correction"] = 0  # resetting correction counter
@@ -291,12 +293,12 @@ class SessionManager:
         else:
             # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
             self.target = int(
-                np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4))
+                np.sign(np.random.normal(-np.mean(self.rolling_bias) * 2, 0.4)),
             )
             # Repeat probability to opposite side of bias
             self.signed_coherence = self.target * np.abs(self.signed_coherence)
             print(
-                f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \nPassive bias correction with: {self.signed_coherence}"
+                f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \nPassive bias correction with: {self.signed_coherence}",
             )
             # increment correction trial counter
             self.trial_counters["correction"] += 1
@@ -316,7 +318,7 @@ class SessionManager:
             [
                 np.full(num_correction, correction_direction),
                 np.full(num_noncorrection, -correction_direction),
-            ]
+            ],
         )
         np.random.shuffle(self.block_schedule)
 
@@ -402,7 +404,7 @@ class SessionManager:
         self.is_correction_trial = next_trial_vars["is_correction_trial"]
         self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
 
-        # if valid update trial variables and send data to terminal
+        # if valid update trial variables and send data to controller
         if self.valid:
             # update rolling bias
             self.rolling_bias[self.rolling_bias_index] = self.choice
@@ -444,7 +446,7 @@ class SessionManager:
 
             # update reaction time array
             if np.isnan(
-                self.plot_vars["response_time_distribution"][self.signed_coherence]
+                self.plot_vars["response_time_distribution"][self.signed_coherence],
             ):
                 self.plot_vars["response_time_distribution"][self.signed_coherence] = (
                     round(self.response_time, 2)

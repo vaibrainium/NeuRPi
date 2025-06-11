@@ -161,7 +161,7 @@ class Application(mainclass):
             self.main_gui.experiment.setCurrentIndex(0)
 
             self._log_message(
-                f"Loaded {len(list_experiments) - 1} experiments for protocol '{self.main_gui.protocol.currentText()}'"
+                f"Loaded {len(list_experiments) - 1} experiments for protocol '{self.main_gui.protocol.currentText()}'",
             )
         except Exception as e:
             self._log_message(f"Error loading experiments: {e}")
@@ -191,7 +191,7 @@ class Application(mainclass):
             self.main_gui.configuration.setCurrentIndex(0)
 
             self._log_message(
-                f"Loaded {len(list_configurations) - 1} configurations for experiment '{self.main_gui.experiment.currentText()}'"
+                f"Loaded {len(list_configurations) - 1} configurations for experiment '{self.main_gui.experiment.currentText()}'",
             )
         except Exception as e:
             self._log_message(f"Error loading configurations: {e}")
@@ -205,7 +205,6 @@ class Application(mainclass):
             self.current_session_info = session_info
             self._update_session_display(session_info)
             self._log_message(f"Starting experiment for {session_info.subject_name}")
-            # Additional experiment start logic would go here
 
     def verify_session_info(self):
         """Verify and validate session information before starting experiment."""
@@ -267,7 +266,7 @@ class Application(mainclass):
                 "experiment": str_to_code(experiment),
                 "configuration": str_to_code(configuration),
                 "start_time": datetime.now().isoformat(),
-            }
+            },
         )
 
         return session_info
@@ -324,7 +323,11 @@ Start Time: {session_info.start_time}"""
         return None
 
     def add_new_rig(
-        self, id: str = "rig_", task_gui=None, session_info=None, subject=None
+        self,
+        id: str = "rig_",
+        task_gui=None,
+        session_info=None,
+        subject=None,
     ):
         """Add a new rig tab with task GUI."""
         try:
@@ -373,8 +376,8 @@ Start Time: {session_info.start_time}"""
 
     def message_to_taskgui(self, value):
         """Send message to specific task GUI."""
-        if "pilot" in value and value["pilot"] in self.rigs_gui:
-            self.rigs_gui[value["pilot"]].comm_to_taskgui.emit(value)
+        if "rig" in value and value["rig"] in self.rigs_gui:
+            self.rigs_gui[value["rig"]].comm_to_taskgui.emit(value)
 
     # ==================== Subject Management ====================
 
@@ -393,7 +396,7 @@ Start Time: {session_info.start_time}"""
             )
             subject_housing = self.new_subject_form.housing.toPlainText().strip()
             subject_dob = self.new_subject_form.dob.selectedDate().toString(
-                "yyyy-MM-dd"
+                "yyyy-MM-dd",
             )
 
             if subject_name == "":
