@@ -28,13 +28,13 @@ class Prefs:
         """Import saved config file."""
         # Determine config file based on mode if filename not provided
         if not self.filename and self.mode:
-            if self.mode in ["server", "terminal"]:
-                self.filename = "config_terminal.yaml"
-            elif self.mode in ["rig", "pilot"]:
-                self.filename = "config_pilot.yaml"
+            if self.mode in ["controller"]:
+                self.filename = "controller.yaml"
+            elif self.mode in ["rig"]:
+                self.filename = "rig.yaml"
             else:
-                # Default to terminal config
-                self.filename = "config_terminal.yaml"
+                # Default to controller config
+                self.filename = "controller.yaml"
 
         if self.directory and self.filename:
             config_path = Path(self.directory) / self.filename
@@ -45,7 +45,7 @@ class Prefs:
                     return config
                 # If it's a ListConfig, wrap it in a dict
                 return OmegaConf.create(
-                    {"data": config}
+                    {"data": config},
                 )  # If file doesn't exist or no directory/filename specified, return empty config
         return OmegaConf.create({})
 
@@ -132,7 +132,7 @@ def configure_prefs(mode: str = None) -> Prefs:
     Configure the global prefs instance for a specific mode.
 
     Args:
-        mode: The mode to configure for ('server'/'terminal' or 'rig'/'pilot')
+        mode: The mode to configure for ('controller' or 'rig')
 
     Returns:
         The configured prefs instance

@@ -12,13 +12,13 @@ from PyQt6 import QtWidgets
 
 from neurpi.gui.main_gui import Application
 from neurpi.loggers.logger import init_logger
-from neurpi.networking import Net_Node, Terminal_Station
+from neurpi.networking import ControllerStation, Net_Node
 from neurpi.prefs import prefs
 
 
-class Terminal(Application):
+class Controller(Application):
     """
-    Server class to initiate and manage all downstream agents.
+    Controller class to initiate and manage all downstream agents.
     """
 
     def __init__(
@@ -27,7 +27,7 @@ class Terminal(Application):
         super().__init__()
 
         # store instance
-        globals()["_TERMINAL"] = self
+        globals()["_CONTROLLER"] = self
 
         # networking
         self.node = None
@@ -40,7 +40,7 @@ class Terminal(Application):
         self.subjects = {}  # Dict of our open subject objects
 
         # property private attributes
-        self._pilots = None
+        self._rigs = None
 
         # logging
         self.logger = init_logger(self)
@@ -50,7 +50,7 @@ class Terminal(Application):
         self.listens = {
             "STATE": self.l_state,  # A Pi has changed state
             "PING": self.l_ping,  # Someone wants to know if we're alive
-            "CHANGE": self.l_change,  # A change was notified from pilot
+            "CHANGE": self.l_change,  # A change was notified from rig
             "DATA": self.l_data,
             "CONTINUOUS": self.l_data,  # handle continuous data same way as other data
             "STREAM": self.l_data,
@@ -60,7 +60,7 @@ class Terminal(Application):
 
         # Start external communications in own process
         # Has to be after init_network so it makes a new context
-        self.networking = Terminal_Station(self.pilots)
+        self.networking = ControllerStation(self.rigs)
         self.networking.start()
         self.logger.info("Station object Initialized")
 
@@ -73,60 +73,60 @@ class Terminal(Application):
         )
         self.logger.info("Net Node Initialized")
 
-        # send an initial ping looking for our pilots
+        # send an initial ping looking for our rigs
         self.node.send("T", "INIT")
 
-        self.logger.info("Terminal Initialized")
+        self.logger.info("Controller Initialized")
 
-        # if we don't have any pilots, pop a dialogue to declare one
-        if len(self.pilots) == 0:
-            # TODO: Implement communication with GUI to add new pilot
+        # if we don't have any rigs, pop a dialogue to declare one
+        if len(self.rigs) == 0:
+            # TODO: Implement communication with GUI to add new rig
             pass
 
     ###################### Properties ######################
 
     @property
-    def pilots(self) -> odict:
+    def rigs(self) -> odict:
         """
-        A dictionary mapping pilot ID to its attributes, including a list of its subjects assigned to it, its IP, etc.
+        A dictionary mapping rig ID to its attributes, including a list of its subjects assigned to it, its IP, etc.
 
         Returns:
-            dict: like ``self.pilots['pilot_id'] = {'subjects': ['subject_0', 'subject_1'], 'ip': '192.168.0.101'}``
+            dict: like ``self.rigs['rig_id'] = {'subjects': ['subject_0', 'subject_1'], 'ip': '192.168.0.101'}``
 
         """
         # try to load, if none exists make one
-        if self._pilots is None:
-            # TODO: get pilot file with GUI
-            self._pilots = odict()
-            # self._pilots["rig_2"] = {"ip": "10.155.207.72"}
-        return self._pilots
+        if self._rigs is None:
+            # TODO: get rig file with GUI
+            self._rigs = odict()
+            # self._rigs["rig_2"] = {"ip": "10.155.207.72"}
+        return self._rigs
 
-    def new_pilot(
+    def new_rig(
         self,
         name: typing.Optional[str] = None,
         ip: str = "",
-        pilot_prefs: typing.Optional[dict] = None,
+        rig_prefs: typing.Optional[dict] = None,
     ):
         """
-        Make a new entry in :attr:`.Terminal.pilots`
+        Make a new entry in :attr:`.Controller.rigs`
         Args:
             ip (str): Optional. if given, stored in db.
-            name (str): If None, prompted for a name, otherwise used for entry in pilot DB.
+            name (str): If None, prompted for a name, otherwise used for entry in rig DB.
         """
-        self._pilots[name] = {
+        self._rigs[name] = {
             "ip": ip,
-            "prefs": pilot_prefs,
+            "prefs": rig_prefs,
         }
 
     ################################ inter-object methods ################################
-    def ping_pilot(self, pilot):
-        self.node.send(pilot, "PING")
+    def ping_rig(self, rig):
+        self.node.send(rig, "PING")
 
     def heartbeat(self, once=False):
         """
-        Perioducally send an ``INIT`` message that checks the status of connected pilots
+        Perioducally send an ``INIT`` message that checks the status of connected rigs
 
-        sent with frequency according to :attr:`.Terminal.heartbeat_dur`
+        sent with frequency according to :attr:`.Controller.heartbeat_dur`
 
         Args:
             once (bool): if True, do a single heartbeat but don't start a thread to do more.
@@ -150,55 +150,55 @@ class Terminal(Application):
 
     def l_state(self, value):
         """
-        A Pilot has changed state, keep track of it.
+        A rig has changed state, keep track of it.
 
         Args:
             value (dict): dict containing `state` .
 
         """
-        # update the pilot button
-        self.logger.debug(f"updating pilot state: {value}")
-        if value["pilot"] not in self.pilots.keys():
-            self.logger.info("Got state info from an unknown pilot, adding...")
-            self.new_pilot(name=value["pilot"])
-        self.pilots[value["pilot"]]["state"] = value["state"]
+        # update the rig button
+        self.logger.debug(f"updating rig state: {value}")
+        if value["rig"] not in self.rigs.keys():
+            self.logger.info("Got state info from an unknown rig, adding...")
+            self.new_rig(name=value["rig"])
+        self.rigs[value["rig"]]["state"] = value["state"]
 
         if value["state"] == "INITIALIZED":
             # Waiting for rig to initiate hardware and start session
-            self.rigs_gui[value["pilot"]].start_experiment()
+            self.rigs_gui[value["rig"]].start_experiment()
 
         # QT Change
         self.update_rig_availability()
 
     def l_handshake(self, value):
         """
-        Pilot is sending its IP and state on startup.
-        If we haven't heard of this pilot before, make a new entry in :attr:`~.Terminal.pilots`
+        Rig is sending its IP and state on startup.
+        If we haven't heard of this rig before, make a new entry in :attr:`~.Controller.rigs`
 
         Args:
             value (dict): dict containing `ip` and `state`
 
         """
         print("HANDSHAKE RECEIVED from")
-        print(value["pilot"])
-        if value["pilot"] in self.pilots.keys():
-            self.pilots[value["pilot"]]["ip"] = value.get("ip", "")
-            self.pilots[value["pilot"]]["state"] = value.get("state", "")
-            self.pilots[value["pilot"]]["prefs"] = value.get("prefs", {})
+        print(value["rig"])
+        if value["rig"] in self.rigs.keys():
+            self.rigs[value["rig"]]["ip"] = value.get("ip", "")
+            self.rigs[value["rig"]]["state"] = value.get("state", "")
+            self.rigs[value["rig"]]["prefs"] = value.get("prefs", {})
 
         else:
-            self.new_pilot(
-                name=value["pilot"],
+            self.new_rig(
+                name=value["rig"],
                 ip=value.get("ip", ""),
-                pilot_prefs=value.get("prefs", {}),
+                rig_prefs=value.get("prefs", {}),
             )
         self.update_rig_availability()
 
     def l_data(self, value):
         """
-        Incoming data from pilot.
+        Incoming data from rig.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identification.
+        `value` should have `subject` and `rig` field added to dictionary for identification.
 
         Any key in `value` that matches a column in the subject's trial data table will be saved.
 
@@ -210,9 +210,9 @@ class Terminal(Application):
 
     def l_change(self, value):
         """
-        Incoming change from pilot.
+        Incoming change from rig.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identification.
+        `value` should have `subject` and `rig` field added to dictionary for identification.
 
         """
         # try:
@@ -222,9 +222,9 @@ class Terminal(Application):
 
     def l_session_files(self, value):
         """
-        Incoming session files from pilot.
+        Incoming session files from rig.
 
-        `value` should have `subject` and `pilot` field added to dictionary for identification.
+        `value` should have `subject` and `rig` field added to dictionary for identification.
 
         """
         try:
@@ -252,7 +252,7 @@ class Terminal(Application):
             self.node.send(to=message["to"], key=message["key"], value=message["value"])
 
     def update_rig_availability(self):
-        for i, key in enumerate(self.pilots.keys()):
+        for i, key in enumerate(self.rigs.keys()):
             display_name = self.code_to_str(key)
             if self.main_gui.rig_id.findText(display_name) == -1:
                 # Add Rig option to the GUI
@@ -328,7 +328,7 @@ class Terminal(Application):
     def start_experiment(self):
         session_info = self.verify_session_info()
         if session_info:
-            if self.pilots[session_info.rig_id]["state"] == "IDLE":
+            if self.rigs[session_info.rig_id]["state"] == "IDLE":
                 # Gathering session configuration
                 session_config, string_session_config = self.prepare_session_config(
                     session_info,
@@ -362,24 +362,14 @@ class Terminal(Application):
                     subject=self.subjects[session_info.subject_name],
                 )
                 self.rigs_gui[session_info.rig_id].set_rig_configuration(
-                    self.pilots[session_info.rig_id]["prefs"],
+                    self.rigs[session_info.rig_id]["prefs"],
                 )
-
-                # # Waiting for rig to initiate hardware and start session
-                # while not self.pilots[session_info.rig_id]["state"] == "RUNNING":
-                #     time.sleep(0.1)
-                #     if self.pilots[session_info.rig_id]["state"] == "ERROR":
-                #         self.critical_message("Rig could not be started because of error")
-                #         return
-
-                # self.rigs_gui[session_info.rig_id].start_experiment()
-
             else:
                 self.critical_message("Rig is not available to start experiment")
 
     def closeEvent(self, event):
         """
-        When Closing the Terminal Window, close any running subject objects,
+        When Closing the Controller Window, close any running subject objects,
         'KILL' our networking object.
         """
         # Save the window geometry, to be optionally restored next time
@@ -404,21 +394,21 @@ def signal_handler(sig, frame):
     """Handle SIGINT (Ctrl+C) to gracefully exit the application"""
     print("\nReceived Ctrl+C, shutting down gracefully...")
 
-    # Get the global terminal instance if it exists
-    global _TERMINAL
-    if _TERMINAL is not None:
+    # Get the global controller instance if it exists
+    global _CONTROLLER
+    if _CONTROLLER is not None:
         try:
             # Close all subjects files
-            for m in _TERMINAL.subjects.values():
+            for m in _CONTROLLER.subjects.values():
                 if hasattr(m, "running") and m.running is True:
                     if hasattr(m, "stop_run"):
                         m.stop_run()
 
             # Stop networking
-            if hasattr(_TERMINAL, "node") and _TERMINAL.node is not None:
-                _TERMINAL.node.send(key="KILL")
+            if hasattr(_CONTROLLER, "node") and _CONTROLLER.node is not None:
+                _CONTROLLER.node.send(key="KILL")
                 time.sleep(0.5)
-                _TERMINAL.node.release()
+                _CONTROLLER.node.release()
         except Exception as e:
             print(f"Error during shutdown: {e}")
 
@@ -458,14 +448,14 @@ def main():
     # Set up signal handler for Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
 
-    app = QtWidgets.QApplication(sys.argv)  # Configure prefs for terminal mode
+    app = QtWidgets.QApplication(sys.argv)  # Configure prefs for controller mode
     from neurpi.prefs import configure_prefs
 
-    configure_prefs(mode="terminal")
+    configure_prefs(mode="controller")
 
-    # Store the terminal instance globally for signal handler access
-    global _TERMINAL
-    _TERMINAL = Terminal()
+    # Store the controller instance globally for signal handler access
+    global _CONTROLLER
+    _CONTROLLER = Controller()
 
     sys.exit(app.exec())
 
@@ -473,6 +463,6 @@ def main():
 if __name__ == "__main__":
     import sys
 
-    _TERMINAL = None
+    _CONTROLLER = None
 
     main()

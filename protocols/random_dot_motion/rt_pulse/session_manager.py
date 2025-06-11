@@ -214,7 +214,8 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         stage_task_args, stage_stimulus_args = {}, {}
         self.intertrial_duration = self.intertrial_duration_function[self.outcome](
-            self.response_time, self.signed_coherence
+            self.response_time,
+            self.signed_coherence,
         )
 
         stage_task_args = {
@@ -228,25 +229,25 @@ class SessionManager:
         if not self.is_correction_trial:  # if not correction trial
             # is this start of new trial block?
             if self.trials_in_block == 0 or self.trials_in_block == len(
-                self.block_schedule
+                self.block_schedule,
             ):
                 self.trials_in_block = 0
                 self.generate_block_schedule()
             self.signed_coherence = self.block_schedule[self.trials_in_block]
             self.target = int(
-                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
+                np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])),
             )
             self.trials_in_block += 1  # incrementing within block counter
             self.trial_counters["correction"] = 0  # resetting correction counter
         else:
             # drawing repeat trial with direction from a normal distribution with mean of against rolling bias
             self.target = int(
-                np.sign(np.random.normal(-np.mean(self.rolling_bias), 0.5))
+                np.sign(np.random.normal(-np.mean(self.rolling_bias), 0.5)),
             )
             # Repeat probability to opposite side of bias
             self.signed_coherence = self.target * np.abs(self.signed_coherence)
             print(
-                f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \nPassive bias correction with: {self.signed_coherence}"
+                f"Rolling choices: {self.rolling_bias} with mean {np.mean(self.rolling_bias)} \nPassive bias correction with: {self.signed_coherence}",
             )
             # increment correction trial counter
             self.trial_counters["correction"] += 1
@@ -335,7 +336,7 @@ class SessionManager:
         # check if next trial is correction trial
         self.is_correction_trial = False
 
-        # if valid update trial variables and send data to terminal
+        # if valid update trial variables and send data to controller
         if self.valid:
             # update rolling bias
             self.rolling_bias[self.rolling_bias_index] = self.choice
@@ -378,7 +379,7 @@ class SessionManager:
 
             # update reaction time array
             if np.isnan(
-                self.plot_vars["response_time_distribution"][self.signed_coherence]
+                self.plot_vars["response_time_distribution"][self.signed_coherence],
             ):
                 self.plot_vars["response_time_distribution"][self.signed_coherence] = (
                     round(self.response_time, 2)

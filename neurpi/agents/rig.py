@@ -4,17 +4,17 @@ import threading
 import types
 
 from neurpi.loggers.logger import init_logger
-from neurpi.networking import Net_Node, Pilot_Station
+from neurpi.networking import Net_Node, RigStation
 from neurpi.prefs import prefs
 
 
-class Pilot:
+class rig:
     def __init__(self):
         self.name = prefs.get("NAME")
         self.child = prefs.get("LINEAGE") == "CHILD"
         self.parentid = prefs.get("PARENTID") if self.child else "T"
         self.logger = init_logger(self)
-        self.logger.debug("Pilot logger initialized")
+        self.logger.debug("rig logger initialized")
 
         # Threading and task management
         self.stage_block = threading.Event()
@@ -25,7 +25,7 @@ class Pilot:
         # Networking
         self.listens = self._initialize_listens()
         # self._load_plugins(prefs.get("PLUGINS", []))
-        self.networking = Pilot_Station()
+        self.networking = RigStation()
         self.networking.start()
         self.node = Net_Node(
             id=f"_{self.name}",
@@ -34,7 +34,7 @@ class Pilot:
             listens=self.listens,
             instance=False,
         )
-        self.logger.debug("Pilot networking initialized")
+        self.logger.debug("rig networking initialized")
 
         # State and session data
         self.state = "IDLE"
@@ -105,9 +105,9 @@ class Pilot:
                 self.logger.exception(f"Failed to load plugin '{module_name}': {e}")
 
     def handshake(self):
-        """Send a handshake message to the terminal."""
+        """Send a handshake message to the controller."""
         hello = {
-            "pilot": self.name,
+            "rig": self.name,
             "ip": self.ip,
             "state": self.state,
             "prefs": prefs.get(),
@@ -115,7 +115,7 @@ class Pilot:
         self.node.send(self.parentid, "HANDSHAKE", value=hello)
 
     def update_state(self):
-        """Send the current state to the terminal."""
+        """Send the current state to the controller."""
         self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
     ############################### LISTEN FUNCTIONS ########################################
@@ -134,7 +134,7 @@ class Pilot:
         self.logger.debug(f"Handler registered for message type: '{key}'")
 
     def l_start(self, value):
-        """Handle task start request from terminal."""
+        """Handle task start request from controller."""
         if self.state == "RUNNING" or self.running.is_set():
             self.logger.warning("Task already running. Cannot start new task")
             return
@@ -169,18 +169,18 @@ class Pilot:
             self._handle_task_error(f"Could not initialize task: {e}")
 
     def l_stop(self, value):
-        """Handle task stop request from terminal."""
+        """Handle task stop request from controller."""
         self.running.clear()
         self.stopping.set()
         self.state = "IDLE"
         self.update_state()
 
     def l_param(self, value):
-        """Handle parameter update from terminal."""
+        """Handle parameter update from controller."""
         # TODO: Placeholder for handling parameter updates
 
     def l_event(self, value):
-        """Handle events sent from the terminal."""
+        """Handle events sent from the controller."""
         key = value.get("key")
         if key == "PAUSE":
             self.running.clear()
@@ -191,7 +191,7 @@ class Pilot:
             self.state = "RUNNING"
             self.update_state()
         elif key == "HARDWARE" and self.task:
-            self.task.handle_terminal_request(value["value"])
+            self.task.handle_controller_request(value["value"])
 
     ############################### SECONDARY FUNCTIONS ########################################
     def convert_str_to_module(self, module_string):
@@ -213,7 +213,7 @@ class Pilot:
         """
         Start running task under new thread
         initiate the task, and progress through each stage of task with `task.stages.next`
-        send data to terminal after every stage
+        send data to controller after every stage
         waits for the task to clear `stage_block` between stages
 
         """
@@ -254,9 +254,9 @@ class Pilot:
         return data
 
     def _send_stage_data(self, data):
-        """Send data to the terminal."""
+        """Send data to the controller."""
         if data:
-            data.update({"pilot": self.name, "subject": self.session_info.subject_name})
+            data.update({"rig": self.name, "subject": self.session_info.subject_name})
             self.node.send("T", "DATA", data)
 
     def _did_trial_end(self, data):
@@ -273,13 +273,13 @@ class Pilot:
                 for file_name, file_path in self.config.FILES.items()
             }
             value = {
-                "pilot": self.name,
+                "rig": self.name,
                 "subject": self.session_info.subject_name,
                 "session_files": session_files,
             }
             self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})
         except Exception:
-            self.logger.exception("Failed to send session files to terminal.")
+            self.logger.exception("Failed to send session files to controller.")
 
     def _cleanup_task(self):
         """Clean up resources after the task ends."""
@@ -293,14 +293,15 @@ class Pilot:
 
 
 def main():
-    # Configure prefs for pilot mode
+    # Configure prefs for rig mode
     from neurpi.prefs import configure_prefs
 
-    configure_prefs(mode="pilot")    quitting = threading.Event()
+    configure_prefs(mode="rig")
+    quitting = threading.Event()
     quitting.clear()
     try:
-        pi = Pilot()
-        # handshake is already called during Pilot initialization
+        pi = rig()
+        # handshake is already called during rig initialization
 
         quitting.wait()
 

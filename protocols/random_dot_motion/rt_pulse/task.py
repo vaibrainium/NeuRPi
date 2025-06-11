@@ -125,8 +125,8 @@ class Task:
         return init_successful
 
     # Reward management from GUI
-    def handle_terminal_request(self, message: dict):
-        """Handle hardware request from terminal based on received message"""
+    def handle_controller_request(self, message: dict):
+        """Handle hardware request from controller based on received message"""
         # Reward related changes
         if message["key"] == "reward_left":
             self.managers["hardware"].reward_left(message["value"])
@@ -167,7 +167,7 @@ class Task:
             self.config.SUBJECT["experiment"],
             self.config.SUBJECT["session"],
         )
-        # since main storage is on server, we will rewrite the directory if already exists assuming that data is already on the server.
+        # since main storage is on controller, we will rewrite the directory if already exists assuming that data is already on the controller.
         if data_path.exists() and data_path.is_dir():
             # If it exists, delete it and its contents
             for item in data_path.iterdir():
