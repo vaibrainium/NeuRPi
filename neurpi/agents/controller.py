@@ -162,10 +162,11 @@ class Controller(Application):
             self.logger.info("Got state info from an unknown rig, adding...")
             self.new_rig(name=value["rig"])
         self.rigs[value["rig"]]["state"] = value["state"]
-
         if value["state"] == "INITIALIZED":
             # Waiting for rig to initiate hardware and start session
-            self.rigs_gui[value["rig"]].start_experiment()
+            # Only call start_experiment if the rig GUI exists (experiment was started from GUI)
+            if value["rig"] in self.rigs_gui:
+                self.rigs_gui[value["rig"]].start_experiment()
 
         # QT Change
         self.update_rig_availability()

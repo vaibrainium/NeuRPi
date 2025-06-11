@@ -453,8 +453,8 @@ class Station(multiprocessing.Process):
 
             if "Controller" in self.__class__.__name__:
                 configure_prefs("controller")
-            elif "Eig" in self.__class__.__name__:
-                configure_prefs("Rig")
+            elif "Rig" in self.__class__.__name__:
+                configure_prefs("rig")
             else:
                 # Default to controller mode
                 configure_prefs("controller")
