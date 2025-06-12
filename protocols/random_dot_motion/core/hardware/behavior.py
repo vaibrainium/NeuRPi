@@ -89,7 +89,6 @@ class Behavior:
                                 right_dur,
                             )
                         )
-            # time.sleep(0.001)
 
     def stop(self):
         """
