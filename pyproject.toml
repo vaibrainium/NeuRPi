@@ -36,6 +36,8 @@ dependencies = [
     "pyserial>=3.5",
     "pyzmq>=25.0.0",
     "tornado>=6.0.0",
+    "lz4==4.4.4",
+    "msgpack==1.1.0",
     "h5py>=3.8.0",
     "sounddevice>=0.4.6",
     "tables>=3.8.0",
