@@ -151,7 +151,7 @@ class Task:
             print(f"[INFO] Updated full reward volume to {value}")
 
         elif key == "calibrate_reward":
-            if self.config.SUBJECT["name"].lower() == "xxx":
+            if self.config.SUBJECT["id"].lower() == "xxx":
                 self.managers["hardware"].start_calibration_sequence()
 
         # LED-related
@@ -209,7 +209,7 @@ class Task:
         self.config.FILES = {}
         data_path = Path(
             prefs.get("DATADIR"),
-            self.config.SUBJECT["name"],
+            self.config.SUBJECT["id"],
             self.config.SUBJECT["protocol"],
             self.config.SUBJECT["experiment"],
             self.config.SUBJECT["session"],
@@ -226,7 +226,7 @@ class Task:
         for file_id, file in self.config.DATAFILES.items():
             self.config.FILES[file_id] = Path(
                 data_path,
-                self.config.SUBJECT["name"] + file,
+                self.config.SUBJECT["id"] + file,
             )
         self.config.FILES["rolling_perf_before"] = Path(
             data_path,

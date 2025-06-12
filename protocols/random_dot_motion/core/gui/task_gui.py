@@ -40,7 +40,7 @@ class TaskGUI(rigclass):
             self.rig = Ui_rig()
             self.rig.setupUi(self)
             self.rig.close_experiment.hide()
-            self.rig.subject_id.setText(f"Subject ID: {self.subject.name}")
+            self.rig.subject_id.setText(f"Subject ID: {self.subject.id}")
             self.rig.age.setText(f"Age: {(self.subject.age)}")
             self.rig.baseline_weight.setText(
                 f"% Baseline Weight: {self.subject.prct_weight!s}%",

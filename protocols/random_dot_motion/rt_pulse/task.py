@@ -142,7 +142,7 @@ class Task:
             self.managers["session"].full_reward_volume = message["value"]
             print(f"NEW REWARD VALUE IS {self.managers['session'].full_reward_volume}")
         elif message["key"] == "calibrate_reward":
-            if self.config.SUBJECT["name"] in ["XXX", "xxx"]:
+            if self.config.SUBJECT["id"] in ["XXX", "xxx"]:
                 self.managers["hardware"].start_calibration_sequence()
 
         # Lick related changes
@@ -162,7 +162,7 @@ class Task:
         self.config.FILES = {}
         data_path = Path(
             prefs.get("DATADIR"),
-            self.config.SUBJECT["name"],
+            self.config.SUBJECT["id"],
             self.config.SUBJECT["protocol"],
             self.config.SUBJECT["experiment"],
             self.config.SUBJECT["session"],
@@ -179,7 +179,7 @@ class Task:
         for file_id, file in self.config.DATAFILES.items():
             self.config.FILES[file_id] = Path(
                 data_path,
-                self.config.SUBJECT["name"] + file,
+                self.config.SUBJECT["id"] + file,
             )
         self.config.FILES["rolling_perf_before"] = Path(
             data_path,
