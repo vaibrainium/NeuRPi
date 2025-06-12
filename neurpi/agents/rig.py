@@ -257,7 +257,7 @@ class Rig:
     def _send_stage_data(self, data):
         """Send data to the controller."""
         if data:
-            data.update({"rig": self.name, "subject": self.session_info.subject_name})
+            data.update({"rig": self.name, "subject": self.session_info.subject_id})
             self.node.send("T", "DATA", data)
 
     def _did_trial_end(self, data):
@@ -275,7 +275,7 @@ class Rig:
             }
             value = {
                 "rig": self.name,
-                "subject": self.session_info.subject_name,
+                "subject": self.session_info.subject_id,
                 "session_files": session_files,
             }
             self.node.send("T", "SESSION_FILES", value, flags={"NOLOG": True})

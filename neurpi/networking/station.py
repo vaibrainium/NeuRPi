@@ -349,33 +349,73 @@ class Station(multiprocessing.Process):
             msg (:class:`.Message`):
         """
         self.logger.info("Received kill request")
-
         self.closing.set()
 
-        # Stopping the loop should kill the process, as it's what's holding us in run()
-        self.listener.stop_on_recv()
-        self.listener.close()
+        # First close the sockets properly
+        try:
+            if self.listener:
+                self.listener.stop_on_recv()
+                self.listener.close()
 
-        if self.pusher:
-            self.listener.stop_on_recv()
-            self.pusher.close()
+            if self.pusher and hasattr(self.pusher, "close"):
+                self.pusher.stop_on_recv()
+                self.pusher.close()
 
-        self.loop.add_callback(lambda: IOLoop.instance().stop())
-        self.logger.debug(self.loop)
+            # Close the underlying ZMQ sockets
+            if hasattr(self, "context") and self.context:
+                # Terminate all sockets in the context
+                self.context.term()
+
+        except Exception as e:
+            self.logger.error(f"Error closing sockets: {e}")
+
+        # Stop the IOLoop
+        try:
+            if self.loop:
+                self.loop.add_callback(lambda: IOLoop.instance().stop())
+                self.logger.debug(self.loop)
+        except Exception as e:
+            self.logger.error(f"Error stopping IOLoop: {e}")
+
         self.logger.info("Stopped IOLoop")
 
     def release(self):
+        """Enhanced release method with robust cleanup"""
         self.closing.set()
 
-        # sending a message to ourselves from the parent process to this one
-        ctx = zmq.Context().instance()
-        sock = ctx.socket(zmq.DEALER)
-        sock.setsockopt_string(zmq.IDENTITY, f"{self.id}/closer")
-        sock.connect(f"tcp://localhost:{self.listen_port}")
-        sock.send_multipart([self.id.encode("utf-8", b"CLOSING")])
-        sock.close()
-        # Terminate mulitiprocess.Process()
-        self.terminate()
+        try:
+            # First try graceful shutdown by sending CLOSING message to ourselves
+            ctx = zmq.Context().instance()
+            sock = ctx.socket(zmq.DEALER)
+            sock.setsockopt_string(zmq.IDENTITY, f"{self.id}/closer")
+            sock.setsockopt(zmq.LINGER, 0)  # Don't wait for pending messages
+
+            try:
+                sock.connect(f"tcp://localhost:{self.listen_port}")
+                sock.send_multipart([self.id.encode("utf-8"), b"CLOSING"])
+                self.logger.debug("Sent CLOSING message to self")
+            except zmq.ZMQError as e:
+                self.logger.warning(f"Failed to send CLOSING message: {e}")
+            finally:
+                sock.close()
+
+            # Give the process a moment to close gracefully
+            time.sleep(0.1)
+
+        except Exception as e:
+            self.logger.error(f"Error during graceful shutdown: {e}")
+
+        finally:
+            # Force termination if still alive
+            if self.is_alive():
+                self.logger.warning("Process still alive, forcing termination")
+                self.terminate()
+
+                # Wait a bit then force kill if necessary
+                time.sleep(0.5)
+                if self.is_alive():
+                    self.logger.warning("Process still alive after terminate, using kill")
+                    self.kill()
 
     def _check_stop(self):
         """
@@ -471,7 +511,23 @@ class Station(multiprocessing.Process):
             # connects it with its antecedents.
             self.listener = self.context.socket(zmq.ROUTER)
             self.listener.setsockopt_string(zmq.IDENTITY, self.id)
-            self.listener.bind(f"tcp://*:{self.listen_port}")
+
+            # Enable socket reuse to handle crashes more gracefully
+            self.listener.setsockopt(zmq.LINGER, 0)  # Don't wait for pending messages
+
+            try:
+                self.listener.bind(f"tcp://*:{self.listen_port}")
+            except zmq.ZMQError as e:
+                if "Address already in use" in str(e):
+                    self.logger.warning(f"Port {self.listen_port} already in use, waiting and retrying...")
+                    time.sleep(1.0)  # Wait for previous instance to cleanup
+                    try:
+                        self.listener.bind(f"tcp://*:{self.listen_port}")
+                    except zmq.ZMQError:
+                        self.logger.error(f"Failed to bind to port {self.listen_port} after retry")
+                        raise
+                else:
+                    raise
             self.listener = ZMQStream(self.listener, self.loop)
             self.listener.on_recv(self.handle_listen)
 

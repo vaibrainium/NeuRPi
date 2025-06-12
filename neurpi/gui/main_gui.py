@@ -191,11 +191,11 @@ class Application(mainclass):
         if session_info:
             self.current_session_info = session_info
             self._update_session_display(session_info)
-            self._log_message(f"Starting experiment for {session_info.subject_name}")
+            self._log_message(f"Starting experiment for {session_info.subject_id}")
 
     def verify_session_info(self):
         """Verify and validate session information before starting experiment."""
-        subject_name = self.main_gui.subject_name.toPlainText().strip().upper()
+        subject_id = self.main_gui.subject_id.toPlainText().strip().upper()
         subject_weight = self.main_gui.subject_weight.toPlainText().strip()
         protocol = self.main_gui.protocol.currentText()
         experiment = self.main_gui.experiment.currentText()
@@ -203,13 +203,13 @@ class Application(mainclass):
         rig_id = self.main_gui.rig_id.currentText()
 
         # Validation checks
-        if subject_name == "":
+        if subject_id == "":
             self.critical_message("Enter Subject ID")
             return None
 
-        if not Path(Path(prefs.get("DATADIR", "data"), subject_name)).exists():
+        if not Path(Path(prefs.get("DATADIR", "data"), subject_id)).exists():
             self.critical_message(
-                f"'{subject_name}' does not exist. Please create new subject.",
+                f"'{subject_id}' does not exist. Please create new subject.",
             )
             self.clear_variables()
             return None
@@ -246,7 +246,7 @@ class Application(mainclass):
         # Create session info
         session_info = OmegaConf.create(
             {
-                "subject_name": subject_name,
+                "subject_id": subject_id,
                 "subject_weight": weight_value,
                 "rig_id": str_to_code(rig_id),
                 "protocol": str_to_code(protocol),
@@ -260,7 +260,7 @@ class Application(mainclass):
 
     def clear_variables(self):
         """Clear all input variables."""
-        self.main_gui.subject_name.clear()
+        self.main_gui.subject_id.clear()
         self.main_gui.subject_weight.clear()
         self.main_gui.protocol.setCurrentIndex(0)
         self.main_gui.experiment.clear()
@@ -280,7 +280,7 @@ class Application(mainclass):
         """Update the session information display."""
         if hasattr(self.main_gui, "session_info_display"):
             display_text = f"""Current Session:
-Subject: {session_info.subject_name}
+Subject: {session_info.subject_id}
 Weight: {session_info.subject_weight}g
 Protocol: {code_to_str(session_info.protocol)}
 Experiment: {code_to_str(session_info.experiment)}
@@ -377,7 +377,7 @@ Start Time: {session_info.start_time}"""
     def create_new_subject(self):
         """Create a new subject with the provided information."""
         try:
-            subject_name = self.new_subject_form.name.toPlainText().strip().upper()
+            subject_id = self.new_subject_form.name.toPlainText().strip().upper()
             subject_identification = (
                 self.new_subject_form.identification.toPlainText().strip()
             )
@@ -386,16 +386,16 @@ Start Time: {session_info.start_time}"""
                 "yyyy-MM-dd",
             )
 
-            if subject_name == "":
+            if subject_id == "":
                 self.critical_message("Please Enter Subject ID")
                 return
 
             # Check if subject already exists
             data_dir = prefs.get("DATADIR", "data")
-            subject_dir = Path(data_dir, subject_name)
+            subject_dir = Path(data_dir, subject_id)
 
             if subject_dir.exists():
-                self.critical_message(f"{subject_name} already exists")
+                self.critical_message(f"{subject_id} already exists")
                 return
 
             # Create subject directory structure
@@ -405,7 +405,7 @@ Start Time: {session_info.start_time}"""
 
             # Create subject info file
             info_dict = {
-                "Name": subject_name,
+                "Name": subject_id,
                 "Identification": "N/A"
                 if subject_identification == ""
                 else subject_identification,
@@ -438,7 +438,7 @@ Start Time: {session_info.start_time}"""
             # Success message
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Icon.Information)
-            msg.setText(f"{subject_name} created successfully!")
+            msg.setText(f"{subject_id} created successfully!")
             msg.setWindowTitle("Success")
             msg.exec()
 
@@ -448,9 +448,9 @@ Start Time: {session_info.start_time}"""
             self.new_subject_form.housing.clear()
             self.new_subject_form.dob.setSelectedDate(QtCore.QDate.currentDate())
             self.new_subject_window.hide()
-            self.main_gui.subject_name.setPlainText(subject_name)
+            self.main_gui.subject_id.setPlainText(subject_id)
 
-            self._log_message(f"Created new subject: {subject_name}")
+            self._log_message(f"Created new subject: {subject_id}")
 
         except Exception as e:
             self._log_message(f"Error creating subject: {e}")

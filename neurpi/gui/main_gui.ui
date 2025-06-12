@@ -204,7 +204,7 @@
               </property>
               <layout class="QGridLayout" name="subject_setup_layout">
                <item row="0" column="0">
-                <widget class="QLabel" name="subject_name_label">
+                <widget class="QLabel" name="subject_id_label">
                  <property name="text">
                   <string>Subject Name:</string>
                  </property>
@@ -218,7 +218,7 @@
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QTextEdit" name="subject_name">
+                <widget class="QTextEdit" name="subject_id">
                  <property name="maximumSize">
                   <size>
                    <width>16777215</width>
@@ -497,7 +497,7 @@ QPushButton:pressed {
   <tabstop>configuration</tabstop>
   <tabstop>rig_id</tabstop>
   <tabstop>response_mode</tabstop>
-  <tabstop>subject_name</tabstop>
+  <tabstop>subject_id</tabstop>
   <tabstop>create_new_subject</tabstop>
   <tabstop>subject_weight</tabstop>
   <tabstop>start_experiment</tabstop>

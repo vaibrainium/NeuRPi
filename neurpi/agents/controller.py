@@ -260,35 +260,9 @@ class Controller(Application):
             session_config (OmegaConfdict): Configuration dictionary to pass to rig
 
         """
-        # Import the configuration file directly using file path instead of module import
-        config_file_path = Path(
-            Path.cwd(),
-            "protocols",
-            session_info.protocol,
-            session_info.experiment,
-            "config",
-            f"{session_info.configuration}.py",
+        return importlib.import_module(
+            f"protocols.{session_info.protocol}.{session_info.experiment}.config.{session_info.configuration}",
         )
-
-        return importlib.import_module(config_file_path)
-
-        # Read the configuration file as a string
-        with open(config_file_path) as f:
-            string_session_config = f.read()
-
-        # Execute the configuration file to get the module-like object
-        config_namespace = {}
-        exec(string_session_config, config_namespace)
-
-        # Create a module-like object from the namespace
-        import types
-
-        session_config = types.ModuleType("session_config")
-        for key, value in config_namespace.items():
-            if not key.startswith("__"):
-                setattr(session_config, key, value)
-
-        return session_config, string_session_config
 
     def initiate_subject(self, session_info, session_config):
         """
@@ -304,11 +278,11 @@ class Controller(Application):
         subject_module = importlib.import_module(
             f"protocols.{session_info.protocol}.core.data_model.subject",
         )
-        self.subjects[session_info.subject_name] = subject_module.Subject(
+        self.subjects[session_info.subject_id] = subject_module.Subject(
             session_info=session_info,
             session_config=session_config,
         )
-        subject_config = self.subjects[session_info.subject_name].initiate_config()
+        subject_config = self.subjects[session_info.subject_id].initiate_config()
         return subject_config
 
     def verify_hardware_requirements(self, session_config):
@@ -347,7 +321,7 @@ class Controller(Application):
                     id=session_info.rig_id,
                     task_gui=gui_module.TaskGUI,
                     session_info=session_info,
-                    subject=self.subjects[session_info.subject_name],
+                    subject=self.subjects[session_info.subject_id],
                 )
                 self.rigs_gui[session_info.rig_id].set_rig_configuration(
                     self.rigs[session_info.rig_id]["prefs"],
@@ -378,27 +352,59 @@ class Controller(Application):
         event.accept()
 
 
+def _cleanup_subjects():
+    """Helper function to cleanup subjects"""
+    global _CONTROLLER
+    if not _CONTROLLER:
+        return
+
+    for m in _CONTROLLER.subjects.values():
+        if hasattr(m, "running") and m.running is True:
+            if hasattr(m, "stop_run"):
+                m.stop_run()
+
+def _cleanup_networking():
+    """Helper function to cleanup networking"""
+    global _CONTROLLER
+    if not _CONTROLLER:
+        return
+
+    # Stop networking station
+    if hasattr(_CONTROLLER, "networking") and _CONTROLLER.networking is not None:
+        try:
+            _CONTROLLER.networking.send(key="KILL")
+            time.sleep(0.2)
+            if _CONTROLLER.networking.is_alive():
+                _CONTROLLER.networking.terminate()
+                _CONTROLLER.networking.join(timeout=1.0)
+                if _CONTROLLER.networking.is_alive():
+                    print("Force killing networking process...")
+                    _CONTROLLER.networking.kill()
+        except Exception as e:
+            print(f"Error stopping networking: {e}")
+            try:
+                _CONTROLLER.networking.kill()
+            except Exception:
+                pass
+
+    # Stop node
+    if hasattr(_CONTROLLER, "node") and _CONTROLLER.node is not None:
+        try:
+            _CONTROLLER.node.send(key="KILL")
+            time.sleep(0.2)
+            _CONTROLLER.node.release()
+        except Exception as e:
+            print(f"Error stopping node: {e}")
+
 def signal_handler(sig, frame):
     """Handle SIGINT (Ctrl+C) to gracefully exit the application"""
     print("\nReceived Ctrl+C, shutting down gracefully...")
 
-    # Get the global controller instance if it exists
-    global _CONTROLLER
-    if _CONTROLLER is not None:
-        try:
-            # Close all subjects files
-            for m in _CONTROLLER.subjects.values():
-                if hasattr(m, "running") and m.running is True:
-                    if hasattr(m, "stop_run"):
-                        m.stop_run()
-
-            # Stop networking
-            if hasattr(_CONTROLLER, "node") and _CONTROLLER.node is not None:
-                _CONTROLLER.node.send(key="KILL")
-                time.sleep(0.5)
-                _CONTROLLER.node.release()
-        except Exception as e:
-            print(f"Error during shutdown: {e}")
+    try:
+        _cleanup_subjects()
+        _cleanup_networking()
+    except Exception as e:
+        print(f"Error during shutdown: {e}")
 
     # Exit the application
     QtWidgets.QApplication.quit()
