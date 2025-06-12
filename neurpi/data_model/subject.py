@@ -29,14 +29,15 @@ class Subject:
         name (str): Subject ID
         dir (str): Path to data file
         running (bool): Indicator if subject is currently running or not
+
     """
 
     def __init__(
         self,
-        name: str,
+        id: str,
         dir: Optional[Path] = None,
     ):
-        self.name = name
+        self.id = id
         self._info = None
         self._history = None
 
@@ -44,9 +45,9 @@ class Subject:
         self._session_uuid = str(uuid.uuid4())  # generate uniquely addressable uuid
 
         if dir:
-            self.dir = Path(dir, self.name)
+            self.dir = Path(dir, self.id)
         else:
-            self.dir = Path(prefs.get("DATADIR"), self.name)
+            self.dir = Path(prefs.get("DATADIR"), self.id)
         self.data_dir = Path(self.dir, "data")
 
         try:
@@ -68,6 +69,7 @@ class Subject:
 
         Returns:
             file: Open file
+
         """
         with open(Path(self.dir, file_name), mode) as file:
             yield file
@@ -105,6 +107,7 @@ class Subject:
         Args:
             hist_dict (dict): Dictionary containing session information.
                 must contain keys: baseline_weight, start_weight, end_weight, protocol, experiment, session, session_uuid (optional)
+
         """
         try:
             hist_dict["date"] = hist_dict.get("date", time.strftime("%Y-%m-%d %H:%M:%S"))
