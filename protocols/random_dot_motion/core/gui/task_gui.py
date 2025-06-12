@@ -8,23 +8,13 @@ import pyqtgraph as pg
 from PyQt6 import QtCore, QtWidgets, uic
 from pyqtgraph import exporters
 
+from neurpi.utils import code_to_str
+
 # Get the absolute path to the UI files
 _current_dir = Path(__file__).parent
 Ui_rig, rigclass = uic.loadUiType(str(_current_dir / "rdk_rig.ui"))
 Ui_summary, summaryclass = uic.loadUiType(str(_current_dir / "summary.ui"))
 camera_index = 0
-
-
-def code_to_str(var: str):
-    display_var = var.replace("_", " ")
-    display_var = str.title(display_var)
-    return display_var
-
-
-def str_to_code(var: str):
-    code_var = var.replace(" ", "_")
-    code_var = code_var.lower()
-    return code_var
 
 
 class TaskGUI(rigclass):
@@ -53,12 +43,12 @@ class TaskGUI(rigclass):
             self.rig.subject_id.setText(f"Subject ID: {self.subject.name}")
             self.rig.age.setText(f"Age: {(self.subject.age)}")
             self.rig.baseline_weight.setText(
-                f"% Baseline Weight: {self.subject.prct_weight!s}%"
+                f"% Baseline Weight: {self.subject.prct_weight!s}%",
             )
             self.rig.protocol.setText(f"Protocol: {code_to_str(self.protocol)}")
             self.rig.experiment.setText(f"Experiment: {code_to_str(self.experiment)}")
             self.rig.configuration.setText(
-                f"Configuration: {code_to_str(self.configuration)}"
+                f"Configuration: {code_to_str(self.configuration)}",
             )
         except Exception as e:
             print(e)

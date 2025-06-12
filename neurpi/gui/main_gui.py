@@ -8,24 +8,11 @@ from omegaconf import OmegaConf
 from PyQt6 import QtCore, QtWidgets, uic
 
 from neurpi.prefs import prefs
+from neurpi.utils import code_to_str, str_to_code
 
 # Load UI files
 Ui_Main, mainclass = uic.loadUiType("neurpi/gui/main_gui.ui")
 Ui_NewSubject, newsubjectclass = uic.loadUiType("neurpi/gui/new_subject_form.ui")
-
-
-def code_to_str(var: str) -> str:
-    """Convert code format to display string format."""
-    str_var = var.replace("_", " ")
-    str_var = str.title(str_var)
-    return str_var
-
-
-def str_to_code(var: str) -> str:
-    """Convert display string to code format."""
-    code_var = var.replace(" ", "_")
-    code_var = code_var.lower()
-    return code_var
 
 
 class Application(mainclass):

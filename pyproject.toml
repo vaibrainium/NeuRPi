@@ -29,6 +29,7 @@ classifiers = [
 dependencies = [
     "blosc2>=2.5.0",
     "numpy<2.0.0",
+    "matplotlib>=3.5.0",
     "click>=8.0.0",
     "rich>=13.0.0",
     "omegaconf>=2.2.2",
@@ -47,7 +48,6 @@ dependencies = [
 [project.optional-dependencies]
 # GUI dependencies
 gui = [
-    "matplotlib>=3.7.0",
     "pyqtgraph>=0.13.0",
     "opencv-python>=4.8.0",
     "PyQt6>=6.9.0",

@@ -14,6 +14,7 @@ from neurpi.gui.main_gui import Application
 from neurpi.loggers.logger import init_logger
 from neurpi.networking import ControllerStation, Net_Node
 from neurpi.prefs import prefs
+from neurpi.utils import code_to_str
 
 
 class Controller(Application):
@@ -32,10 +33,7 @@ class Controller(Application):
         # networking
         self.node = None
         self.networking = None
-        self.heartbeat_dur = (
-            10  # check every n seconds whether our pis are still around
-        )
-
+        self.heartbeat_dur = 10
         # data
         self.subjects = {}  # Dict of our open subject objects
 
@@ -234,16 +232,7 @@ class Controller(Application):
             print("Could not update GUI")
             print(e)
 
-    ######################## GUI related functions ########################
-    def code_to_str(self, var: str):
-        str_var = var.replace("_", " ")
-        str_var = str.title(str_var)
-        return str_var
-
-    def str_to_code(self, var: str):
-        code_var = var.replace(" ", "_")
-        code_var = code_var.lower()
-        return code_var
+    ######################## GUI related functions ########################r
 
     def message_from_taskgui(self, message):
         if message["to"] == "main_gui":
@@ -254,7 +243,7 @@ class Controller(Application):
 
     def update_rig_availability(self):
         for i, key in enumerate(self.rigs.keys()):
-            display_name = self.code_to_str(key)
+            display_name = code_to_str(key)
             if self.main_gui.rig_id.findText(display_name) == -1:
                 # Add Rig option to the GUI
                 self.main_gui.rig_id.addItem(display_name)
@@ -280,6 +269,8 @@ class Controller(Application):
             "config",
             f"{session_info.configuration}.py",
         )
+
+        return importlib.import_module(config_file_path)
 
         # Read the configuration file as a string
         with open(config_file_path) as f:
@@ -331,9 +322,7 @@ class Controller(Application):
         if session_info:
             if self.rigs[session_info.rig_id]["state"] == "IDLE":
                 # Gathering session configuration
-                session_config, string_session_config = self.prepare_session_config(
-                    session_info,
-                )
+                session_config = self.prepare_session_config(session_info)
                 # Initializing subject
                 subject_config = self.initiate_subject(session_info, session_config)
 
@@ -345,8 +334,6 @@ class Controller(Application):
                     key="START",
                     value={
                         "session_info": session_info,
-                        # python object cannot be sent over network, so converting to string and will convert back to module on rig
-                        "session_config": string_session_config,
                         "subject_config": subject_config,
                     },
                     flags={"NOLOG": True},

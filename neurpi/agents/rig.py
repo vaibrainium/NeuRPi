@@ -8,7 +8,7 @@ from neurpi.networking import Net_Node, RigStation
 from neurpi.prefs import prefs
 
 
-class rig:
+class Rig:
     def __init__(self):
         self.name = prefs.get("NAME")
         self.child = prefs.get("LINEAGE") == "CHILD"
@@ -141,7 +141,8 @@ class rig:
 
         try:
             self.session_info = value["session_info"]
-            self.config = self.convert_str_to_module(value["session_config"])
+            self.config = importlib.import_module(
+                f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.config}")
             self.config.SUBJECT = value["subject_config"]
 
             # Import task module and initialize
@@ -300,7 +301,7 @@ def main():
     quitting = threading.Event()
     quitting.clear()
     try:
-        pi = rig()
+        pi = Rig()
         # handshake is already called during rig initialization
 
         quitting.wait()

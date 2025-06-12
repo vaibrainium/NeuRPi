@@ -36,6 +36,7 @@ logs
 commitlint.config.js
 node_modules/
 ruff.toml
+rust_backend
 
 start.bat
 start.sh
