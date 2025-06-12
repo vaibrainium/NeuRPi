@@ -379,10 +379,19 @@ class TaskGUI(rigclass):
             self.summary_data["response_time_distribution"] = None
 
     def show_summary_window(self, value=None):
-        """Show summary window with summarized data"""
+        """Show summary window with summarized data."""
+        # Ensure summary_data is not None before accessing it
+        if self.summary_data is None:
+            print("Warning: show_summary_window called but summary_data is None")
+            return
+
+        # Ensure session clock has required fields
+        start_time = self.session_clock.get("start", time.time())
+        end_time = self.session_clock.get("end", time.time())
+
         summary_string = (
-            f"{time.ctime(self.session_clock['start'])} \n\n"
-            f"{time.ctime(self.session_clock['end'])} \n\n"
+            f"{time.ctime(start_time)} \n\n"
+            f"{time.ctime(end_time)} \n\n"
             f"{self.summary_data['total_valid']} {self.summary_data['trial_distribution']} \n\n"
             f"{self.summary_data['total_accuracy']}% {self.summary_data['psychometric_function']} \n\n"
             f"{self.summary_data['response_time_distribution']} \n\n"
@@ -505,15 +514,16 @@ class TaskGUI(rigclass):
             self.rig.reward_volume.setValue(value["reward_volume"])
 
         if "total_reward" in value.keys():
-            self.rig.total_reward.setText(str(round(value["total_reward"], 2)))
-
-        # Close session and Task GUI
+            self.rig.total_reward.setText(str(round(value["total_reward"], 2)))        # Close session and Task GUI
         if "TRIAL_END" in value.keys() and self.state == "STOPPED":
             self.session_clock["end"] = time.time()
             self.session_clock["timer"].stop()
             self.create_summary_data(value)
 
         if "session_files" in value.keys():
+            # Ensure summary data is created before showing the summary window
+            if self.summary_data is None:
+                self.create_summary_data(value)
             self.show_summary_window(value)
             while not self.rig.close_experiment.isVisible():
                 QtWidgets.QApplication.processEvents()
