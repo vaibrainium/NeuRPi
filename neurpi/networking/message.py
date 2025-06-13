@@ -147,7 +147,7 @@ class Message(object):
 
         else:
             msg_block_str = str(msg_block)
-            msg_block_byte = msg_block_str.encode("ascii")
+            msg_block_byte = msg_block_str.encode("utf-8")
             compressed = base64.b64encode(msg_block_byte).decode("ascii")
             return {
                 "MSG_BLOCK": compressed,
@@ -155,10 +155,12 @@ class Message(object):
                 "DTYPE": None,
                 "SHAPE": None,
             }
-
     def _deserialize_msg_block(self, obj_pairs):
         if len(obj_pairs) == 4 and obj_pairs[0][0] == "MSG_BLOCK":
-            if obj_pairs[1][1] == np.ndarray:
+            # Check if this is a numpy array by looking at the TYPE field
+            type_str = obj_pairs[1][1]
+            if "numpy.ndarray" in str(type_str) or type_str == np.ndarray:
+                # Handle numpy arrays
                 decode = base64.b64decode(obj_pairs[0][1])
                 try:
                     arr = blosc.unpack_array(decode)
@@ -167,9 +169,21 @@ class Message(object):
                     arr = np.frombuffer(decode, dtype=literal_eval(obj_pairs[2][1])).reshape(literal_eval(obj_pairs[3][1]))
                 return arr
             else:
-                message_bytes = obj_pairs[0][1].encode("ascii")
-                message_str = base64.b64decode(message_bytes).decode("ascii")
+                # Handle non-numpy objects (strings, dicts, etc.)
+                message_bytes = base64.b64decode(obj_pairs[0][1])
+                try:
+                    # Try UTF-8 first
+                    message_str = message_bytes.decode("utf-8")
+                except UnicodeDecodeError:
+                    try:
+                        # Fallback to latin-1 for binary data
+                        message_str = message_bytes.decode("latin-1")
+                    except UnicodeDecodeError:
+                        # Last resort: ignore errors
+                        message_str = message_bytes.decode("utf-8", errors="ignore")
+
                 message = literal_eval(message_str)
+
                 # converting to original type
                 if obj_pairs[1][1] in [
                     "dict",

@@ -45,6 +45,7 @@ dependencies = [
     "scipy>=1.10.0",
     "pandas>=2.0.0",
     "pygame>=2.1.2",
+    "psutil>=5.8.0"
 ]
 
 [project.optional-dependencies]
