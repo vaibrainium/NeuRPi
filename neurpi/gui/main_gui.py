@@ -147,9 +147,12 @@ class Application(mainclass):
             self.main_gui.experiment.addItems(list_experiments)
             self.main_gui.experiment.setCurrentIndex(0)
 
-            self._log_message(
-                f"Loaded {len(list_experiments) - 1} experiments for protocol '{self.main_gui.protocol.currentText()}'",
-            )
+            # Only log if there are actual experiments loaded
+            experiment_count = len(list_experiments) - 1
+            if experiment_count > 0:
+                self._log_message(
+                    f"Loaded {experiment_count} experiments for protocol '{self.main_gui.protocol.currentText()}'",
+                )
         except Exception as e:
             self._log_message(f"Error loading experiments: {e}")
 
@@ -177,9 +180,12 @@ class Application(mainclass):
             self.main_gui.configuration.addItems(list_configurations)
             self.main_gui.configuration.setCurrentIndex(0)
 
-            self._log_message(
-                f"Loaded {len(list_configurations) - 1} configurations for experiment '{self.main_gui.experiment.currentText()}'",
-            )
+            # Only log if there are actual configurations loaded
+            configuration_count = len(list_configurations) - 1
+            if configuration_count > 0:
+                self._log_message(
+                    f"Loaded {configuration_count} configurations for experiment '{self.main_gui.experiment.currentText()}'",
+                )
         except Exception as e:
             self._log_message(f"Error loading configurations: {e}")
 

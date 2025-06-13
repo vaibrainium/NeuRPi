@@ -30,6 +30,10 @@ class Controller(Application):
         # store instance
         globals()["_CONTROLLER"] = self
 
+        # logging
+        self.logger = init_logger(self)
+        self.logger.info("Starting controller initialization...")
+
         # networking
         self.node = None
         self.networking = None
@@ -39,9 +43,6 @@ class Controller(Application):
 
         # property private attributes
         self._rigs = None
-
-        # logging
-        self.logger = init_logger(self)
 
         # Listen dictionary - which methods to call for different messages
         # Methods are spawned in new threads using handle_message
@@ -54,14 +55,14 @@ class Controller(Application):
             "STREAM": self.l_data,
             "HANDSHAKE": self.l_handshake,  # a pi is making first contact, telling us its IP
             "SESSION_FILES": self.l_session_files,
-        }
-
-        # Start external communications in own process
+        }  # Start external communications in own process
         # Has to be after init_network so it makes a new context
+        self.logger.info("Initializing networking...")
         self.networking = ControllerStation(self.rigs)
         self.networking.start()
-        self.logger.info("Station object Initialized")
+        self.logger.info("Station object initialized")
 
+        self.logger.info("Initializing network node...")
         self.node = Net_Node(
             id="_T",
             upstream="T",
@@ -69,12 +70,17 @@ class Controller(Application):
             listens=self.listens,
             instance=False,
         )
-        self.logger.info("Net Node Initialized")
+        self.logger.info("Net Node initialized")
 
-        # send an initial ping looking for our rigs
-        self.node.send("T", "INIT")
+        # send an initial ping looking for our rigs (non-blocking)
+        self.logger.info("Sending initial ping to discover rigs...")
+        try:
+            self.node.send("T", "INIT")
+            self.logger.info("Initial ping sent")
+        except Exception as e:
+            self.logger.warning("Failed to send initial ping: %s", e)
 
-        self.logger.info("Controller Initialized")
+        self.logger.info("Controller initialization completed")
 
         # if we don't have any rigs, pop a dialogue to declare one
         if len(self.rigs) == 0:
@@ -363,6 +369,7 @@ def _cleanup_subjects():
             if hasattr(m, "stop_run"):
                 m.stop_run()
 
+
 def _cleanup_networking():
     """Helper function to cleanup networking"""
     global _CONTROLLER
@@ -395,6 +402,7 @@ def _cleanup_networking():
             _CONTROLLER.node.release()
         except Exception as e:
             print(f"Error stopping node: {e}")
+
 
 def signal_handler(sig, frame):
     """Handle SIGINT (Ctrl+C) to gracefully exit the application"""
