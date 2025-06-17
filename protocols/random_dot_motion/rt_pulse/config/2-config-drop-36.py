@@ -1,7 +1,7 @@
 """
-Refactored RT Test configuration using base template.
+Refactored RT Pulse configuration using base template.
 
-This eliminates ~140 lines of repetitive configuration code.
+This eliminates ~150 lines of repetitive configuration code while adding pulse-specific features.
 """
 
 import numpy as np
@@ -13,18 +13,18 @@ from protocols.random_dot_motion.core.config.base_config import BaseRDMConfig
 TASK = BaseRDMConfig.get_base_task_config()
 STIMULUS = BaseRDMConfig.get_base_stimulus_display_config()
 
-# RT Test specific customizations
+# RT Pulse specific customizations
 TASK.update(
     {
         "epochs": {
             "tag": "List of all epochs and their respective parameters in secs",
             "fixation": {
                 "tag": "Fixation epoch",
-                "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5),
+                "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04),
             },
             "stimulus": {
                 "tag": "Stimulus epoch",
-                "max_viewing": 15,
+                "max_viewing": 25,
                 "min_viewing": 0,
             },
             "reinforcement": {
@@ -39,10 +39,10 @@ TASK.update(
             "intertrial": {
                 "tag": "Intertrial epoch",
                 "duration": {
-                    "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
+                    "correct": lambda response_time, coh: stats.expon.rvs(loc=0.25, scale=0.075),
                     "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                    "noresponse": lambda response_time, coh: 3,
-                    "invalid": lambda response_time, coh: 2,
+                    "noresponse": lambda response_time, coh: 7,
+                    "invalid": lambda response_time, coh: 7,
                 },
             },
         },
@@ -54,30 +54,58 @@ TASK.update(
             },
             "signed_coherences": {
                 "tag": "List of all signed coherences",
-                "type": "np.array",
+                "type": "list",
                 "value": np.array([-100, -36, -18, -9, 0, 9, 18, 36, 100]),
             },
             "repeats_per_block": {
                 "tag": "Number of repeats of each coherences per block",
-                "type": "np.array",
-                "value": np.array([3, 3, 3, 3, 3, 3, 3, 3, 3]),
+                "type": "int",
+                "value": 3,
+            },
+            # Pulse-specific parameters
+            "pulse_probabilities": {
+                "tag": "Probability of pulse at each coherence",
+                "type": "dict",
+                "value": {
+                    # Drop 36 configuration
+                    -100: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    -36: [0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.000, 0.000, 0.40],
+                    -18: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    -9: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    0: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    9: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    18: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                    36: [0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.000, 0.000, 0.40],
+                    100: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.125, 0.125, 0.15],
+                },
+            },
+            "pulse_duration": {
+                "tag": "Duration of pulse in #frames (1/60s)",
+                "type": "int",
+                "value": 4,
+            },
+            "pulse_onset": {
+                "tag": "Onset of pulse in #frames (1/60s)",
+                "type": "dict",
+                "value": {
+                    "early": 3,
+                    "middle": 14,
+                    "late": 25,
+                },
             },
         },
         "bias_correction": {
-            "bias_window": 20,
-            "passive": {
-                "coherence_threshold": 101,  # Disabled for testing
+            "repeat_threshold": {
+                "active": 100,
+                "passive": 100,
             },
-            "active": {
-                "abs_bias_threshold": 1.01,  # Disabled for testing
-                "correction_strength": 0,  # No correction for testing
-            },
+            "bias_window": 10,
         },
         "training_type": {
             "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
             "value": 2,
         },
-    },
+    }
 )
 
 # Hardware requirements

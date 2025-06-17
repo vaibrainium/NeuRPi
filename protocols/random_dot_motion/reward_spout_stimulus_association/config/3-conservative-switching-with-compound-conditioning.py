@@ -1,7 +1,7 @@
 """
-Refactored RT Test configuration using base template.
+Refactored Reward Spout Stimulus Association configuration (conservative with compound conditioning) using base template.
 
-This eliminates ~140 lines of repetitive configuration code.
+This eliminates ~150 lines of repetitive configuration code.
 """
 
 import numpy as np
@@ -13,18 +13,18 @@ from protocols.random_dot_motion.core.config.base_config import BaseRDMConfig
 TASK = BaseRDMConfig.get_base_task_config()
 STIMULUS = BaseRDMConfig.get_base_stimulus_display_config()
 
-# RT Test specific customizations
+# Conservative switching with compound conditioning specific customizations
 TASK.update(
     {
         "epochs": {
             "tag": "List of all epochs and their respective parameters in secs",
             "fixation": {
                 "tag": "Fixation epoch",
-                "duration": lambda: stats.expon.rvs(loc=0.5, scale=1 / 5),
+                "duration": lambda: 0,  # No fixation for association task
             },
             "stimulus": {
                 "tag": "Stimulus epoch",
-                "max_viewing": 15,
+                "max_viewing": 10,
                 "min_viewing": 0,
             },
             "reinforcement": {
@@ -35,14 +35,17 @@ TASK.update(
                     "noresponse": lambda response_time: 0,
                     "invalid": lambda response_time: 0,
                 },
+                "knowledge_of_results": {
+                    "duration": 0.5,
+                },
             },
             "intertrial": {
                 "tag": "Intertrial epoch",
                 "duration": {
-                    "correct": lambda response_time, coh: stats.expon.rvs(loc=0.75, scale=1 / 5),
-                    "incorrect": lambda response_time, coh: 3 + 4 * (np.exp(-3 * response_time)),
-                    "noresponse": lambda response_time, coh: 3,
-                    "invalid": lambda response_time, coh: 2,
+                    "correct": lambda response_time, coh: stats.expon.rvs(loc=5, scale=1 / 5),
+                    "incorrect": lambda response_time, coh: 6 + 4 * (np.exp(-3 * response_time)),
+                    "noresponse": lambda response_time, coh: 6,
+                    "invalid": lambda response_time, coh: 5,
                 },
             },
         },
@@ -55,27 +58,31 @@ TASK.update(
             "signed_coherences": {
                 "tag": "List of all signed coherences",
                 "type": "np.array",
-                "value": np.array([-100, -36, -18, -9, 0, 9, 18, 36, 100]),
+                "value": np.array([-100, 100]),
             },
             "repeats_per_block": {
                 "tag": "Number of repeats of each coherences per block",
                 "type": "np.array",
-                "value": np.array([3, 3, 3, 3, 3, 3, 3, 3, 3]),
+                "value": np.array([3, 3]),
+            },
+            "schedule_structure": {
+                "tag": "How to structure block, interleaved or blocked",
+                "value": "interleaved",
             },
         },
         "bias_correction": {
             "bias_window": 20,
             "passive": {
-                "coherence_threshold": 101,  # Disabled for testing
+                "coherence_threshold": 40,
             },
             "active": {
-                "abs_bias_threshold": 1.01,  # Disabled for testing
-                "correction_strength": 0,  # No correction for testing
+                "abs_bias_threshold": 1.1,
+                "correction_strength": 1,
             },
         },
-        "training_type": {
-            "tag": "Training type: 0: passive-only, 1: active-passive, 2: active-only",
-            "value": 2,
+        "reward": {
+            "volume": 2,
+            "must_consume": True,
         },
     },
 )
