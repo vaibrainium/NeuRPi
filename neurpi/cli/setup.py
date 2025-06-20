@@ -20,10 +20,130 @@ def check_uv_available():
                 timeout=10,
                 check=True,
             )
+            print(f"✓ UV found: {result.stdout.strip()}")
             return uv_path
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             pass
+    
+    # UV not found, try to install it
+    print("UV not found. Installing UV...")
+    if _install_uv():
+        return shutil.which("uv")
+    
     return None
+
+
+def _install_uv():
+    """Install UV package manager."""
+    try:
+        # Method 1: Try installing via pip
+        print("Attempting to install UV via pip...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--user", "uv"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print("✓ UV installed via pip")
+        return True
+    except subprocess.CalledProcessError:
+        pass
+    
+    try:
+        # Method 2: Try the official installer script
+        print("Attempting to install UV via official installer...")
+        
+        # Check if curl is available
+        curl_available = shutil.which("curl") is not None
+        wget_available = shutil.which("wget") is not None
+        
+        if curl_available:
+            # Download and run the installer
+            subprocess.run(
+                ["curl", "-LsSf", "https://astral.sh/uv/install.sh"],
+                stdout=subprocess.PIPE,
+                check=True,
+                text=True,
+            )
+            # The installer script needs to be piped to sh
+            installer_result = subprocess.run(
+                ["curl", "-LsSf", "https://astral.sh/uv/install.sh"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["sh"],
+                input=installer_result.stdout,
+                text=True,
+                check=True,
+            )
+            print("✓ UV installed via official installer")
+            return True
+        elif wget_available:
+            # Alternative with wget
+            subprocess.run(
+                ["wget", "-qO-", "https://astral.sh/uv/install.sh"],
+                stdout=subprocess.PIPE,
+                check=True,
+            )
+            installer_result = subprocess.run(
+                ["wget", "-qO-", "https://astral.sh/uv/install.sh"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            subprocess.run(
+                ["sh"],
+                input=installer_result.stdout,
+                text=True,
+                check=True,
+            )
+            print("✓ UV installed via official installer")
+            return True
+    except subprocess.CalledProcessError as e:
+        print(f"Official installer failed: {e}")
+    
+    print("❌ Failed to install UV automatically")
+    print("Please install UV manually:")
+    print("  • pip install uv")
+    print("  • curl -LsSf https://astral.sh/uv/install.sh | sh")
+    print("  • Visit: https://docs.astral.sh/uv/getting-started/installation/")
+    
+    return False
+
+
+def _ensure_python_version_with_uv(uv_executable, python_version):
+    """Ensure the specified Python version is available with UV."""
+    try:
+        # Check if the Python version is already available
+        result = subprocess.run(
+            [uv_executable, "python", "list"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        
+        if python_version in result.stdout:
+            print(f"✓ Python {python_version} is already available")
+            return True
+        
+        # Install the Python version
+        print(f"Installing Python {python_version} with UV...")
+        subprocess.run(
+            [uv_executable, "python", "install", python_version],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print(f"✓ Python {python_version} installed successfully")
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to install Python {python_version}: {e}")
+        if e.stderr:
+            print(f"Error details: {e.stderr}")
+        return False
 
 
 def read_requirements_from_toml(group_name):
@@ -325,24 +445,54 @@ def create_virtual_environment(
 
     try:
         if use_uv and uv_executable:
-            subprocess.run(
+            print(f"Using uv to create virtual environment with Python {python_version}")
+            result = subprocess.run(
                 [uv_executable, "venv", str(venv_path), "--python", python_version],
                 check=True,
                 capture_output=True,
                 text=True,
             )
+            print("✓ Virtual environment created with uv")
         else:
+            # When not using uv, fall back to system Python version if 3.11 not available
+            if python_version == "3.11":
+                current_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+                if current_version != "3.11":
+                    print(f"System has Python {current_version}, using that instead of 3.11")
+                    print("Install uv to use Python 3.11: https://docs.astral.sh/uv/")
+                    python_version = current_version
+            
+            print(f"Using venv to create virtual environment with Python {python_version}")
             subprocess.run(
                 [sys.executable, "-m", "venv", str(venv_path)],
                 check=True,
                 capture_output=True,
                 text=True,
             )
+            print("✓ Virtual environment created with venv")
 
-        print("✓ Virtual environment created")
         return True
     except subprocess.CalledProcessError as e:
         print(f"Failed to create virtual environment: {e}")
+        if e.stderr:
+            print(f"Error details: {e.stderr}")
+        
+        # If uv failed to find Python 3.11, suggest installation
+        if use_uv and "python" in str(e).lower() and python_version == "3.11":
+            print("\n💡 Python 3.11 not found. You can install it with uv:")
+            print("   uv python install 3.11")
+            print("   Then run this setup script again.")
+        
+        return False
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to create virtual environment: {e}")
+        # Print more detailed error information
+        print(f"Command that failed: {e.cmd}")
+        if e.stderr:
+            print(f"Error output: {e.stderr}")
+        if e.stdout:
+            print(f"Standard output: {e.stdout}")
         return False
 
 
@@ -523,19 +673,23 @@ def setup_neurpi(
 
     console = Console()
 
-    # Check for uv availability
+    # Check for uv availability and install if needed
     uv_executable = check_uv_available()
     use_uv = uv_executable is not None
 
     if use_uv:
         console.print("[green]✓ Using uv package manager[/green]")
+        
+        # Ensure the specified Python version is available
+        if not _ensure_python_version_with_uv(uv_executable, python_version):
+            console.print(f"[yellow]Warning: Could not ensure Python {python_version} is available[/yellow]")
+            console.print("[yellow]Continuing with available Python version...[/yellow]")
     else:
         console.print("[yellow]Using pip package manager[/yellow]")
+        console.print("[yellow]UV not available - will use system Python[/yellow]")
 
     # Determine which dependency groups to install
-    dependency_groups = []
-
-    # If no flags specified, default to full installation
+    dependency_groups = []    # If no flags specified, default to full installation
     if not any([controller, rig, dev, full]):
         full = True
 
@@ -568,6 +722,16 @@ def setup_neurpi(
     project_root = Path(__file__).parent.parent.parent
     venv_path = project_root / ".venv"
 
+    # Clean up any existing virtual environment
+    if venv_path.exists():
+        console.print("[yellow]Removing existing virtual environment...[/yellow]")
+        try:
+            import shutil
+            shutil.rmtree(venv_path)
+            console.print("[green]✓ Existing virtual environment removed[/green]")
+        except Exception as e:
+            console.print(f"[yellow]Warning: Could not remove existing venv: {e}[/yellow]")
+
     try:
         # Step 1: Create virtual environment
         if not create_virtual_environment(
@@ -577,7 +741,9 @@ def setup_neurpi(
             uv_executable,
         ):
             console.print("[red]Failed to create virtual environment[/red]")
-            sys.exit(1)  # Step 2: Determine python executable path
+            sys.exit(1)
+            
+        # ...existing code...
         python_exe = venv_path / ("Scripts/python.exe" if platform.system() == "Windows" else "bin/python")
 
         # Step 3: Fix virtual environment activation scripts
