@@ -93,6 +93,12 @@ def ensure_essential_dependencies():
 
 def _try_install_dependencies(packages):
     """Try multiple methods to install packages, return True if successful."""
+    # First, check if pip is available at all
+    if not _check_pip_availability():
+        print("❌ pip is not available. Attempting to install pip...")
+        if not _install_pip():
+            return False
+    
     installation_methods = [
         ("with --user flag", [sys.executable, "-m", "pip", "install", "--user"] + packages),
         ("standard method", [sys.executable, "-m", "pip", "install"] + packages),
@@ -141,17 +147,105 @@ def _try_install_dependencies(packages):
     return False
 
 
+def _check_pip_availability():
+    """Check if pip is available via python -m pip."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "--version"],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        print(f"✓ pip is available: {result.stdout.strip()}")
+        return True
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+        print(f"pip check failed: {e}")
+        return False
+
+
+def _install_pip():
+    """Try to install pip using various methods."""
+    print("Attempting to install pip...")
+    
+    # Method 1: Try using ensurepip
+    try:
+        print("Trying to install pip using ensurepip...")
+        subprocess.run(
+            [sys.executable, "-m", "ensurepip", "--upgrade"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print("✓ pip installed using ensurepip")
+        return _check_pip_availability()
+    except subprocess.CalledProcessError as e:
+        print(f"ensurepip failed: {e}")
+    
+    # Method 2: Try downloading get-pip.py (if curl/wget available)
+    try:
+        print("Trying to download and install pip using get-pip.py...")
+        
+        # Check if we can download get-pip.py
+        download_commands = [
+            ["curl", "-o", "get-pip.py", "https://bootstrap.pypa.io/get-pip.py"],
+            ["wget", "-O", "get-pip.py", "https://bootstrap.pypa.io/get-pip.py"],
+        ]
+        
+        downloaded = False
+        for cmd in download_commands:
+            try:
+                subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30)
+                downloaded = True
+                print(f"✓ Downloaded get-pip.py using {cmd[0]}")
+                break
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+                continue
+        
+        if downloaded:
+            # Run get-pip.py
+            subprocess.run(
+                [sys.executable, "get-pip.py", "--user"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            print("✓ pip installed using get-pip.py")
+            
+            # Clean up
+            try:
+                Path("get-pip.py").unlink()
+            except FileNotFoundError:
+                pass
+            
+            return _check_pip_availability()
+    
+    except subprocess.CalledProcessError as e:
+        print(f"get-pip.py method failed: {e}")
+    
+    return False
+
+
 def _show_manual_installation_help(packages):
     """Show help message for manual installation."""
     print("\n" + "="*60)
     print("❌ FAILED TO INSTALL ESSENTIAL DEPENDENCIES")
     print("="*60)
     print("All installation methods failed. Please try one of the following:")
+    print("\n📋 FIRST, ensure pip is installed:")
+    print("   • sudo apt update && sudo apt install python3-pip  # On Debian/Ubuntu/Raspberry Pi OS")
+    print("   • curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && python3 get-pip.py --user")
+    print("   • python3 -m ensurepip --upgrade")
+    print("\n📦 THEN, install the required packages:")
     print(f"1. Manual installation: pip install --user {' '.join(packages)}")
     print(f"2. System installation: sudo pip install {' '.join(packages)}")
-    print(f"3. Virtual environment: python -m venv venv && source venv/bin/activate && pip install {' '.join(packages)}")
-    print("4. Check if you have internet connection")
-    print("5. Check if pip is properly configured")
+    print(f"3. Alternative: python3 -m pip install --user {' '.join(packages)}")
+    print(f"4. Virtual environment: python3 -m venv venv && source venv/bin/activate && pip install {' '.join(packages)}")
+    print("\n🔍 TROUBLESHOOTING:")
+    print("   • Check if you have internet connection: ping google.com")
+    print("   • Check Python version: python3 --version")
+    print("   • Check if pip works: python3 -m pip --version")
+    print("   • Update package list: sudo apt update (on Debian-based systems)")
     print("\nAfter manual installation, run this setup script again.")
     print("="*60)
 
