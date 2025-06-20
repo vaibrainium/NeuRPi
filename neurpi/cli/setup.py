@@ -89,6 +89,24 @@ def ensure_essential_dependencies():
         if not _try_install_dependencies(missing):
             _show_manual_installation_help(missing)
             sys.exit(1)
+        
+        # After installation, refresh the Python path to ensure modules are available
+        _refresh_python_path()
+
+
+def _refresh_python_path():
+    """Refresh Python path to include user site-packages after installation."""
+    import site
+    import importlib
+    
+    # Reload site module to pick up new user site-packages
+    importlib.reload(site)
+    
+    # Add user site-packages to sys.path if not already there
+    user_site = site.getusersitepackages()
+    if user_site not in sys.path:
+        sys.path.insert(0, user_site)
+        print(f"✓ Added user site-packages to Python path: {user_site}")
 
 
 def _try_install_dependencies(packages):
@@ -98,13 +116,13 @@ def _try_install_dependencies(packages):
         print("❌ pip is not available. Attempting to install pip...")
         if not _install_pip():
             return False
-    
+
     installation_methods = [
         ("with --user flag", [sys.executable, "-m", "pip", "install", "--user"] + packages),
         ("standard method", [sys.executable, "-m", "pip", "install"] + packages),
         ("with --break-system-packages", [sys.executable, "-m", "pip", "install", "--break-system-packages"] + packages),
     ]
-    
+
     for method_name, command in installation_methods:
         try:
             print(f"Attempting installation {method_name}...")
@@ -120,7 +138,7 @@ def _try_install_dependencies(packages):
             print(f"Installation {method_name} failed: {e}")
             if e.stderr:
                 print(f"Error details: {e.stderr}")
-    
+
     # Try upgrading pip first, then install
     try:
         print("Attempting to upgrade pip first...")
@@ -143,7 +161,7 @@ def _try_install_dependencies(packages):
         print(f"Installation after pip upgrade failed: {e}")
         if e.stderr:
             print(f"Error details: {e.stderr}")
-    
+
     return False
 
 
@@ -167,7 +185,7 @@ def _check_pip_availability():
 def _install_pip():
     """Try to install pip using various methods."""
     print("Attempting to install pip...")
-    
+
     # Method 1: Try using ensurepip
     try:
         print("Trying to install pip using ensurepip...")
@@ -181,17 +199,17 @@ def _install_pip():
         return _check_pip_availability()
     except subprocess.CalledProcessError as e:
         print(f"ensurepip failed: {e}")
-    
+
     # Method 2: Try downloading get-pip.py (if curl/wget available)
     try:
         print("Trying to download and install pip using get-pip.py...")
-        
+
         # Check if we can download get-pip.py
         download_commands = [
             ["curl", "-o", "get-pip.py", "https://bootstrap.pypa.io/get-pip.py"],
             ["wget", "-O", "get-pip.py", "https://bootstrap.pypa.io/get-pip.py"],
         ]
-        
+
         downloaded = False
         for cmd in download_commands:
             try:
@@ -201,7 +219,7 @@ def _install_pip():
                 break
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
                 continue
-        
+
         if downloaded:
             # Run get-pip.py
             subprocess.run(
@@ -211,26 +229,26 @@ def _install_pip():
                 text=True,
             )
             print("✓ pip installed using get-pip.py")
-            
+
             # Clean up
             try:
                 Path("get-pip.py").unlink()
             except FileNotFoundError:
                 pass
-            
+
             return _check_pip_availability()
-    
+
     except subprocess.CalledProcessError as e:
         print(f"get-pip.py method failed: {e}")
-    
+
     return False
 
 
 def _show_manual_installation_help(packages):
     """Show help message for manual installation."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("❌ FAILED TO INSTALL ESSENTIAL DEPENDENCIES")
-    print("="*60)
+    print("=" * 60)
     print("All installation methods failed. Please try one of the following:")
     print("\n📋 FIRST, ensure pip is installed:")
     print("   • sudo apt update && sudo apt install python3-pip  # On Debian/Ubuntu/Raspberry Pi OS")
@@ -247,7 +265,7 @@ def _show_manual_installation_help(packages):
     print("   • Check if pip works: python3 -m pip --version")
     print("   • Update package list: sudo apt update (on Debian-based systems)")
     print("\nAfter manual installation, run this setup script again.")
-    print("="*60)
+    print("=" * 60)
 
 
 def create_executable_script(project_root, venv_path):
@@ -560,9 +578,7 @@ def setup_neurpi(
         ):
             console.print("[red]Failed to create virtual environment[/red]")
             sys.exit(1)  # Step 2: Determine python executable path
-        python_exe = venv_path / (
-            "Scripts/python.exe" if platform.system() == "Windows" else "bin/python"
-        )
+        python_exe = venv_path / ("Scripts/python.exe" if platform.system() == "Windows" else "bin/python")
 
         # Step 3: Fix virtual environment activation scripts
         console.print("[blue]Fixing virtual environment activation...[/blue]")
@@ -791,26 +807,13 @@ def create_pip_wrapper(venv_path, python_exe):
 # Create the setup command for CLI integration
 ensure_essential_dependencies()
 
-# Now we can safely import click since it's been verified
-import click
-
-
+# Import click inside functions to avoid import issues
 def main():
     """Main entry point for the neurpi-setup command."""
     setup_cli()
 
 
-@click.command()
-@click.option("--controller", is_flag=True, help="Install core + GUI dependencies")
-@click.option("--rig", is_flag=True, help="Install core + hardware dependencies")
-@click.option("--dev", is_flag=True, help="Install core + development dependencies")
-@click.option("--full", is_flag=True, help="Install all dependencies (default)")
-@click.option(
-    "--python-version",
-    default="3.11",
-    help="Python version to use (default: 3.11)",
-)
-def setup_cli(controller, rig, dev, full, python_version):
+def setup_cli(controller=False, rig=False, dev=False, full=False, python_version="3.11"):
     """Set up NeuRPi development environment with selective dependency installation."""
     setup_neurpi(
         controller=controller,
@@ -823,7 +826,34 @@ def setup_cli(controller, rig, dev, full, python_version):
 
 if __name__ == "__main__":
     try:
-        setup_cli()
+        # Import click here to ensure it's available after installation
+        import click
+
+        @click.command()
+        @click.option("--controller", is_flag=True, help="Install core + GUI dependencies")
+        @click.option("--rig", is_flag=True, help="Install core + hardware dependencies")
+        @click.option("--dev", is_flag=True, help="Install core + development dependencies")
+        @click.option("--full", is_flag=True, help="Install all dependencies (default)")
+        @click.option(
+            "--python-version",
+            default="3.11",
+            help="Python version to use (default: 3.11)",
+        )
+        def cli_command(controller, rig, dev, full, python_version):
+            """Set up NeuRPi development environment with selective dependency installation."""
+            setup_neurpi(
+                controller=controller,
+                rig=rig,
+                dev=dev,
+                full=full,
+                python_version=python_version,
+            )
+
+        cli_command()
+    except ImportError as e:
+        print(f"Error importing required modules: {e}")
+        print("Please ensure all essential dependencies are installed.")
+        sys.exit(1)
     except KeyboardInterrupt:
         print("\nOperation cancelled by user")
         sys.exit(130)
