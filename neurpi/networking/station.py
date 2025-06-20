@@ -114,30 +114,37 @@ class Station(multiprocessing.Process):
 
     def get_ip(self):
         """
-        Find our IP address
-        returns (str): our IPv4 address.
-        """
-        # shamelessly stolen from https://www.w3resource.com/python-exercises/python-basic-exercise-55.php
-        # variables are badly named because this is just a rough unwrapping of what was a monstrous one-liner
-        # (and i don't really understand how it works)
+        Find our IP address using a more reliable and understandable method.
 
-        # get ips that aren't the loopback
-        unwrap00 = [
-            ip
-            for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-            if not ip.startswith("10.")
-        ][:1]
-        # ??? truly dk
-        unwrap01 = [
-            [
-                (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
-                for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
-            ][0][1],
-        ]
-        unwrap2 = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][
-            0
-        ]
-        return unwrap2
+        Returns:
+            str: Our IPv4 address.
+
+        """
+        try:
+            # Method 1: Connect to a public DNS server to determine the local IP
+            # This doesn't actually send data, just determines routing
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+                # Connect to Google's public DNS (doesn't send data)
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                return local_ip
+        except Exception:
+            # Method 2: Fallback to hostname resolution
+            try:
+                # Get all IP addresses associated with this hostname
+                hostname = socket.gethostname()
+                ip_list = socket.gethostbyname_ex(hostname)[2]
+
+                # Filter out loopback addresses and select first valid IP
+                for ip in ip_list:
+                    if not ip.startswith("127.") and not ip.startswith("::1"):
+                        return ip
+
+                # If no valid IP found, return localhost
+                return "127.0.0.1"
+            except Exception:
+                # Final fallback
+                return "127.0.0.1"
 
     def prepare_message(self, to, key, value, repeat=True, flags=None):
         """
