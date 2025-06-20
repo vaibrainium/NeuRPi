@@ -84,17 +84,76 @@ def ensure_essential_dependencies():
 
     if missing:
         print(f"Installing essential dependencies: {', '.join(missing)}")
+        
+        # Try multiple installation methods
+        if not _try_install_dependencies(missing):
+            _show_manual_installation_help(missing)
+            sys.exit(1)
+
+
+def _try_install_dependencies(packages):
+    """Try multiple methods to install packages, return True if successful."""
+    installation_methods = [
+        ("with --user flag", [sys.executable, "-m", "pip", "install", "--user"] + packages),
+        ("standard method", [sys.executable, "-m", "pip", "install"] + packages),
+        ("with --break-system-packages", [sys.executable, "-m", "pip", "install", "--break-system-packages"] + packages),
+    ]
+    
+    for method_name, command in installation_methods:
         try:
-            subprocess.run(
-                [sys.executable, "-m", "pip", "install"] + missing,
+            print(f"Attempting installation {method_name}...")
+            result = subprocess.run(
+                command,
                 check=True,
                 capture_output=True,
                 text=True,
             )
-            print("✓ Essential dependencies installed")
+            print(f"✓ Essential dependencies installed {method_name}")
+            return True
         except subprocess.CalledProcessError as e:
-            print(f"Failed to install essential dependencies: {e}")
-            sys.exit(1)
+            print(f"Installation {method_name} failed: {e}")
+            if e.stderr:
+                print(f"Error details: {e.stderr}")
+    
+    # Try upgrading pip first, then install
+    try:
+        print("Attempting to upgrade pip first...")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "pip"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print("✓ pip upgraded, retrying dependency installation...")
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "--user"] + packages,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        print("✓ Essential dependencies installed after pip upgrade")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Installation after pip upgrade failed: {e}")
+        if e.stderr:
+            print(f"Error details: {e.stderr}")
+    
+    return False
+
+
+def _show_manual_installation_help(packages):
+    """Show help message for manual installation."""
+    print("\n" + "="*60)
+    print("❌ FAILED TO INSTALL ESSENTIAL DEPENDENCIES")
+    print("="*60)
+    print("All installation methods failed. Please try one of the following:")
+    print(f"1. Manual installation: pip install --user {' '.join(packages)}")
+    print(f"2. System installation: sudo pip install {' '.join(packages)}")
+    print(f"3. Virtual environment: python -m venv venv && source venv/bin/activate && pip install {' '.join(packages)}")
+    print("4. Check if you have internet connection")
+    print("5. Check if pip is properly configured")
+    print("\nAfter manual installation, run this setup script again.")
+    print("="*60)
 
 
 def create_executable_script(project_root, venv_path):
