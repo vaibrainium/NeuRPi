@@ -113,9 +113,7 @@ class ProcessMonitor(threading.Thread):
         for process_id, info in processes_copy:
             self._check_single_process(process_id, info, current_time)
 
-    def _check_single_process(
-        self, process_id: str, info: ProcessInfo, current_time: float
-    ):
+    def _check_single_process(self, process_id: str, info: ProcessInfo, current_time: float):
         """Check a single process for health and performance."""
         try:
             if info.process and info.process.is_alive():
@@ -139,14 +137,9 @@ class ProcessMonitor(threading.Thread):
                 info.cpu_percent = proc.cpu_percent()
                 info.memory_percent = proc.memory_percent()
 
-    def _check_heartbeat_timeout(
-        self, process_id: str, info: ProcessInfo, current_time: float
-    ):
+    def _check_heartbeat_timeout(self, process_id: str, info: ProcessInfo, current_time: float):
         """Check for heartbeat timeout."""
-        if (
-            info.last_heartbeat
-            and current_time - info.last_heartbeat > info.config.timeout
-        ):
+        if info.last_heartbeat and current_time - info.last_heartbeat > info.config.timeout:
             self.logger.warning(f"Process {process_id} heartbeat timeout")
             self._handle_process_timeout(process_id, info)
 
@@ -339,9 +332,7 @@ class ParallelManager:
         info = self.processes[process_id]
         return self.stop_process_internal(process_id, info, timeout)
 
-    def stop_process_internal(
-        self, process_id: str, info: ProcessInfo, timeout: float = 10.0
-    ) -> bool:
+    def stop_process_internal(self, process_id: str, info: ProcessInfo, timeout: float = 10.0) -> bool:
         """Internal method to stop a process."""
         if not info.process or not info.process.is_alive():
             info.state = ProcessState.STOPPED
@@ -390,9 +381,7 @@ class ParallelManager:
             self.logger.error(f"Process {process_id} exceeded max restarts")
             return False
 
-        self.logger.info(
-            f"Restarting process {process_id} (attempt {info.restart_count + 1})"
-        )
+        self.logger.info(f"Restarting process {process_id} (attempt {info.restart_count + 1})")
 
         # Stop current process
         self.stop_process_internal(process_id, info)
@@ -435,9 +424,7 @@ class ParallelManager:
         else:
             return True
 
-    def receive_message(
-        self, process_id: str, timeout: float = 1.0
-    ) -> tuple[bool, Any]:
+    def receive_message(self, process_id: str, timeout: float = 1.0) -> tuple[bool, Any]:
         """Receive message from a process."""
         if process_id not in self.processes:
             return False, None
@@ -456,18 +443,13 @@ class ParallelManager:
         else:
             return True, message
 
-    def wait_for_message(
-        self, process_id: str, message_type: str | None = None, timeout: float = 30.0
-    ) -> tuple[bool, Any]:
+    def wait_for_message(self, process_id: str, message_type: str | None = None, timeout: float = 30.0) -> tuple[bool, Any]:
         """Wait for a specific type of message from a process."""
         start_time = time.time()
 
         while time.time() - start_time < timeout:
             success, message = self.receive_message(process_id, timeout=0.1)
-            if success and (
-                message_type is None
-                or (isinstance(message, dict) and message.get("type") == message_type)
-            ):
+            if success and (message_type is None or (isinstance(message, dict) and message.get("type") == message_type)):
                 return True, message
             time.sleep(0.01)
 

@@ -98,7 +98,11 @@ class StimulusManager(Display):
         audio_volume = args.get("audio_volume", 1)
         audio_loops = args.get("audio_loops", 0)
         if audio_stim and self.initiate_stimulus_config["audio"][audio_stim]:
-            self.play_audio(self.initiate_stimulus_config["audio"][audio_stim], loops=audio_loops, volume=audio_volume)
+            self.play_audio(
+                self.initiate_stimulus_config["audio"][audio_stim],
+                loops=audio_loops,
+                volume=audio_volume,
+            )
 
     def update_stimulus(self, args=None):
         frame_rate = self.clock.get_fps() or self.frame_rate
@@ -172,9 +176,10 @@ class StimulusManager(Display):
 def main():
     import multiprocessing
 
-
     import protocols.random_dot_motion.core.stimulus.config as config
-    from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion
+    from protocols.random_dot_motion.core.stimulus.random_dot_motion import (
+        RandomDotMotion,
+    )
 
     in_queue = multiprocessing.Queue()
     out_queue = multiprocessing.Queue()
@@ -190,7 +195,6 @@ def main():
     a.start()
 
     while True:
-
         message = "('stimulus_epoch', {'seed': 1, 'coherence': 100, 'stimulus_size': (1920, 1280)})"
         in_queue.put(eval(message))
         time.sleep(1)

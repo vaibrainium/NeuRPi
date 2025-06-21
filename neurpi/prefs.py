@@ -65,11 +65,7 @@ class Prefs:
             val: updated value of the key parameter
 
         """
-        if (
-            key in self._prefs
-            and isinstance(self._prefs[key], dict)
-            and "default" in self._prefs[key]
-        ):
+        if key in self._prefs and isinstance(self._prefs[key], dict) and "default" in self._prefs[key]:
             # Preserve existing structure if it has a 'default' field
             temp_dict_holder = self._prefs[key].copy()
             temp_dict_holder["default"] = val
@@ -113,9 +109,7 @@ class Prefs:
         """Set the mode and reload configuration if needed."""
         if self.mode != mode:
             self.mode = mode
-            self.filename = (
-                None  # Reset filename to let import_configuration determine it
-            )
+            self.filename = None  # Reset filename to let import_configuration determine it
             config = self.import_configuration()
             self._prefs.clear()
             self._prefs.update(config)

@@ -251,9 +251,7 @@ class TaskGUI(rigclass):
             self.camera_timer.stop()
 
     def update_session_clock(self):
-        self.session_display_clock = (
-            time.time() - self.session_clock["start"] - self.session_clock["pause"]
-        )
+        self.session_display_clock = time.time() - self.session_clock["start"] - self.session_clock["pause"]
         self.rig.session_timer.display(int(self.session_display_clock))
 
     def update_video_image(self):
@@ -353,19 +351,11 @@ class TaskGUI(rigclass):
             self.summary_data["total_valid"] = value["trial_counters"]["valid"]
             self.summary_data["total_correct"] = value["trial_counters"]["correct"]
             self.summary_data["total_incorrect"] = value["trial_counters"]["incorrect"]
-            self.summary_data["total_noresponse"] = value["trial_counters"][
-                "noresponse"
-            ]
+            self.summary_data["total_noresponse"] = value["trial_counters"]["noresponse"]
             self.summary_data["total_accuracy"] = value["plots"]["running_accuracy"][1]
-            self.summary_data["trial_distribution"] = value["plots"][
-                "trial_distribution"
-            ]
-            self.summary_data["psychometric_function"] = value["plots"][
-                "psychometric_function"
-            ]
-            self.summary_data["response_time_distribution"] = value["plots"][
-                "response_time_distribution"
-            ]
+            self.summary_data["trial_distribution"] = value["plots"]["trial_distribution"]
+            self.summary_data["psychometric_function"] = value["plots"]["psychometric_function"]
+            self.summary_data["response_time_distribution"] = value["plots"]["response_time_distribution"]
         except:
             # Make them none
             self.summary_data["total_attempt"] = None
@@ -397,11 +387,7 @@ class TaskGUI(rigclass):
         self.summary_window.show()
 
     def hide_summary(self):
-        if (
-            self.summary.baseline_weight.toPlainText() == ""
-            or self.summary.start_weight.toPlainText() == ""
-            or self.summary.end_weight.toPlainText() == ""
-        ):
+        if self.summary.baseline_weight.toPlainText() == "" or self.summary.start_weight.toPlainText() == "" or self.summary.end_weight.toPlainText() == "":
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Icon.Critical)
             msg.setText("Forgot to Enter one of the weights")
@@ -419,15 +405,11 @@ class TaskGUI(rigclass):
             )
             self.subject.end_weight = self.summary_data["end_weight"]
             self.summary_data["start_weight_prct"] = round(
-                100
-                * self.summary_data["start_weight"]
-                / self.summary_data["baseline_weight"],
+                100 * self.summary_data["start_weight"] / self.summary_data["baseline_weight"],
                 2,
             )
             self.summary_data["end_weight_prct"] = round(
-                100
-                * self.summary_data["end_weight"]
-                / self.summary_data["baseline_weight"],
+                100 * self.summary_data["end_weight"] / self.summary_data["baseline_weight"],
                 2,
             )
             self.summary_data["comments"] = self.summary.comments.toPlainText()
@@ -435,25 +417,19 @@ class TaskGUI(rigclass):
             self.summary.close.show()
 
     def close_summary(self):
-        self.summary_data["comments"] = (
-            self.summary.comments.toPlainText()
-        )  # update comments
+        self.summary_data["comments"] = self.summary.comments.toPlainText()  # update comments
         self.summary_window.hide()
         self.rig.close_experiment.show()
 
     def check_water_requirement(self):
-        received_water = (
-            self.subject.get_today_received_water() + self.summary_data["total_reward"]
-        )
+        received_water = self.subject.get_today_received_water() + self.summary_data["total_reward"]
         additional_water = 0
         if received_water < 600:
             additional_water = max(additional_water, 600 - received_water)
         if self.summary_data["end_weight_prct"] < 85:
             additional_water = max(
                 additional_water,
-                ((85 - self.summary_data["end_weight_prct"]) / 100)
-                * self.summary_data["baseline_weight"]
-                * 1000,
+                ((85 - self.summary_data["end_weight_prct"]) / 100) * self.summary_data["baseline_weight"] * 1000,
             )
         if additional_water > 0:
             msg = QtWidgets.QMessageBox()
@@ -605,11 +581,7 @@ class TaskGUI(rigclass):
 
         # updating psychometric function
         try:
-            value["psychometric_function"] = {
-                float(k): v
-                for k, v in value["psychometric_function"].items()
-                if not np.isnan(v)
-            }
+            value["psychometric_function"] = {float(k): v for k, v in value["psychometric_function"].items() if not np.isnan(v)}
             coherences, psych = zip(*sorted(value["psychometric_function"].items()))
             if len(coherences) > 0:
                 self.psychometric_plot.setData(
@@ -626,11 +598,7 @@ class TaskGUI(rigclass):
             pass
         # updating total distribution
         try:
-            value["trial_distribution"] = {
-                float(k): v
-                for k, v in value["trial_distribution"].items()
-                if not np.isnan(v)
-            }
+            value["trial_distribution"] = {float(k): v for k, v in value["trial_distribution"].items() if not np.isnan(v)}
             coherences, trials = zip(*sorted(value["trial_distribution"].items()))
             self.rig.trial_distribution.clear()
             if len(coherences) > 0:
@@ -645,11 +613,7 @@ class TaskGUI(rigclass):
             pass
         # updating reaction time distribution
         try:
-            value["response_time_distribution"] = {
-                float(k): v
-                for k, v in value["response_time_distribution"].items()
-                if not np.isnan(v)
-            }
+            value["response_time_distribution"] = {float(k): v for k, v in value["response_time_distribution"].items() if not np.isnan(v)}
             coherences, rt_dist = zip(
                 *sorted(value["response_time_distribution"].items()),
             )

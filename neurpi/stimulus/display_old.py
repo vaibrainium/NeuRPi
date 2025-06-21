@@ -32,7 +32,12 @@ class Display:
         self.font = self.pygame.font.SysFont("Arial", 20)
 
         if self.stim_config.display.num_screens == 1:
-            self.screen[0] = self.pygame.display.set_mode(self.window_size, flags=self.flags, display=eval(self.stim_config.display.screen), vsync=self.vsync)
+            self.screen[0] = self.pygame.display.set_mode(
+                self.window_size,
+                flags=self.flags,
+                display=eval(self.stim_config.display.screen),
+                vsync=self.vsync,
+            )
             self.screen[0].fill((0, 0, 0))
         else:
             for screen in range(self.stim_config.display.num_screens):

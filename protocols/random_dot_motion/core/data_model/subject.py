@@ -61,7 +61,9 @@ class Subject(BaseSubject):
             "summary": str(Path(self.experiment_dir, self.id + "_summary.csv")),
             "rolling_perf": str(Path(self.experiment_dir, "rolling_performance.pkl")),
             # within session
-            "config": str(Path(self.experiment_dir, self.session, self.id + "_config.txt")),
+            "config": str(
+                Path(self.experiment_dir, self.session, self.id + "_config.txt"),
+            ),
             "trial": str(
                 Path(self.experiment_dir, self.session, self.id + "_trial.csv"),
             ),

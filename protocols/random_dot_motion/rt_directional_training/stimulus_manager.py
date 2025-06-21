@@ -1,5 +1,9 @@
-from protocols.random_dot_motion.core.stimulus.stimulus_manager import StimulusManager as core_StimulusManager
-from protocols.random_dot_motion.core.stimulus.random_dot_motion import RandomDotMotion as core_RDK
+from protocols.random_dot_motion.core.stimulus.stimulus_manager import (
+    StimulusManager as core_StimulusManager,
+)
+from protocols.random_dot_motion.core.stimulus.random_dot_motion import (
+    RandomDotMotion as core_RDK,
+)
 
 
 class RandomDotMotion(core_RDK):

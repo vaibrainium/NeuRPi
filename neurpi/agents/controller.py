@@ -422,15 +422,11 @@ def signal_handler(sig, frame):
 def main():
     # Set virtual environment using relative path
     script_dir = Path(__file__).parent
-    venv_path = (
-        script_dir.parent.parent / ".venv"
-    )  # Go up to NeuRPi root, then to .venv
+    venv_path = script_dir.parent.parent / ".venv"  # Go up to NeuRPi root, then to .venv
 
     if venv_path.exists():
         os.environ["VIRTUAL_ENV"] = str(venv_path)
-        os.environ["PATH"] = (
-            str(venv_path / "Scripts") + os.pathsep + os.environ.get("PATH", "")
-        )
+        os.environ["PATH"] = str(venv_path / "Scripts") + os.pathsep + os.environ.get("PATH", "")
         sys.path.insert(0, str(venv_path / "Lib" / "site-packages"))
 
     # Add the parent directory to Python path if needed

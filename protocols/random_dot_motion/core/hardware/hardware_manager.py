@@ -20,12 +20,8 @@ class HardwareManager(BaseHWManager):
         self.reset_lick_sensor()
 
         self._reward_calibration = self.config.Arduino.Primary.reward.calibration
-        self._reward_calibration_left = (
-            self.config.Arduino.Primary.reward.calibration_left
-        )
-        self._reward_calibration_right = (
-            self.config.Arduino.Primary.reward.calibration_right
-        )
+        self._reward_calibration_left = self.config.Arduino.Primary.reward.calibration_left
+        self._reward_calibration_right = self.config.Arduino.Primary.reward.calibration_right
 
         self.lick_threshold_left = self.config.Arduino.Primary.lick.threshold_left
         self.lick_threshold_right = self.config.Arduino.Primary.lick.threshold_right
@@ -100,10 +96,7 @@ class HardwareManager(BaseHWManager):
             self.hardware["Primary"].write(f"toggle_reward_right,{dummy}\n")
         else:
             raise Exception(
-                "Incorrect spout provided. Please provide from the following list:\n"
-                "'Left': For left spout\n"
-                "'Right': For right spout\n"
-                "'Center': For center spout",
+                "Incorrect spout provided. Please provide from the following list:\n'Left': For left spout\n'Right': For right spout\n'Center': For center spout",
             )
 
     def read_licks(self):

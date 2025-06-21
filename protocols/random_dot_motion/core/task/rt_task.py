@@ -220,7 +220,10 @@ class RTTask(TrialConstruct):
         if "SCREEN" in task_args.get("reinforcer_mode", None):
             self.msg_to_stimulus.put(("kor_epoch", stimulus_args))
             if task_args.get("duration", None):
-                threading.Timer(task_args["duration"], lambda: self.msg_to_stimulus.put(("intertrial_epoch", {}))).start()
+                threading.Timer(
+                    task_args["duration"],
+                    lambda: self.msg_to_stimulus.put(("intertrial_epoch", {})),
+                ).start()
 
         self.stage_block.wait()
 

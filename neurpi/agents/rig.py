@@ -141,8 +141,7 @@ class Rig:
 
         try:
             self.session_info = value["session_info"]
-            self.config = importlib.import_module(
-                f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
+            self.config = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
             self.config.SUBJECT = value["subject_config"]
 
             # Import task module and initialize
@@ -273,10 +272,11 @@ class Rig:
             for file_name, file_path in self.config.FILES.items():
                 # Convert Path objects to strings if needed
                 file_path_str = str(file_path)
-                
+
                 # Check if file exists before trying to read it
                 try:
                     from pathlib import Path
+
                     if Path(file_path_str).exists():
                         with open(file_path_str, "rb") as f:
                             session_files[file_name] = f.read()
@@ -289,7 +289,7 @@ class Rig:
                     self.logger.warning(f"Failed to read session file {file_name} at {file_path_str}: {e}")
                     if file_name in ["lick", "trial"]:
                         session_files[file_name] = b""  # Empty content for failed reads
-            
+
             value = {
                 "rig": self.name,
                 "subject": self.session_info.subject_id,

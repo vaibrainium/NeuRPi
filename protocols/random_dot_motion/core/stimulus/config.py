@@ -1,4 +1,3 @@
-
 import numpy as np
 from scipy import stats
 
@@ -9,7 +8,10 @@ REQUIRED_MODULES = ["Task", "Stimulus", "Behavior"]
 TASK = {
     "epochs": {
         "tag": "List of all epochs and their respective parameters in secs",
-        "fixation": {"tag": "Fixation epoch", "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04)},
+        "fixation": {
+            "tag": "Fixation epoch",
+            "duration": lambda: stats.gamma.rvs(a=1.6, loc=0.5, scale=0.04),
+        },
         "stimulus": {
             "tag": "Stimulus epoch",
             "max_viewing": 25,

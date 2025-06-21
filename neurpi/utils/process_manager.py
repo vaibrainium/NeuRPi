@@ -19,9 +19,7 @@ class CommunicationProcess(multiprocessing.Process):
         self.out_queue = out_queue or multiprocessing.Queue()
         self.stop_event = stop_event or multiprocessing.Event()
         self.args = args
-        self.daemon = (
-            daemon  # if True, the process will be terminated when the main process ends
-        )
+        self.daemon = daemon  # if True, the process will be terminated when the main process ends
 
     def run(self):
         try:

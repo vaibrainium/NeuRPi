@@ -44,13 +44,7 @@ class Display:
             for flag in self.display_config["flags"]:
                 self.flags |= getattr(self.pygame, flag)
         except:
-            self.flags = (
-                self.pygame.FULLSCREEN
-                | self.pygame.SCALED
-                | self.pygame.DOUBLEBUF
-                | self.pygame.HWSURFACE
-                | self.pygame.NOFRAME
-            )
+            self.flags = self.pygame.FULLSCREEN | self.pygame.SCALED | self.pygame.DOUBLEBUF | self.pygame.HWSURFACE | self.pygame.NOFRAME
 
         self.clock = self.pygame.time.Clock()
         self.screen = None

@@ -384,9 +384,7 @@ Start Time: {session_info.start_time}"""
         """Create a new subject with the provided information."""
         try:
             subject_id = self.new_subject_form.name.toPlainText().strip().upper()
-            subject_identification = (
-                self.new_subject_form.identification.toPlainText().strip()
-            )
+            subject_identification = self.new_subject_form.identification.toPlainText().strip()
             subject_housing = self.new_subject_form.housing.toPlainText().strip()
             subject_dob = self.new_subject_form.dob.selectedDate().toString(
                 "yyyy-MM-dd",
@@ -412,9 +410,7 @@ Start Time: {session_info.start_time}"""
             # Create subject info file
             info_dict = {
                 "Name": subject_id,
-                "Identification": "N/A"
-                if subject_identification == ""
-                else subject_identification,
+                "Identification": "N/A" if subject_identification == "" else subject_identification,
                 "subject_dob": subject_dob,
                 "subject_housing": "N/A" if subject_housing == "" else subject_housing,
                 "created_date": datetime.now().isoformat(),
@@ -498,8 +494,7 @@ Start Time: {session_info.start_time}"""
             self,
             "Exit Application",
             "Are you sure you want to exit?",
-            QtWidgets.QMessageBox.StandardButton.Yes
-            | QtWidgets.QMessageBox.StandardButton.No,
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
             QtWidgets.QMessageBox.StandardButton.No,
         )
 

@@ -42,15 +42,9 @@ class SessionManager:
         # Timing parameters
         self.fixation_duration: Optional[float] = None
         self.stimulus_duration: Optional[float] = None
-        self.minimum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"][
-            "min_viewing"
-        ]
-        self.maximum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"][
-            "max_viewing"
-        ]
-        self.knowledge_of_results_duration: Optional[float] = self.config.TASK[
-            "epochs"
-        ]["reinforcement"]["knowledge_of_results"]["duration"]
+        self.minimum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
+        self.maximum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
+        self.knowledge_of_results_duration: Optional[float] = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["duration"]
         self.reinforcement_duration: Optional[float] = None
         self.intertrial_duration: Optional[float] = None
 
@@ -62,51 +56,30 @@ class SessionManager:
         self.intertrial_onset: Optional[float] = None
 
         # Behavioral timing functions
-        self.fixation_duration_function = self.config.TASK["epochs"]["fixation"][
-            "duration"
-        ]
-        self.reinforcement_duration_function = self.config.TASK["epochs"][
-            "reinforcement"
-        ]["duration"]
-        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"][
-            "duration"
-        ]
+        self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
+        self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
 
         # Session variables
-        self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"][
-            "value"
-        ]
+        self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
         self.active_coherences = self.full_coherences  # Could be different subset
-        self.active_coherence_indices = [
-            np.where(self.full_coherences == val)[0][0]
-            for val in self.active_coherences
-        ]
+        self.active_coherence_indices = [np.where(self.full_coherences == val)[0][0] for val in self.active_coherences]
         self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
 
         # Block schedule and trials counter within block
         self.block_schedule: deque = deque()
         self.block_number: int = 0
-        self.repeats_per_block: int = self.config.TASK["stimulus"]["repeats_per_block"][
-            "value"
-        ]
-        self.schedule_structure: str = self.config.TASK["stimulus"][
-            "schedule_structure"
-        ]["value"]
+        self.repeats_per_block: int = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
+        self.schedule_structure: str = self.config.TASK["stimulus"]["schedule_structure"]["value"]
 
         # Bias correction variables
         self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
         self.rolling_bias = deque(maxlen=self.bias_window)
         self.rolling_bias.extend([0] * self.bias_window)
-        self.passive_bias_correction_threshold = self.config.TASK["bias_correction"][
-            "passive"
-        ]["coherence_threshold"]
+        self.passive_bias_correction_threshold = self.config.TASK["bias_correction"]["passive"]["coherence_threshold"]
         self.in_active_bias_correction_block: bool = False
-        self.active_bias_correction_probability = self.config.TASK["bias_correction"][
-            "active"
-        ]["correction_strength"]
-        self.active_bias_correction_threshold = self.config.TASK["bias_correction"][
-            "active"
-        ]["abs_bias_threshold"]
+        self.active_bias_correction_probability = self.config.TASK["bias_correction"]["active"]["correction_strength"]
+        self.active_bias_correction_threshold = self.config.TASK["bias_correction"]["active"]["abs_bias_threshold"]
 
         # Plot variables for performance tracking
         self.plot_vars = {
@@ -115,9 +88,7 @@ class SessionManager:
             "chose_left": {int(coh): 0 for coh in self.full_coherences},
             "psych": {int(coh): np.nan for coh in self.full_coherences},
             "trial_distribution": {int(coh): 0 for coh in self.full_coherences},
-            "response_time_distribution": {
-                int(coh): np.nan for coh in self.full_coherences
-            },
+            "response_time_distribution": {int(coh): np.nan for coh in self.full_coherences},
         }
 
     ####################### pre-session methods #######################
@@ -176,25 +147,19 @@ class SessionManager:
         }
         return stage_task_args, stage_stimulus_args
 
-    def prepare_reinforcement_stage(
-        self, choice: Optional[int], response_time: Optional[float]
-    ) -> tuple[dict[str, Any], dict[str, Any]]:
+    def prepare_reinforcement_stage(self, choice: Optional[int], response_time: Optional[float]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Prepare parameters for reinforcement stage based on choice and response time."""
         self.choice = choice
         self.response_time = response_time
         stage_task_args, stage_stimulus_args = {}, {}
 
-        self.outcome, self.trial_reward = self._determine_outcome_and_reward(
-            self.choice
-        )
+        self.outcome, self.trial_reward = self._determine_outcome_and_reward(self.choice)
 
         # Get reinforcement duration for this outcome
         if self.outcome not in self.reinforcement_duration_function:
             msg = f"Reinforcement duration function for outcome '{self.outcome}' is not defined."
             raise KeyError(msg)
-        self.reinforcement_duration = self.reinforcement_duration_function[
-            self.outcome
-        ](self.response_time)
+        self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
 
         stage_stimulus_args = {"outcome": self.outcome}
         # Build task args
@@ -218,9 +183,7 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         """Prepare parameters for intertrial stage."""
         stage_task_args, stage_stimulus_args = {}, {}
-        self.intertrial_duration = self.intertrial_duration_function[self.outcome](
-            self.response_time, self.signed_coherence
-        )
+        self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
         stage_task_args = {"intertrial_duration": self.intertrial_duration}
         if self.trial_reward > 0:
@@ -234,13 +197,9 @@ class SessionManager:
         self.in_active_bias_correction_block = True
         correction_direction = -np.sign(np.nanmean(self.rolling_bias))
         self.rolling_bias.extend([0] * self.bias_window)
-        self.generate_active_correction_block_schedule(
-            correction_direction, prob=self.active_bias_correction_probability
-        )
+        self.generate_active_correction_block_schedule(correction_direction, prob=self.active_bias_correction_probability)
         self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
-        self.target = int(
-            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
-        )
+        self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
 
     def _handle_standard_block(self):
         if self.trial_counters["attempt"] == 0 or len(self.block_schedule) == 0:
@@ -249,19 +208,13 @@ class SessionManager:
             self.generate_block_schedule()
 
         self.trial_seed, self.signed_coherence = self.block_schedule.popleft()
-        self.target = int(
-            np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2]))
-        )
+        self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
         self.trial_counters["correction"] = 0
 
     def prepare_trial_variables(self):
         """Prepare parameters for next trial based on current flags and bias."""
         self.reset_trial_variables()
-        if (
-            not self.in_active_bias_correction_block
-            and np.abs(np.nanmean(self.rolling_bias))
-            >= self.active_bias_correction_threshold
-        ):
+        if not self.in_active_bias_correction_block and np.abs(np.nanmean(self.rolling_bias)) >= self.active_bias_correction_threshold:
             self._start_active_bias_correction_block()
         else:
             self._handle_standard_block()
@@ -305,9 +258,7 @@ class SessionManager:
         chosen_value = np.random.choice(values, p=probabilities)
         return chosen_value
 
-    def shuffle_seq(
-        self, sequence: Union[np.ndarray, list[float]], max_repeat: int = 3
-    ) -> np.ndarray:
+    def shuffle_seq(self, sequence: Union[np.ndarray, list[float]], max_repeat: int = 3) -> np.ndarray:
         """Shuffle sequence so that no more than max_repeat consecutive elements have same sign."""
         sequence = np.array(sequence)
         for i in range(len(sequence) - max_repeat + 1):
@@ -375,9 +326,7 @@ class SessionManager:
             self.plot_vars["running_accuracy"] = [valid_trials, accuracy, self.outcome]
 
         # Update psychometric function (fraction choosing right)
-        psych_val = (
-            round(chose_right[signed_coh] / tot_trials, 2) if tot_trials > 0 else 0.0
-        )
+        psych_val = round(chose_right[signed_coh] / tot_trials, 2) if tot_trials > 0 else 0.0
         self.plot_vars["psych"][signed_coh] = psych_val
 
         # Update trial distribution count
@@ -421,9 +370,7 @@ class SessionManager:
         elif self.outcome == 0:
             self._handle_incorrect_trial()
             # Correction trial if signed coherence above threshold
-            next_trial_vars["is_correction_trial"] = (
-                np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
-            )
+            next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
 
         else:  # NaN outcome
             self._handle_noresponse_or_invalid(next_trial_vars)
@@ -436,17 +383,11 @@ class SessionManager:
         self.is_repeat_trial = next_trial_vars["is_repeat_trial"]
         if next_trial_vars["is_correction_trial"]:
             if self.schedule_structure == "interleaved":
-                new_target = int(
-                    np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4))
-                )
+                new_target = int(np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4)))
                 new_signed_coh = new_target * np.abs(self.signed_coherence)
-                self.block_schedule.append(
-                    (np.random.randint(0, 1_000_000), new_signed_coh)
-                )
+                self.block_schedule.append((np.random.randint(0, 1_000_000), new_signed_coh))
             elif self.schedule_structure == "blocked":
-                self.block_schedule.append(
-                    (np.random.randint(0, 1_000_000), self.signed_coherence)
-                )
+                self.block_schedule.append((np.random.randint(0, 1_000_000), self.signed_coherence))
         if next_trial_vars["is_repeat_trial"]:
             self.block_schedule.appendleft((self.trial_seed, self.signed_coherence))
 
@@ -459,17 +400,13 @@ class SessionManager:
             "trial_counters": self.trial_counters,
             "block_number": self.block_number,
             "reward_volume": round(self.reward_volume, 2),
-            "trial_reward": round(self.trial_reward, 2)
-            if self.trial_reward is not None
-            else None,
+            "trial_reward": round(self.trial_reward, 2) if self.trial_reward is not None else None,
             "total_reward": round(self.total_reward, 2),
             "plots": {
                 "running_accuracy": self.plot_vars["running_accuracy"],
                 "psychometric_function": self.plot_vars["psych"],
                 "trial_distribution": self.plot_vars["trial_distribution"],
-                "response_time_distribution": self.plot_vars[
-                    "response_time_distribution"
-                ],
+                "response_time_distribution": self.plot_vars["response_time_distribution"],
             },
         }
         return trial_data
@@ -509,9 +446,7 @@ class SessionManager:
 
     def end_of_session_updates(self):
         self.config.SUBJECT["rolling_perf"]["reward_volume"] = self.reward_volume
-        self.config.SUBJECT["rolling_perf"]["total_attempts"] = self.trial_counters[
-            "attempt"
-        ]
+        self.config.SUBJECT["rolling_perf"]["total_attempts"] = self.trial_counters["attempt"]
         self.config.SUBJECT["rolling_perf"]["total_reward"] = self.total_reward
         with open(self.config.FILES["rolling_perf_after"], "wb") as file:
             pickle.dump(self.config.SUBJECT["rolling_perf"], file)
@@ -528,10 +463,7 @@ if __name__ == "__main__":
     rolling_window = config.TASK["rolling_performance"]["rolling_window"]
     rolling_perf = {
         "rolling_window": rolling_window,
-        "history": {
-            int(coh): list(np.zeros(rolling_window).astype(int))
-            for coh in full_coherences
-        },
+        "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
         "history_indices": {int(coh): 49 for coh in full_coherences},
         "accuracy": {int(coh): 0 for coh in full_coherences},
         # "current_coherence_level": current_coherence_level,

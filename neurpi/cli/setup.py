@@ -238,9 +238,15 @@ def _try_install_dependencies(packages):
             return False
 
     installation_methods = [
-        ("with --user flag", [sys.executable, "-m", "pip", "install", "--user"] + packages),
+        (
+            "with --user flag",
+            [sys.executable, "-m", "pip", "install", "--user"] + packages,
+        ),
         ("standard method", [sys.executable, "-m", "pip", "install"] + packages),
-        ("with --break-system-packages", [sys.executable, "-m", "pip", "install", "--break-system-packages"] + packages),
+        (
+            "with --break-system-packages",
+            [sys.executable, "-m", "pip", "install", "--break-system-packages"] + packages,
+        ),
     ]
 
     for method_name, command in installation_methods:
@@ -297,7 +303,11 @@ def _check_pip_availability():
         )
         print(f"✓ pip is available: {result.stdout.strip()}")
         return True
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError) as e:
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+    ) as e:
         print(f"pip check failed: {e}")
         return False
 
@@ -337,7 +347,11 @@ def _install_pip():
                 downloaded = True
                 print(f"✓ Downloaded get-pip.py using {cmd[0]}")
                 break
-            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+            except (
+                subprocess.CalledProcessError,
+                subprocess.TimeoutExpired,
+                FileNotFoundError,
+            ):
                 continue
 
         if downloaded:

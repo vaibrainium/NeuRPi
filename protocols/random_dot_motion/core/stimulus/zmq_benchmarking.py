@@ -104,7 +104,14 @@ def main():
     mp_sender_process = mp.Process(target=sender_mp, args=(mp_queue, num_messages))
     mp_receiver_process = mp.Process(target=receiver_mp, args=(mp_queue, num_messages))
 
-    processes = [ipc_sender_process, ipc_receiver_process, tcp_sender_process, tcp_receiver_process, mp_sender_process, mp_receiver_process]
+    processes = [
+        ipc_sender_process,
+        ipc_receiver_process,
+        tcp_sender_process,
+        tcp_receiver_process,
+        mp_sender_process,
+        mp_receiver_process,
+    ]
 
     for process in processes:
         process.start()

@@ -40,5 +40,19 @@ if __name__ == "__main__":
     # generate_sound(filename="left_direction_tone.wav", frequency=8000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=.2)
     # generate_sound(filename="right_direction_tone.wav", frequency=16000, duration=60, ramping_time=0.0, sampling_rate=192000, volume=1)
 
-    generate_sound(filename="8KHz_2sec.wav", frequency=8000, duration=2, ramping_time=0.05, sampling_rate=192000, volume=0.2)
-    generate_sound(filename="16KHz_2sec.wav", frequency=16000, duration=2, ramping_time=0.05, sampling_rate=192000, volume=1)
+    generate_sound(
+        filename="8KHz_2sec.wav",
+        frequency=8000,
+        duration=2,
+        ramping_time=0.05,
+        sampling_rate=192000,
+        volume=0.2,
+    )
+    generate_sound(
+        filename="16KHz_2sec.wav",
+        frequency=16000,
+        duration=2,
+        ramping_time=0.05,
+        sampling_rate=192000,
+        volume=1,
+    )

@@ -63,9 +63,7 @@ def init_logger(
         raise ValueError(msg)
 
     # Construct the logger name from available components
-    logger_name_pieces = [
-        v for v in (module_name, class_name, object_name) if v is not None
-    ]
+    logger_name_pieces = [v for v in (module_name, class_name, object_name) if v is not None]
     logger_name = ".".join(logger_name_pieces)
 
     # Create or retrieve the logger
@@ -95,11 +93,7 @@ def _extract_module_name(instance: Any) -> str:
         try:
             if mod_obj and hasattr(mod_obj, "__file__") and mod_obj.__file__:
                 mod_suffix = inspect.getmodulename(mod_obj.__file__)
-                if (
-                    mod_suffix
-                    and hasattr(mod_obj, "__package__")
-                    and mod_obj.__package__
-                ):
+                if mod_suffix and hasattr(mod_obj, "__package__") and mod_obj.__package__:
                     module_name = f"{mod_obj.__package__}.{mod_suffix}"
         except AttributeError:
             # When running interactively or from a plugin, __main__ does not have __file__
@@ -215,10 +209,5 @@ def _create_file_handler(base_filename: Path) -> RotatingFileHandler:
                 backupCount=log_num,
             )
         except (OSError, PermissionError) as f:
-            error_msg = (
-                f"Couldn't open logfile {base_filename}, and couldn't fix permissions.\n"
-                + "-" * 20
-                + f"\nGot errors:\n{e}\n\n{f}\n"
-                + "-" * 20
-            )
+            error_msg = f"Couldn't open logfile {base_filename}, and couldn't fix permissions.\n" + "-" * 20 + f"\nGot errors:\n{e}\n\n{f}\n" + "-" * 20
             raise PermissionError(error_msg) from e

@@ -38,18 +38,12 @@ class SessionManager:
         self.total_reward = 0  # total reward given in session
         self.fixation_duration = None
         self.stimulus_duration = None
-        self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"][
-            "min_viewing"
-        ]
-        self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"][
-            "max_viewing"
-        ]
+        self.minimum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
+        self.maximum_viewing_duration = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
         self.reinforcement_duration = None
         self.intertrial_duration = None
         # pulse variables
-        self.pulse_probabilities = self.config.TASK["stimulus"]["pulse_probabilities"][
-            "value"
-        ]
+        self.pulse_probabilities = self.config.TASK["stimulus"]["pulse_probabilities"]["value"]
         self.pulse_onset = None
         self.pulse_duration = self.config.TASK["stimulus"]["pulse_duration"]["value"]
         self.pulse_coherence = None
@@ -60,43 +54,24 @@ class SessionManager:
         self.reinforcement_onset = None
         self.intertrial_onset = None
         # behavior dependent function
-        self.fixation_duration_function = self.config.TASK["epochs"]["fixation"][
-            "duration"
-        ]
-        self.reinforcement_duration_function = self.config.TASK["epochs"][
-            "reinforcement"
-        ]["duration"]
-        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"][
-            "duration"
-        ]
+        self.fixation_duration_function = self.config.TASK["epochs"]["fixation"]["duration"]
+        self.reinforcement_duration_function = self.config.TASK["epochs"]["reinforcement"]["duration"]
+        self.intertrial_duration_function = self.config.TASK["epochs"]["intertrial"]["duration"]
         # initialize session variables
-        self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"][
-            "value"
-        ]
-        self.active_coherences = (
-            self.full_coherences
-        )  # self.config.TASK["stimulus"]["active_coherences"]["value"]
-        self.active_coherence_indices = [
-            np.where(self.full_coherences == value)[0][0]
-            for value in self.active_coherences
-        ]
+        self.full_coherences = self.config.TASK["stimulus"]["signed_coherences"]["value"]
+        self.active_coherences = self.full_coherences  # self.config.TASK["stimulus"]["active_coherences"]["value"]
+        self.active_coherence_indices = [np.where(self.full_coherences == value)[0][0] for value in self.active_coherences]
         self.coh_to_xrange = {coh: i for i, coh in enumerate(self.full_coherences)}
         # trial block
         self.block_schedule = []
         self.trials_in_block = 0
-        self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"][
-            "value"
-        ]
+        self.repeats_per_block = self.config.TASK["stimulus"]["repeats_per_block"]["value"]
         # bias
         self.rolling_bias_index = 0
         self.bias_window = self.config.TASK["bias_correction"]["bias_window"]
         self.rolling_bias = np.zeros(self.bias_window)
-        self.passive_bias_correction_threshold = self.config.TASK["bias_correction"][
-            "repeat_threshold"
-        ]["passive"]
-        self.active_bias_correction_threshold = self.config.TASK["bias_correction"][
-            "repeat_threshold"
-        ]["active"]
+        self.passive_bias_correction_threshold = self.config.TASK["bias_correction"]["repeat_threshold"]["passive"]
+        self.active_bias_correction_threshold = self.config.TASK["bias_correction"]["repeat_threshold"]["active"]
         # plot variables
         self.plot_vars = {
             "running_accuracy": [],
@@ -104,9 +79,7 @@ class SessionManager:
             "chose_left": {int(coh): 0 for coh in self.full_coherences},
             "psych": {int(coh): np.nan for coh in self.full_coherences},
             "trial_distribution": {int(coh): 0 for coh in self.full_coherences},
-            "response_time_distribution": {
-                int(coh): np.nan for coh in self.full_coherences
-            },
+            "response_time_distribution": {int(coh): np.nan for coh in self.full_coherences},
         }
 
         # list of all variables needed to be reset every trial
@@ -195,9 +168,7 @@ class SessionManager:
         stage_stimulus_args["outcome"] = self.outcome
 
         # determine reinfocement duration and reward
-        self.reinforcement_duration = self.reinforcement_duration_function[
-            self.outcome
-        ](self.response_time)
+        self.reinforcement_duration = self.reinforcement_duration_function[self.outcome](self.response_time)
         if self.outcome == "correct":
             self.trial_reward = self.full_reward_volume
         else:
@@ -265,17 +236,11 @@ class SessionManager:
             self.pulse_coherence = self.signed_coherence
 
         if index % 3 == 0:
-            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"][
-                "early"
-            ]
+            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"]["early"]
         elif index % 3 == 1:
-            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"][
-                "middle"
-            ]
+            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"]["middle"]
         else:
-            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"][
-                "late"
-            ]
+            self.pulse_onset = self.config.TASK["stimulus"]["pulse_onset"]["value"]["late"]
 
         pulse = [
             (int(self.pulse_onset), self.pulse_coherence),
@@ -350,27 +315,21 @@ class SessionManager:
                 # computing right choices coherence-wise
                 self.plot_vars["chose_right"][self.signed_coherence] += 1
 
-            tot_trials_in_coh = (
-                self.plot_vars["chose_left"][self.signed_coherence]
-                + self.plot_vars["chose_right"][self.signed_coherence]
-            )
+            tot_trials_in_coh = self.plot_vars["chose_left"][self.signed_coherence] + self.plot_vars["chose_right"][self.signed_coherence]
 
             # update running accuracy
             if self.trial_counters["correct"] + self.trial_counters["incorrect"] > 0:
                 self.plot_vars["running_accuracy"] = [
                     self.trial_counters["valid"],
                     round(
-                        self.trial_counters["correct"]
-                        / self.trial_counters["valid"]
-                        * 100,
+                        self.trial_counters["correct"] / self.trial_counters["valid"] * 100,
                         2,
                     ),
                     self.outcome,
                 ]
             # update psychometric array
             self.plot_vars["psych"][self.signed_coherence] = round(
-                self.plot_vars["chose_right"][self.signed_coherence]
-                / tot_trials_in_coh,
+                self.plot_vars["chose_right"][self.signed_coherence] / tot_trials_in_coh,
                 2,
             )
 
@@ -381,41 +340,24 @@ class SessionManager:
             if np.isnan(
                 self.plot_vars["response_time_distribution"][self.signed_coherence],
             ):
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = (
-                    round(self.response_time, 2)
-                )
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round(self.response_time, 2)
             else:
-                self.plot_vars["response_time_distribution"][self.signed_coherence] = (
-                    round(
-                        (
-                            (
-                                (tot_trials_in_coh - 1)
-                                * self.plot_vars["response_time_distribution"][
-                                    self.signed_coherence
-                                ]
-                            )
-                            + self.response_time
-                        )
-                        / tot_trials_in_coh,
-                        2,
-                    )
+                self.plot_vars["response_time_distribution"][self.signed_coherence] = round(
+                    (((tot_trials_in_coh - 1) * self.plot_vars["response_time_distribution"][self.signed_coherence]) + self.response_time) / tot_trials_in_coh,
+                    2,
                 )
 
         trial_data = {
             "is_valid": self.valid,
             "trial_counters": self.trial_counters,
             "reward_volume": round(self.full_reward_volume, 2),
-            "trial_reward": round(self.trial_reward, 2)
-            if self.trial_reward is not None
-            else None,
+            "trial_reward": round(self.trial_reward, 2) if self.trial_reward is not None else None,
             "total_reward": round(self.total_reward, 2),
             "plots": {
                 "running_accuracy": self.plot_vars["running_accuracy"],
                 "psychometric_function": self.plot_vars["psych"],
                 "trial_distribution": self.plot_vars["trial_distribution"],
-                "response_time_distribution": self.plot_vars[
-                    "response_time_distribution"
-                ],
+                "response_time_distribution": self.plot_vars["response_time_distribution"],
             },
         }
         return trial_data
@@ -455,9 +397,7 @@ class SessionManager:
 
     def end_of_session_updates(self):
         self.config.SUBJECT["rolling_perf"]["reward_volume"] = self.full_reward_volume
-        self.config.SUBJECT["rolling_perf"]["total_attempts"] = self.trial_counters[
-            "attempt"
-        ]
+        self.config.SUBJECT["rolling_perf"]["total_attempts"] = self.trial_counters["attempt"]
         self.config.SUBJECT["rolling_perf"]["total_reward"] = self.total_reward
         with open(self.config.FILES["rolling_perf_after"], "wb") as file:
             pickle.dump(self.config.SUBJECT["rolling_perf"], file)
