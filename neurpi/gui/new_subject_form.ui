@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ui version="4.0">
  <class>NewSubjectForm</class>
  <widget class="QWidget" name="NewSubjectForm">
@@ -215,6 +215,6 @@ color: rgb(255, 255, 255);</string>
   <tabstop>identification</tabstop>
   <tabstop>create_button</tabstop>
  </tabstops>
- <resources/>
- <connections/>
+ <resources />
+ <connections />
 </ui>

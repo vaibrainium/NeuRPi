@@ -11,18 +11,21 @@ NeuRPi provides a robust, scalable platform for conducting behavioral experiment
 ## 🧠 Key Features
 
 ### Core Architecture
+
 - **🔗 Unified Codebase**: Single repository combining controller and experiment functionality
 - **🌐 Distributed Computing**: Run components across multiple machines or locally
 - **⚡ Real-time Performance**: High-precision timing for behavioral experiments
 - **🔌 Hardware Abstraction**: Unified interface for diverse hardware components
 
 ### Deployment & Management
+
 - **📦 Modern Package Management**: UV-based dependency management with Python 3.13+
 - **🖥️ Flexible GUI**: Optional PyQt6 interface with headless operation support
 - **🔧 Cross-Platform**: Native support for Windows and Linux
 - **📊 Comprehensive Logging**: Structured logging with multiple output formats
 
 ### Networking & Communication
+
 - **🚀 ZeroMQ Backbone**: High-performance, reliable inter-process communication
 - **🔄 Auto-Discovery**: Automatic rig detection and management
 - **📡 Protocol Flexibility**: Support for various experimental protocols
@@ -31,12 +34,14 @@ NeuRPi provides a robust, scalable platform for conducting behavioral experiment
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Python 3.13+** (Required for latest features and performance)
 - **UV Package Manager** (Modern, fast Python package management)
 
 ### Installation
 
 #### 1. Install UV Package Manager
+
 ```bash
 # Windows (PowerShell)
 powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
@@ -49,6 +54,7 @@ pip install uv
 ```
 
 #### 2. Clone and Setup NeuRPi
+
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/neurpi.git
@@ -62,6 +68,7 @@ uv sync
 ```
 
 #### 3. Configure Environment
+
 ```bash
 # Initialize default configuration
 uv run neurpi init-config
@@ -75,6 +82,7 @@ export NEURPI_DATADIR="/path/to/data"
 ### Basic Usage
 
 #### Run Controller (Controller)
+
 ```bash
 # With GUI (default)
 uv run neurpi controller
@@ -87,6 +95,7 @@ uv run neurpi controller --config custom_config.yaml
 ```
 
 #### Run rig (Experiment Node)
+
 ```bash
 # Basic rig
 uv run neurpi rig --name rig_01
@@ -99,6 +108,7 @@ uv run neurpi rig --child --parent controller_main
 ```
 
 #### Unified Mode (Auto-detection)
+
 ```bash
 # Automatically detects role based on configuration
 uv run neurpi unified
@@ -110,7 +120,9 @@ uv run neurpi unified --force-role rig
 ## 📖 Usage Examples & Scenarios
 
 ### Scenario 1: Single Machine Development
+
 Perfect for protocol development and testing:
+
 ```bash
 # Controller 1: Start rig with test hardware
 uv run neurpi rig --name dev_rig --hardware simulator
@@ -120,7 +132,9 @@ uv run neurpi controller --development-mode
 ```
 
 ### Scenario 2: Distributed Laboratory Setup
+
 Production environment with multiple experiment rigs:
+
 ```bash
 # Experiment Room - Rig 1
 uv run neurpi rig --name rig_001 --hardware lab_config_a
@@ -133,7 +147,9 @@ uv run neurpi controller --lab-mode --auto-discover
 ```
 
 ### Scenario 3: Console Mode for Remote Operation
+
 Headless operation via SSH or automated scripts:
+
 ```bash
 # Start controller in console mode
 uv run neurpi controller --no-gui --remote-access
@@ -151,7 +167,9 @@ neurpi> quit                # Exit controller
 ```
 
 ### Scenario 4: Python API Integration
+
 Embed NeuRPi in custom applications:
+
 ```python
 from neurpi.agents.controller import Controller
 from neurpi.agents.rig import rig
@@ -180,7 +198,9 @@ while controller.is_experiment_running("rig_001"):
 ```
 
 ### Scenario 5: Hierarchical Multi-Lab Setup
+
 Coordinate multiple laboratories:
+
 ```bash
 # Lab A - Main Controller
 uv run neurpi controller --name lab_a_control --port 5555
@@ -214,6 +234,7 @@ neurpi/
 ## ⚙️ Configuration
 
 Configuration is handled through:
+
 1. Default values in code
 2. YAML config files (`neurpi_config.yaml`)
 3. Environment variables (`NEURPI_*`)

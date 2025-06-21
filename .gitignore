@@ -33,7 +33,10 @@ logs
 .venv
 
 .pre-commit-config.yaml
-commitlint.config.js
+.benchmarks
+.husky
+.pytest_cache
+.ruff_cache
 node_modules/
 ruff.toml
 rust_backend

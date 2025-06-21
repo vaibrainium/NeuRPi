@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <ui version="4.0">
  <class>Behavior_Data</class>
  <widget class="QWidget" name="Behavior_Data">
@@ -218,7 +218,7 @@
     <string>00.0</string>
    </property>
    <property name="markdown" stdset="0">
-    <string/>
+    <string />
    </property>
   </widget>
   <widget class="QTextEdit" name="summary_data">
@@ -315,7 +315,7 @@ p, li { white-space: pre-wrap; }
     <string>00.0</string>
    </property>
    <property name="markdown" stdset="0">
-    <string/>
+    <string />
    </property>
   </widget>
   <widget class="QLabel" name="label_11">
@@ -360,7 +360,7 @@ p, li { white-space: pre-wrap; }
     <string>00.0</string>
    </property>
    <property name="markdown" stdset="0">
-    <string/>
+    <string />
    </property>
   </widget>
   <widget class="QLabel" name="label_12">
@@ -411,6 +411,6 @@ p, li { white-space: pre-wrap; }
   <tabstop>okay</tabstop>
   <tabstop>summary_data</tabstop>
  </tabstops>
- <resources/>
- <connections/>
+ <resources />
+ <connections />
 </ui>
