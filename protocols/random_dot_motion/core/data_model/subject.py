@@ -47,11 +47,7 @@ class Subject(BaseSubject):
         self.rig_id = session_info.rig_id
         self.start_weight = session_info.subject_weight
         self.end_weight = None
-        self.baseline_weight = (
-            self.start_weight
-            if self.history.baseline_weight.empty
-            else self.history.baseline_weight.iloc[-1]
-        )
+        self.baseline_weight = self.start_weight if self.history.baseline_weight.empty else self.history.baseline_weight.iloc[-1]
         self.prct_weight = round((self.start_weight / self.baseline_weight * 100), 2)
         self.protocol = session_info.protocol
         self.experiment = session_info.experiment
@@ -65,9 +61,7 @@ class Subject(BaseSubject):
             "summary": str(Path(self.experiment_dir, self.id + "_summary.csv")),
             "rolling_perf": str(Path(self.experiment_dir, "rolling_performance.pkl")),
             # within session
-            "config": str(
-                Path(self.experiment_dir, self.session, self.id + "_config.txt"),
-            ),
+            "config": str(Path(self.experiment_dir, self.session, self.id + "_config.txt")),
             "trial": str(
                 Path(self.experiment_dir, self.session, self.id + "_trial.csv"),
             ),
@@ -123,13 +117,9 @@ class Subject(BaseSubject):
                         session_idx = int(session.name.split("_")[-1])
                     if int(session.name.split("_")[-2]) == day:
                         session_idx = max(session_idx, int(session.name.split("_")[-1]))
-            creation_time = (
-                Path(self.experiment_dir, f"{day}_{session_idx}").stat().st_ctime
-            )
+            creation_time = Path(self.experiment_dir, f"{day}_{session_idx}").stat().st_ctime
 
-            if (
-                time.time() - creation_time > 12 * 60 * 60
-            ):  # if created more than 12 hrs ago, increase day
+            if time.time() - creation_time > 12 * 60 * 60:  # if created more than 12 hrs ago, increase day
                 day += 1
                 session_idx = 1
             else:
@@ -155,26 +145,15 @@ class Subject(BaseSubject):
         """
         # If first session, creating
         if self.session == "1_1":
-            if self.experiment not in ["reward_spout_stimulus_association"]:
-                full_coherences = self.session_config.TASK["stimulus"][
-                    "signed_coherences"
-                ]["value"]
-                current_coherence_level = self.session_config.TASK[
-                    "rolling_performance"
-                ]["current_coherence_level"]
-                reward_volume = self.session_config.TASK["rolling_performance"][
-                    "reward_volume"
-                ]
-                rolling_window = self.session_config.TASK["rolling_performance"][
-                    "rolling_window"
-                ]
+            if self.experiment not in ["reward_spout_stimulus_association", "rt_test"]:
+                full_coherences = self.session_config.TASK["stimulus"]["signed_coherences"]["value"]
+                current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
+                reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]
+                rolling_window = self.session_config.TASK["rolling_performance"]["rolling_window"]
 
                 self.rolling_perf = {
                     "rolling_window": rolling_window,
-                    "history": {
-                        int(coh): list(np.zeros(rolling_window).astype(int))
-                        for coh in full_coherences
-                    },
+                    "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
                     "history_indices": {int(coh): 0 for coh in full_coherences},
                     "accuracy": {int(coh): 0 for coh in full_coherences},
                     "current_coherence_level": current_coherence_level,
@@ -275,9 +254,7 @@ class Subject(BaseSubject):
                 # Fallback for dynamically created modules or objects without source
                 session_config_content = f"# Session config could not be retrieved as source code\n# Error: {e}\n# Config object: {self.session_config}\n"
                 if hasattr(self.session_config, "__dict__"):
-                    session_config_content += (
-                        f"# Config attributes: {vars(self.session_config)}\n"
-                    )
+                    session_config_content += f"# Config attributes: {vars(self.session_config)}\n"
 
             with open(self.files["config"], "w") as file:
                 file.write(session_config_content)
@@ -355,9 +332,7 @@ class Subject(BaseSubject):
         water_received=None,
     ):
         hist_dict = {
-            "baseline_weight": baseline_weight
-            if baseline_weight
-            else self.baseline_weight,
+            "baseline_weight": baseline_weight if baseline_weight else self.baseline_weight,
             "start_weight": start_weight if start_weight else self.start_weight,
             "end_weight": end_weight if end_weight else self.end_weight,
             "water_received": water_received,

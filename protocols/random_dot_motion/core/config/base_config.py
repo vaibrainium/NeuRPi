@@ -42,6 +42,7 @@ class BaseRDMConfig:
                     },
                     "knowledge_of_results": {
                         "duration": 0.5,
+                        "mode": ["LED", "SCREEN"],
                     },
                 },
                 "intertrial": {
@@ -148,6 +149,45 @@ class BaseRDMConfig:
                     },
                     "initiate_intertrial": {
                         "background_color": (0, 0, 0),
+                    },
+                },
+            },
+            "task_epochs": {
+                "tag": """List of all epochs and their respective functions
+                    Format:
+                        epoch_name:
+                            init_func: function to initiate epoch. This will be executed once at the beginning of epoch.
+                            update_func: function to update epoch. This will be executed continuously until epoch is over.""",
+                "value": {
+                    "fixation_epoch": {
+                        "clear_queue": True,
+                        "init_func": "initiate_fixation",
+                        "update_func": None,
+                    },
+                    "stimulus_epoch": {
+                        "clear_queue": True,
+                        "init_func": "initiate_stimulus",
+                        "update_func": "update_stimulus",
+                    },
+                    "reinforcement_epoch": {
+                        "clear_queue": True,
+                        "init_func": "initiate_reinforcement",
+                        "update_func": None,
+                    },
+                    "delay_epoch": {
+                        "clear_queue": True,
+                        "init_func": "initiate_delay",
+                        "update_func": None,  # "update_delay", #None,
+                    },
+                    "must_respond_epoch": {
+                        "clear_queue": False,
+                        "init_func": "initiate_must_respond",
+                        "update_func": None,
+                    },
+                    "intertrial_epoch": {
+                        "clear_queue": True,
+                        "init_func": "initiate_intertrial",
+                        "update_func": None,
                     },
                 },
             },

@@ -1,7 +1,6 @@
 import datetime
 import itertools
 import threading
-import time
 
 import numpy as np
 
@@ -130,9 +129,7 @@ class RTTask(TrialConstruct):
         # initiate fixation and start monitoring responses
         self.msg_to_stimulus.put(("fixation_epoch", stimulus_args))
         self.timers["trial"] = datetime.datetime.now()
-        self.managers["session"].fixation_onset = (
-            datetime.datetime.now() - self.timers["session"]
-        )
+        self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
         self.response_block.set()
         self.stage_block.wait()
 
@@ -157,8 +154,7 @@ class RTTask(TrialConstruct):
             self.trigger = {
                 "type": "GO",
                 "targets": task_args["response_to_check"],
-                "duration": task_args["stimulus_duration"]
-                - task_args["minimum_viewing_duration"],
+                "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
             }
             # initiate stimulus			# flash LED
             if task_args.get("flash_led") is not None:
@@ -172,14 +168,10 @@ class RTTask(TrialConstruct):
                 task_args["minimum_viewing_duration"],
                 self.response_block.set,
             ).start()
-            self.managers["session"].stimulus_onset = (
-                datetime.datetime.now() - self.timers["session"]
-            )
+            self.managers["session"].stimulus_onset = datetime.datetime.now() - self.timers["session"]
 
             self.stage_block.wait()
-            self.managers["session"].response_onset = (
-                datetime.datetime.now() - self.timers["session"]
-            )
+            self.managers["session"].response_onset = datetime.datetime.now() - self.timers["session"]
             print(
                 f"Responded in {self.response_time} secs with {self.choice} for target: {task_args['target']} with {task_args['coherence']}",
             )
@@ -195,24 +187,16 @@ class RTTask(TrialConstruct):
         self.stage_block.clear()
         task_args, stimulus_args = {}, {}
 
-        task_args, stimulus_args = self.managers["session"].prepare_reinforcement_stage(
-            self.choice,
-            self.response_time,
-        )
+        task_args, stimulus_args = self.managers["session"].prepare_reinforcement_stage(self.choice, self.response_time)
         # start reinforcement epoch
         self.msg_to_stimulus.put(("reinforcement_epoch", stimulus_args))
 
         # wait for reinforcement duration then send message to stimulus manager
-        threading.Timer(
-            task_args["reinforcement_duration"],
-            self.stage_block.set,
-        ).start()
-        self.managers["session"].reinforcement_onset = (
-            datetime.datetime.now() - self.timers["session"]
-        )
+        threading.Timer(task_args["reinforcement_duration"], self.stage_block.set).start()
+        self.managers["session"].reinforcement_onset = datetime.datetime.now() - self.timers["session"]
 
         # if reward is requested:
-        if task_args["trial_reward"]:
+        if task_args.get("trial_reward", None) is not None:
             # give reward
             if task_args["reward_side"] == -1:  # reward left
                 self.managers["hardware"].reward_left(task_args["trial_reward"])
@@ -228,31 +212,15 @@ class RTTask(TrialConstruct):
                     "duration": None,
                 }
                 self.response_block.set()
-
-        if task_args.get("flash_led") is not None:
-            # flash LED
+        if "LED" in task_args.get("reinforcer_mode", None):
             self.managers["hardware"].flash_led(
-                task_args["flash_led"]["direction"],
-                task_args["flash_led"]["duration"],
+                task_args["reinforcer_direction"],
+                task_args["duration"],
             )
-
-        # If fixed reward ratio is requested:
-        if task_args.get("FRR_reward") is not None:
-            # give reward after some delay
-            time.sleep(0.1)
-            if (
-                stimulus_args.get("play_FRR_audio") is not None
-            ):  # play FRR reward stimulus
-                self.msg_to_stimulus.put(
-                    ("play_audio", stimulus_args["play_FRR_audio"]),
-                )
-            if task_args["reward_side"] == -1:
-                self.managers["hardware"].reward_left(task_args["FRR_reward"])
-                self.managers["session"].total_reward += task_args["FRR_reward"]
-            elif task_args["reward_side"] == 1:
-                self.managers["hardware"].reward_right(task_args["FRR_reward"])
-                self.managers["session"].total_reward += task_args["FRR_reward"]
-            print(f"FRR reward given: {task_args['FRR_reward']}")
+        if "SCREEN" in task_args.get("reinforcer_mode", None):
+            self.msg_to_stimulus.put(("kor_epoch", stimulus_args))
+            if task_args.get("duration", None):
+                threading.Timer(task_args["duration"], lambda: self.msg_to_stimulus.put(("intertrial_epoch", {}))).start()
 
         self.stage_block.wait()
 
@@ -277,9 +245,7 @@ class RTTask(TrialConstruct):
             ).start()
         else:
             self.stage_block.set()
-        self.managers["session"].intertrial_onset = (
-            datetime.datetime.now() - self.timers["session"]
-        )
+        self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
 
         if task_args.get("wait_for_consumption", False):
             print("[intertrial_stage] Waiting for must_respond_block")

@@ -36,6 +36,7 @@ TASK.update(
                     "invalid": lambda response_time: 0,
                 },
                 "knowledge_of_results": {
+                    "mode": ["LED", "SCREEN"],
                     "duration": 0.5,
                 },
             },
@@ -79,8 +80,9 @@ TASK.update(
             "window_size": 50,
             "coherence_levels": [100, 72, 36, 18, 9],
         },
-    }
+    },
 )
+
 
 # Hardware requirements
 REQUIRED_HARDWARE = ["Arduino", "Display"]

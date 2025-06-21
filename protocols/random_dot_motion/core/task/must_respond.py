@@ -129,9 +129,7 @@ class MustRespond(TrialConstruct):
 
         self.managers["session"].prepare_trial_vars()
         self.timers["trial"] = datetime.datetime.now()
-        self.managers["session"].fixation_onset = (
-            datetime.datetime.now() - self.timers["session"]
-        )
+        self.managers["session"].fixation_onset = datetime.datetime.now() - self.timers["session"]
 
         print(
             f"Current Bias: {self.managers['session'].bias}. Threshold: {self.managers['session'].switch_threshold}",
@@ -164,9 +162,7 @@ class MustRespond(TrialConstruct):
         """
         # Clear stage block
         self.stage_block.clear()
-        task_args, stim_args = self.managers["session"].prepare_reinforcement_stage(
-            self.choice,
-        )
+        task_args, stimulus_args = self.managers["session"].prepare_reinforcement_stage(self.choice)
 
         # if stim arg is not empty
         if "LED" in task_args.get("reinforcer_mode", None):
@@ -175,7 +171,7 @@ class MustRespond(TrialConstruct):
                 task_args["duration"],
             )
         if "SCREEN" in task_args.get("reinforcer_mode", None):
-            self.msg_to_stimulus.put(("kor_epoch", stim_args))
+            self.msg_to_stimulus.put(("kor_epoch", stimulus_args))
             if task_args.get("duration", None):
                 threading.Timer(
                     task_args["duration"],
@@ -217,9 +213,7 @@ class MustRespond(TrialConstruct):
             ).start()
         else:
             self.stage_block.set()
-        self.managers["session"].intertrial_onset = (
-            datetime.datetime.now() - self.timers["session"]
-        )
+        self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
 
         if task_args.get("wait_for_consumption", False):
             print("[intertrial_stage] Waiting for must_respond_block")
