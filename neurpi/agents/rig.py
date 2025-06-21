@@ -318,7 +318,7 @@ def main():
     quitting = threading.Event()
     quitting.clear()
     try:
-        pi = Rig()
+        _rig = Rig()  # Keep reference to prevent garbage collection
         # handshake is already called during rig initialization
 
         quitting.wait()

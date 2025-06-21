@@ -206,11 +206,10 @@ class Controller(Application):
         `value` should have `subject` and `rig` field added to dictionary for identification.
 
         Any key in `value` that matches a column in the subject's trial data table will be saved.
-
         """
         try:
             self.message_to_taskgui(value)
-        except:
+        except Exception:
             print("Could not update GUI")
 
     def l_change(self, value):
