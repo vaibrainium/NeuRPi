@@ -10,7 +10,7 @@ from pathlib import Path
 
 def check_uv_available():
     """Check if uv is available and return the executable path."""
-    uv_path = shutil.which("uv")
+    uv_path = _find_uv_executable()
     if uv_path:
         try:
             result = subprocess.run(
@@ -28,7 +28,56 @@ def check_uv_available():
     # UV not found, try to install it
     print("UV not found. Installing UV...")
     if _install_uv():
-        return shutil.which("uv")
+        return _find_uv_executable()
+
+    return None
+
+
+def _find_uv_executable():
+    """Find UV executable in various locations."""
+    # First try the standard PATH
+    uv_path = shutil.which("uv")
+    if uv_path:
+        return uv_path
+
+    # On Windows, UV might be installed in user's Scripts directory
+    if platform.system() == "Windows":
+        import os
+
+        # Check user's Scripts directory
+        user_scripts = Path.home() / "AppData" / "Roaming" / "Python" / f"Python{sys.version_info.major}{sys.version_info.minor}" / "Scripts"
+        uv_exe = user_scripts / "uv.exe"
+        if uv_exe.exists():
+            return str(uv_exe)
+
+        # Check local AppData Scripts
+        local_scripts = Path.home() / "AppData" / "Local" / "Programs" / "Python" / f"Python{sys.version_info.major}{sys.version_info.minor}" / "Scripts"
+        uv_exe = local_scripts / "uv.exe"
+        if uv_exe.exists():
+            return str(uv_exe)
+
+        # Check if it's in the user site-packages Scripts
+        try:
+            import site
+            user_site = site.getusersitepackages()
+            if user_site:
+                user_scripts_alt = Path(user_site).parent / "Scripts"
+                uv_exe = user_scripts_alt / "uv.exe"
+                if uv_exe.exists():
+                    return str(uv_exe)
+        except:
+            pass
+    else:
+        # On Unix/Linux, check common locations
+        unix_locations = [
+            Path.home() / ".local" / "bin" / "uv",
+            Path("/usr/local/bin/uv"),
+            Path("/opt/homebrew/bin/uv"),  # macOS Homebrew
+        ]
+
+        for uv_path in unix_locations:
+            if uv_path.exists():
+                return str(uv_path)
 
     return None
 
@@ -433,7 +482,7 @@ python -m neurpi "$@"
 def create_virtual_environment(
     venv_path,
     python_version,
-    use_uv=False,
+    use_uv=True,
     uv_executable=None,
 ):
     """Create virtual environment using uv or venv."""
