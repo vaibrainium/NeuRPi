@@ -224,7 +224,9 @@ class Net_Node:
                 except Exception as e:
                     self.logger.exception(e)
 
-            self.logger.exception(f"MSG ID {msg.id} - No listen function found for key: {msg.key}")
+            self.logger.exception(
+                f"MSG ID {msg.id} - No listen function found for key: {msg.key}"
+            )
 
         if (msg.key != "CONFIRM") and ("NOREPEAT" not in msg.flags.keys()):
             # send confirmation
@@ -534,7 +536,14 @@ class Net_Node:
         self.streams[id] = stream_thread
 
         self.logger.info(
-            "Stream started with configuration:\n" + "ID: {}\n".format(self.id + "_" + id) + f"Key: {key}\n" + f"Min Chunk Size: {min_size}\n" + f"Upstream ID: {upstream}\n" + f"Port: {port}\n" + f"IP: {ip}\n" + f"Subject: {subject}\n",
+            "Stream started with configuration:\n"
+            + "ID: {}\n".format(self.id + "_" + id)
+            + f"Key: {key}\n"
+            + f"Min Chunk Size: {min_size}\n"
+            + f"Upstream ID: {upstream}\n"
+            + f"Port: {port}\n"
+            + f"IP: {ip}\n"
+            + f"Subject: {subject}\n",
         )
 
         return q
@@ -604,9 +613,15 @@ class Net_Node:
                         flags={"NOREPEAT": True, "MINPRINT": True},
                         sender=socket_id,
                     ).serialize()
-                    socket.send_multipart((upstream, upstream, msg), track=True, copy=True)
+                    socket.send_multipart(
+                        (upstream, upstream, msg), track=True, copy=True
+                    )
 
-                    self.logger.debug("STREAM {}: Sent {} items".format(self.id + "_" + id, len(pending_data)))
+                    self.logger.debug(
+                        "STREAM {}: Sent {} items".format(
+                            self.id + "_" + id, len(pending_data)
+                        )
+                    )
                     pending_data = []
         else:
             # just send like normal messags
@@ -635,7 +650,9 @@ class Net_Node:
                     id=f"{id}_{next(msg_counter)}",
                     sender=socket_id,
                 ).serialize()
-                socket.send_multipart((upstream, upstream, msg), track=False, copy=False)
+                socket.send_multipart(
+                    (upstream, upstream, msg), track=False, copy=False
+                )
 
                 self.logger.debug("STREAM {}: Sent 1 item".format(self.id + "_" + id))
 
@@ -656,13 +673,22 @@ class Net_Node:
 
         if self._ip is None:
             # get ips that aren't the loopback
-            unwrap00 = [ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1]
+            unwrap00 = [
+                ip
+                for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+                if not ip.startswith("127.")
+            ][:1]
             # ??? truly dk
             unwrap01 = [
-                [(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1],
+                [
+                    (s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close())
+                    for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]
+                ][0][1],
             ]
 
-            self._ip = [list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip][0][0]
+            self._ip = [
+                list_of_ip for list_of_ip in (unwrap00, unwrap01) if list_of_ip
+            ][0][0]
 
         return self._ip
 

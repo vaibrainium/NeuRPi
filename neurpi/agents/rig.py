@@ -31,11 +31,9 @@ class Rig:
             id=f"_{self.name}",
             upstream=self.name,
             port=int(prefs.get("MSGPORT")),
-            upstream_ip=prefs.get("CONTROLLERIP"),  # Connect to controller's IP
             listens=self.listens,
             instance=False,
         )
-        self.logger.info(f"Net_Node connecting to {prefs.get('CONTROLLERIP')}:{prefs.get('MSGPORT')}")
         self.logger.debug("rig networking initialized")
 
         # State and session data
@@ -114,14 +112,11 @@ class Rig:
             "state": self.state,
             "prefs": prefs.get(),
         }
-        self.logger.info(f"Sending handshake to {self.parentid} via RigStation: {hello}")
-        # Use RigStation to send handshake - it properly connects to controller
-        self.networking.push(to="T", key="HANDSHAKE", value=hello)
-        self.logger.info("Handshake sent successfully via RigStation")
+        self.node.send(self.parentid, "HANDSHAKE", value=hello)
 
     def update_state(self):
         """Send the current state to the controller."""
-        self.networking.push(to="T", key="STATE", value=self.state, flags={"NOLOG": True})
+        self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
 
     ############################### LISTEN FUNCTIONS ########################################
     def register_handler(self, key, handler):
@@ -146,7 +141,8 @@ class Rig:
 
         try:
             self.session_info = value["session_info"]
-            self.config = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
+            self.config = importlib.import_module(
+                f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
             self.config.SUBJECT = value["subject_config"]
 
             # Import task module and initialize
@@ -281,7 +277,6 @@ class Rig:
                 # Check if file exists before trying to read it
                 try:
                     from pathlib import Path
-
                     if Path(file_path_str).exists():
                         with open(file_path_str, "rb") as f:
                             session_files[file_name] = f.read()
@@ -323,7 +318,7 @@ def main():
     quitting = threading.Event()
     quitting.clear()
     try:
-        _rig = Rig()  # Keep reference to prevent garbage collection
+        pi = Rig()
         # handshake is already called during rig initialization
 
         quitting.wait()

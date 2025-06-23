@@ -1023,7 +1023,7 @@ class RigStation(Station):
                 "FILE": self.l_file,  # We are receiving a file
                 "CONTINUOUS": self.l_continuous,  # we are sending continuous data to the controller
                 "CHILD": self.l_child,
-                "HANDSHAKE": self.l_handshake,
+                "HANDSHAKE": self.l_noop,
                 "CALIBRATE_PORT": self.l_forward,
                 "CALIBRATE_RESULT": self.l_forward,
                 "BANDWIDTH": self.l_forward,
@@ -1167,19 +1167,10 @@ class RigStation(Station):
         with open(full_path, "wb") as open_file:
             open_file.write(file_data)
 
-        self.logger.info("SOUND RECEIVED {}".format(msg.value["path"]))        # If we requested a file, some poor start fn is probably waiting on us
+        self.logger.info("SOUND RECEIVED {}".format(msg.value["path"]))
+
+        # If we requested a file, some poor start fn is probably waiting on us
         self.file_block.set()
-
-    def l_handshake(self, msg: Message):
-        """
-        Forward handshake message from rig to controller.
-
-        Args:
-            msg (:class:`Message`): Handshake message from rig
-        """
-        # Forward the handshake message to the controller
-        self.push(to="T", key="HANDSHAKE", value=msg.value)
-        self.logger.debug(f"Forwarding handshake from {msg.sender} to controller")
 
     def l_continuous(self, msg: Message):
         """
