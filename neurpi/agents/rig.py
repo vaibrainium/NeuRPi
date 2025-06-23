@@ -31,9 +31,11 @@ class Rig:
             id=f"_{self.name}",
             upstream=self.name,
             port=int(prefs.get("MSGPORT")),
+            upstream_ip=prefs.get("CONTROLLERIP"),  # Connect to controller's IP
             listens=self.listens,
             instance=False,
         )
+        self.logger.info(f"Net_Node connecting to {prefs.get('CONTROLLERIP')}:{prefs.get('MSGPORT')}")
         self.logger.debug("rig networking initialized")
 
         # State and session data

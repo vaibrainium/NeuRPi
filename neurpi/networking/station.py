@@ -1173,7 +1173,7 @@ class RigStation(Station):
     def l_handshake(self, msg: Message):
         """
         Forward handshake message from rig to controller.
-        
+
         Args:
             msg (:class:`Message`): Handshake message from rig
         """
