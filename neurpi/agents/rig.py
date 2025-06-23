@@ -114,13 +114,14 @@ class Rig:
             "state": self.state,
             "prefs": prefs.get(),
         }
-        self.logger.info(f"Sending handshake to {self.parentid}: {hello}")
-        self.node.send(self.parentid, "HANDSHAKE", value=hello)
-        self.logger.info("Handshake sent successfully")
+        self.logger.info(f"Sending handshake to {self.parentid} via RigStation: {hello}")
+        # Use RigStation to send handshake - it properly connects to controller
+        self.networking.push(to="T", key="HANDSHAKE", value=hello)
+        self.logger.info("Handshake sent successfully via RigStation")
 
     def update_state(self):
         """Send the current state to the controller."""
-        self.node.send(self.name, "STATE", self.state, flags={"NOLOG": True})
+        self.networking.push(to="T", key="STATE", value=self.state, flags={"NOLOG": True})
 
     ############################### LISTEN FUNCTIONS ########################################
     def register_handler(self, key, handler):

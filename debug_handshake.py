@@ -111,28 +111,28 @@ def test_network_connectivity():
         # Test ZMQ connection specifically
         print("\n🔧 Testing ZMQ connection...")
         import zmq
-        
+
         context = zmq.Context()
         dealer = context.socket(zmq.DEALER)
         dealer.setsockopt_string(zmq.IDENTITY, "test_rig")
         dealer.setsockopt(zmq.LINGER, 0)
-        
+
         try:
             dealer.connect(f"tcp://{controller_ip}:{push_port}")
             print(f"✓ ZMQ DEALER connected to tcp://{controller_ip}:{push_port}")
-            
+
             # Send a test message
             test_msg = ["TEST", "HANDSHAKE", '{"test": "data"}']
             dealer.send_multipart([part.encode() if isinstance(part, str) else part for part in test_msg])
             print("✓ Test message sent")
-            
+
             # Try to receive response (with timeout)
             if dealer.poll(timeout=2000):  # 2 second timeout
                 response = dealer.recv_multipart()
                 print(f"✓ Received response: {response}")
             else:
                 print("⚠️ No response received (timeout)")
-                
+
         except Exception as e:
             print(f"❌ ZMQ connection test failed: {e}")
         finally:
@@ -146,31 +146,31 @@ def test_network_connectivity():
 def test_zmq_handshake():
     """Test ZMQ handshake specifically."""
     print("🔧 Testing ZMQ handshake simulation...")
-    
+
     try:
         import zmq
         import json
         from neurpi.prefs import configure_prefs
-        
+
         # Get config
         configure_prefs(mode="rig")
         from neurpi.prefs import prefs
-        
+
         controller_ip = prefs.get("CONTROLLERIP")
         push_port = prefs.get("PUSHPORT")
         rig_name = prefs.get("NAME")
-        
+
         print(f"Simulating handshake from {rig_name} to {controller_ip}:{push_port}")
-        
+
         context = zmq.Context()
         dealer = context.socket(zmq.DEALER)
         dealer.setsockopt_string(zmq.IDENTITY, rig_name)
         dealer.setsockopt(zmq.LINGER, 0)
-        
+
         try:
             dealer.connect(f"tcp://{controller_ip}:{push_port}")
             print("✓ Connected")
-            
+
             # Create handshake message in the same format as the real rig
             handshake_data = {
                 "rig": rig_name,
@@ -178,30 +178,30 @@ def test_zmq_handshake():
                 "state": "IDLE",
                 "prefs": {"test": "data"}
             }
-            
+
             # Send message in the format expected by ControllerStation
             message_parts = [
                 b"T",  # TO
-                b"HANDSHAKE",  # KEY  
+                b"HANDSHAKE",  # KEY
                 json.dumps(handshake_data).encode()  # VALUE
             ]
-            
+
             dealer.send_multipart(message_parts)
             print(f"✓ Sent handshake: {handshake_data}")
-            
+
             # Wait for response
             if dealer.poll(timeout=3000):
                 response = dealer.recv_multipart()
                 print(f"✓ Received: {response}")
             else:
                 print("⚠️ No response (this might be expected)")
-                
+
         except Exception as e:
             print(f"❌ ZMQ handshake test failed: {e}")
         finally:
             dealer.close()
             context.term()
-            
+
     except Exception as e:
         print(f"❌ Handshake simulation failed: {e}")
 
