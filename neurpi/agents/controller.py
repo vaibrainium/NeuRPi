@@ -184,19 +184,21 @@ class Controller(Application):
             value (dict): dict containing `ip` and `state`
 
         """
+        self.logger.info(f"HANDSHAKE RECEIVED: {value}")
         print("HANDSHAKE RECEIVED from")
         print(value["rig"])
         if value["rig"] in self.rigs.keys():
             self.rigs[value["rig"]]["ip"] = value.get("ip", "")
             self.rigs[value["rig"]]["state"] = value.get("state", "")
             self.rigs[value["rig"]]["prefs"] = value.get("prefs", {})
-
+            self.logger.info(f"Updated existing rig: {value['rig']}")
         else:
             self.new_rig(
                 name=value["rig"],
                 ip=value.get("ip", ""),
                 rig_prefs=value.get("prefs", {}),
             )
+            self.logger.info(f"Added new rig: {value['rig']}")
         self.update_rig_availability()
 
     def l_data(self, value):

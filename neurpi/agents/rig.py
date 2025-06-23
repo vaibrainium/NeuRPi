@@ -112,7 +112,9 @@ class Rig:
             "state": self.state,
             "prefs": prefs.get(),
         }
+        self.logger.info(f"Sending handshake to {self.parentid}: {hello}")
         self.node.send(self.parentid, "HANDSHAKE", value=hello)
+        self.logger.info("Handshake sent successfully")
 
     def update_state(self):
         """Send the current state to the controller."""
