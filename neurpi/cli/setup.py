@@ -191,11 +191,11 @@ def ensure_essential_dependencies():
     except ImportError:
         missing.append("tomli>=1.2.0")
 
-    # Check for click and rich availability
+    # Check for typer and rich availability
     try:
-        import click  # noqa: F401
+        import typer  # noqa: F401
     except ImportError:
-        missing.append("click>=8.0.0")
+        missing.append("typer>=0.9.0")
 
     try:
         import rich  # noqa: F401
@@ -989,7 +989,7 @@ def create_pip_wrapper(venv_path, python_exe):
 ensure_essential_dependencies()
 
 
-# Import click inside functions to avoid import issues
+# Import typer inside functions to avoid import issues
 def main():
     """Main entry point for the neurpi-setup command."""
     setup_cli()
@@ -1008,20 +1008,20 @@ def setup_cli(controller=False, rig=False, dev=False, full=False, python_version
 
 if __name__ == "__main__":
     try:
-        # Import click here to ensure it's available after installation
-        import click
+        # Import typer here to ensure it's available after installation
+        import typer
+        from typing_extensions import Annotated
 
-        @click.command()
-        @click.option("--controller", is_flag=True, help="Install core + GUI dependencies")
-        @click.option("--rig", is_flag=True, help="Install core + hardware dependencies")
-        @click.option("--dev", is_flag=True, help="Install core + development dependencies")
-        @click.option("--full", is_flag=True, help="Install all dependencies (default)")
-        @click.option(
-            "--python-version",
-            default="3.11",
-            help="Python version to use (default: 3.11)",
-        )
-        def cli_command(controller, rig, dev, full, python_version):
+        app = typer.Typer(help="Set up NeuRPi development environment with selective dependency installation.")
+
+        @app.command()
+        def setup(
+            controller: Annotated[bool, typer.Option("--controller", help="Install core + GUI dependencies")] = False,
+            rig: Annotated[bool, typer.Option("--rig", help="Install core + hardware dependencies")] = False,
+            dev: Annotated[bool, typer.Option("--dev", help="Install core + development dependencies")] = False,
+            full: Annotated[bool, typer.Option("--full", help="Install all dependencies (default)")] = False,
+            python_version: Annotated[str, typer.Option("--python-version", help="Python version to use (default: 3.11)")] = "3.11",
+        ):
             """Set up NeuRPi development environment with selective dependency installation."""
             setup_neurpi(
                 controller=controller,
@@ -1031,7 +1031,7 @@ if __name__ == "__main__":
                 python_version=python_version,
             )
 
-        cli_command()
+        app()
     except ImportError as e:
         print(f"Error importing required modules: {e}")
         print("Please ensure all essential dependencies are installed.")

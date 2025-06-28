@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+from __future__ import annotations
+
 import subprocess
 import sys
 from pathlib import Path
 
-import click
+import typer
 import yaml
 from rich.console import Console
+from typing_extensions import Annotated
 
 # Add the project root to Python path
 project_root = Path(__file__).parent.parent.parent
@@ -16,6 +19,11 @@ sys.path.insert(0, str(project_root))
 from neurpi.prefs import configure_prefs
 
 console = Console()
+app = typer.Typer(
+    name="neurpi",
+    help="NeuRPi CLI - Run agents with specified configuration.",
+    rich_markup_mode="rich",
+)
 
 
 def load_config(config_file):
@@ -30,9 +38,7 @@ def load_config(config_file):
 
 def run_agent(mode):
     """Run the specified agent with python from VENVDIR."""
-    # Configure prefs for the specific mode
     configure_prefs(mode)
-
     if mode == "controller":
         config_file = project_root / "neurpi" / "config" / "controller.yaml"
         agent_script = project_root / "neurpi" / "agents" / "controller.py"
@@ -42,33 +48,20 @@ def run_agent(mode):
     else:
         console.print(f"[red]Unknown agent type: {mode}[/red]")
         sys.exit(1)
-
-    # Load config to get VENVDIR
     config = load_config(config_file)
-    venv_dir = config.get("VENVDIR", "venv/")  # Construct python executable path
-    if venv_dir.startswith(("./", "../", ".")):
-        # Relative path - resolve relative to project root
-        python_exe = project_root / venv_dir / "Scripts" / "python.exe"
-    else:
-        # Absolute path
-        python_exe = Path(venv_dir) / "Scripts" / "python.exe"
-
+    venv_dir = config.get("VENVDIR", "venv/")
+    python_exe = project_root / venv_dir / "Scripts" / "python.exe" if venv_dir.startswith(("./", "../", ".")) else Path(venv_dir) / "Scripts" / "python.exe"
     console.print(f"[green]Starting {mode} agent...[/green]")
     console.print(f"[blue]Python: {python_exe}[/blue]")
     console.print(f"[blue]Script: {agent_script}[/blue]")
-
     try:
-        # Validate that files exist before running
         if not python_exe.exists():
             console.print(f"[red]Python executable not found: {python_exe}[/red]")
-            console.print(
-                "[yellow]Make sure the virtual environment is set up correctly[/yellow]",
-            )
+            console.print("[yellow]Make sure the virtual environment is set up correctly[/yellow]")
             sys.exit(1)
         if not agent_script.exists():
             console.print(f"[red]Agent script not found: {agent_script}[/red]")
             sys.exit(1)
-
         subprocess.run([str(python_exe), str(agent_script)], check=True)
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Agent failed with exit code {e.returncode}[/red]")
@@ -78,14 +71,11 @@ def run_agent(mode):
         sys.exit(1)
 
 
-def run_agent_direct(mode, no_gui=False, name=None):
+def run_agent_direct(mode: str, *, no_gui: bool = False, name: str | None = None):
     """Run the specified agent directly by importing and executing it."""
-    # Configure prefs for the specific mode
     configure_prefs(mode)
-
     if mode == "controller":
         try:
-            # Import and run the controller agent
             from neurpi.agents.controller import main as controller_main
 
             controller_main()
@@ -94,7 +84,6 @@ def run_agent_direct(mode, no_gui=False, name=None):
             sys.exit(1)
     elif mode == "rig":
         try:
-            # Import and run the rig agent
             from neurpi.agents.rig import main as rig_main
 
             rig_main()
@@ -106,63 +95,49 @@ def run_agent_direct(mode, no_gui=False, name=None):
         sys.exit(1)
 
 
-@click.group()
-def cli():
-    """NeuRPi CLI - Run agents with specified configuration."""
-
-
-@cli.command()
-@click.option("--no-gui", is_flag=True, help="Run without GUI")
-def controller(no_gui):
+@app.command()
+def controller(
+    no_gui: Annotated[bool, typer.Option("--no-gui", help="Run without GUI")] = False,
+):
     """Run as Controller (controller/interface)."""
     mode = "controller"
     configure_prefs(mode)
-    console.print(
-        f"[green]Starting controller agent{'(no GUI)' if no_gui else '(with GUI)'}...[/green]",
-    )
-
+    console.print(f"[green]Starting controller agent{' (no GUI)' if no_gui else ' (with GUI)'}...[/green]")
     try:
-        run_agent_direct(mode, no_gui)
+        run_agent_direct(mode, no_gui=no_gui)
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user[/yellow]")
-        sys.exit(130)
+        raise typer.Exit(130) from None
 
 
-@cli.command()
-@click.option("--name", help="Rig name")
-def rig(name):
+@app.command()
+def rig(
+    name: Annotated[str | None, typer.Option("--name", help="Rig name")] = None,
+):
     """Run as Rig (experiment execution)."""
     mode = "rig"
     configure_prefs(mode)
     console.print(f"[green]Starting rig agent{f' ({name})' if name else ''}...[/green]")
-
     try:
-        run_agent_direct(mode, False, name)
+        run_agent_direct(mode, name=name)
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user[/yellow]")
-        sys.exit(130)
+        raise typer.Exit(130) from None
 
 
-@cli.command()
+@app.command()
 def status():
     """Show system status."""
-    # For now, just show that the CLI is working
     console.print("[green]NeuRPi CLI is operational[/green]")
-    console.print(
-        "[blue]Use 'neurpi controller' or 'neurpi rig' to start agents[/blue]",
-    )
+    console.print("[blue]Use 'neurpi controller' or 'neurpi rig' to start agents[/blue]")
 
 
 def main():
-    """Main entry point for the CLI."""
     try:
-        cli()
+        app()
     except KeyboardInterrupt:
         console.print("\n[yellow]Operation cancelled by user[/yellow]")
-        sys.exit(130)
-    except Exception as e:
-        console.print(f"[red]Unexpected error: {e}[/red]")
-        sys.exit(1)
+        raise typer.Exit(130) from None
 
 
 if __name__ == "__main__":
