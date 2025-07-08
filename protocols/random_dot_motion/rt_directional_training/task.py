@@ -9,14 +9,13 @@ import numpy as np
 
 from neurpi.prefs import prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
-from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
+from protocols.random_dot_motion.core.hardware.hardware_manager import \
+    HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-from protocols.random_dot_motion.rt_directional_training.session_manager import (
-    SessionManager,
-)
-from protocols.random_dot_motion.rt_directional_training.stimulus_manager import (
-    StimulusManager,
-)
+from protocols.random_dot_motion.rt_directional_training.session_manager import \
+    SessionManager
+from protocols.random_dot_motion.rt_directional_training.stimulus_manager import \
+    StimulusManager
 
 # TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
 # TODO: 5. Make sure graduation is working properly
@@ -156,15 +155,15 @@ class Task:
 
         # LED-related
         elif key == "flash_led_left":
-            duration = self.managers["session"].knowledge_of_results_duration
+            duration = self.managers["session"].kor_duration
             self.managers["hardware"].flash_led(-1, duration)
 
         elif key == "flash_led_center":
-            duration = self.managers["session"].knowledge_of_results_duration
+            duration = self.managers["session"].kor_duration
             self.managers["hardware"].flash_led(0, duration)
 
         elif key == "flash_led_right":
-            duration = self.managers["session"].knowledge_of_results_duration
+            duration = self.managers["session"].kor_duration
             self.managers["hardware"].flash_led(1, duration)
 
         elif key == "toggle_led_left":
@@ -178,13 +177,13 @@ class Task:
 
         # Combined LED and Reward
         elif key == "led_and_reward_left":
-            duration = self.managers["session"].knowledge_of_results_duration
+            duration = self.managers["session"].kor_duration
             self.managers["hardware"].flash_led(-1, duration)
             self.managers["hardware"].reward_left(value)
             self.managers["session"].total_reward += value
 
         elif key == "led_and_reward_right":
-            duration = self.managers["session"].knowledge_of_results_duration
+            duration = self.managers["session"].kor_duration
             self.managers["hardware"].flash_led(1, duration)
             self.managers["hardware"].reward_right(value)
             self.managers["session"].total_reward += value

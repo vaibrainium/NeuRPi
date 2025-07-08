@@ -156,7 +156,7 @@ class RTTask(TrialConstruct):
                 "targets": task_args["response_to_check"],
                 "duration": task_args["stimulus_duration"] - task_args["minimum_viewing_duration"],
             }
-            # initiate stimulus			# flash LED
+            # initiate stimulus	# flash LED
             if task_args.get("flash_led") is not None:
                 self.managers["hardware"].flash_led(
                     task_args["flash_led"]["direction"],
