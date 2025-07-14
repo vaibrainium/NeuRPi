@@ -140,12 +140,14 @@ class SessionManager:
 
     def prepare_stimulus_stage(self) -> tuple[dict[str, Any], dict[str, Any]]:
         """Prepare parameters for stimulus presentation stage."""
-        self.stimulus_duration = self.maximum_viewing_duration
         if self.trial_type == "active":
+            self.stimulus_duration = self.maximum_viewing_duration
             response_to_check = [-1, 1]
         else:
             response_to_check = []
             self.minimum_viewing_duration = self.passive_viewing_time
+            self.stimulus_duration = self.passive_viewing_time
+
         stage_stimulus_args = {
             "coherence": self.signed_coherence,
             "seed": self.trial_seed,
@@ -231,7 +233,7 @@ class SessionManager:
     def set_trial_type(self):
         # generate random uniform number with if below self.passive_trial_probability then return "passive" else "active"
         random_value = np.random.uniform(0, 1)
-        if (self.signed_coherence > self.passive_coherence_threshold) and (random_value < self.passive_trial_probability): # type: ignore
+        if (np.abs(self.signed_coherence) >= self.passive_coherence_threshold) and (random_value <= self.passive_trial_probability): # type: ignore
             self.passive_viewing_time = self.passive_viewing_duration_func()
             self.trial_type = "passive"
             self.trial_type, self.passive_viewing_time
@@ -265,7 +267,6 @@ class SessionManager:
 
         seed_schedule = [(np.random.randint(0, 1_000_000), coh) for coh in schedule]
         self.block_schedule = deque(seed_schedule)
-
 
     def generate_active_correction_block_schedule(self, correction_direction, prob):
         block_length = self.get_variable_trial_block_length()
