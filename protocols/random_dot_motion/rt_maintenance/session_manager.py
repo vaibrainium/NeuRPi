@@ -173,7 +173,7 @@ class SessionManager:
         if self.kor_duration > 0:
             stage_task_args["kor"] = {
                 "reinforcer_mode": self.kor_mode,
-                "reinforcer_direction": self.choice,
+                "reinforcer_direction": self.target,
                 "duration": self.kor_duration,
             }
 
@@ -220,6 +220,7 @@ class SessionManager:
             self._start_active_bias_correction_block()
         else:
             self._handle_standard_block()
+        print(self.block_schedule)
 
     def generate_block_schedule(self):
         schedule = np.repeat(self.active_coherences, self.repeats_per_block)
@@ -303,6 +304,14 @@ class SessionManager:
                 next_trial_vars["is_repeat_trial"] = True
         else:
             next_trial_vars["is_repeat_trial"] = True
+
+    def shuffle_deque(self, deq: deque) -> deque:
+        """Shuffle a deque in place."""
+        temp_list = list(deq)
+        random.shuffle(temp_list)
+        deq.clear()
+        deq.extend(temp_list)
+        return deq
 
     def _update_post_trial_stats(self):
         # Update rolling bias circular buffer
@@ -390,8 +399,11 @@ class SessionManager:
                 self.block_schedule.append((np.random.randint(0, 1_000_000), new_signed_coh))
             elif self.schedule_structure == "blocked":
                 self.block_schedule.append((np.random.randint(0, 1_000_000), self.signed_coherence))
+            self.block_schedule = self.shuffle_deque(self.block_schedule)
+
         if next_trial_vars["is_repeat_trial"]:
             self.block_schedule.appendleft((self.trial_seed, self.signed_coherence))
+            self.block_schedule = self.shuffle_deque(self.block_schedule)
 
         # if valid update trial variables and send data to controller
         if self.valid:
