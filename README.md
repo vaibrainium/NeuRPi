@@ -281,3 +281,55 @@ The networking and core functionality remain compatible while simplifying deploy
 5. Submit a pull request
 
 Happy experimenting with NeuRPi!
+
+
+
+
+
+
+## TROUBLESHOOT
+
+## Troubleshooting
+
+### Windows Firewall Blocking Controller Connections
+
+**Problem:** Rig machines cannot connect to Windows controller, connection times out.
+
+**Symptoms:**
+- Rig connection fails with timeout error
+- Ping between machines works
+- Controller shows as listening on port 12000
+- Connection works when Windows Firewall is disabled
+
+**Solution:**
+
+1. **Open Command Prompt as Administrator**
+
+2. **Find Python executable path:**
+   ```cmd
+   where python
+   ```
+
+3. **Add firewall rules:**
+   ```cmd
+   netsh advfirewall firewall add rule name="NeuRPi Controller TCP" dir=in action=allow protocol=TCP localport=12000 profile=any
+   netsh advfirewall firewall add rule name="NeuRPi Controller Program" dir=in action=allow program="[PYTHON_PATH]" profile=any
+   ```
+   Replace `[PYTHON_PATH]` with the full path from step 2.
+
+4. **Restart controller and test connection**
+
+**Alternative:** Use Windows Security GUI:
+- Windows Security → Firewall & network protection → Advanced settings
+- Inbound Rules → New Rule → Port → TCP → Port 12000 → Allow
+
+### Network Configuration Issues
+
+**Controller IP Binding:**
+- Set `CONTROLLERIP: 0.0.0.0` in `controller.yaml` to listen on all interfaces
+- Or use specific IP address if network allows direct connections
+
+**University/Corporate Networks:**
+- Some networks block inter-device communication
+- Contact IT support if firewall rules don't resolve the issue
+- Consider using a VPN or dedicated network segment
