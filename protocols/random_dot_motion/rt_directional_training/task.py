@@ -287,6 +287,13 @@ if __name__ == "__main__":
 
     task = Task(**value)
 
+    # Initialize the task to start hardware and stimulus processes
+    print("Initializing task...")
+    if not task.initialize():
+        print("Failed to initialize task. Exiting.")
+        exit(1)
+    print("Task initialized successfully.")
+
     stage_list = [
         task.managers["trial"].fixation_stage,
         task.managers["trial"].stimulus_stage,
@@ -298,10 +305,15 @@ if __name__ == "__main__":
 
     # stages =
     iteration = 0
-    while True:
-        data = next(stages)()
-        # Waiting for stage block to clear
-        value["stage_block"].wait()
+    try:
+        while True:
+            data = next(stages)()
+            # Waiting for stage block to clear
+            value["stage_block"].wait()
 
-        # print(f"completed {data['trial_stage']}")
-        print("stage block passed")
+            # print(f"completed {data['trial_stage']}")
+            print("stage block passed")
+    except KeyboardInterrupt:
+        print("\nInterrupted by user. Cleaning up...")
+        task.end()
+        print("Task ended successfully.")
