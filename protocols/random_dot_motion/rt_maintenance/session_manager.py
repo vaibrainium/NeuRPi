@@ -44,7 +44,8 @@ class SessionManager:
         self.stimulus_duration: Optional[float] = None
         self.minimum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["min_viewing"]
         self.maximum_viewing_duration: float = self.config.TASK["epochs"]["stimulus"]["max_viewing"]
-        self.knowledge_of_results_duration: Optional[float] = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["duration"]
+        self.kor_duration: Optional[float] = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["duration"]
+        self.kor_mode: Optional[list] = self.config.TASK["epochs"]["reinforcement"]["knowledge_of_results"]["mode"]
         self.reinforcement_duration: Optional[float] = None
         self.intertrial_duration: Optional[float] = None
 
@@ -169,10 +170,11 @@ class SessionManager:
             "reward_side": self.target,
         }
 
-        if self.knowledge_of_results_duration:
+        if self.kor_duration:
             stage_task_args["flash_led"] = {
-                "direction": self.target,
-                "duration": self.knowledge_of_results_duration,
+                "reinforcer_mode": self.kor_mode,
+                "reinforcer_direction": self.choice,
+                "duration": self.kor_duration,
             }
 
         if self.trial_reward > 0:

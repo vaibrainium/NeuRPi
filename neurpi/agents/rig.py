@@ -141,8 +141,7 @@ class Rig:
 
         try:
             self.session_info = value["session_info"]
-            self.config = importlib.import_module(
-                f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
+            self.config = importlib.import_module(f"protocols.{self.session_info.protocol}.{self.session_info.experiment}.config.{self.session_info.configuration}")
             self.config.SUBJECT = value["subject_config"]
 
             # Import task module and initialize
@@ -277,6 +276,7 @@ class Rig:
                 # Check if file exists before trying to read it
                 try:
                     from pathlib import Path
+
                     if Path(file_path_str).exists():
                         with open(file_path_str, "rb") as f:
                             session_files[file_name] = f.read()
@@ -318,7 +318,7 @@ def main():
     quitting = threading.Event()
     quitting.clear()
     try:
-        pi = Rig()
+        _rig = Rig()  # Keep reference to prevent garbage collection
         # handshake is already called during rig initialization
 
         quitting.wait()
