@@ -217,18 +217,23 @@ class RTTask(TrialConstruct):
                         "duration": None,
                     }
                     self.response_block.set()
-            if "LED" in task_args.get("reinforcer_mode", []):
-                self.managers["hardware"].flash_led(
-                    task_args["reinforcer_direction"],
-                    task_args["duration"],
-                )
-            if "SCREEN" in task_args.get("reinforcer_mode", []):
-                self.msg_to_stimulus.put(("kor_epoch", stimulus_args))
-                if task_args.get("duration", None):
-                    threading.Timer(
-                        task_args["duration"],
-                        lambda: self.msg_to_stimulus.put(("intertrial_epoch", {})),
-                    ).start()
+
+            print(task_args["kor"])
+            if task_args.get("kor", False):
+                kor = task_args["kor"]
+                print(kor["reinforcer_mode"])
+                if "LED" in kor.get("reinforcer_mode", []):
+                    self.managers["hardware"].flash_led(
+                        kor["reinforcer_direction"],
+                        kor["duration"],
+                    )
+                if "SCREEN" in kor.get("reinforcer_mode", []):
+                    self.msg_to_stimulus.put(("kor_epoch", stimulus_args))
+                    if kor.get("duration", None):
+                        threading.Timer(
+                            task_args["duration"],
+                            lambda: self.msg_to_stimulus.put(("intertrial_epoch", {})),
+                        ).start()
 
             self.stage_block.wait()
 

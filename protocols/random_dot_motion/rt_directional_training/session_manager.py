@@ -175,13 +175,11 @@ class SessionManager:
         }
 
         if self.kor_duration > 0:
-            stage_task_args.update(
-                {
-                    "reinforcer_mode": self.kor_mode,
-                    "reinforcer_direction": self.choice,
-                    "duration": self.kor_duration,
-                },
-            )
+            stage_task_args["kor"] = {
+                "reinforcer_mode": self.kor_mode,
+                "reinforcer_direction": self.choice,
+                "duration": self.kor_duration,
+            }
 
         if self.trial_reward > 0:
             stage_task_args["wait_for_consumption"] = self.must_consume_reward

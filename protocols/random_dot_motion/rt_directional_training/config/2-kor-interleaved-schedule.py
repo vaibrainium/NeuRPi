@@ -37,7 +37,7 @@ TASK.update(
                     "invalid": lambda response_time: 0,
                 },
                 "knowledge_of_results": {
-                    "mode": ["LED", "SCREEN"],
+                    "mode": ["LED"],
                     "duration": 0.5,
                 },
             },

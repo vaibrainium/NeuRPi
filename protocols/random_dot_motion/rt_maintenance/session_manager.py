@@ -170,8 +170,8 @@ class SessionManager:
             "reward_side": self.target,
         }
 
-        if self.kor_duration:
-            stage_task_args["flash_led"] = {
+        if self.kor_duration > 0:
+            stage_task_args["kor"] = {
                 "reinforcer_mode": self.kor_mode,
                 "reinforcer_direction": self.choice,
                 "duration": self.kor_duration,
