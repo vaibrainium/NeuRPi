@@ -160,10 +160,10 @@ class TaskGUI(rigclass):
         try:
             hardware = prefs.get("HARDWARE")
             self.rig.lick_threshold_left.setValue(
-                hardware.Arduino.Primary.lick.threshold_left,
+                int(hardware.Arduino.Primary.lick.threshold_left),
             )
             self.rig.lick_threshold_right.setValue(
-                hardware.Arduino.Primary.lick.threshold_right,
+                int(hardware.Arduino.Primary.lick.threshold_right),
             )
         except EOFError:
             pass
