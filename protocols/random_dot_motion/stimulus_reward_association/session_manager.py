@@ -3,6 +3,7 @@ import pickle
 from collections import deque
 from typing import Any, Optional, Union
 import random
+
 import numpy as np
 
 
@@ -82,6 +83,13 @@ class SessionManager:
         self.active_bias_correction_probability = self.config.TASK["bias_correction"]["active"]["correction_strength"]
         self.active_bias_correction_threshold = self.config.TASK["bias_correction"]["active"]["abs_bias_threshold"]
 
+        # Training Parameters
+        self.passive_trial_probability = self.config.TASK["training_params"].get("passive_trial_probability", 0)
+        self.passive_coherence_threshold = self.config.TASK["training_params"].get("passive_coherence_threshold", 35)
+        self.passive_viewing_duration_func = self.config.TASK["training_params"]["passive_viewing_duration_func"]
+        self.trial_type = None
+        self.passive_viewing_time = None
+
         # Plot variables for performance tracking
         self.plot_vars = {
             "running_accuracy": [],
@@ -101,6 +109,8 @@ class SessionManager:
         self.trial_seed = None
         self.signed_coherence = None
         self.target = None
+        self.trial_type = None
+        self.passive_viewing_time = None
         self.choice = None
         self.response_time = None
         self.valid = None
@@ -132,8 +142,15 @@ class SessionManager:
 
     def prepare_stimulus_stage(self) -> tuple[dict[str, Any], dict[str, Any]]:
         """Prepare parameters for stimulus presentation stage."""
-        self.stimulus_duration = self.maximum_viewing_duration
-        response_to_check = [-1, 1]
+        print(self.trial_type)
+        if self.trial_type == "active":
+            response_to_check = [-1, 1]
+            self.stimulus_duration = self.maximum_viewing_duration
+        else:
+            response_to_check = []
+            self.minimum_viewing_duration = self.passive_viewing_time
+            self.stimulus_duration = self.passive_viewing_time
+
         stage_stimulus_args = {
             "coherence": self.signed_coherence,
             "seed": self.trial_seed,
@@ -150,12 +167,17 @@ class SessionManager:
 
     def prepare_reinforcement_stage(self, choice: Optional[int], response_time: Optional[float]) -> tuple[dict[str, Any], dict[str, Any]]:
         """Prepare parameters for reinforcement stage based on choice and response time."""
-        self.choice = choice
-        self.response_time = response_time
+        if self.trial_type == "active":
+            self.choice = choice
+            self.response_time = response_time
+        else:
+            self.choice = self.target
+            self.response_time = self.passive_viewing_time
+
         stage_task_args, stage_stimulus_args = {}, {}
 
-        self.outcome, self.trial_reward = self._determine_outcome_and_reward(self.choice)
 
+        self.outcome, self.trial_reward = self._determine_outcome_and_reward(self.choice)
         # Get reinforcement duration for this outcome
         if self.outcome not in self.reinforcement_duration_function:
             msg = f"Reinforcement duration function for outcome '{self.outcome}' is not defined."
@@ -213,6 +235,17 @@ class SessionManager:
         self.target = int(np.sign(self.signed_coherence + np.random.choice([-1e-2, 1e-2])))
         self.trial_counters["correction"] = 0
 
+    def _set_trial_type(self):
+        # generate random uniform number with if below self.passive_trial_probability then return "passive" else "active"
+        random_value = np.random.uniform(0, 1)
+        if (np.abs(self.signed_coherence) >= self.passive_coherence_threshold) and (random_value <= self.passive_trial_probability): # type: ignore
+            self.passive_viewing_time = self.passive_viewing_duration_func()
+            self.trial_type = "passive"
+            self.trial_type, self.passive_viewing_time
+        else:
+            self.trial_type = "active"
+            self.passive_viewing_time = None
+
     def prepare_trial_variables(self):
         """Prepare parameters for next trial based on current flags and bias."""
         self.reset_trial_variables()
@@ -221,6 +254,7 @@ class SessionManager:
         else:
             self._handle_standard_block()
         print(self.block_schedule)
+        self._set_trial_type()
 
     def generate_block_schedule(self):
         schedule = np.repeat(self.active_coherences, self.repeats_per_block)
@@ -305,6 +339,10 @@ class SessionManager:
         else:
             next_trial_vars["is_repeat_trial"] = True
 
+    def _handle_passive_trial(self):
+        """Handle the case where the trial is passive."""
+        self.valid = False
+
     def shuffle_deque(self, deq: deque) -> deque:
         """Shuffle a deque in place."""
         temp_list = list(deq)
@@ -371,20 +409,24 @@ class SessionManager:
         self.trial_counters["attempt"] += 1
         next_trial_vars = {"is_correction_trial": False, "is_repeat_trial": False}
 
-        if self.in_active_bias_correction_block:
-            self.valid = False
-            next_trial_vars["is_repeat_trial"] = self.outcome != 1
-        elif self.outcome == 1:
-            self._handle_correct_trial()
-            next_trial_vars["is_correction_trial"] = False
+        if self.trial_type == "active":
+            if self.in_active_bias_correction_block:
+                self.valid = False
+                next_trial_vars["is_repeat_trial"] = self.outcome != 1
+            elif self.outcome == 1:
+                self._handle_correct_trial()
+                next_trial_vars["is_correction_trial"] = False
 
-        elif self.outcome == 0:
-            self._handle_incorrect_trial()
-            # Correction trial if signed coherence above threshold
-            next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
+            elif self.outcome == 0:
+                self._handle_incorrect_trial()
+                # Correction trial if signed coherence above threshold
+                next_trial_vars["is_correction_trial"] = np.abs(self.signed_coherence) > self.passive_bias_correction_threshold
 
-        else:  # NaN outcome
-            self._handle_noresponse_or_invalid(next_trial_vars)
+            else:  # NaN outcome
+                self._handle_noresponse_or_invalid(next_trial_vars)
+
+        elif self.trial_type == "passive":
+            self._handle_passive_trial()
 
         # write trial data to file
         self.write_trial_data_to_file()
@@ -397,6 +439,7 @@ class SessionManager:
                 new_target = int(np.sign(np.random.normal(-np.nanmean(self.rolling_bias) * 2, 0.4)))
                 new_signed_coh = new_target * np.abs(self.signed_coherence)
                 self.block_schedule.append((np.random.randint(0, 1_000_000), new_signed_coh))
+
             elif self.schedule_structure == "blocked":
                 self.block_schedule.append((np.random.randint(0, 1_000_000), self.signed_coherence))
             self.block_schedule = self.shuffle_deque(self.block_schedule)

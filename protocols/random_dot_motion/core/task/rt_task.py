@@ -244,6 +244,8 @@ class RTTask(TrialConstruct):
         self.stage_block.clear()
         task_args, stimulus_args = {}, {}
 
+        print(task_args)
+
         task_args, stimulus_args = self.managers["session"].prepare_intertrial_stage()
         print(f"ITI stage started: {task_args['intertrial_duration']} secs")
         if task_args["intertrial_duration"] > 0:
@@ -258,7 +260,7 @@ class RTTask(TrialConstruct):
             self.stage_block.set()
         self.managers["session"].intertrial_onset = datetime.datetime.now() - self.timers["session"]
 
-        if task_args.get("wait_for_consumption", False):
+        if task_args.get("wait_for_consumption", False) and not self.abort_trial:
             print("[intertrial_stage] Waiting for must_respond_block")
             self.must_respond_block.wait()
 
