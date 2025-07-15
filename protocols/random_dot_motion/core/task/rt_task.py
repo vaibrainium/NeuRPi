@@ -185,7 +185,7 @@ class RTTask(TrialConstruct):
         """
         if self.abort_trial:
             print("Aborting trial due to fixation break")
-            self.managers["session"].prepare_reinforcement_stage(np.NaN, np.NaN)
+            self.managers["session"].prepare_reinforcement_stage(np.nan, np.nan)
             self.stage_block.set()
         else:
             # Clear stage block
@@ -218,10 +218,8 @@ class RTTask(TrialConstruct):
                     }
                     self.response_block.set()
 
-            print(task_args["kor"])
             if task_args.get("kor", False):
                 kor = task_args["kor"]
-                print(kor["reinforcer_mode"])
                 if "LED" in kor.get("reinforcer_mode", []):
                     self.managers["hardware"].flash_led(
                         kor["reinforcer_direction"],
