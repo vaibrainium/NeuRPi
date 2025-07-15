@@ -123,6 +123,7 @@ class BaseRDMConfig:
                 "value": {
                     "initiate_fixation": {
                         "background_color": (0, 0, 0),
+                        "audio": None,
                     },
                     "initiate_stimulus": {
                         "background_color": (0, 0, 0),
