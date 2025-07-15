@@ -193,3 +193,10 @@ class BaseRDMConfig:
                 },
             },
         }
+
+    @staticmethod
+    def get_data_files():
+        return {
+            "lick": "_lick.csv",
+            "trial": "_trial.csv",
+        }
