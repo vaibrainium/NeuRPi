@@ -8,7 +8,27 @@ from __future__ import annotations
 
 import numpy as np
 from scipy import stats
+from scipy.stats import truncexpon
 
+def get_expon_flat_hazard_function(start, end, b=5):
+    """
+    Returns a truncated exponential sampler with consistent decay shape
+    regardless of interval width.
+
+    Parameters
+    ----------
+    - start: minimum value
+    - end: maximum value
+    - b: shape parameter (higher means steeper decay)
+
+    Returns
+    -------
+    - A callable that samples from a truncated exponential distribution.
+
+    """
+    interval = end - start
+    scale = interval / b
+    return lambda: np.clip(truncexpon.rvs(b=b, loc=start, scale=scale), start, end)
 
 class BaseRDMConfig:
     """
@@ -122,7 +142,7 @@ class BaseRDMConfig:
                 "tag": "Required functions for stimulus display",
                 "value": {
                     "initiate_fixation": {
-                        "background_color": (0, 0, 0),
+                        "background_color": (30, 70, 160),
                         "audio": None,
                     },
                     "initiate_stimulus": {
@@ -192,4 +212,11 @@ class BaseRDMConfig:
                     },
                 },
             },
+        }
+
+    @staticmethod
+    def get_data_files():
+        return {
+            "lick": "_lick.csv",
+            "trial": "_trial.csv",
         }

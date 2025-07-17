@@ -7,38 +7,15 @@ from pathlib import Path
 
 import numpy as np
 
-from neurpi.prefs import prefs
+from neurpi.prefs import configure_prefs
 from protocols.random_dot_motion.core.hardware.behavior import Behavior
-from protocols.random_dot_motion.core.hardware.hardware_manager import \
-    HardwareManager
+from protocols.random_dot_motion.core.hardware.hardware_manager import HardwareManager
 from protocols.random_dot_motion.core.task.rt_task import RTTask
-from protocols.random_dot_motion.rt_directional_training.session_manager import \
-    SessionManager
-from protocols.random_dot_motion.rt_directional_training.stimulus_manager import \
-    StimulusManager
+from protocols.random_dot_motion.stimulus_reward_association.session_manager import SessionManager
+from protocols.random_dot_motion.stimulus_reward_association.stimulus_manager import StimulusManager
 
-# TODO: 1. Use subject_config["session_uuid"] instead of subject name for file naming
-# TODO: 5. Make sure graduation is working properly
-# TODO: 7. In future version, change mulitprocessing queue to zmq queue for better performance.
-# # Create a ZeroMQ context
-# context = zmq.Context()
-
-# # Create a PUSH socket for sending data to the display process
-# out_socket = context.socket(zmq.PUSH)
-# out_socket.bind("tcp://localhost:5555")  # Replace with your desired endpoint
-
-# # Create a PULL socket for receiving data from the display process
-# in_socket = context.socket(zmq.PULL)
-# in_socket.connect("tcp://localhost:5555")  # Connect to the same endpoint
-
-
-# display = StimulusDisplay(stimulus_configuration=config, in_socket=in_socket, out_socket=out_socket)
-
-# # Don't forget to close and destroy sockets when done
-# in_socket.close()
-# out_socket.close()
-# context.term()
-
+# Configure prefs for rig mode
+prefs = configure_prefs(mode="rig")
 
 class Task:
     """
@@ -49,7 +26,7 @@ class Task:
         self,
         stage_block=None,
         protocol="random_dot_motion",
-        experiment="rt_directional_training",
+        experiment="rt_maintenance",
         config=None,
         **kwargs,
     ):
@@ -77,7 +54,9 @@ class Task:
         # Preparing Managers
         self.managers = {}
         self.managers["hardware"] = HardwareManager()
-        self.managers["hardware"].start_session()
+        self.managers["hardware"].start_session(
+            session_id=self.config.SUBJECT["session_uuid"],
+        )
         self.managers["session"] = SessionManager(config=self.config)
         self.managers["trial"] = RTTask(
             stage_block=self.stage_block,
@@ -251,12 +230,27 @@ class Task:
 
 
 if __name__ == "__main__":
-    from protocols.random_dot_motion.rt_directional_training import config
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    # Import the config file with non-standard name
+    config_path = Path(__file__).parent / "config" / "main.py"
+    spec = importlib.util.spec_from_file_location("config", config_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Could not load config from {config_path}")
+    config = importlib.util.module_from_spec(spec)
+    sys.modules["config"] = config
+    spec.loader.exec_module(config)
+
+    # Verify that the config loaded correctly
+    print(f"Config loaded successfully from {config_path}")
+    print(f"Available config attributes: {[attr for attr in dir(config) if not attr.startswith('_')]}")
 
     full_coherences = config.TASK["stimulus"]["signed_coherences"]["value"]
     # current_coherence_level = config.TASK["rolling_performance"]["current_coherence_level"]
-    reward_volume = config.TASK["rolling_performance"]["reward_volume"]
-    rolling_window = config.TASK["rolling_performance"]["rolling_window"]
+    reward_volume = 2 #config.TASK["rolling_performance"]["reward_volume"]
+    rolling_window = 50 #config.TASK["rolling_performance"]["rolling_window"]
     rolling_perf = {
         "rolling_window": rolling_window,
         "history": {int(coh): list(np.zeros(rolling_window).astype(int)) for coh in full_coherences},
@@ -271,12 +265,12 @@ if __name__ == "__main__":
 
     config.SUBJECT = {
         # Subject and task identification
-        "name": "test",
+        "id": "XXX",
         "baseline_weight": 20,
         "start_weight": 19,
         "prct_weight": 95,
         "protocol": "random_dot_motion",
-        "experiment": "rt_directional_training",
+        "experiment": "rt_maintenance",
         "session": "1_1",
         "session_uuid": "XXXX",
         "rolling_perf": rolling_perf,
@@ -285,11 +279,18 @@ if __name__ == "__main__":
     value = {
         "stage_block": threading.Event(),
         "protocol": "random_dot_motion",
-        "experiment": "rt_directional_training",
+        "experiment": "rt_maintenance",
         "config": config,
     }
 
     task = Task(**value)
+
+    # Initialize the task to start hardware and stimulus processes
+    print("Initializing task...")
+    if not task.initialize():
+        print("Failed to initialize task. Exiting.")
+        exit(1)
+    print("Task initialized successfully.")
 
     stage_list = [
         task.managers["trial"].fixation_stage,
@@ -302,10 +303,15 @@ if __name__ == "__main__":
 
     # stages =
     iteration = 0
-    while True:
-        data = next(stages)()
-        # Waiting for stage block to clear
-        value["stage_block"].wait()
+    try:
+        while True:
+            data = next(stages)()
+            # Waiting for stage block to clear
+            value["stage_block"].wait()
 
-        # print(f"completed {data['trial_stage']}")
-        print("stage block passed")
+            # print(f"completed {data['trial_stage']}")
+            print("stage block passed")
+    except KeyboardInterrupt:
+        print("\nInterrupted by user. Cleaning up...")
+        task.end()
+        print("Task ended successfully.")

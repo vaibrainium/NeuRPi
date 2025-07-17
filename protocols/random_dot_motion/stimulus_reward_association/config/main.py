@@ -1,5 +1,5 @@
 """
-Refactored Reward Spout Stimulus Association configuration (conservative with compound conditioning) using base template.
+Refactored RT Maintenance configuration using base template.
 
 This eliminates ~150 lines of repetitive configuration code.
 """
@@ -7,24 +7,25 @@ This eliminates ~150 lines of repetitive configuration code.
 import numpy as np
 from scipy import stats
 
-from protocols.random_dot_motion.core.config.base_config import BaseRDMConfig
+from protocols.random_dot_motion.core.config.base_config import BaseRDMConfig, get_expon_flat_hazard_function
 
 # Get base configurations
 TASK = BaseRDMConfig.get_base_task_config()
 STIMULUS = BaseRDMConfig.get_base_stimulus_display_config()
+DATAFILES = BaseRDMConfig.get_data_files()
 
-# Conservative switching with compound conditioning specific customizations
+# RT Maintenance specific customizations
 TASK.update(
     {
         "epochs": {
             "tag": "List of all epochs and their respective parameters in secs",
             "fixation": {
                 "tag": "Fixation epoch",
-                "duration": lambda: 0,  # No fixation for association task
+                "duration": get_expon_flat_hazard_function(start=2, end=3),
             },
             "stimulus": {
                 "tag": "Stimulus epoch",
-                "max_viewing": 10,
+                "max_viewing": 15,
                 "min_viewing": 0,
             },
             "reinforcement": {
@@ -36,57 +37,51 @@ TASK.update(
                     "invalid": lambda response_time: 0,
                 },
                 "knowledge_of_results": {
-                    "mode": ["LED", "SCREEN"],
+                    "mode": ["LED"],
                     "duration": 0.5,
                 },
             },
             "intertrial": {
                 "tag": "Intertrial epoch",
                 "duration": {
-                    "correct": lambda response_time, coh: stats.expon.rvs(loc=5, scale=1 / 5),
-                    "incorrect": lambda response_time, coh: 6 + 4 * (np.exp(-3 * response_time)),
-                    "noresponse": lambda response_time, coh: 6,
+                    "correct": lambda response_time, coh: get_expon_flat_hazard_function(start=2, end=3)(),
+                    "incorrect": lambda response_time, coh: get_expon_flat_hazard_function(start=6, end=10)(),
+                    "noresponse": lambda response_time, coh: get_expon_flat_hazard_function(start=6, end=10)(),
                     "invalid": lambda response_time, coh: 5,
                 },
             },
         },
         "stimulus": {
-            "coherences": {
-                "tag": "List of all coherences used in study",
-                "type": "list",
-                "value": np.array([100, 72, 36, 18, 9, 0]),
-            },
             "signed_coherences": {
                 "tag": "List of all signed coherences",
                 "type": "np.array",
-                "value": np.array([-100, 100]),
+                "value": np.array([-100, -72, 72, 100]),
             },
             "repeats_per_block": {
                 "tag": "Number of repeats of each coherences per block",
                 "type": "np.array",
-                "value": np.array([3, 3]),
+                "value": np.array([3, 3, 3, 3]),
             },
             "schedule_structure": {
                 "tag": "How to structure block, interleaved or blocked",
                 "value": "interleaved",
             },
         },
-        "bias_correction": {
-            "bias_window": 20,
-            "passive": {
-                "coherence_threshold": 40,
-            },
-            "active": {
-                "abs_bias_threshold": 1.1,
-                "correction_strength": 1,
-            },
+        "training_params": {
+            "tag": "All other training related parameters",
+            "passive_trial_probability": 1,  # between 0 & 1: 1 means all trials are passive, 0 means all trials are active
+            "passive_coherence_threshold": 35,
+            "passive_viewing_duration_func": get_expon_flat_hazard_function(start=0.2, end=0.3),
         },
-        "reward": {
-            "volume": 2,
-            "must_consume": True,
+        "graduation": {
+            "tag": "Graduation criteria for coherence level advancement",
+            "accuracy_threshold": 80,
+            "window_size": 50,
+            "coherence_levels": [100, 72, 36, 18, 9],
         },
     },
 )
+
 
 # Hardware requirements
 REQUIRED_HARDWARE = ["Arduino", "Display"]

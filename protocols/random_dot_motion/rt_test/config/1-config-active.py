@@ -12,6 +12,7 @@ from protocols.random_dot_motion.core.config.base_config import BaseRDMConfig
 # Get base configurations
 TASK = BaseRDMConfig.get_base_task_config()
 STIMULUS = BaseRDMConfig.get_base_stimulus_display_config()
+DATAFILES = BaseRDMConfig.get_data_files()
 
 # RT Test specific customizations
 TASK.update(
