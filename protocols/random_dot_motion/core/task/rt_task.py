@@ -185,7 +185,6 @@ class RTTask(TrialConstruct):
 
         """
         if self.abort_trial:
-            self.managers["session"].prepare_reinforcement_stage(np.nan, np.nan)
             self.stage_block.set()
         else:
             # Clear stage block
