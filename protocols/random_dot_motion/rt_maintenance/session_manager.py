@@ -185,6 +185,10 @@ class SessionManager:
     def prepare_intertrial_stage(self):
         """Prepare parameters for intertrial stage."""
         stage_task_args, stage_stimulus_args = {}, {}
+        # if aborted trial change outcome to invalid
+        if self.outcome is None:
+            self.outcome = "invalid"
+            self.trial_reward = 0
         self.intertrial_duration = self.intertrial_duration_function[self.outcome](self.response_time, self.signed_coherence)
 
         stage_task_args = {"intertrial_duration": self.intertrial_duration}
