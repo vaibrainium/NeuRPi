@@ -149,9 +149,14 @@ class Subject(BaseSubject):
         if self.session == "1_1":
             if self.experiment not in ["reward_spout_stimulus_association", "rt_test"]:
                 full_coherences = self.session_config.TASK["stimulus"]["signed_coherences"]["value"]
-                current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
-                reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]
-                rolling_window = self.session_config.TASK["rolling_performance"]["rolling_window"]
+                try:
+                    current_coherence_level = self.session_config.TASK["rolling_performance"]["current_coherence_level"]
+                    reward_volume = self.session_config.TASK["rolling_performance"]["reward_volume"]
+                    rolling_window = self.session_config.TASK["rolling_performance"]["rolling_window"]
+                except KeyError:
+                    current_coherence_level = 2
+                    reward_volume = 2
+                    rolling_window = 50
 
                 self.rolling_perf = {
                     "rolling_window": rolling_window,
