@@ -137,6 +137,7 @@ class RTTask(TrialConstruct):
             self.abort_trial = True
             self.choice = np.nan
             self.response_time = np.nan
+            print("Aborting trial due to fixation break")
 
     def stimulus_stage(self):
         """
@@ -184,7 +185,6 @@ class RTTask(TrialConstruct):
 
         """
         if self.abort_trial:
-            print("Aborting trial due to fixation break")
             self.managers["session"].prepare_reinforcement_stage(np.nan, np.nan)
             self.stage_block.set()
         else:
